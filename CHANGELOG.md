@@ -2,7 +2,7 @@
 
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; depend on it with `">=0.N <1"`.
 
-## Unreleased
+## 0.1.0-rc.0
 
 - Repository scaffold: unbundled `tsc` build with per-file `'use client'` directives, `check-package` (13 rules, a
   failing fixture per rule), `check-tokens` for hosts, the i18n key manifest, consumer tests (Next 16 build,
