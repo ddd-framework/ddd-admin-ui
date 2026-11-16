@@ -1,6 +1,44 @@
 # Changelog
 
-All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; depend on it with `">=0.N <1"`.
+All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
+is in 0.x prereleases.
+
+## 0.1.0-rc.3
+
+- List table, all optional (a table without the new props renders the same DOM and classes as 0.1.0-rc.2, proven by
+  a server-render snapshot taken from 0.1.0-rc.2, `pnpm test:render`):
+  - Column tracks: `EntityListColumn.width` (`'1fr'`, `'2fr'`, `'120px'`), `minWidth` (px, default 120), `align`
+    (`start` / `center` / `end`). One column with a width gives every column a track (default `1fr`); share columns
+    never go below their minimum, and when the minimums exceed the visible width the table scrolls sideways inside its
+    card. A table with tracks is one CSS grid (every row a subgrid, table roles kept); without any width the layout
+    stays content-sized.
+  - Pinned columns: `pin: 'start' | 'end'`. `end` always holds; `start` only while the table overflows by 120 px or
+    more and the pinned columns take less than a third of the visible width. In a table using tracks, pins or the row
+    index, the selection column and the row index always pin. A pinned cell paints the card surface and its edge only
+    while content scrolls under it.
+  - Sortable headers: `sortKey` on the column, `sort` / `onSortChange` on `EntityListTable` and `EntityListBody`;
+    not sorted → ascending → descending → not sorted, `aria-sort`, the header content is a button. The table never
+    sorts rows itself.
+  - Row index: `showRowIndex`, a leading `#` column, 1-based among the loaded rows (new text `Row number`).
+  - Sizes are measured after hydration only (server and hydration render use the CSS form of the same tracks).
+- `EntityListBody.renderOwnView(mode)`: a view that owns its data and states, drawn in the list card as is, without
+  the paged list's skeletons, empty and error states and tail. `renderExtraView` is unchanged.
+- `./logic`: `nextListSort`, `parseListSort`, `formatListSort` (`key:asc`), `EntityListSort`, `ListSortDirection`; the
+  pure track and pin mechanics `computeListTracks`, `listTrackTemplate`, `minimumListWidth`, `hasListTracks`,
+  `resolveListPins`, `shouldHonourStartPins`, `LIST_COLUMN_MIN_WIDTH`, `LIST_PIN_MAX_VISIBLE_SHARE`,
+  `LIST_PIN_MIN_OVERFLOW` and their types (`ListColumnWidth`, `ListColumnPin`, `ListColumnAlign`, `ListTrack`,
+  `ListTrackLayout`, `ListPinRequest`, `ListPinPlacement`, `ListPinMeasure`, `ListPinLayout`).
+- Status contexts: `StatusDefinition.context` and `defineStatusMap(map, { context })` (`StatusMapOptions`; the
+  definition's context wins). `StatusBadge` translates label and description with it. `m()` takes an optional
+  `{ context }` (`MarkOptions`) that text exports read: `m('Failed', { context: 'import-status' })` → key
+  `Failed__import-status`. Existing calls are unchanged.
+- `tokens.json`: data attributes `data-list-tracks`, `data-list-pin`, `data-list-pin-edge`, `data-list-overflow-start`,
+  `data-list-overflow-end` (read by `components.css`). No new colour role or custom property.
+- Removed the optional peer `recharts` (no entry used it).
+- Docs: pin the exact version while the package is in 0.x prereleases; neutral examples in `STANDARDS.md`; the list
+  section and the skill describe the new table props.
+- Consumer checks: the no-prop snapshot and the status context (server render), and a list page with tracks, pins, sort
+  and row index in the browser (pin guard at three widths, sideways scroll inside the card at 390 px, sort cycle).
 
 ## 0.1.0-rc.2
 

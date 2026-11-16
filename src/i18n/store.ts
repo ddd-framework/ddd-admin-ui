@@ -1,3 +1,5 @@
+// @translations-ignore-file — the doc examples below are not UI texts
+
 import { formatIcuPlural } from './plural.ts';
 
 /**
@@ -68,8 +70,17 @@ export const translateText = (text: string, options: TranslateOptions = {}): str
   return values ? applyReplacements(message, values) : message;
 };
 
+/** Options of the `m()` marker: what text exports read next to the text. */
+export interface MarkOptions {
+  /** The translation context the text is rendered with (key `<text>__<context>`). */
+  context?: string;
+}
+
 /**
  * Marks an English UI text that is defined outside a component (status maps, column definitions, option lists) for
- * the key export, unchanged. The component that renders it translates it with `t(value)`.
+ * the key export, unchanged. The component that renders it translates it with `t(value)`, or with
+ * `t(value, { context })` for a text marked `m('Failed', { context: 'import-status' })`. The marker returns the text
+ * only: the context reaches the renderer separately (e.g. `StatusDefinition.context`). Text exports read the text and
+ * the context as literals, so write both as string literals.
  */
-export const m = <TText extends string>(text: TText): TText => text;
+export const m = <TText extends string>(text: TText, _options?: MarkOptions): TText => text;

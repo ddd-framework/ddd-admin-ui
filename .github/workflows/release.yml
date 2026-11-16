@@ -53,6 +53,8 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      # list tables without the optional props render as in 0.1.0-rc.2; status map contexts reach the badge
+      - run: pnpm test:render
       - name: Published manifest has no workspace-only specifiers
         run: |
           if grep -E '"(workspace|link|file):' package.json; then

@@ -1,6 +1,6 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.1.0-rc.2",
+  "version": "0.1.0-rc.3",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
@@ -593,6 +593,14 @@
         "i18n/serverMessages.ts"
       ],
       "hint": "Title of the red error toast and error box above a form after the server rejected a save because one or more fields are invalid (the fields are listed below it)."
+    },
+    {
+      "key": "Row number",
+      "text": "Row number",
+      "files": [
+        "list/EntityListTable.tsx"
+      ],
+      "hint": "Screen-reader name of the narrow '#' column at the start of a list table that numbers the loaded rows 1, 2, 3 …"
     },
     {
       "key": "Save changes",

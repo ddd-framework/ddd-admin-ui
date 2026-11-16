@@ -126,5 +126,6 @@
   "Wrong credentials.": "Error message on the login page when the e-mail address / username or the password is wrong.",
   "Yes": "Option of a yes/no filter in the filter panel of a list; selecting it shows only records where the flag is set.",
   "Yes__boolean-flag": "Default label of a yes/no flag cell in a list table, shown with a green check when the flag is on, e.g. Active column.",
-  "You have unsaved changes. Closing now will lose them.": "Body text of the discard confirmation dialog, warning that closing the form drawer throws away the user's unsaved edits."
+  "You have unsaved changes. Closing now will lose them.": "Body text of the discard confirmation dialog, warning that closing the form drawer throws away the user's unsaved edits.",
+  "Row number": "Screen-reader name of the narrow '#' column at the start of a list table that numbers the loaded rows 1, 2, 3 …"
 }

@@ -1,7 +1,7 @@
 // T4: in a project without next, sonner and recharts, every entry except ./next and ./notify-sonner imports in Node;
 // those two fail because their optional peer is missing. Also loads the JSON manifests.
 const expectations = {
-  logic: ['formatDate', 'formatDateTime', 'defineStatusMap', 'notify', 'setNotificationAdapter', 'toFormSubmitError', 'useUrlListState', 'useEntityTranslations', 'prepareImageFile'],
+  logic: ['formatDate', 'formatDateTime', 'defineStatusMap', 'notify', 'setNotificationAdapter', 'toFormSubmitError', 'useUrlListState', 'useEntityTranslations', 'prepareImageFile', 'nextListSort', 'parseListSort', 'formatListSort', 'computeListTracks', 'resolveListPins'],
   i18n: ['setTranslations', 'translateText', 'm', 'useTranslate', 'Translate', 'translationKeyOf', 'formatUiNumber', 'translateServerMessage'],
   primitives: ['cn', 'Button', 'Dialog', 'DialogContent', 'Sheet', 'SheetContent', 'Select', 'SelectContent', 'Tooltip', 'TooltipProvider'],
   list: ['EntityListCard', 'EntityListToolbar', 'EntityListBody', 'EntityListTable', 'EntityListEmpty', 'DateCell', 'StatusBadge', 'FilterPanel'],

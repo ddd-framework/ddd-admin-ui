@@ -12,7 +12,7 @@ import { EmptyValue } from './EmptyValue.tsx';
 /** @deprecated moved to logic/pure/status — the re-export is removed in a later minor */
 export { defineStatusMap } from '../logic/pure/status.ts';
 /** @deprecated moved to logic/pure/status — the re-export is removed in a later minor */
-export type { StatusDefinition, StatusMap, StatusTone } from '../logic/pure/status.ts';
+export type { StatusDefinition, StatusMap, StatusMapOptions, StatusTone } from '../logic/pure/status.ts';
 
 const TONE_CLASS: Record<StatusTone, string> = {
   neutral: 'bg-secondary text-secondary-foreground',
@@ -68,9 +68,10 @@ export const StatusBadge = <TValue extends string = string>(props: StatusBadgePr
     if (value === null || value === undefined || value === '') return <EmptyValue />;
     const definition = (map as Partial<Record<string, StatusDefinition>>)[value];
     tone = definition?.tone ?? 'neutral';
-    label = definition ? t(definition.label) : value;
+    const context = definition?.context ? { context: definition.context } : undefined;
+    label = definition ? t(definition.label, context) : value;
     Icon = definition?.icon;
-    title = definition?.description ? t(definition.description) : undefined;
+    title = definition?.description ? t(definition.description, context) : undefined;
   } else {
     ({ tone, label, icon: Icon, title } = props);
   }

@@ -1,6 +1,6 @@
 ---
 name: ddd-admin-ui-specialist
-description: "Build admin screens with @mgamadeus/ddd-admin-ui on @mgamadeus/ddd-web and extend the package. Covers the entries and their import matrix, host setup (AdminUiProvider above every page, theme.css and components.css after Tailwind, tokens.json with ddd-admin-ui-check-tokens, peers, one Radix copy with ddd-admin-ui-check-radix), list pages with URL filters, grid/table view, selection and bulk actions, detail shells, form drawers with conditions, server errors and the unsaved-changes guard, translations on full locale::style keys, media fields, toasts, layers and the portal container, the text manifest i18n-keys.json, server vs client files, and adding a block (build, pack, check-package). Use when building or reviewing a list, detail or form screen with these blocks, a page fails with Tooltip must be used within TooltipProvider, a colour, layer or overlay misbehaves (two overlays fight over focus or outside clicks), translations lose a style variant, URL filters get lost, or a block is added to the package."
+description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend the package. Covers entries and import matrix, host setup (AdminUiProvider above every page, theme.css and components.css, tokens.json with ddd-admin-ui-check-tokens, one Radix copy with ddd-admin-ui-check-radix), list pages with URL filters, grid/table view, selection and bulk actions, wide tables (column tracks, pins, sortable headers, row index), detail shells, form drawers with conditions, server errors and the unsaved-changes guard, translations on full locale::style keys, media fields, toasts, layers, the portal container, the text manifest i18n-keys.json and text contexts, server vs client files, and adding a block. Use when building or reviewing a list, detail or form screen with these blocks, a page fails with Tooltip must be used within TooltipProvider, a wide table squeezes or needs pinned columns or sorting, a colour, layer or overlay misbehaves, translations lose a style variant, URL filters get lost, or a block is added."
 metadata:
   author: mgamadeus
   version: 0.1.0
@@ -20,7 +20,10 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | search and filters in the URL | `useUrlListState` with `useNextUrlStateAdapter` | logic, next |
 | grid / table switch remembered per list | `useListViewParam` + `EntityListViewToggle` | next, list |
 | checkbox column and bulk actions | `useRowSelection` + `EntityListBulkBar` + `runSequentialWithSummary` | logic, list |
-| status pill of an enum | `defineStatusMap` + `StatusBadge` | logic, list |
+| status pill of an enum | `defineStatusMap` + `StatusBadge` (a `context` for an ambiguous word) | logic, list |
+| a wide table: column tracks, pinned columns, sortable headers, row numbers | `EntityListColumn` `width` / `minWidth` / `pin` / `align` / `sortKey` + `sort` / `onSortChange` / `showRowIndex` | list |
+| the sort in the URL | `formatListSort` / `parseListSort` / `nextListSort` (`key:asc`) | logic |
+| a view that loads its own data (a tree) in the list card | `EntityListBody.renderOwnView` | list |
 | an entity detail with tabs | `EntityDetailShell` (+ `SectionHeader`, `DefinitionList`) | page |
 | a form page or drawer | `Form` + `FormField` / `FormSection` + `FormActions`, in `FormDrawer` | form |
 | drawer state in the URL (`?edit=<id>`, `?create=1`) | `useEntityDrawer` with `useNextDrawerUrlAdapter` | logic, next |
@@ -50,6 +53,13 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 - **URL state.** Build requests from `list.debounced`, never `list.values`. All writes (filters, view, drawer) go
   through the one URL writer, so writes in the same tick merge; never `router.replace` the search parameters by hand.
   Screens reading search parameters render inside `<Suspense>`.
+- **Wide tables.** Tracks are opt-in per table: one `width` gives every column a track (default `1fr`, minimum 120
+  px); the table then scrolls sideways inside its card instead of squeezing. `pin: 'end'` always holds; `pin: 'start'`
+  only while the table overflows by 120 px or more and the pinned columns stay under a third of the visible width. The
+  table never sorts rows: map `sortKey` to the request. Sizes are measured after hydration only.
+- **Text contexts are literals.** `m('Failed', { context: 'import-status' })`: extractors (the package manifest and
+  host exports) read the text and the context as string literals; a context only on the status map or in a variable is
+  not exported. Put the same context on the definition or the map so `StatusBadge` translates with it.
 - **Server vs client.** Hooks and context live in files with `'use client'`; pure helpers (`m`, `formatDateTime`,
   `defineStatusMap`, schemas, conditions) may be called in server code and `metadata`.
 
@@ -65,6 +75,7 @@ export const ItemsScreen = () => {
   const list = useUrlListState(LIST_KEYS, { adapter: useNextUrlStateAdapter({ listId: LIST_ID }), uncounted: ['q'] });
   const [displayMode, setDisplayMode] = useListViewParam(LIST_ID, 'table');
   const query = useItemsQuery(list.debounced);            // the host's data hook
+  // wide tables: columns with width / pin / sortKey, then sort={sort} onSortChange={setSort} showRowIndex on the body
   return (
     <EntityListPage
       title="Items"

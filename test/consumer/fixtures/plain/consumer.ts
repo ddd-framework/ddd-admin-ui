@@ -2,13 +2,19 @@
 // moduleResolution bundler and nodenext and skipLibCheck false: it passes only if the published declarations are
 // complete and resolve (lucide-react types included, at the version under test).
 import {
+  computeListTracks,
   defineStatusMap,
   formatDate,
+  formatListSort,
   formatDateTime,
   notify,
   setNotificationAdapter,
   toFormSubmitError,
+  nextListSort,
+  parseListSort,
+  type EntityListSort,
   type FormSubmitError,
+  type ListTrackLayout,
   type NotificationAdapter,
   type StatusMap,
   type UrlStateAdapter,
@@ -53,6 +59,17 @@ export const providerProps: Omit<AdminUiProviderProps, 'children'> = { storageKe
 export const pageFrameProps: Omit<PageFrameProps, 'children'> = { title: 'Users' };
 export const dateCellProps: DateCellProps = { value: '2026-03-04', format: 'date' };
 export const columns: EntityListColumn<{ id: number; name: string }>[] = [{ id: 'name', header: 'Name', cell: item => item.name }];
+export const sizedColumns: EntityListColumn<{ id: number; name: string }>[] = [
+  { id: 'id', header: 'ID', cell: item => item.id, width: '80px', pin: 'start', sortKey: 'id' },
+  { id: 'name', header: 'Name', cell: item => item.name, width: '2fr', minWidth: 200, align: 'center' },
+];
+export const sort: EntityListSort | null = nextListSort(parseListSort('id:asc', ['id']), 'id');
+export const sortText: string = formatListSort(sort);
+export const trackLayout: ListTrackLayout = computeListTracks([{ width: '80px' }, { width: '2fr' }], 800);
+export const contextStatuses = defineStatusMap(
+  { FAILED: { label: m('Failed', { context: 'import-status' }), tone: 'danger', context: 'import-status' } },
+  { context: 'import-status' },
+);
 export const className: string = cn('p-2', 'p-4');
 export const components = [
   Button, DialogContent, SelectContent, SheetContent, TooltipProvider, DateCell, EntityListBody, EntityListToolbar,

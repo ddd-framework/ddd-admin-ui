@@ -52,7 +52,6 @@ from the entry that owns it.
 | `next` | optional peer | `^16.0.0` — needed by `./next` only |
 | `sonner` | optional peer | `^2.0.0` — needed by `./notify-sonner` only |
 | `tailwindcss` | optional peer | `^4.1.0` — the host's build compiles the CSS |
-| `recharts` | optional peer | `^3.0.0` — reserved; no entry uses it yet |
 | `radix-ui` | peer | `^1.8.1` — one copy per app, as with React (see below) |
 | `class-variance-authority`, `cmdk`, `clsx`, `tailwind-merge` | dependencies | imported inside `./primitives` only |
 
@@ -190,6 +189,13 @@ The UI language lives in one store: `setTranslations(languageCode, writingStyle,
 `translations` adapter) sets it, `useTranslate().t` and `translateText` read it, `m('…')` marks a text for extraction
 without translating it. A key is the English text, or `<text>__<context>` with a context.
 
+A text rendered with a context is marked with it: `m('Failed', { context: 'import-status' })` (`m` returns the text;
+the context reaches the renderer separately, e.g. as `StatusDefinition.context` or the map context of
+`defineStatusMap(map, { context })`). Extractors read the call statically: the first argument of `t(…)`,
+`translateText(…)` or `m(…)` as a string literal, an optional second argument `{ … }` without nested braces whose
+`context:` is a string literal, and `<Translate context="…">text</Translate>`; the key is `<text>__<context>`. A
+context held in a variable, or only on the map, is invisible to an extractor, so each label carries its literal.
+
 The package ships its texts as [`i18n-keys.json`](./i18n-keys.json) (`./i18n-keys.json`): every key with its text,
 context, translator hint and the files that use it, sorted by key. A host's text export merges this manifest instead of
 scanning the package (one usage per key, the hints with the host's own hint precedence). `ddd-admin-ui-i18n-manifest
@@ -207,8 +213,9 @@ project's `.claude/skills/`. Idempotent; repoints an existing symlink, never tou
 
 ## Versioning
 
-0.x: each minor may break. Depend on it with an explicit range, `">=0.N <1"`, never a caret on 0.x. Pre-releases
-(`x.y.z-…`) are published under the `next` dist-tag. Changes per release: [CHANGELOG.md](CHANGELOG.md).
+0.x: each minor may break. Pin the exact version while the package is in 0.x prereleases; modules peer on the version
+they were tested with. Pre-releases (`x.y.z-…`) are published under the `next` dist-tag. Changes per release:
+[CHANGELOG.md](CHANGELOG.md).
 
 ## Development
 
@@ -217,6 +224,7 @@ pnpm install
 pnpm typecheck
 pnpm test                       # unit tests beside the sources, script tests and a failing fixture per check-package rule
 pnpm build                      # tsc → dist, declaration specifiers, stylesheets, manifests and shipped scripts
+pnpm test:render                # after the build: list tables without the optional props render as in 0.1.0-rc.2
 node scripts/check-package.mjs --dir .
 pnpm pack --pack-destination "$TMPDIR" && test/consumer/run.sh "$TMPDIR"/mgamadeus-ddd-admin-ui-*.tgz pnpm "$TMPDIR/consumer-pnpm"
 ```
@@ -226,6 +234,7 @@ pnpm pack --pack-destination "$TMPDIR" && test/consumer/run.sh "$TMPDIR"/mgamade
 | `node scripts/build.mjs` (`pnpm build`) | removes `dist`, `tsc -p tsconfig.build.json` (one JS and declaration file per source file, directives kept, `.js` specifiers), rewrites the declarations' specifiers to `.js`, copies CSS, JSON and the shipped scripts into `dist` |
 | `node scripts/check-package.mjs --dir <package root or extracted tarball>` | the 13 package rules: exports and bins, directives, specifiers, no app alias, deny list (`--deny a,b` or `CHECK_PACKAGE_DENY`; `--require-deny-list` on release), declared dependencies, entry edges and reach, module state once, `files` and `sideEffects`, declarations in a strict consumer, no tests, fresh text manifest, tokens |
 | `node scripts/tokens-utilities.mjs [--write]` | checks (or regenerates) the `utilities` lists of `tokens.json` from the source |
+| `pnpm test:render` | server-renders list tables, bodies and badges from the build: without the optional table props the markup equals `test/consumer/fixtures/plain/list-snapshot.html` (taken from 0.1.0-rc.2); a status map's translation context reaches `StatusBadge` |
 | `node scripts/build-i18n-manifest.mjs [--check]` (`pnpm i18n:manifest`) | regenerates `i18n-keys.json` from the source and `i18n/hints.json`; run it after changing a text or the version |
 | `node scripts/check-tokens.mjs <css> [tokens.json]` | the host check above (shipped as `ddd-admin-ui-check-tokens`) |
 | `node scripts/check-radix.mjs [host folder]` | the Radix copy check above (shipped as `ddd-admin-ui-check-radix`) |

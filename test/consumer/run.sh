@@ -7,6 +7,8 @@
 #         strict tsc (skipLibCheck false) with moduleResolution bundler and nodenext
 #     T3  (server render) bound fields from ./translations and ./media find the form of ./form
 #     T6  one translation store across entries (./i18n sets the language, ./logic and ./list use it)
+#         list tables, bodies and badges without the optional table props render as in 0.1.0-rc.2 (list-snapshot.html)
+#         a status map's translation context reaches StatusBadge
 #     the shipped i18n manifest matches the installed package (ddd-admin-ui-i18n-manifest --check)
 #   next      a Next 16 app router project with Tailwind 4:
 #     T1  `next build`; the server page's metadata title is m('Users'), pure helpers render on the server
@@ -16,13 +18,15 @@
 #         without a hydration warning
 #     T3  (browser) server violations on a translatable and a media field are named by the fields' labels (the label
 #         registry of ./form is one context across ./form, ./translations and ./media)
+#         (browser) a list table with column tracks, pins, sort and a row index: tracks, the pin guard at three widths,
+#         at 390 px the table scrolls inside its card and the page does not, the sort cycle, no hydration warning
 #     T7  (browser) a select inside a dialog inside a sheet, and inside a host overlay at z-index 10000 with
 #         --layer-popover: 10001, is clickable (with a negative control at the default layer)
 #   link-skills  `ddd-admin-ui link-skills` links the shipped skill
 #
 # T8 / T9: DDD_WEB_VERSION (default: the latest 0.x from 0.13.0 on) and LUCIDE_VERSION (default: latest) choose the
 # peer versions; CI runs once more with the floors (DDD_WEB_VERSION=0.13.0 LUCIDE_VERSION=0.550.0).
-# SKIP_BROWSER=1 skips the browser checks (T2, T3, T7). CHROME_PATH chooses the browser (default: the installed Google Chrome).
+# SKIP_BROWSER=1 skips the browser checks (T2, T3, T7, list table). CHROME_PATH chooses the browser (default: the installed Google Chrome).
 #
 # Usage: test/consumer/run.sh <tarball> <npm|pnpm> <workDir>
 set -euo pipefail
@@ -90,6 +94,10 @@ echo "── T3 bound fields across entries (server render)"
 node form-fields.mjs
 echo "── T6 one translation store"
 node one-store.mjs
+echo "── list tables without the optional props: same DOM as 0.1.0-rc.2"
+node list-snapshot.mjs
+echo "── status map translation context"
+node status-context.mjs
 echo "── shipped i18n manifest"
 if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-i18n-manifest --check; else pnpm exec ddd-admin-ui-i18n-manifest --check; fi
 
@@ -110,7 +118,7 @@ echo "── one Radix copy"
 if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-check-radix; else pnpm exec ddd-admin-ui-check-radix; fi
 
 if [ "${SKIP_BROWSER:-}" = 1 ]; then
-  echo "── T2 / T3 / T7 skipped (SKIP_BROWSER=1)"
+  echo "── T2 / T3 / T7 / list table skipped (SKIP_BROWSER=1)"
 else
   PORT=$(node -e "const server = require('node:net').createServer().listen(0, () => { console.log(server.address().port); server.close(); })")
   NEXT_TELEMETRY_DISABLED=1 ./node_modules/.bin/next start -p "$PORT" > next-start.log 2>&1 &
@@ -120,7 +128,7 @@ else
     if curl -sf "http://127.0.0.1:$PORT/" > /dev/null; then break; fi
     sleep 0.5
   done
-  echo "── T2 / T3 / T7 headless browser"
+  echo "── T2 / T3 / T7 / list table headless browser"
   node browser.mjs "http://127.0.0.1:$PORT"
   kill $SERVER_PID 2>/dev/null || true
 fi

@@ -2,6 +2,7 @@ export { formatIcuPlural, isIcuPlural } from './plural.ts';
 export {
   getTranslationState,
   m,
+  type MarkOptions,
   setTranslations,
   subscribeTranslations,
   type TranslateOptions,

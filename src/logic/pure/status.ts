@@ -1,3 +1,5 @@
+// @translations-ignore-file — the doc examples below are not UI texts
+
 import type { LucideIcon } from 'lucide-react';
 
 /**
@@ -15,10 +17,44 @@ export interface StatusDefinition {
   icon?: LucideIcon;
   /** Hover text (e.g. what the status means). */
   description?: string;
+  /**
+   * Translation context of `label` and `description` (key `<text>__<context>`), for a word that means something else
+   * elsewhere (`Open` as a status vs. as an action). Mark the label with the same context so text exports find the
+   * key: `label: m('Failed', { context: 'import-status' })`.
+   */
+  context?: string;
+}
+
+/** Options of a whole status family. */
+export interface StatusMapOptions {
+  /** Translation context of every definition without its own `context`. */
+  context?: string;
 }
 
 /** A status family: every value of one enum → its badge. Define it once per family and reuse it in rows, cards, details. */
 export type StatusMap<TValue extends string = string> = Readonly<Record<TValue, StatusDefinition>>;
 
-/** Typed identity helper: `defineStatusMap<Campaign['status'] & string>({ RUNNING: { … }, … })` checks completeness. */
-export const defineStatusMap = <TValue extends string>(map: Record<TValue, StatusDefinition>): StatusMap<TValue> => map;
+/**
+ * Typed helper: `defineStatusMap<Item['status'] & string>({ RUNNING: { … }, … })` checks completeness. Without options
+ * it returns the map itself; with a `context` every definition without its own gets it (the definition's wins):
+ *
+ * ```ts
+ * const IMPORT_STATUS = defineStatusMap(
+ *   { FAILED: { label: m('Failed', { context: 'import-status' }), tone: 'danger', icon: CircleX } },
+ *   { context: 'import-status' },
+ * );
+ * ```
+ */
+export const defineStatusMap = <TValue extends string>(
+  map: Record<TValue, StatusDefinition>,
+  options?: StatusMapOptions
+): StatusMap<TValue> => {
+  const context = options?.context;
+  if (!context) return map;
+  const withContext = {} as Record<TValue, StatusDefinition>;
+  for (const value of Object.keys(map) as TValue[]) {
+    const definition = map[value];
+    withContext[value] = definition.context ? definition : { ...definition, context };
+  }
+  return withContext;
+};

@@ -61,6 +61,23 @@ describe('build-i18n-manifest', () => {
     assert.equal(generate(root, '--check').status, 0);
   });
 
+  // The map-level context of defineStatusMap is runtime only: an extractor reads the m() call, so a label rendered with a
+  // context is marked with it (FAILED); an unmarked one (DONE) is recorded without it.
+  it('records the context of m() inside a status map definition (key text__context)', () => {
+    const root = createPackage({
+      'src/a/status.ts':
+        "export const IMPORT_STATUS = defineStatusMap({\n  FAILED: { label: m('Failed', { context: 'import-status' }), tone: 'danger' },\n  DONE: { label: m(\"Done\"), tone: 'success' },\n}, { context: 'import-status' });\n",
+      'i18n/hints.json': '{ "Failed__import-status": "Status of an import.", "Done": "Status of an import." }',
+    });
+    const { status, output } = generate(root);
+    assert.equal(status, 0, output);
+    const manifest = JSON.parse(fs.readFileSync(path.join(root, 'i18n-keys.json'), 'utf8'));
+    assert.deepEqual(manifest.keys, [
+      { key: 'Done', text: 'Done', files: ['a/status.ts'], hint: 'Status of an import.' },
+      { key: 'Failed__import-status', text: 'Failed', context: 'import-status', files: ['a/status.ts'], hint: 'Status of an import.' },
+    ]);
+  });
+
   it('--check fails on a stale manifest and on a key without a hint', () => {
     const root = createPackage({ 'src/a/A.ts': "m('Apple')", 'i18n/hints.json': '{ "Apple": "A fruit." }' });
     assert.equal(generate(root).status, 0);

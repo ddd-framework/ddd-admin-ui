@@ -4,11 +4,13 @@ import type { ReactNode } from 'react';
 
 import { cn } from '../primitives/cn.ts';
 import { EntityListGrid } from './EntityListGrid.tsx';
-import { type EntityListColumn, EntityListTable } from './EntityListTable.tsx';
+import { type EntityListColumn, EntityListTable, type EntityListTableProps } from './EntityListTable.tsx';
 import type { EntityCardRenderer, EntityListDataProps, ListDisplayMode } from './types.ts';
 import type { EntityListSelection } from '../logic/react/useRowSelection.ts';
 
-export interface EntityListBodyProps<TItem, TExtra extends string = never> extends EntityListDataProps<TItem> {
+export interface EntityListBodyProps<TItem, TExtra extends string = never>
+  extends EntityListDataProps<TItem>,
+    Pick<EntityListTableProps<TItem>, 'sort' | 'onSortChange' | 'showRowIndex'> {
   displayMode: ListDisplayMode | TExtra;
   columns: EntityListColumn<TItem>[];
   /** Card of the grid view. Absent → table only (and no view toggle). */
@@ -23,6 +25,13 @@ export interface EntityListBodyProps<TItem, TExtra extends string = never> exten
    * table.
    */
   renderExtraView?: (mode: TExtra, items: TItem[]) => ReactNode;
+  /**
+   * A view that owns its data and its states (e.g. a tree loaded by its own query): drawn in the list card as is,
+   * without the paged list's skeletons, empty and error states and infinite-scroll tail. Returns `undefined` for a mode
+   * it does not own (then `renderExtraView`, then the table apply). While it is shown, the host leaves the toolbar's
+   * search, filters and clear button out when they do not act on it.
+   */
+  renderOwnView?: (mode: TExtra) => ReactNode | undefined;
 }
 
 const isExtraMode = <TExtra extends string>(mode: ListDisplayMode | TExtra): mode is TExtra =>
@@ -41,9 +50,18 @@ export const EntityListBody = <TItem, TExtra extends string = never>({
   skeletonCards,
   selection,
   renderExtraView,
+  renderOwnView,
+  sort,
+  onSortChange,
+  showRowIndex,
   className,
   ...data
 }: EntityListBodyProps<TItem, TExtra>) => {
+  if (isExtraMode(displayMode) && renderOwnView) {
+    const ownView = renderOwnView(displayMode);
+    if (ownView !== undefined) return ownView;
+  }
+  const tableProps = { sort, onSortChange, showRowIndex };
   if (isExtraMode(displayMode) && renderExtraView) {
     return (
       <EntityListGrid
@@ -56,7 +74,16 @@ export const EntityListBody = <TItem, TExtra extends string = never>({
     );
   }
   if (!renderCard) {
-    return <EntityListTable {...data} columns={columns} skeletonRows={skeletonRows} selection={selection} className={className} />;
+    return (
+      <EntityListTable
+        {...data}
+        {...tableProps}
+        columns={columns}
+        skeletonRows={skeletonRows}
+        selection={selection}
+        className={className}
+      />
+    );
   }
   if (displayMode === 'grid') {
     return <EntityListGrid {...data} renderCard={renderCard} skeletonCards={skeletonCards} className={className} />;
@@ -65,6 +92,7 @@ export const EntityListBody = <TItem, TExtra extends string = never>({
     <>
       <EntityListTable
         {...data}
+        {...tableProps}
         columns={columns}
         skeletonRows={skeletonRows}
         selection={selection}

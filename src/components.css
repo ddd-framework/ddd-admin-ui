@@ -127,6 +127,61 @@
     backdrop-filter: blur(12px);
     box-shadow: var(--surface-shadow);
   }
+  /* A list table with column tracks (`EntityListColumn.width`): one CSS grid, every row a subgrid of it, so header and
+     body share the tracks. The table sets `grid-template-columns` (and its minimum width) inline; the header sticks as
+     a whole (a cell's containing block is now its row). Cells centre their content vertically, as table cells do. */
+  table[data-list-tracks] {
+    display: grid;
+  }
+  table[data-list-tracks] > :is(thead, tbody),
+  table[data-list-tracks] > :is(thead, tbody) > tr {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+  table[data-list-tracks] > thead {
+    position: sticky;
+    top: 0;
+    z-index: var(--layer-raised);
+  }
+  table[data-list-tracks] > :is(thead, tbody) > tr > :is(th, td) {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+  }
+  /* Pinned columns (`data-list-pin`, sticky offsets inline): while content scrolls under them they paint the card
+     surface (the row's tint on a selected or hovered row) and the innermost one draws the separating edge. The scroll
+     container carries `data-list-overflow-start` / `-end` while content is hidden past that edge. */
+  [data-list-overflow-start] tbody [data-list-pin='start'],
+  [data-list-overflow-end] tbody [data-list-pin='end'] {
+    background-color: --theme(--color-card);
+  }
+  [data-list-overflow-start] tbody tr:hover > [data-list-pin='start'],
+  [data-list-overflow-end] tbody tr:hover > [data-list-pin='end'] {
+    background-color: color-mix(in oklab, --theme(--color-muted) 50%, --theme(--color-card));
+  }
+  [data-list-overflow-start] tbody tr[data-state='selected'] > [data-list-pin='start'],
+  [data-list-overflow-end] tbody tr[data-state='selected'] > [data-list-pin='end'] {
+    background-color: --theme(--color-muted);
+  }
+  [data-list-overflow-start] [data-list-pin='start'][data-list-pin-edge]::after,
+  [data-list-overflow-end] [data-list-pin='end'][data-list-pin-edge]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    pointer-events: none;
+    background-color: --theme(--color-border);
+  }
+  [data-list-overflow-start] [data-list-pin='start'][data-list-pin-edge]::after {
+    right: -1px;
+    box-shadow: 4px 0 8px color-mix(in oklab, --theme(--color-foreground) 8%, transparent);
+  }
+  [data-list-overflow-end] [data-list-pin='end'][data-list-pin-edge]::before {
+    left: -1px;
+    box-shadow: -4px 0 8px color-mix(in oklab, --theme(--color-foreground) 8%, transparent);
+  }
 }
 
 /* List cards: the toolbar and the filter panel sit straight on the page background — no card background, no rule;
