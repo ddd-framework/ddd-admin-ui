@@ -6,15 +6,20 @@
 */
 @source './';
 
-/* Layer scale. The blocks and primitives stack with `z-(--layer-<name>)`; these are only defaults: zero specificity
-   (`:where`) in the lowest cascade layer (`theme`), so any host declaration of a `--layer-*` variable wins, layered or
-   not. Equal overlay / popover values: a later portal paints on top. */
+/* Layer scale and component defaults. The blocks and primitives stack with `z-(--layer-<name>)`; these are only
+   defaults: zero specificity (`:where`) in the lowest cascade layer (`theme`), so any host declaration of a `--layer-*`
+   or `--segmented-control-*` variable wins, layered or not. Equal overlay / popover values: a later portal paints on
+   top. */
 @layer theme {
   :where(:root) {
     --layer-raised: 10;
     --layer-sticky: 20;
     --layer-overlay: 50;
     --layer-popover: 50;
+    /* SegmentedControl: corner of the track, the options and the indicator (the pill of the other toggles), and the
+       slide of the indicator (no slide with reduced motion). */
+    --segmented-control-radius: 9999px;
+    --segmented-control-duration: 200ms;
   }
 }
 

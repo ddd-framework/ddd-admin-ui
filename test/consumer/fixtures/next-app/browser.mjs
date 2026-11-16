@@ -1,4 +1,4 @@
-// T2, T3, T7 and the sized list table in a headless browser against `next start`.
+// T2, T3, T7, the sized list table, SegmentedControl and the showcase in a headless browser against `next start`.
 // Browser: CHROME_PATH, else the installed Google Chrome (playwright channel "chrome"); no browser download.
 import { chromium } from 'playwright-core';
 
@@ -129,6 +129,18 @@ try {
       sortCycle.join(' '),
     );
 
+    const createdButton = page.getByRole('button', { name: 'Created' });
+    const arrowFirst = await createdButton.evaluate((button) => button.firstElementChild?.tagName.toLowerCase() === 'svg');
+    await createdButton.click();
+    const createdFirst = await page.textContent('#sort');
+    await createdButton.click();
+    await createdButton.click();
+    report(
+      'list: end-aligned sortable header puts the arrow first; sortStart desc starts descending',
+      arrowFirst && createdFirst === 'created:desc' && (await page.textContent('#sort')) === '',
+      `${arrowFirst} ${createdFirst}`,
+    );
+
     await page.setViewportSize({ width: 1024, height: 800 });
     await page.waitForFunction(() => document.querySelector('[data-entity-list-scroll] th[data-list-pin="start"]:nth-child(3)'), null, { timeout: 5_000 }).catch(() => {});
     const medium = await tableState(page);
@@ -161,6 +173,198 @@ try {
     report('list: scrolled, the selection cell stays at the left edge', Math.abs(edges.selectLeft) <= 1, String(edges.selectLeft));
     report('list: scrolled, content is marked under both pinned edges', edges.overflowStart && edges.overflowEnd);
     report('list: no hydration warning or console error', consoleProblems.length === 0, consoleProblems.join(' | '));
+    await page.close();
+  }
+
+  // SegmentedControl (app/segmented): roles, keyboard in both activation modes, RTL, disabled reason, description,
+  // icon-only name and tooltip, drag preview
+  {
+    const consoleProblems = [];
+    const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
+    page.on('console', (message) => {
+      if (message.type() === 'error' || (message.type() === 'warning' && /hydrat/i.test(message.text()))) {
+        consoleProblems.push(`${message.type()}: ${message.text()}`);
+      }
+    });
+    page.on('pageerror', (error) => consoleProblems.push(`pageerror: ${error.message}`));
+    await page.goto(`${baseUrl}/segmented`, { waitUntil: 'networkidle' });
+    await page.waitForFunction(() => document.querySelector('#drag [data-slot="segmented-control-indicator"]'), null, { timeout: 10_000 });
+    const probe = async (id) => page.$eval(`#${id}`, (element) => ({ value: element.dataset.value, changes: element.dataset.changes }));
+    const focusedName = () => page.evaluate(() => document.activeElement?.textContent?.trim().replace(/\d+$/, ''));
+
+    // roles and tab stop
+    const roles = await page.evaluate(() => {
+      const group = document.querySelector('#automatic [role="radiogroup"]');
+      const radios = [...group.querySelectorAll('[role="radio"]')];
+      return {
+        label: group.getAttribute('aria-label'),
+        count: radios.length,
+        checked: radios.filter((radio) => radio.getAttribute('aria-checked') === 'true').length,
+        tabStops: radios.filter((radio) => radio.tabIndex === 0).length,
+        tabStopIsChecked: radios.find((radio) => radio.tabIndex === 0)?.getAttribute('aria-checked') === 'true',
+      };
+    });
+    report(
+      'segmented: radiogroup with radios, exactly one checked, one tab stop on it',
+      roles.label === 'Period' && roles.count === 4 && roles.checked === 1 && roles.tabStops === 1 && roles.tabStopIsChecked,
+      JSON.stringify(roles),
+    );
+
+    // accessibility tree: names and descriptions as a screen reader gets them
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Accessibility.enable');
+    const { nodes } = await cdp.send('Accessibility.getFullAXTree');
+    const radioNamed = (name) => nodes.find((node) => node.role?.value === 'radio' && node.name?.value === name);
+    const week = radioNamed('Week');
+    const month = radioNamed('Month');
+    report('segmented: description announced after the label (aria-describedby)', week?.description?.value === 'Seven days', JSON.stringify(week?.description));
+    report('segmented: the decorative badge is not part of the name', Boolean(week));
+    report('segmented: disabled option announces its reason', month?.description?.value === 'Not enough data yet', JSON.stringify(month?.description));
+    report(
+      'segmented: disabled option is marked disabled',
+      Boolean(month?.properties?.some((property) => property.name === 'disabled' && property.value.value === true)),
+    );
+    report('segmented: icon-only option keeps its label as name', Boolean(radioNamed('Grid view')) && Boolean(radioNamed('Table view')));
+
+    // automatic: arrows / Home / End move and select, skipping the disabled option, wrapping
+    await page.focus('#automatic [role="radio"][aria-checked="true"]');
+    const automaticSteps = [];
+    for (const key of ['ArrowRight', 'ArrowRight', 'Home', 'ArrowLeft', 'End', 'ArrowDown']) {
+      await page.keyboard.press(key);
+      automaticSteps.push(`${key}:${(await probe('automatic-probe')).value}`);
+    }
+    report(
+      'segmented: automatic activation moves and selects, skips the disabled option, wraps',
+      automaticSteps.join(' ') === 'ArrowRight:week ArrowRight:year Home:day ArrowLeft:year End:year ArrowDown:day',
+      automaticSteps.join(' '),
+    );
+    report('segmented: automatic changes fire once per move', (await probe('automatic-probe')).changes === 'week,year,day,year,day');
+
+    // manual: arrows move the focus only; Space / Enter select
+    await page.focus('#manual [role="radio"][aria-checked="true"]');
+    await page.keyboard.press('ArrowRight');
+    const afterArrow = { focused: await focusedName(), ...(await probe('manual-probe')) };
+    await page.keyboard.press('Space');
+    const afterSpace = await probe('manual-probe');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Enter');
+    const afterEnter = await probe('manual-probe');
+    report(
+      'segmented: manual activation — arrows move focus only, Space / Enter select',
+      afterArrow.focused === 'Week' && afterArrow.value === 'day' && afterArrow.changes === '' && afterSpace.value === 'week' && afterEnter.value === 'year' && afterEnter.changes === 'week,year',
+      JSON.stringify({ afterArrow, afterSpace, afterEnter }),
+    );
+
+    // right to left: ArrowLeft goes forward
+    await page.focus('#rtl [role="radio"][aria-checked="true"]');
+    await page.keyboard.press('ArrowLeft');
+    const rtlForward = (await probe('rtl-probe')).value;
+    await page.keyboard.press('ArrowRight');
+    report('segmented: right to left swaps the horizontal arrows', rtlForward === 'week' && (await probe('rtl-probe')).value === 'day', rtlForward);
+
+    // a click on the disabled option changes nothing; hovering shows its reason
+    await page.click('#automatic [role="radio"]:nth-of-type(3)', { force: true });
+    report('segmented: a click on a disabled option changes nothing', (await probe('automatic-probe')).value === 'day');
+    // Radix opens a tooltip on pointer movement over its trigger (and keeps a clicked trigger's tooltip closed until the
+    // pointer leaves): leave, then move over the option in steps until the tooltip with the text shows
+    const tooltipOf = async (selector, text) => {
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        await page.mouse.move(0, 0);
+        const box = await page.locator(selector).boundingBox();
+        await page.mouse.move(box.x + box.width / 2 - 3, box.y + box.height / 2, { steps: 5 });
+        await page.mouse.move(box.x + box.width / 2 + 3, box.y + box.height / 2, { steps: 5 });
+        const shown = await page
+          .waitForFunction(
+            (expected) => [...document.querySelectorAll('[data-slot="tooltip-content"]')].some((tip) => tip.textContent?.includes(expected)),
+            text,
+            { timeout: 2_000 },
+          )
+          .then(() => true, () => false);
+        if (shown) return true;
+      }
+      return false;
+    };
+    report('segmented: disabled option shows its reason as tooltip', await tooltipOf('#automatic button[aria-disabled="true"]', 'Not enough data yet'));
+    report('segmented: icon-only option shows its label as tooltip', await tooltipOf('#icons button[role="radio"]:not([aria-checked="true"])', 'Table view'));
+    await page.mouse.move(0, 0);
+
+    // drag: preview without changes, one change on release; Escape and pointer cancel restore
+    const centre = async (index) =>
+      page.$eval(`#drag [role="radio"]:nth-of-type(${index})`, (element) => {
+        const box = element.getBoundingClientRect();
+        return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+      });
+    const indicatorOver = (index) =>
+      page.evaluate((position) => {
+        const indicator = document.querySelector('#drag [data-slot="segmented-control-indicator"]').getBoundingClientRect();
+        const option = document.querySelectorAll('#drag [role="radio"]')[position - 1].getBoundingClientRect();
+        return Math.abs(indicator.left + indicator.width / 2 - (option.left + option.width / 2)) < 2;
+      }, index);
+    const a = await centre(1);
+    const b = await centre(2);
+    const c = await centre(3);
+    await page.mouse.move(a.x, a.y);
+    await page.mouse.down();
+    await page.mouse.move(b.x, b.y, { steps: 4 });
+    await page.mouse.move(c.x, c.y, { steps: 4 });
+    await page.waitForTimeout(350);
+    const during = { ...(await probe('drag-probe')), previewOnC: await indicatorOver(3) };
+    await page.mouse.up();
+    const released = await probe('drag-probe');
+    report(
+      'segmented: drag previews without a change, then fires one change on release',
+      during.changes === '' && during.value === 'a' && during.previewOnC && released.value === 'c' && released.changes === 'c',
+      JSON.stringify({ during, released }),
+    );
+
+    await page.mouse.move(c.x, c.y);
+    await page.mouse.down();
+    await page.mouse.move(a.x, a.y, { steps: 4 });
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(350);
+    const restoredOnC = await indicatorOver(3);
+    await page.mouse.up();
+    report('segmented: Escape during a drag restores and changes nothing', restoredOnC && (await probe('drag-probe')).changes === 'c');
+
+    await page.mouse.move(c.x, c.y);
+    await page.mouse.down();
+    await page.mouse.move(b.x, b.y, { steps: 4 });
+    await page.evaluate(() =>
+      document.querySelector('#drag [role="radiogroup"]').dispatchEvent(new PointerEvent('pointercancel', { pointerId: 1, bubbles: true, isPrimary: true, pointerType: 'mouse' })),
+    );
+    await page.waitForTimeout(350);
+    const cancelledOnC = await indicatorOver(3);
+    await page.mouse.up();
+    report('segmented: pointer cancel restores and changes nothing', cancelledOnC && (await probe('drag-probe')).changes === 'c');
+
+    report('segmented: no hydration warning or console error', consoleProblems.length === 0, consoleProblems.join(' | '));
+    await page.close();
+  }
+
+  // Showcase (app/showcase): renders light and dark, loads ./notify-sonner through the host's loader, host section last
+  {
+    const consoleProblems = [];
+    const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+    page.on('console', (message) => {
+      if (message.type() === 'error' || (message.type() === 'warning' && /hydrat/i.test(message.text()))) {
+        consoleProblems.push(`${message.type()}: ${message.text()}`);
+      }
+    });
+    page.on('pageerror', (error) => consoleProblems.push(`pageerror: ${error.message}`));
+    await page.goto(`${baseUrl}/showcase`, { waitUntil: 'networkidle' });
+    await page.waitForSelector('[data-showcase-theme="dark"] [data-showcase-loaded="notify-sonner"]', { timeout: 10_000 }).catch(() => {});
+    const state = await page.evaluate(() => ({
+      panes: [...document.querySelectorAll('[data-showcase-theme]')].map((pane) => pane.getAttribute('data-showcase-theme')).join(','),
+      darkBackground: getComputedStyle(document.querySelector('[data-showcase-theme="dark"]')).backgroundColor,
+      lightBackground: getComputedStyle(document.querySelector('[data-showcase-theme="light"]')).backgroundColor,
+      loaded: document.querySelectorAll('[data-showcase-loaded="notify-sonner"]').length,
+      host: document.querySelectorAll('#host-block').length,
+      radios: document.querySelectorAll('[data-showcase] [role="radiogroup"]').length,
+    }));
+    report('showcase: a light and a dark pane in the host theme', state.panes === 'light,dark' && state.darkBackground !== state.lightBackground, JSON.stringify(state));
+    report('showcase: ./notify-sonner loaded lazily through the host loader', state.loaded === 2);
+    report('showcase: the host section renders in both panes', state.host === 2);
+    report('showcase: no hydration warning or console error', consoleProblems.length === 0, consoleProblems.join(' | '));
     await page.close();
   }
 

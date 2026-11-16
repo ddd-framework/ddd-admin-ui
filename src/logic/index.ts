@@ -38,7 +38,7 @@ export type { FormValidationError } from './pure/serverViolations.ts';
 export { defineStatusMap } from './pure/status.ts';
 export type { StatusDefinition, StatusMap, StatusMapOptions, StatusTone } from './pure/status.ts';
 export { formatListSort, nextListSort, parseListSort } from './pure/listSort.ts';
-export type { EntityListSort, ListSortDirection } from './pure/listSort.ts';
+export type { EntityListSort, ListSortCycle, ListSortDirection } from './pure/listSort.ts';
 export {
   computeListTracks,
   hasListTracks,

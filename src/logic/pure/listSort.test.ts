@@ -18,6 +18,34 @@ describe('nextListSort', () => {
   });
 });
 
+describe('nextListSort with a cycle', () => {
+  it('starts descending with start: desc, then ascending, then not sorted', () => {
+    const first = nextListSort(null, 'created', { start: 'desc' });
+    assert.deepEqual(first, { key: 'created', direction: 'desc' });
+    const second = nextListSort(first, 'created', { start: 'desc' });
+    assert.deepEqual(second, { key: 'created', direction: 'asc' });
+    assert.equal(nextListSort(second, 'created', { start: 'desc' }), null);
+  });
+
+  it('never returns to unsorted with required', () => {
+    const descending = nextListSort({ key: 'name', direction: 'asc' }, 'name', { required: true });
+    assert.deepEqual(descending, { key: 'name', direction: 'desc' });
+    assert.deepEqual(nextListSort(descending, 'name', { required: true }), { key: 'name', direction: 'asc' });
+    assert.deepEqual(nextListSort({ key: 'created', direction: 'asc' }, 'created', { start: 'desc', required: true }), {
+      key: 'created',
+      direction: 'desc',
+    });
+  });
+
+  it('starts another column with its own start direction', () => {
+    assert.deepEqual(nextListSort({ key: 'name', direction: 'asc' }, 'created', { start: 'desc' }), { key: 'created', direction: 'desc' });
+  });
+
+  it('keeps the default cycle with an empty cycle', () => {
+    assert.equal(nextListSort({ key: 'name', direction: 'desc' }, 'name', {}), null);
+  });
+});
+
 describe('parseListSort / formatListSort', () => {
   it('round-trips key:direction', () => {
     assert.equal(formatListSort({ key: 'createdTime', direction: 'desc' }), 'createdTime:desc');

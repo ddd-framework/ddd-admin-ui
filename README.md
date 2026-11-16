@@ -22,7 +22,7 @@ pnpm add @mgamadeus/ddd-admin-ui @mgamadeus/ddd-web radix-ui react react-dom luc
 |---|---|---|
 | `./logic` | pure helpers (`formatDate`, `defineStatusMap`, conditions, schemas, `notify`, `runSequential`), React hooks without markup (`useUrlListState`, `useEntityDrawer`, `useRowSelection`, `useEntityTranslations`, …), browser helpers (`prepareImageFile`) | `./i18n` |
 | `./i18n` | the UI text store (`m`, `translateText`, `setTranslations`), `useTranslate`, `<Translate>`, number / date formats of the UI locale, server-message translation | — |
-| `./primitives` | buttons, inputs, selects, dialogs, sheets, popovers, menus, tooltips, tables, badges, `cn`, the portal container | `./i18n` |
+| `./primitives` | buttons, inputs, selects, dialogs, sheets, popovers, menus, tooltips, tables, badges, `SegmentedControl`, `cn`, the portal container | `./i18n` |
 | `./list` | entity list card, toolbar, search, filters, table, grid, load-more, status badge, cells, multi-select, combobox, bulk bar | logic, i18n, primitives |
 | `./page` | page header and frame, `EntityListPage`, detail shell and header, tabs, section header, definition list, page toolbar, editable card, status callout, entity metadata | logic, i18n, primitives; from list only `EmptyValue`, `EntityListEmpty`, `EntityListCard` |
 | `./form` | `Form`, `FormField`, `FormSection`, `FormActions`, `FormDrawer`, `FormHeader`, `FormWrapper`, `FormJumpBar`, `FormErrors`, `FormSubmitButton`, `useConfirmDialog` | logic, i18n, primitives; from page only `DetailHeader`, `EntityMetadata` |
@@ -32,6 +32,7 @@ pnpm add @mgamadeus/ddd-admin-ui @mgamadeus/ddd-web radix-ui react react-dom luc
 | `./provider` | `AdminUiProvider`, `useAdminUi`, `defaultStorageKey` | logic, i18n, primitives; types only from media and translations |
 | `./next` | Next.js adapters: `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useListViewParam`, the one URL writer (`queueSearchParamsWrite`) | logic, provider; the only entry importing `next/*` |
 | `./notify-sonner` | `sonnerNotifications` (the notification adapter on `sonner`) and its `Toaster` | logic; the only entry importing `sonner` |
+| `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE` | logic, i18n, primitives, list, page, form, translations, media, glass; never `./next` or `./notify-sonner` |
 | `./theme.css`, `./components.css` | the Tailwind theme binding and the structural CSS of the blocks | — |
 | `./tokens.json`, `./i18n-keys.json` | the host contract (colour roles, properties, layers, data attributes) and the text manifest | — |
 
@@ -113,7 +114,9 @@ It reads the host's `node_modules` (npm and pnpm layouts) and the folders above 
    [`tokens.json`](./tokens.json): the 31 colour roles, `--nav-h`, `--content-max`, `--radius`, the surface and glass
    alphas and shadows, `--glass-control-shadow`. Dark mode is a `.dark` class on an ancestor; the default border
    colour is the `border` role. `components.css` sets the four `--layer-*` defaults (`raised` 10, `sticky` 20,
-   `overlay` 50, `popover` 50) with zero specificity in the lowest cascade layer, so any host value wins. Check a built
+   `overlay` 50, `popover` 50) and the two optional properties of `SegmentedControl` (`--segmented-control-radius`
+   9999px, `--segmented-control-duration` 200ms) with zero specificity in the lowest cascade layer, so any host value
+   wins. Check a built
    stylesheet against the contract:
 
    ```sh
@@ -177,6 +180,30 @@ const STATUS = defineStatusMap({ ACTIVE: { label: 'Active', tone: 'success' } })
 Client components (`DateCell`, `EntityListTable`, `Form`, …) render from server components as long as they get no
 function props there.
 
+## Showcase
+
+`./showcase` is a development page, not a screen block: mount it on a route of the host, below `AdminUiProvider`, to
+see every block in the host's theme and tokens, light and dark side by side (each pane's dialogs and menus open inside
+it).
+
+```tsx
+'use client';
+import { Showcase } from '@mgamadeus/ddd-admin-ui/showcase';
+
+export const ShowcaseScreen = () => (
+  <Showcase
+    // only a host with the optional peer sonner passes it; without it the section says it is skipped
+    loadNotifySonner={() => import('@mgamadeus/ddd-admin-ui/notify-sonner')}
+    sections={[{ id: 'host', title: 'Host blocks', content: <HostBlocks /> }]}
+  />
+);
+```
+
+It needs none of the optional peers: `./notify-sonner` loads only through `loadNotifySonner` (lazily, skipped when the
+import fails), `./next` is described, never imported. `themes` limits the panes, `omit` leaves package sections out.
+Its texts are developer-facing English and not part of `i18n-keys.json`. `SHOWCASE_COVERAGE` lists per entry the
+components it draws and why the others are not drawn alone; the package's checks compare it with the exports.
+
 A list rendered on the server hydrates without a mismatch: the stored grid/table view (`useListViewParam`) and the
 saved filters of a list (`useUrlListState` with an adapter's `restore`) are read from browser storage only after
 hydration, and applied in the render right after it. A list that mounts on the client (no server HTML) reads them in
@@ -196,7 +223,7 @@ the context reaches the renderer separately, e.g. as `StatusDefinition.context` 
 `context:` is a string literal, and `<Translate context="…">text</Translate>`; the key is `<text>__<context>`. A
 context held in a variable, or only on the map, is invisible to an extractor, so each label carries its literal.
 
-The package ships its texts as [`i18n-keys.json`](./i18n-keys.json) (`./i18n-keys.json`): every key with its text,
+The package ships its texts (all entries except `./showcase`) as [`i18n-keys.json`](./i18n-keys.json) (`./i18n-keys.json`): every key with its text,
 context, translator hint and the files that use it, sorted by key. A host's text export merges this manifest instead of
 scanning the package (one usage per key, the hints with the host's own hint precedence). `ddd-admin-ui-i18n-manifest
 --check` verifies that the installed package's manifest matches its built files (`--dir <package>` checks another
@@ -224,7 +251,7 @@ pnpm install
 pnpm typecheck
 pnpm test                       # unit tests beside the sources, script tests and a failing fixture per check-package rule
 pnpm build                      # tsc → dist, declaration specifiers, stylesheets, manifests and shipped scripts
-pnpm test:render                # after the build: list tables without the optional props render as in 0.1.0-rc.2
+pnpm test:render                # after the build: list snapshot (as in 0.1.0-rc.2), status contexts, the showcase
 node scripts/check-package.mjs --dir .
 pnpm pack --pack-destination "$TMPDIR" && test/consumer/run.sh "$TMPDIR"/mgamadeus-ddd-admin-ui-*.tgz pnpm "$TMPDIR/consumer-pnpm"
 ```
@@ -234,7 +261,7 @@ pnpm pack --pack-destination "$TMPDIR" && test/consumer/run.sh "$TMPDIR"/mgamade
 | `node scripts/build.mjs` (`pnpm build`) | removes `dist`, `tsc -p tsconfig.build.json` (one JS and declaration file per source file, directives kept, `.js` specifiers), rewrites the declarations' specifiers to `.js`, copies CSS, JSON and the shipped scripts into `dist` |
 | `node scripts/check-package.mjs --dir <package root or extracted tarball>` | the 13 package rules: exports and bins, directives, specifiers, no app alias, deny list (`--deny a,b` or `CHECK_PACKAGE_DENY`; `--require-deny-list` on release), declared dependencies, entry edges and reach, module state once, `files` and `sideEffects`, declarations in a strict consumer, no tests, fresh text manifest, tokens |
 | `node scripts/tokens-utilities.mjs [--write]` | checks (or regenerates) the `utilities` lists of `tokens.json` from the source |
-| `pnpm test:render` | server-renders list tables, bodies and badges from the build: without the optional table props the markup equals `test/consumer/fixtures/plain/list-snapshot.html` (taken from 0.1.0-rc.2); a status map's translation context reaches `StatusBadge` |
+| `pnpm test:render` | server-renders list tables, bodies and badges from the build: without the optional table props the markup equals `test/consumer/fixtures/plain/list-snapshot.html` (taken from 0.1.0-rc.2); a status map's translation context reaches `StatusBadge`; the showcase renders (light, dark, every section) and its coverage list matches the exports |
 | `node scripts/build-i18n-manifest.mjs [--check]` (`pnpm i18n:manifest`) | regenerates `i18n-keys.json` from the source and `i18n/hints.json`; run it after changing a text or the version |
 | `node scripts/check-tokens.mjs <css> [tokens.json]` | the host check above (shipped as `ddd-admin-ui-check-tokens`) |
 | `node scripts/check-radix.mjs [host folder]` | the Radix copy check above (shipped as `ddd-admin-ui-check-radix`) |

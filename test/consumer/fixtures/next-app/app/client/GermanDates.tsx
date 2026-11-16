@@ -2,10 +2,10 @@
 
 // T2: a client page sets German translations, then renders a date cell, a translated text, a number and a list block.
 import { useState } from 'react';
-import { formatUiNumber, setTranslations, useTranslate } from '@mgamadeus/ddd-admin-ui/i18n';
+import { formatUiNumber, useTranslate } from '@mgamadeus/ddd-admin-ui/i18n';
 import { DateCell, EntityListEmpty } from '@mgamadeus/ddd-admin-ui/list';
 
-setTranslations('de', 'FORMAL', { 'Clear search': 'Suche zurücksetzen' });
+import '../germanUi';
 
 export function GermanDates() {
   const { t } = useTranslate();

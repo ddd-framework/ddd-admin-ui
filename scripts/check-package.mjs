@@ -263,6 +263,8 @@ export function checkPackage(packageDirectory, options = {}) {
       page: ['logic', 'i18n', 'primitives', 'list'],
       primitives: ['i18n'],
       provider: ['logic', 'i18n', 'primitives'],
+      // the development page: every block entry, never an entry with an optional peer (./next, ./notify-sonner)
+      showcase: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'translations', 'media', 'glass'],
       translations: ['logic', 'i18n', 'primitives', 'form'],
     };
     const TYPE_ONLY = { provider: ['media', 'translations'] };

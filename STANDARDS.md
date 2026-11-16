@@ -13,7 +13,7 @@ Where the names below come from (setup and the entry list: [`README.md`](./READM
 | `@mgamadeus/ddd-admin-ui/page` | `EntityListPage`, `PageToolbar`, `ExportButton`, `AddEntityButton`, `EntityDetailShell`, `SectionHeader`, `DefinitionList`, `EditableCard`, `IconValue`, `IconValueRow`, `PageSections`, `CardGrid`, `PageFrame`, `PageHeader` |
 | `@mgamadeus/ddd-admin-ui/form` | `FormDrawer`, `FormActions`, `FormField`, `FormSection`, `useConfirmDialog` |
 | `@mgamadeus/ddd-admin-ui/glass` | `QuickFilterPills`, `CollapsibleCard`, `GlassGroup`, `ActionRow` |
-| `@mgamadeus/ddd-admin-ui/primitives` | `Button`, `Card`, `CardContent` |
+| `@mgamadeus/ddd-admin-ui/primitives` | `Button`, `Card`, `CardContent`, `SegmentedControl` |
 | `@mgamadeus/ddd-admin-ui/next` | `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useListViewParam` |
 
 Every screen renders below `AdminUiProvider`.
@@ -200,9 +200,12 @@ const columns: EntityListColumn<Project>[] = [
   scrolls like the others. The selection column and the row index always pin in a table that uses tracks, pins or the
   row index. A pinned cell paints the card surface and its edge only while content scrolls under it.
 - **Sort.** `sortKey` makes the header a button (with `aria-sort` on the sorted header); a click moves the sort on: not
-  sorted → ascending → descending → not sorted (`null`: the request's default order). The table never sorts rows
-  itself; the screen maps the key to its request. One sort at a time; keep it in the URL list state as one value
-  (`formatListSort` / `parseListSort`, `key:asc`).
+  sorted → ascending → descending → not sorted (`null`: the request's default order). `sortStart: 'desc'` on a column
+  starts it descending (dates: newest first); `sortRequired` on the table never returns to unsorted (the third click
+  goes back to the first direction). An end-aligned sortable header puts the arrow before the label, so the label lines
+  up with the numbers. The table never sorts rows itself; the screen maps the key to its request. One sort at a time;
+  keep it in the URL list state as one value (`formatListSort` / `parseListSort`, `key:asc`; `nextListSort` takes the
+  same cycle).
 - **Row index.** `showRowIndex`: a leading `#` column, 1-based among the loaded rows.
 - `align: 'center' | 'end'` aligns header and cells (numbers and actions `end`).
 
@@ -431,3 +434,26 @@ const entity = id ? (query.currentData?.supplier ?? null) : null;   // currentDa
 - **Confirm**: the drawer asks through the package dialog; a host with its own confirmation service passes
   `confirm={hostConfirm}` (stable function, same Radix copy). The same prop exists on the translatable fields.
 - One column inside the drawer (≤ 760 px): no `md:grid-cols-2` form grids.
+
+## 13. One value out of a few — `SegmentedControl`
+
+| Need | Use |
+|---|---|
+| switch what one area shows, without own panels or routes (a period, a scope, a chart metric, a view mode) | `SegmentedControl` (`./primitives`) |
+| sections of an entity with their own content or route | `EntityTabs` / `EntityDetailShell` tabs / `SectionHeader tabs` |
+| quick filters on the clouds, "All" allowed, counts | `QuickFilterPills` |
+| several values on at once (languages, weekdays) | `ChipToggleGroup` (or `MultiSelect` when the set grows) |
+| the list's grid / table switch | `EntityListViewToggle` |
+
+```tsx
+<SegmentedControl aria-label="Period" value={period} onValueChange={setPeriod} options={[
+  { value: 'week', label: 'Week' },
+  { value: 'month', label: 'Month', description: 'Calendar month' },
+  { value: 'year', label: 'Year', disabled: !hasYearData, disabledReason: 'Not enough data yet' },
+]} />
+```
+
+- Always exactly one value; 2–5 short options. More, or long labels: a select.
+- `activation="manual"` when a change is expensive (loads data): arrows move the focus, Space / Enter select.
+- `iconOnly` keeps the label as the accessible name and shows it as a tooltip (needs `AdminUiProvider`).
+- A disabled option says why (`disabledReason`); a count goes in `badge` and, when it matters, in `description`.

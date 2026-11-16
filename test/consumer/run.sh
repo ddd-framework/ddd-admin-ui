@@ -2,7 +2,9 @@
 # Installs a packed @mgamadeus/ddd-admin-ui tarball into fresh consumer projects and checks it as a host would.
 #
 #   tarball   check-package on the extracted tarball (rules 1–13, the strict consumer compile included)
-#   plain     a project without next, sonner and recharts:
+#   plain     a project without the optional peers (next, sonner, tailwindcss):
+#         the showcase renders (light, dark, every section, a host section), lists every exported component, skips the
+#         lazily loaded ./notify-sonner section, and bundles for the browser (esbuild) without reaching an optional peer
 #     T4  Node imports of every entry but ./next and ./notify-sonner (those two fail on the missing peer) and a
 #         strict tsc (skipLibCheck false) with moduleResolution bundler and nodenext
 #     T3  (server render) bound fields from ./translations and ./media find the form of ./form
@@ -56,7 +58,8 @@ install_into() {
   echo '{"name":"consumer","private":true,"type":"module"}' > "$dir/package.json"
   if [ "$PM" = pnpm ]; then
     # Freshly released packages of this framework may be younger than pnpm's minimum release age.
-    printf "minimumReleaseAgeExclude:\n  - '@mgamadeus/*'\n" > "$dir/pnpm-workspace.yaml"
+    # esbuild (the showcase bundle check) runs its install script; pnpm refuses unlisted build scripts.
+    printf "minimumReleaseAgeExclude:\n  - '@mgamadeus/*'\nallowBuilds:\n  esbuild: true\n" > "$dir/pnpm-workspace.yaml"
     (cd "$dir" && pnpm add "$TARBALL" "$@")
   else
     (cd "$dir" && npm install --no-audit --no-fund "$TARBALL" "$@")
@@ -68,10 +71,10 @@ TYPES=("typescript@^6" @types/react @types/react-dom @types/node)
 
 echo "── plain project ($PM, $DDD_WEB_SPEC, $LUCIDE_SPEC)"
 PLAIN="$WORK/plain"
-install_into "$PLAIN" "${PEERS[@]}" "${TYPES[@]}"
+install_into "$PLAIN" "${PEERS[@]}" "${TYPES[@]}" esbuild
 cp "$HERE/fixtures/plain/"* "$PLAIN/"
 cd "$PLAIN"
-node -e "for (const name of ['next','sonner','recharts']) { try { require.resolve(name); console.error(name + ' is installed'); process.exit(1); } catch {} }"
+node -e "for (const name of ['next','sonner','tailwindcss','recharts']) { try { require.resolve(name); console.error(name + ' is installed'); process.exit(1); } catch {} }"
 node -p "'installed: ddd-web ' + require('@mgamadeus/ddd-web/package.json').version + ', lucide-react ' + require('lucide-react/package.json').version"
 echo "── T4 Node imports"
 node smoke.mjs
@@ -98,6 +101,9 @@ echo "── list tables without the optional props: same DOM as 0.1.0-rc.2"
 node list-snapshot.mjs
 echo "── status map translation context"
 node status-context.mjs
+echo "── showcase without the optional peers: server render, coverage, lazy ./notify-sonner skipped, browser bundle"
+node showcase-render.mjs
+node showcase-build.mjs
 echo "── shipped i18n manifest"
 if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-i18n-manifest --check; else pnpm exec ddd-admin-ui-i18n-manifest --check; fi
 

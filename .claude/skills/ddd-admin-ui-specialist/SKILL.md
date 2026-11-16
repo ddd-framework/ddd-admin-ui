@@ -1,6 +1,6 @@
 ---
 name: ddd-admin-ui-specialist
-description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend the package. Covers entries and import matrix, host setup (AdminUiProvider above every page, theme.css and components.css, tokens.json with ddd-admin-ui-check-tokens, one Radix copy with ddd-admin-ui-check-radix), list pages with URL filters, grid/table view, selection and bulk actions, wide tables (column tracks, pins, sortable headers, row index), detail shells, form drawers with conditions, server errors and the unsaved-changes guard, translations on full locale::style keys, media fields, toasts, layers, the portal container, the text manifest i18n-keys.json and text contexts, server vs client files, and adding a block. Use when building or reviewing a list, detail or form screen with these blocks, a page fails with Tooltip must be used within TooltipProvider, a wide table squeezes or needs pinned columns or sorting, a colour, layer or overlay misbehaves, translations lose a style variant, URL filters get lost, or a block is added."
+description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend the package. Covers entries, import matrix, host setup (AdminUiProvider above every page, theme.css and components.css, tokens.json with ddd-admin-ui-check-tokens, one Radix copy with ddd-admin-ui-check-radix), list pages with URL filters, grid/table view, selection and bulk actions, wide tables (column tracks, pins, sortable headers, row index), the segmented control, the showcase, detail shells, form drawers, server errors, the unsaved-changes guard, translations on full locale::style keys, media fields, toasts, layers, the portal container, i18n-keys.json and text contexts, server vs client files, and adding a block. Use when building or reviewing a list, detail or form screen with these blocks, a page fails with Tooltip must be used within TooltipProvider, a wide table squeezes or needs pinned columns or sorting, a colour, layer or overlay misbehaves, translations lose a style variant, URL filters get lost, or a block is added."
 metadata:
   author: mgamadeus
   version: 0.1.0
@@ -22,7 +22,9 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | checkbox column and bulk actions | `useRowSelection` + `EntityListBulkBar` + `runSequentialWithSummary` | logic, list |
 | status pill of an enum | `defineStatusMap` + `StatusBadge` (a `context` for an ambiguous word) | logic, list |
 | a wide table: column tracks, pinned columns, sortable headers, row numbers | `EntityListColumn` `width` / `minWidth` / `pin` / `align` / `sortKey` + `sort` / `onSortChange` / `showRowIndex` | list |
-| the sort in the URL | `formatListSort` / `parseListSort` / `nextListSort` (`key:asc`) | logic |
+| the sort in the URL | `formatListSort` / `parseListSort` / `nextListSort` (`key:asc`; `sortStart`, `sortRequired`) | logic |
+| one value out of a few (period, scope, view) | `SegmentedControl` (not tabs, not toggle chips) | primitives |
+| see every block in the host theme, light and dark | `Showcase` on a development route | showcase |
 | a view that loads its own data (a tree) in the list card | `EntityListBody.renderOwnView` | list |
 | an entity detail with tabs | `EntityDetailShell` (+ `SectionHeader`, `DefinitionList`) | page |
 | a form page or drawer | `Form` + `FormField` / `FormSection` + `FormActions`, in `FormDrawer` | form |
@@ -57,6 +59,11 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
   px); the table then scrolls sideways inside its card instead of squeezing. `pin: 'end'` always holds; `pin: 'start'`
   only while the table overflows by 120 px or more and the pinned columns stay under a third of the visible width. The
   table never sorts rows: map `sortKey` to the request. Sizes are measured after hydration only.
+- **SegmentedControl** is a radio group: exactly one value, one tab stop, arrows select (`activation="manual"`: Space /
+  Enter). Tooltips (`iconOnly`, `disabledReason`) need `AdminUiProvider`. Corner and slide come from
+  `--segmented-control-radius` / `--segmented-control-duration`.
+- **Showcase** needs no optional peer: pass `loadNotifySonner={() => import('@mgamadeus/ddd-admin-ui/notify-sonner')}`
+  only when sonner is installed. A new block gets a showcase sample and a `SHOWCASE_COVERAGE` entry, or the checks fail.
 - **Text contexts are literals.** `m('Failed', { context: 'import-status' })`: extractors (the package manifest and
   host exports) read the text and the context as string literals; a context only on the status map or in a variable is
   not exported. Put the same context on the definition or the map so `StatusBadge` translates with it.

@@ -10,7 +10,7 @@ import type { EntityListSelection } from '../logic/react/useRowSelection.ts';
 
 export interface EntityListBodyProps<TItem, TExtra extends string = never>
   extends EntityListDataProps<TItem>,
-    Pick<EntityListTableProps<TItem>, 'sort' | 'onSortChange' | 'showRowIndex'> {
+    Pick<EntityListTableProps<TItem>, 'sort' | 'onSortChange' | 'sortRequired' | 'showRowIndex'> {
   displayMode: ListDisplayMode | TExtra;
   columns: EntityListColumn<TItem>[];
   /** Card of the grid view. Absent → table only (and no view toggle). */
@@ -53,6 +53,7 @@ export const EntityListBody = <TItem, TExtra extends string = never>({
   renderOwnView,
   sort,
   onSortChange,
+  sortRequired,
   showRowIndex,
   className,
   ...data
@@ -61,7 +62,7 @@ export const EntityListBody = <TItem, TExtra extends string = never>({
     const ownView = renderOwnView(displayMode);
     if (ownView !== undefined) return ownView;
   }
-  const tableProps = { sort, onSortChange, showRowIndex };
+  const tableProps = { sort, onSortChange, sortRequired, showRowIndex };
   if (isExtraMode(displayMode) && renderExtraView) {
     return (
       <EntityListGrid

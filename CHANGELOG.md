@@ -3,6 +3,34 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x prereleases.
 
+## 0.1.0-rc.4
+
+- `SegmentedControl` in `./primitives`: one value out of a few. Props `value`, `onValueChange`, `options` (`value`,
+  `label`, `icon`, `badge`, `description`, `disabled`, `disabledReason`, `className`), `aria-label` (required),
+  `height` (32 / 36 / 40 / 48), `iconOnly`, `fullWidth`, `selection` (`surface` / `primary`), `tone`
+  (`default` / `onBrand`), `activation` (`automatic` / `manual`), `className`; types `SegmentedControlProps`,
+  `SegmentedControlOption`. A radio group (`role="radiogroup"`, `role="radio"` + `aria-checked`, one tab stop): arrows,
+  Home and End move and select (manual: move the focus, Space / Enter select), right to left aware, disabled options
+  skipped with their reason announced and shown as a tooltip, `description` announced through `aria-describedby`,
+  `badge` hidden from assistive technology, `iconOnly` keeps the label as name and tooltip. A sliding indicator,
+  measured after layout, without motion under reduced motion; at least a 44 px target on coarse pointers. Pressing and
+  dragging across the options previews the choice; the value changes once on release; Escape or a cancelled pointer
+  restores it; a touch drag starts only after a sideways movement. New optional properties in `tokens.json`:
+  `--segmented-control-radius` (9999px) and `--segmented-control-duration` (200ms), defaults in `components.css`.
+- New entry `./showcase`: `Showcase` draws every block of the package in the host's theme, light and dark, one section
+  per entry, with the host's sections appended (`sections`, `themes`, `omit`); `SHOWCASE_COVERAGE` lists the drawn
+  components per entry. It needs none of the optional peers: `./notify-sonner` loads lazily through `loadNotifySonner`
+  and is skipped without it or when the import fails; `./next` is described, never imported. Its texts stay out of
+  `i18n-keys.json` (the manifest builder skips the entry). `check-package` allows the entry the block entries only.
+- List table sort: `EntityListColumn.sortStart` (`'asc'` / `'desc'`, the first direction when the column becomes
+  sorted) and `sortRequired` on `EntityListTable` / `EntityListBody` (never unsorted: the third click returns to the
+  first direction). `nextListSort(current, key, { start, required })` takes the same cycle (new type `ListSortCycle`);
+  calls without it keep the old cycle. A sortable header with `align: 'end'` puts the arrow before the label.
+- Consumer checks: SegmentedControl in the browser (roles, both activation modes, right to left, disabled reason,
+  description, icon-only name and tooltip, drag preview with one change on release and none on Escape or cancel); the
+  showcase rendered on the server, bundled for the browser without optional peers and hydrated in the Next app; the
+  sort cycle with `sortStart` on an end-aligned column. The fixture app sets its UI language in one shared module.
+
 ## 0.1.0-rc.3
 
 - List table, all optional (a table without the new props renders the same DOM and classes as 0.1.0-rc.2, proven by

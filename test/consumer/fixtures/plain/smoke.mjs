@@ -3,7 +3,7 @@
 const expectations = {
   logic: ['formatDate', 'formatDateTime', 'defineStatusMap', 'notify', 'setNotificationAdapter', 'toFormSubmitError', 'useUrlListState', 'useEntityTranslations', 'prepareImageFile', 'nextListSort', 'parseListSort', 'formatListSort', 'computeListTracks', 'resolveListPins'],
   i18n: ['setTranslations', 'translateText', 'm', 'useTranslate', 'Translate', 'translationKeyOf', 'formatUiNumber', 'translateServerMessage'],
-  primitives: ['cn', 'Button', 'Dialog', 'DialogContent', 'Sheet', 'SheetContent', 'Select', 'SelectContent', 'Tooltip', 'TooltipProvider'],
+  primitives: ['cn', 'SegmentedControl', 'Button', 'Dialog', 'DialogContent', 'Sheet', 'SheetContent', 'Select', 'SelectContent', 'Tooltip', 'TooltipProvider'],
   list: ['EntityListCard', 'EntityListToolbar', 'EntityListBody', 'EntityListTable', 'EntityListEmpty', 'DateCell', 'StatusBadge', 'FilterPanel'],
   page: ['PageFrame', 'PageHeader', 'EntityListPage', 'EntityDetailShell', 'StatusCallout'],
   form: ['Form', 'FormField', 'FormActions', 'FormDrawer', 'FormErrors', 'FormSubmitButton', 'useConfirmDialog'],
@@ -11,6 +11,7 @@ const expectations = {
   media: ['FormMediaItemField', 'MediaItemField', 'MediaItemPickerDialog', 'MediaPreview'],
   glass: ['GlassPill', 'QuickFilterPills', 'CollapsibleCard', 'GlassGroup', 'ActionRow'],
   provider: ['AdminUiProvider', 'useAdminUi', 'defaultStorageKey'],
+  showcase: ['Showcase', 'SHOWCASE_COVERAGE'],
 };
 
 let failed = false;

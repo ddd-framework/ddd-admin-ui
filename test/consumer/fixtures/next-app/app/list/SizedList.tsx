@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { EntityListBody, type EntityListColumn, EntityListToolbar, StatusBadge } from '@mgamadeus/ddd-admin-ui/list';
 import { defineStatusMap, type EntityListSort, formatListSort, useRowSelection } from '@mgamadeus/ddd-admin-ui/logic';
 import { EntityListPage } from '@mgamadeus/ddd-admin-ui/page';
+import '../germanUi';
 
 interface Row {
   id: number;
@@ -44,7 +45,7 @@ const COLUMNS: EntityListColumn<Row>[] = [
   { id: 'phone', header: 'Phone', cell: row => row.phone, width: '1fr', minWidth: 160 },
   { id: 'country', header: 'Country', cell: row => row.country, width: '1fr', minWidth: 140 },
   { id: 'notes', header: 'Notes', cell: row => row.notes, width: '2fr', minWidth: 240 },
-  { id: 'created', header: 'Created', cell: row => row.created, width: '140px', sortKey: 'created' },
+  { id: 'created', header: 'Created', cell: row => row.created, width: '140px', sortKey: 'created', sortStart: 'desc', align: 'end' },
   { id: 'status', header: 'Status', cell: row => <StatusBadge value={row.status} map={STATUS} />, width: '120px' },
   {
     id: 'actions',

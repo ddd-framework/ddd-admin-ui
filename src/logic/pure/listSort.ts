@@ -7,13 +7,28 @@ export interface EntityListSort {
   direction: ListSortDirection;
 }
 
+/** How one column's sort cycles. */
+export interface ListSortCycle {
+  /** The first direction when the column becomes sorted (default `'asc'`). */
+  start?: ListSortDirection;
+  /** Never unsorted: after the second direction the cycle returns to the first one instead of `null`. */
+  required?: boolean;
+}
+
 /**
- * The sort after a click on the header of `key`: not sorted → ascending → descending → not sorted (`null`: the host
- * applies its default order). A click on another column starts that column ascending.
+ * The sort after a click on the header of `key`: not sorted → `start` (default ascending) → the other direction → not
+ * sorted (`null`: the host applies its default order), or back to `start` with `required`. A click on another column
+ * starts that column with its `start` direction.
  */
-export const nextListSort = (current: EntityListSort | null | undefined, key: string): EntityListSort | null => {
-  if (!current || current.key !== key) return { key, direction: 'asc' };
-  return current.direction === 'asc' ? { key, direction: 'desc' } : null;
+export const nextListSort = (
+  current: EntityListSort | null | undefined,
+  key: string,
+  cycle: ListSortCycle = {}
+): EntityListSort | null => {
+  const start = cycle.start ?? 'asc';
+  if (!current || current.key !== key) return { key, direction: start };
+  if (current.direction === start) return { key, direction: start === 'asc' ? 'desc' : 'asc' };
+  return cycle.required ? { key, direction: start } : null;
 };
 
 /**

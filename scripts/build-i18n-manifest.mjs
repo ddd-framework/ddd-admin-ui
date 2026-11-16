@@ -12,7 +12,8 @@
 //
 // Scan rules (the same as the host export): string literals passed to `t()`, `translateText()` and `m()` with an
 // optional `{ context }`, and `<Translate context>…</Translate>` elements; a file containing the marker
-// `@translations-ignore-file` is skipped; tests are skipped. Key = text, or `${text}__${context}` with a context.
+// `@translations-ignore-file` is skipped; tests are skipped; the `showcase` entry (a development page with
+// developer-facing English) is skipped. Key = text, or `${text}__${context}` with a context.
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -40,6 +41,9 @@ const CONTEXT = new RegExp(String.raw`context\s*:\s*(${LITERAL})`);
 const ELEMENT = /<Translate\b([^>]*)>([^<{}]+)<\/Translate>/g;
 const ELEMENT_CONTEXT = /context=(?:"([^"]*)"|'([^']*)'|\{\s*['"]([^'"]*)['"]\s*\})/;
 const IGNORE_MARKER = '@translations-ignore-file';
+/** Entry folders whose texts are not UI texts of the blocks: the showcase is a development page. */
+const IGNORED_ENTRIES = ['showcase'];
+const inIgnoredEntry = name => IGNORED_ENTRIES.some(entry => name.startsWith(`${entry}/`));
 
 const unquote = literal =>
   literal
@@ -60,7 +64,8 @@ const sourceFiles = () => {
   if (sourceMode) {
     return walk(sourceRoot)
       .filter(path => /\.(ts|tsx)$/.test(path) && !/\.test\.tsx?$/.test(path) && !path.endsWith('.d.ts'))
-      .map(path => ({ path, name: toPosix(relative(sourceRoot, path)) }));
+      .map(path => ({ path, name: toPosix(relative(sourceRoot, path)) }))
+      .filter(file => !inIgnoredEntry(file.name));
   }
   // built JS keeps the calls and the comments; the path is the dist path with the source's extension (`.ts` or
   // `.tsx`, read from the file's source map)
@@ -72,7 +77,8 @@ const sourceFiles = () => {
       const map = existsSync(mapPath) ? JSON.parse(readFileSync(mapPath, 'utf8')) : null;
       const extension = /\.tsx?$/.exec(map?.sources?.[0] ?? '')?.[0] ?? '.js';
       return { path, name: toPosix(relative(distRoot, path)).replace(/\.js$/, extension) };
-    });
+    })
+    .filter(file => !inIgnoredEntry(file.name));
 };
 
 const scan = ({ path, name }) => {

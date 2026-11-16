@@ -78,6 +78,25 @@ describe('build-i18n-manifest', () => {
     ]);
   });
 
+  it('skips the showcase entry (developer-facing English), in the source and in the built JS', () => {
+    const root = createPackage({
+      'src/a/A.ts': "m('Apple')",
+      'src/showcase/Showcase.tsx': "t('Only in the showcase'); m('Also showcase')",
+      'dist/a/A.js': "m('Apple')",
+      'dist/showcase/Showcase.js': "t('Only in the showcase')",
+      'i18n/hints.json': '{ "Apple": "A fruit." }',
+      'dist/i18n/hints.json': '{ "Apple": "A fruit." }',
+    });
+    for (const args of [[], ['--built']]) {
+      const { status, output } = generate(root, ...args);
+      assert.equal(status, 0, output);
+    }
+    for (const file of ['i18n-keys.json', 'dist/i18n-keys.json']) {
+      const manifest = JSON.parse(fs.readFileSync(path.join(root, file), 'utf8'));
+      assert.deepEqual(manifest.keys.map((entry: { key: string }) => entry.key), ['Apple'], file);
+    }
+  });
+
   it('--check fails on a stale manifest and on a key without a hint', () => {
     const root = createPackage({ 'src/a/A.ts': "m('Apple')", 'i18n/hints.json': '{ "Apple": "A fruit." }' });
     assert.equal(generate(root).status, 0);

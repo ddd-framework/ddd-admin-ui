@@ -20,7 +20,8 @@ import {
   type UrlStateAdapter,
 } from '@mgamadeus/ddd-admin-ui/logic';
 import { formatUiNumber, m, setTranslations, translateText, useTranslate, type WritingStyle } from '@mgamadeus/ddd-admin-ui/i18n';
-import { Button, cn, DialogContent, SelectContent, SheetContent, TooltipProvider } from '@mgamadeus/ddd-admin-ui/primitives';
+import { Button, cn, DialogContent, SegmentedControl, type SegmentedControlProps, SelectContent, SheetContent, TooltipProvider } from '@mgamadeus/ddd-admin-ui/primitives';
+import { Showcase, type ShowcaseProps, type ShowcaseSection } from '@mgamadeus/ddd-admin-ui/showcase';
 import { DateCell, EntityListBody, EntityListToolbar, StatusBadge, type DateCellProps, type EntityListColumn } from '@mgamadeus/ddd-admin-ui/list';
 import { EntityDetailShell, PageFrame, type PageFrameProps } from '@mgamadeus/ddd-admin-ui/page';
 import { Form, FormErrors, FormField, type FormErrorsProps } from '@mgamadeus/ddd-admin-ui/form';
@@ -71,8 +72,18 @@ export const contextStatuses = defineStatusMap(
   { context: 'import-status' },
 );
 export const className: string = cn('p-2', 'p-4');
+export const segmentedProps: SegmentedControlProps<'day' | 'week'> = {
+  'aria-label': 'Period',
+  value: 'day',
+  onValueChange: () => {},
+  options: [{ value: 'day', label: 'Day' }, { value: 'week', label: 'Week', disabled: true, disabledReason: 'Not yet' }],
+  height: 36,
+  activation: 'manual',
+};
+export const hostSection: ShowcaseSection = { id: 'host', title: 'Host', content: null };
+export const showcaseProps: ShowcaseProps = { sections: [hostSection], themes: ['dark'], omit: ['next'] };
 export const components = [
-  Button, DialogContent, SelectContent, SheetContent, TooltipProvider, DateCell, EntityListBody, EntityListToolbar,
+  Button, SegmentedControl, Showcase, DialogContent, SelectContent, SheetContent, TooltipProvider, DateCell, EntityListBody, EntityListToolbar,
   StatusBadge, EntityDetailShell, PageFrame, Form, FormErrors, FormField, FormTranslatableInput, TranslatableInput,
   FormMediaItemField, MediaItemPickerDialog, GlassPill, QuickFilterPills, AdminUiProvider,
 ];

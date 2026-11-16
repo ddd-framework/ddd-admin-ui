@@ -9,7 +9,7 @@ import { cn } from '../primitives/cn.ts';
 import { EntityListLoadMore } from './EntityListLoadMore.tsx';
 import { EntityListStatus } from './EntityListStatus.tsx';
 import type { EntityListDataProps } from './types.ts';
-import { type EntityListSort, nextListSort } from '../logic/pure/listSort.ts';
+import { type EntityListSort, type ListSortDirection, nextListSort } from '../logic/pure/listSort.ts';
 import {
   computeListTracks,
   hasListTracks,
@@ -53,6 +53,8 @@ export interface EntityListColumn<TItem> {
    * `onSortChange`. The table never sorts rows itself: the host maps the key to its request.
    */
   sortKey?: string;
+  /** The first direction when this column becomes sorted (default `'asc'`; e.g. `'desc'` for dates, newest first). */
+  sortStart?: ListSortDirection;
 }
 
 export interface EntityListTableProps<TItem> extends EntityListDataProps<TItem> {
@@ -72,8 +74,13 @@ export interface EntityListTableProps<TItem> extends EntityListDataProps<TItem> 
   stickyHeaderTop?: string;
   /** The current sort (`null`: the host's default order). Shown on the header of the column with that `sortKey`. */
   sort?: EntityListSort | null;
-  /** Called with the next sort when a sortable header is clicked: not sorted → ascending → descending → `null`. */
+  /**
+   * Called with the next sort when a sortable header is clicked: not sorted → the column's `sortStart` (ascending by
+   * default) → the other direction → `null` (or back to `sortStart` with `sortRequired`).
+   */
   onSortChange?: (sort: EntityListSort | null) => void;
+  /** The list is always sorted: a sorted column's third click returns to its first direction instead of `null`. */
+  sortRequired?: boolean;
   /** A leading `#` column: the 1-based position of the row among the loaded rows. Pinned with the selection column. */
   showRowIndex?: boolean;
 }
@@ -156,12 +163,16 @@ const SortHeaderButton = ({
   label,
   direction,
   onClick,
+  iconFirst,
 }: {
   label: ReactNode;
   direction: 'asc' | 'desc' | undefined;
   onClick: () => void;
+  /** An end-aligned column: the arrow before the label, so the label shares the right edge with the numbers. */
+  iconFirst: boolean;
 }) => {
   const Icon = direction === 'asc' ? ArrowUp : direction === 'desc' ? ArrowDown : ArrowUpDown;
+  const icon = <Icon aria-hidden className={cn('size-3.5 shrink-0', !direction && 'opacity-50')} />;
   return (
     <button
       type="button"
@@ -171,8 +182,9 @@ const SortHeaderButton = ({
         direction && 'text-foreground'
       )}
     >
+      {iconFirst && icon}
       <span>{label}</span>
-      <Icon aria-hidden className={cn('size-3.5 shrink-0', !direction && 'opacity-50')} />
+      {!iconFirst && icon}
     </button>
   );
 };
@@ -277,6 +289,7 @@ export const EntityListTable = <TItem,>({
   stickyHeaderTop,
   sort,
   onSortChange,
+  sortRequired = false,
   showRowIndex = false,
 }: EntityListTableProps<TItem>) => {
   const { t } = useTranslate();
@@ -423,7 +436,10 @@ export const EntityListTable = <TItem,>({
                       <SortHeaderButton
                         label={label}
                         direction={direction}
-                        onClick={() => onSortChange(nextListSort(sort, column.sortKey as string))}
+                        onClick={() =>
+                          onSortChange(nextListSort(sort, column.sortKey as string, { start: column.sortStart, required: sortRequired }))
+                        }
+                        iconFirst={column.align === 'end'}
                       />
                     ) : (
                       label
