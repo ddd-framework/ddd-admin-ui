@@ -224,36 +224,57 @@ export interface FilterDateRangeProps {
   to: string;
   onFromChange: (value: string) => void;
   onToChange: (value: string) => void;
+  /** Inline (a toolbar row, a table header): no visible label; the two fields keep accessible names. */
+  hideLabel?: boolean;
+  /** Accessible name of the first field (default "<label> from"). */
+  fromLabel?: string;
+  /** Accessible name of the second field (default "<label> to"). */
+  toLabel?: string;
+  className?: string;
 }
 
 /** Two calendar-day bounds (`YYYY-MM-DD`); each bound limits the other. Build the filter with `ge` / `le`. */
-export const FilterDateRange = ({ label, from, to, onFromChange, onToChange }: FilterDateRangeProps) => {
+export const FilterDateRange = ({
+  label,
+  from,
+  to,
+  onFromChange,
+  onToChange,
+  hideLabel = false,
+  fromLabel,
+  toLabel,
+  className,
+}: FilterDateRangeProps) => {
   const id = useId();
   const { t } = useTranslate();
+  const fields = (
+    <div className={cn('flex items-center gap-1.5', hideLabel && className)} role={hideLabel ? 'group' : undefined} aria-label={hideLabel ? t(label) : undefined}>
+      <Input
+        id={id}
+        type="date"
+        value={from}
+        max={to || undefined}
+        onChange={event => onFromChange(event.target.value)}
+        aria-label={fromLabel ? t(fromLabel) : t('%label% from', { replacements: { label } })}
+        className={FILTER_DATE_CONTROL_CLASS}
+      />
+      <span className="text-muted-foreground" aria-hidden>
+        –
+      </span>
+      <Input
+        type="date"
+        value={to}
+        min={from || undefined}
+        onChange={event => onToChange(event.target.value)}
+        aria-label={toLabel ? t(toLabel) : t('%label% to', { replacements: { label } })}
+        className={FILTER_DATE_CONTROL_CLASS}
+      />
+    </div>
+  );
+  if (hideLabel) return fields;
   return (
-    <FilterField label={label} htmlFor={id}>
-      <div className="flex items-center gap-1.5">
-        <Input
-          id={id}
-          type="date"
-          value={from}
-          max={to || undefined}
-          onChange={event => onFromChange(event.target.value)}
-          aria-label={t('%label% from', { replacements: { label } })}
-          className={FILTER_DATE_CONTROL_CLASS}
-        />
-        <span className="text-muted-foreground" aria-hidden>
-          –
-        </span>
-        <Input
-          type="date"
-          value={to}
-          min={from || undefined}
-          onChange={event => onToChange(event.target.value)}
-          aria-label={t('%label% to', { replacements: { label } })}
-          className={FILTER_DATE_CONTROL_CLASS}
-        />
-      </div>
+    <FilterField label={label} htmlFor={id} className={className}>
+      {fields}
     </FilterField>
   );
 };

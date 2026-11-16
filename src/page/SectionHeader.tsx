@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { useTranslate } from '../i18n/index.ts';
 import { cn } from '../primitives/cn.ts';
 import { type EntityTab, EntityTabs } from './EntityTabs.tsx';
-import type { PageLinkComponent } from './links.tsx';
+import type { PageLinkComponent } from '../primitives/link.tsx';
 
 export interface SectionHeaderProps {
   /** The section title; a two-tone title wraps its brand part in `<em>` (`Top <em>riders</em>`). */

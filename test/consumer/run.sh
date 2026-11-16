@@ -5,6 +5,7 @@
 #   plain     a project without the optional peers (next, sonner, tailwindcss):
 #         the showcase renders (light, dark, every section, a host section), lists every exported component, skips the
 #         lazily loaded ./notify-sonner section, and bundles for the browser (esbuild) without reaching an optional peer
+#         links rendered by blocks go through AdminUiProvider.linkComponent and keep sticky parameters (withStickyParams)
 #     T4  Node imports of every entry but ./next and ./notify-sonner (those two fail on the missing peer) and a
 #         strict tsc (skipLibCheck false) with moduleResolution bundler and nodenext
 #     T3  (server render) bound fields from ./translations and ./media find the form of ./form
@@ -20,6 +21,8 @@
 #         without a hydration warning
 #     T3  (browser) server violations on a translatable and a media field are named by the fields' labels (the label
 #         registry of ./form is one context across ./form, ./translations and ./media)
+#         (browser) Combobox: out-of-order server answers, picked label outside the results, reset on close, keyboard
+#         through groups and the create row, clearing; SegmentedControl incl. a 358 px container; the showcase at 390 px
 #         (browser) a list table with column tracks, pins, sort and a row index: tracks, the pin guard at three widths,
 #         at 390 px the table scrolls inside its card and the page does not, the sort cycle, no hydration warning
 #     T7  (browser) a select inside a dialog inside a sheet, and inside a host overlay at z-index 10000 with
@@ -104,6 +107,8 @@ node status-context.mjs
 echo "── showcase without the optional peers: server render, coverage, lazy ./notify-sonner skipped, browser bundle"
 node showcase-render.mjs
 node showcase-build.mjs
+echo "── links through the provider's link component keep sticky parameters"
+node sticky-links.mjs
 echo "── shipped i18n manifest"
 if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-i18n-manifest --check; else pnpm exec ddd-admin-ui-i18n-manifest --check; fi
 

@@ -11,7 +11,7 @@ import { EntityListEmpty } from '../list/EntityListEmpty.tsx';
 import { DetailHeader } from './DetailHeader.tsx';
 import { EntityMetadata } from './EntityMetadata.tsx';
 import { type EntityTab, EntityTabs } from './EntityTabs.tsx';
-import { AnchorLink, type PageLinkComponent } from './links.tsx';
+import { type PageLinkComponent, useLinkComponent } from '../primitives/link.tsx';
 
 export interface EntityDetailBack {
   /** The list route (`/worlds`). */
@@ -59,7 +59,7 @@ export const EntityDetailShell = ({
   fallbackTitle,
   description,
   back,
-  linkComponent: Link = AnchorLink,
+  linkComponent,
   actions,
   metadata,
   tabs,
@@ -72,6 +72,7 @@ export const EntityDetailShell = ({
   className,
 }: EntityDetailShellProps) => {
   const { t } = useTranslate();
+  const Link = useLinkComponent(linkComponent);
   if (error) {
     return (
       <div className={cn('w-full', className)}>

@@ -5,8 +5,13 @@ import { useCallback, useMemo, useState } from 'react';
 /** What `EntityListTable` needs to draw the checkbox column (the `selection` prop). */
 export interface EntityListSelection<TItem> {
   isItemSelected: (item: TItem) => boolean;
-  /** False for a row without a usable key (it gets no checkbox). */
+  /** False for a row without a usable key (it gets no checkbox) or one `isSelectable` refuses. */
   isItemSelectable: (item: TItem) => boolean;
+  /**
+   * True for a row with a key that `isSelectable` refuses: the table draws its checkbox disabled (a row without a key
+   * still gets none). Absent: no such rows.
+   */
+  isItemSelectionDisabled?: (item: TItem) => boolean;
   setItemSelected: (item: TItem, selected: boolean) => void;
   /** The header checkbox: every loaded row, some of them, or none. */
   allLoadedState: boolean | 'indeterminate';
@@ -26,6 +31,11 @@ export interface UseRowSelectionOptions<TItem, TKey extends string | number> {
   resetKey?: string;
   disabled?: boolean;
   rowLabel?: (item: TItem) => string;
+  /**
+   * False for a row that cannot be selected now (e.g. one without the right to delete): its checkbox is disabled, and
+   * "Select all loaded", the header state and the count take only selectable rows. Keep it stable (`useCallback`).
+   */
+  isSelectable?: (item: TItem) => boolean;
 }
 
 export interface RowSelection<TItem, TKey extends string | number> extends EntityListSelection<TItem> {
@@ -51,6 +61,7 @@ export const useRowSelection = <TItem, TKey extends string | number>({
   resetKey = '',
   disabled,
   rowLabel,
+  isSelectable,
 }: UseRowSelectionOptions<TItem, TKey>): RowSelection<TItem, TKey> => {
   const [state, setState] = useState<{ resetKey: string; keys: ReadonlySet<TKey> }>({ resetKey, keys: EMPTY });
   const keys = state.resetKey === resetKey ? state.keys : (EMPTY as ReadonlySet<TKey>);
@@ -68,19 +79,19 @@ export const useRowSelection = <TItem, TKey extends string | number>({
     const list: TKey[] = [];
     for (const item of items) {
       const key = getKey(item);
-      if (key !== null && key !== undefined && key !== '') list.push(key);
+      if (key !== null && key !== undefined && key !== '' && (isSelectable?.(item) ?? true)) list.push(key);
     }
     return list;
-  }, [items, getKey]);
+  }, [items, getKey, isSelectable]);
 
   const selectedKeys = useMemo(() => loadedKeys.filter(key => keys.has(key)), [loadedKeys, keys]);
   const selectedItems = useMemo(
     () =>
       items.filter(item => {
         const key = getKey(item);
-        return key !== null && key !== undefined && keys.has(key);
+        return key !== null && key !== undefined && keys.has(key) && (isSelectable?.(item) ?? true);
       }),
-    [items, getKey, keys]
+    [items, getKey, keys, isSelectable]
   );
 
   const setSelected = useCallback(
@@ -113,15 +124,23 @@ export const useRowSelection = <TItem, TKey extends string | number>({
     clear,
     isItemSelected: item => {
       const key = getKey(item);
-      return key !== null && key !== undefined && keys.has(key);
+      return key !== null && key !== undefined && keys.has(key) && (isSelectable?.(item) ?? true);
     },
     isItemSelectable: item => {
       const key = getKey(item);
-      return key !== null && key !== undefined && key !== '';
+      return key !== null && key !== undefined && key !== '' && (isSelectable?.(item) ?? true);
     },
+    ...(isSelectable
+      ? {
+          isItemSelectionDisabled: (item: TItem) => {
+            const key = getKey(item);
+            return key !== null && key !== undefined && key !== '' && !isSelectable(item);
+          },
+        }
+      : {}),
     setItemSelected: (item, selected) => {
       const key = getKey(item);
-      if (key !== null && key !== undefined && key !== '') setSelected(key, selected);
+      if (key !== null && key !== undefined && key !== '' && (isSelectable?.(item) ?? true)) setSelected(key, selected);
     },
     allLoadedState,
     setAllLoadedSelected,

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { cn } from "./cn.ts"
+import { AnchorLink, LinkComponentContext } from "./link.tsx"
 import { ChevronRight, MoreHorizontal } from "lucide-react"
 import { Slot } from "radix-ui"
 import { useTranslate } from "../i18n/index.ts"
@@ -41,6 +42,21 @@ function BreadcrumbLink({
 }: React.ComponentProps<"a"> & {
   asChild?: boolean
 }) {
+  // the host's link component (AdminUiProvider.linkComponent), when one is set: a crumb navigates like every other link
+  const HostLink = React.useContext(LinkComponentContext)
+  if (!asChild && props.href && HostLink !== AnchorLink) {
+    const { href, children, ...rest } = props
+    return (
+      <Slot.Root
+        data-slot="breadcrumb-link"
+        className={cn("transition-colors hover:text-foreground", className)}
+        {...rest}
+      >
+        <HostLink href={href}>{children}</HostLink>
+      </Slot.Root>
+    )
+  }
+
   const Comp = asChild ? Slot.Root : "a"
 
   return (

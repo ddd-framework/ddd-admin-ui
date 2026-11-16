@@ -7,6 +7,8 @@ import {
   BooleanCell,
   ChipToggleGroup,
   Combobox,
+  type ComboboxOption,
+  CopyButton,
   DateCell,
   EmptyValue,
   EntityListBody,
@@ -34,7 +36,7 @@ import {
   Tag,
   YES_NO_FILTER_OPTIONS,
 } from '../../list/index.ts';
-import { defineStatusMap, type EntityListSort, type ListDisplayMode, useRowSelection } from '../../logic/index.ts';
+import { defineStatusMap, type EntityListSort, type ListDisplayMode, useLatestSearch, useRowSelection } from '../../logic/index.ts';
 import { Input } from '../../primitives/index.ts';
 import { Sample, Samples } from './PrimitivesShowcase.tsx';
 
@@ -68,6 +70,77 @@ const OPTIONS = [
   { value: 'gamma', label: 'Gamma' },
 ];
 
+const GROUPED_OPTIONS: ComboboxOption[] = [
+  { value: 'north', label: 'North', group: 'Regions', badge: <Tag size="sm">12</Tag> },
+  { value: 'south', label: 'South', group: 'Regions', badge: <Tag size="sm">3</Tag> },
+  { value: 'ops', label: 'Operations', group: 'Teams', description: 'Day-to-day running' },
+  { value: 'sales', label: 'Sales', group: 'Teams' },
+];
+
+const CITIES = ['Amsterdam', 'Athens', 'Berlin', 'Bern', 'Brussels', 'Lisbon', 'London', 'Madrid', 'Oslo', 'Paris', 'Prague', 'Rome', 'Vienna'];
+
+/** A fake server: answers after a delay that is longer for shorter terms, so answers arrive out of order. */
+const searchCities = (term: string, signal: AbortSignal) =>
+  new Promise<ComboboxOption[]>((resolve, reject) => {
+    const timer = setTimeout(
+      () => resolve(CITIES.filter(city => city.toLowerCase().includes(term.toLowerCase())).map(city => ({ value: city.toLowerCase(), label: city }))),
+      Math.max(150, 900 - term.length * 250)
+    );
+    signal.addEventListener('abort', () => {
+      clearTimeout(timer);
+      reject(new DOMException('aborted', 'AbortError'));
+    });
+  });
+
+const ComboboxSamples = () => {
+  const [plain, setPlain] = useState('beta');
+  const [grouped, setGrouped] = useState('');
+  const [created, setCreated] = useState<ComboboxOption[]>([]);
+  const [tag, setTag] = useState('');
+  const [city, setCity] = useState('rome');
+  const cities = useLatestSearch(searchCities, CITIES.slice(0, 5).map(name => ({ value: name.toLowerCase(), label: name })));
+  return (
+    <>
+      <Combobox aria-label="Combobox" options={OPTIONS} value={plain} onChange={setPlain} className="w-56" />
+      <Combobox
+        aria-label="Grouped, clearable"
+        placeholder="Region or team"
+        options={GROUPED_OPTIONS}
+        value={grouped}
+        onChange={setGrouped}
+        clearable
+        className="w-56"
+        popoverClassName="w-72"
+      />
+      <Combobox
+        aria-label="With create"
+        placeholder="Tag"
+        options={[...OPTIONS, ...created]}
+        value={tag}
+        onChange={setTag}
+        onRequestCreate={term => {
+          const option = { value: term.toLowerCase(), label: term };
+          setCreated(previous => [...previous, option]);
+          setTag(option.value);
+        }}
+        className="w-56"
+      />
+      <Combobox
+        aria-label="Server search"
+        placeholder="City"
+        options={cities.results}
+        onSearch={cities.onSearch}
+        isSearching={cities.isSearching}
+        selectedOption={{ value: 'rome', label: 'Rome' }}
+        value={city}
+        onChange={setCity}
+        clearable
+        className="w-56"
+      />
+    </>
+  );
+};
+
 const COLUMNS: EntityListColumn<ShowcaseRow>[] = [
   { id: 'image', header: 'Image', cell: () => <ImageCell src={null} alt="" />, className: 'w-16' },
   { id: 'id', header: 'ID', cell: row => <IdCell id={row.id} copyable />, className: 'w-24' },
@@ -85,6 +158,10 @@ const SIZED_COLUMNS: EntityListColumn<ShowcaseRow>[] = [
   { id: 'status', header: 'Status', cell: row => <StatusBadge value={row.status} map={SHOWCASE_STATUS} />, width: '140px' },
   { id: 'created', header: 'Created', cell: row => <DateCell value={row.created} />, width: '180px', sortKey: 'created', align: 'end' },
 ];
+
+/** Failed rows cannot be selected in the showcase (a disabled checkbox; select all skips them). */
+const isRowSelectable = (row: ShowcaseRow) => row.status !== 'FAILED';
+const rowClassName = (row: ShowcaseRow) => (row.status === 'PAUSED' ? 'text-muted-foreground' : undefined);
 
 const renderCard = ({ item }: { item: ShowcaseRow }) => (
   <article className="surface space-y-2 rounded-2xl p-4">
@@ -104,9 +181,8 @@ export const ListShowcase = () => {
   const [displayMode, setDisplayMode] = useState<ListDisplayMode>('table');
   const [sort, setSort] = useState<EntityListSort | null>({ key: 'name', direction: 'asc' });
   const [chips, setChips] = useState<string[]>(['alpha']);
-  const [combo, setCombo] = useState('beta');
   const [multi, setMulti] = useState<string[]>(['alpha', 'gamma']);
-  const selection = useRowSelection({ items: SHOWCASE_ROWS, getKey: row => row.id });
+  const selection = useRowSelection({ items: SHOWCASE_ROWS, getKey: row => row.id, isSelectable: isRowSelectable });
   const activeFilterCount = status.length + (single ? 1 : 0) + (text ? 1 : 0);
   const clear = () => {
     setQuery('');
@@ -153,6 +229,7 @@ export const ListShowcase = () => {
           renderCard={renderCard}
           selection={selection}
           rowAction={() => null}
+          rowClassName={rowClassName}
         />
       </EntityListCard>
 
@@ -189,6 +266,7 @@ export const ListShowcase = () => {
           <EntityListLoadMore hasMore isFetchingMore onLoadMore={() => {}} />
           <EntityListEmpty message="No results" icon={<Inbox />} onClearSearch={() => {}} />
           <EntityListEmpty message="Could not load" tone="error" />
+          <EntityListEmpty message="Nothing linked yet" size="compact" icon={<Inbox />} action={<CopyButton value="compact" label="Copy text" />} />
         </Sample>
         <Sample title="StatusBadge, Tag, cells">
           <StatusBadge value="ACTIVE" map={SHOWCASE_STATUS} />
@@ -205,12 +283,18 @@ export const ListShowcase = () => {
           <DateCell value="2026-03-04" format="date" />
           <BooleanCell value={false} showFalse />
           <EmptyValue />
+          <span className="group inline-flex items-center gap-1 text-sm">
+            https://example.com/share/42
+            <CopyButton value="https://example.com/share/42" label="Copy link" reveal="hover" notify />
+          </span>
+          <CopyButton value="ABC-123" label="Copy code" notify="Code copied" />
         </Sample>
         <Sample title="Pickers">
           <SearchField value={query} onChange={setQuery} placeholder="SearchField" aria-label="SearchField" />
           <ChipToggleGroup aria-label="Chips" options={OPTIONS} value={chips} onChange={setChips} />
-          <Combobox aria-label="Combobox" options={OPTIONS} value={combo} onChange={setCombo} className="w-56" />
+          <ComboboxSamples />
           <MultiSelect aria-label="MultiSelect" options={OPTIONS} value={multi} onChange={setMulti} className="w-72" />
+          <FilterDateRange label="Created" hideLabel from={from} to={to} onFromChange={setFrom} onToChange={setTo} fromLabel="Created after" toLabel="Created before" />
         </Sample>
       </Samples>
     </div>

@@ -25,3 +25,4 @@ export * from './listSurface.ts';
 export * from './fieldSurface.ts';
 export * from './textarea.tsx';
 export * from './segmented-control.tsx';
+export * from './link.tsx';

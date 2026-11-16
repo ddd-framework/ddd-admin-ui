@@ -21,6 +21,8 @@ export interface EntityListPageProps {
   isRefetching?: boolean;
   /** The list body, usually an `EntityListTable`. */
   children: ReactNode;
+  /** Drawn as a specimen inside another page (see `PageFrame.asSpecimen`): no `data-page-frame`, no full-height frame. */
+  asSpecimen?: boolean;
   className?: string;
 }
 
@@ -41,9 +43,11 @@ export const EntityListPage = ({
   toolbar,
   isRefetching = false,
   children,
+  asSpecimen,
   className,
 }: EntityListPageProps) => (
   <PageFrame
+    asSpecimen={asSpecimen}
     title={title}
     description={description}
     actions={headerActions}

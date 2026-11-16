@@ -100,14 +100,14 @@ import {
 
 /** A labelled sample inside a section. */
 export const Sample = ({ title, children }: { title: string; children: ReactNode }) => (
-  <div className="space-y-2">
+  <div className="min-w-0 space-y-2">
     <h3 className="text-xs font-bold tracking-[0.08em] text-muted-foreground uppercase">{title}</h3>
     <div className="flex flex-wrap items-start gap-3">{children}</div>
   </div>
 );
 
 /** A grid of samples. */
-export const Samples = ({ children }: { children: ReactNode }) => <div className="grid gap-8 lg:grid-cols-2">{children}</div>;
+export const Samples = ({ children }: { children: ReactNode }) => <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-2">{children}</div>;
 
 const SegmentedSamples = () => {
   const [period, setPeriod] = useState('week');

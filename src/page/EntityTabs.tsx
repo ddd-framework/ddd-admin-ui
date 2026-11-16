@@ -4,7 +4,7 @@ import { type ReactNode, useState } from 'react';
 
 import { useTranslate } from '../i18n/index.ts';
 import { cn } from '../primitives/cn.ts';
-import { AnchorLink, type PageLinkComponent } from './links.tsx';
+import { type PageLinkComponent, useLinkComponent } from '../primitives/link.tsx';
 
 export interface EntityTab {
   id: string;
@@ -65,12 +65,13 @@ export const EntityTabs = ({
   activeId,
   currentPath,
   onSelect,
-  linkComponent: Link = AnchorLink,
+  linkComponent,
   variant = 'segmented',
   align = 'start',
   className,
 }: EntityTabsProps) => {
   const { t } = useTranslate();
+  const Link = useLinkComponent(linkComponent);
   const size = TAB_CLASS[variant];
   // The clicked route tab is active at once (the switch must not wait for the page); the route match
   // takes over again once the path has changed.

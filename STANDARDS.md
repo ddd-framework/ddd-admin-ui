@@ -108,6 +108,7 @@ const selection = useRowSelection({
   getKey: task => toNumericId(task.id),  // a host helper
   resetKey: filterString ?? '',            // new filters → empty selection
   disabled: busy,
+  isSelectable: canDelete,                 // optional: other rows get a disabled checkbox, "select all" skips them
 });
 
 const handleBulkDelete = async () => {
@@ -168,7 +169,10 @@ const columns: EntityListColumn<Project>[] = [
 - Dates: `DateCell` in tables, `formatDateTime` / `formatDate` in text. Never raw strings, never
   `toLocaleString()`, never `new Date(value)`.
 - Numbers and ids: the host's formatters (one per kind), never ad-hoc `toFixed` calls.
-- Copy next to a value outside the ID column: a copy button on `useCopyToClipboard`.
+- Copy next to a value outside the ID column: `CopyButton` (`value`, `label`, `reveal="hover"` in rows, `notify` for a
+  toast).
+- A row that looks different (archived, muted): `rowClassName={(item, index) => …}` on the table or body.
+- Small lists inside a card or section: `EntityListEmpty size="compact"` (one inline line, no 64 px block).
 
 ### Wide tables: tracks, pins, sort, row index
 
@@ -254,6 +258,13 @@ Always with an icon.
 
 Single searchable select (not a filter): `Combobox`.
 
+- Long or server-side lists: `onSearch` + `isSearching` with `useLatestSearch` (the block debounces, never shows a stale
+  term's options, resets the search on close); a picked value outside the current results passes `selectedOption`.
+- `clearable` for an optional value (a clear control; picking the picked option clears it); without it a pick is kept.
+  An option whose value is `''` and means something ("No parent") stays an ordinary option.
+- Headings with `group`, a count or status after the label with `badge`, a "Create “…”" row with `onRequestCreate`.
+- A date range in a toolbar row or table header: `FilterDateRange hideLabel` with `fromLabel` / `toLabel`.
+
 ## 8. Detail screens — `EntityDetailShell`
 
 Every entity detail uses the shell: back + centred title + description + actions, `EntityMetadata` (ID, Created,
@@ -301,6 +312,12 @@ Inside a tab:
   ]} />
 </CardContent></Card>
 ```
+
+A summary card or side panel lists facts as divided rows, label left and value right: `layout="rows"`.
+
+Every link a block renders (tabs, the back link, the Add button, breadcrumb links) goes through the host's link component, set once as
+`AdminUiProvider.linkComponent` (a block's own `linkComponent` prop still wins). A host with sticky search parameters
+wraps its router link with `withStickyParams(href, names, currentSearch)`.
 
 Create screens: no `metadata` id yet → the strip renders nothing. Edit screens outside a shell keep
 `<EntityMetadata id={…} changeHistory={…} />` right under their `FormHeader`.
@@ -433,6 +450,8 @@ const entity = id ? (query.currentData?.supplier ?? null) : null;   // currentDa
 - A list hosting two drawers passes its own `editKey` / `createKey`.
 - **Confirm**: the drawer asks through the package dialog; a host with its own confirmation service passes
   `confirm={hostConfirm}` (stable function, same Radix copy). The same prop exists on the translatable fields.
+  `ConfirmOptions.description` may be a React node; the package's own confirmations always pass plain text, so a
+  service that renders text only can show them.
 - One column inside the drawer (≤ 760 px): no `md:grid-cols-2` form grids.
 
 ## 13. One value out of a few — `SegmentedControl`
@@ -456,4 +475,9 @@ const entity = id ? (query.currentData?.supplier ?? null) : null;   // currentDa
 - Always exactly one value; 2–5 short options. More, or long labels: a select.
 - `activation="manual"` when a change is expensive (loads data): arrows move the focus, Space / Enter select.
 - `iconOnly` keeps the label as the accessible name and shows it as a tooltip (needs `AdminUiProvider`).
+- In a row with form controls use `height={36}` (the height of a select trigger).
+- On a phone the control keeps its size and scrolls inside itself (the selected and the focused option stay in view);
+  with more than three options or long labels prefer `fullWidth` with short labels, or a select.
+- Labels are English UI texts, translated by the control (`context` for an ambiguous word, marked as literal
+  `m('Open', { context: 'filter' })`); already translated text (names from the server) passes `translate: false`.
 - A disabled option says why (`disabledReason`); a count goes in `badge` and, when it matters, in `description`.

@@ -6,6 +6,7 @@ import type { NotificationAdapter } from '../logic/pure/notify.ts';
 import type { EntityDrawerUrlAdapter } from '../logic/pure/entityDrawer.ts';
 import type { UrlStateAdapter } from '../logic/pure/urlListState.ts';
 import type { MediaUploadAdapter } from '../media/types.ts';
+import type { PageLinkComponent } from '../primitives/link.tsx';
 import type { MarkdownEditorRenderArgs } from '../translations/TranslatableMarkdown.tsx';
 
 export type { NotificationAdapter, NotifyAction, NotifyOptions } from '../logic/pure/notify.ts';
@@ -58,6 +59,11 @@ export interface AdminUiProviderProps {
    * may still set them. Absent = none.
    */
   preserveSearchParams?: readonly string[];
+  /**
+   * The app's router link for every block that renders a link (tabs, back links, the Add button); a block's own
+   * `linkComponent` prop still wins. Wrap the router link with `withStickyParams` to keep sticky search parameters.
+   */
+  linkComponent?: PageLinkComponent;
 }
 
 export interface AdminUiContextValue extends Required<Pick<AdminUiProviderProps, 'storageKey'>> {

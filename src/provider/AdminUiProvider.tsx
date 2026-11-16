@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useMemo } from 'react';
 
 import { setTranslations } from '../i18n/store.ts';
 import { setNotificationAdapter } from '../logic/pure/notify.ts';
+import { LinkComponentProvider } from '../primitives/link.tsx';
 import { PortalContainerProvider } from '../primitives/portal.tsx';
 import { TooltipProvider } from '../primitives/tooltip.tsx';
 import { AdminUiContext } from './adminUiContext.ts';
@@ -27,8 +28,8 @@ const TranslationBridge = ({ adapter }: { adapter: TranslationAdapter }) => {
 /**
  * The one provider of the package: registers the host's notification adapter, feeds the translation store from a
  * host store, renders the tooltip provider and the portal container, and hands the host adapters (storage keys,
- * router hooks, upload, markdown editor, AI translation) to packaged screens through `useAdminUi()`. Blocks never read
- * it: they take adapters as props.
+ * router hooks, upload, markdown editor, AI translation) to packaged screens through `useAdminUi()`, and sets the link
+ * component of every block (`linkComponent`). Blocks never read `useAdminUi()`: they take adapters as props.
  */
 export const AdminUiProvider = ({
   children,
@@ -43,6 +44,7 @@ export const AdminUiProvider = ({
   renderMarkdownEditor,
   aiTranslation,
   preserveSearchParams,
+  linkComponent,
 }: AdminUiProviderProps) => {
   // A layout effect: registered before any child's ordinary effect can raise a toast.
   useLayoutEffect(() => {
@@ -68,7 +70,9 @@ export const AdminUiProvider = ({
     <AdminUiContext.Provider value={value}>
       {translations && <TranslationBridge adapter={translations} />}
       <TooltipProvider delayDuration={tooltipDelayMs}>
-        <PortalContainerProvider container={portalContainer}>{children}</PortalContainerProvider>
+        <PortalContainerProvider container={portalContainer}>
+          {linkComponent ? <LinkComponentProvider linkComponent={linkComponent}>{children}</LinkComponentProvider> : children}
+        </PortalContainerProvider>
       </TooltipProvider>
     </AdminUiContext.Provider>
   );

@@ -32,7 +32,7 @@ report('T5 built CSS found', cssFiles.length > 0, `${cssFiles.length} file(s)`);
 const expectations = [
   ['component rule .surface (components.css)', /\.surface\s*\{/],
   ['@utility text-title-page (components.css)', /\.text-title-page\s*\{/],
-  ['form > [data-form-actions] (components.css)', /form\s*>\s*\[data-form-actions\]\s*\{/],
+  ['form > [data-form-actions=admin-ui] (components.css)', /form\s*>\s*\[data-form-actions=["']?admin-ui["']?\]\s*\{/],
   ['layer defaults (components.css)', /--layer-popover\s*:\s*50/],
   ['utility named only in the package: md:h-[calc(100dvh_-_var(--nav-h))]', /\.md\\:h-\\\[calc\\\(100dvh_-_var\\\(--nav-h\\\)\\\)\\\]/],
   ['layer utility z-(--layer-popover)', /\.z-\\\(--layer-popover\\\)/],

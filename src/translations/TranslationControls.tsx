@@ -24,12 +24,14 @@ export interface TranslationControlsProps {
   disabled?: boolean;
 }
 
+/** Status words of one locale's translation task (context `translation-status`: `Done` here is no button). */
+const STATUS_CONTEXT = 'translation-status';
 const STATUS_LABEL: Record<TranslationTaskProgress['status'], string> = {
-  pending: m('Waiting'),
-  running: m('Translating'),
-  done: m('Done'),
-  failed: m('Failed'),
-  cancelled: m('Cancelled'),
+  pending: m('Waiting', { context: 'translation-status' }),
+  running: m('Translating', { context: 'translation-status' }),
+  done: m('Done', { context: 'translation-status' }),
+  failed: m('Failed', { context: 'translation-status' }),
+  cancelled: m('Cancelled', { context: 'translation-status' }),
 };
 
 /**
@@ -117,7 +119,7 @@ export const TranslationControls = ({
                 {item.status === 'running' && <Loader2 className="animate-spin" aria-hidden />}
                 {item.status === 'done' && <Check aria-hidden />}
                 {item.status === 'failed' && <CircleAlert aria-hidden />}
-                {item.locale} · {t(STATUS_LABEL[item.status])}
+                {item.locale} · {t(STATUS_LABEL[item.status], { context: STATUS_CONTEXT })}
               </Badge>
             </li>
           ))}

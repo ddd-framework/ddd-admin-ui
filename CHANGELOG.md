@@ -3,6 +3,54 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x prereleases.
 
+## 0.1.0-rc.5
+
+- `EntityListTable` / `EntityListBody`: `rowClassName(item, index)` for extra row classes.
+- `useRowSelection`: `isSelectable(item)`. A row it refuses gets a disabled checkbox; "Select all loaded", the header
+  state, the count and `selectedKeys` take selectable rows only. `EntityListSelection` gains the optional
+  `isItemSelectionDisabled` (a row without a key still gets no checkbox).
+- `Combobox`: `clearable` (a clear control; re-picking the picked option clears; without it the value is kept, as
+  before), `onSearch` (server search: no client filtering, debounced 300 ms, `''` on close; the list never shows the
+  previous term's options) with `isSearching`, option `group` (headings in first-appearance order) and `badge`,
+  `onRequestCreate` (a "Create “…”" row while no label equals the trimmed term), `selectedOption` (the label of a picked
+  value outside the options), `popoverClassName`; `COMBOBOX_SEARCH_DEBOUNCE_MS`. With `clearable`, `className` sizes a
+  wrapper around trigger and clear control.
+- `./logic`: `useLatestSearch` (only the answer to the last term counts; aborts the previous request), date input
+  values `toDateInputValue`, `fromDateInputValue`, `toDateTimeInputValue`, `fromDateTimeInputValue` with an explicit
+  `'local' | 'utc'` zone (`DateInputZone`), `withStickyParams(href, names, currentSearch)`, the guarded storage helpers
+  `readStored` / `writeStored` (`StorageArea`, moved from the Next adapters, which use them from here) and
+  `buildStorageKey(prefix, area, name)` → `<prefix>.<area>.<name>`.
+- `CopyButton` in `./list`: `value`, `label`, `reveal` (`always` / `hover`), `notify` (a toast through `notify`).
+- Links: `AdminUiProvider.linkComponent` sets the router link of every block that renders a link (`EntityTabs`,
+  `SectionHeader` tabs, `EntityDetailShell` back link, `AddEntityButton`, and `BreadcrumbLink` with an `href`); a
+  block's own `linkComponent` still wins. Without the provider prop every link renders as before.
+  The link contract (`PageLinkProps`, `PageLinkComponent`, `AnchorLink`) moved to `./primitives` with
+  `LinkComponentContext`, `LinkComponentProvider`, `useLinkComponent`; `./page` still exports the old names.
+- `EntityListEmpty size="compact"`: one inline line. `DefinitionList layout="rows"`: divided rows, label left, value
+  right. `FilterDateRange hideLabel` with `fromLabel` / `toLabel` (and `className`) for an inline range.
+- `PageFrame` / `EntityListPage` `asSpecimen`: no `data-page-frame`, no full-height frame (used by the showcase, so a
+  host rule keyed to the attribute no longer fires there).
+- `SegmentedControl`: a control wider than its container scrolls inside itself, keeping the selected and the focused
+  option in view (touch swipes scroll then, the drag preview stays for mouse and pen); options no longer shrink.
+  Options take `context` (passed to `t()`) and `translate: false` for already translated text.
+- `ConfirmOptions.description`: documented — may be a React node; the package's own confirmations pass plain text.
+- Showcase: samples of the new props and blocks; specimen cells shrink (`min-w-0`), so a wide specimen does not widen
+  the page at 390 px.
+- DOM change: `FormActions` renders `data-form-actions="admin-ui"` (was an empty value), and `components.css` selects
+  that value only, so a host's own action bar with a bare `data-form-actions` is no longer restyled.
+- Text keys changed (move host translations):
+  - `Search for a command to run...` → `Search for a command to run…`
+  - the translation progress statuses got the context `translation-status`: `Waiting`, `Translating`, `Done`,
+    `Failed`, `Cancelled` → `Waiting__translation-status`, `Translating__translation-status`,
+    `Done__translation-status`, `Failed__translation-status`, `Cancelled__translation-status`.
+    `Translating…` (the running button label) stays a separate key: a button text, not a status word.
+  - new: `Clear`, `Copied`, `Could not copy`, `Create “%term%”`.
+- Consumer checks: Combobox in the browser (out-of-order answers, picked label outside the results, reset on close,
+  keyboard through groups and the create row, clearing), selectable rows, SegmentedControl in a 358 px container, the
+  showcase at 390 px without page scroll and without `data-page-frame`, links through the provider's link component
+  keeping sticky parameters; unit tests for the date values (UTC and Europe/Berlin around midnight and both clock
+  changes), `withStickyParams` and the storage helpers.
+
 ## 0.1.0-rc.4
 
 - `SegmentedControl` in `./primitives`: one value out of a few. Props `value`, `onValueChange`, `options` (`value`,

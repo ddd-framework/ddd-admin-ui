@@ -35,12 +35,18 @@ export interface FormActionsProps {
   className?: string;
 }
 
+/**
+ * The value of the bar's `data-form-actions` attribute: `components.css` selects exactly this value, so a host's own
+ * action bar with a bare `data-form-actions` is not restyled by the package.
+ */
+const FORM_ACTIONS_MARKER = 'admin-ui';
+
 /** Below `sm` the buttons share the row; from `sm` up each keeps its own width. */
 const ACTION_CLASS = 'flex-1 min-w-fit *:w-full sm:flex-none sm:*:w-auto';
 
 /**
  * The page action pill (host CSS `.glass-bar`): compact, right-aligned at the top of the form and sticky under the
- * fixed chrome (`--nav-h`) while the form scrolls. Forms write `<FormActions>` last; `data-form-actions` + the host
+ * fixed chrome (`--nav-h`) while the form scrolls. Forms write `<FormActions>` last; `data-form-actions="admin-ui"` + the host
  * CSS move it first (`order: -1`), so the DOM / tab order is unchanged everywhere.
  */
 // No row of its own where the page has tabs: the wrapper is 0 px tall and pulled 3.5 rem up (and as
@@ -151,7 +157,7 @@ export const FormActions = ({
   return (
     <DrawerFooter
       inlineClassName={cn(STICKY_WRAPPER_CLASS, placement === 'auto' && BESIDE_TABS_CLASS, className)}
-      inlineProps={{ 'data-form-actions': '' }}
+      inlineProps={{ 'data-form-actions': FORM_ACTIONS_MARKER }}
     >
       <div ref={anchor} className={STICKY_PILL_CLASS}>
         <ChangeStatus control={formContext?.control} isDirty={isDirty} />

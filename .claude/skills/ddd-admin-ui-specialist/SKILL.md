@@ -24,6 +24,10 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | a wide table: column tracks, pinned columns, sortable headers, row numbers | `EntityListColumn` `width` / `minWidth` / `pin` / `align` / `sortKey` + `sort` / `onSortChange` / `showRowIndex` | list |
 | the sort in the URL | `formatListSort` / `parseListSort` / `nextListSort` (`key:asc`; `sortStart`, `sortRequired`) | logic |
 | one value out of a few (period, scope, view) | `SegmentedControl` (not tabs, not toggle chips) | primitives |
+| a picker over a server search, with clear / create | `Combobox` `onSearch` + `useLatestSearch`, `clearable`, `onRequestCreate` | list, logic |
+| copy a value next to it | `CopyButton` | list |
+| one router link for every block, sticky search parameters | `AdminUiProvider.linkComponent` + `withStickyParams` | provider, logic |
+| a `type="date"` / `datetime-local` value | `toDateInputValue` / `fromDateTimeInputValue` … with `'local'` or `'utc'` | logic |
 | see every block in the host theme, light and dark | `Showcase` on a development route | showcase |
 | a view that loads its own data (a tree) in the list card | `EntityListBody.renderOwnView` | list |
 | an entity detail with tabs | `EntityDetailShell` (+ `SectionHeader`, `DefinitionList`) | page |
@@ -62,6 +66,10 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 - **SegmentedControl** is a radio group: exactly one value, one tab stop, arrows select (`activation="manual"`: Space /
   Enter). Tooltips (`iconOnly`, `disabledReason`) need `AdminUiProvider`. Corner and slide come from
   `--segmented-control-radius` / `--segmented-control-duration`.
+- **Combobox server search**: pass `onSearch` and `isSearching` (from `useLatestSearch`, which drops answers to older
+  terms); the block debounces and never shows the previous term's options. A picked value outside the results needs
+  `selectedOption`.
+- **Links**: set `linkComponent` once on `AdminUiProvider`; without it blocks render plain `<a>` (full page loads).
 - **Showcase** needs no optional peer: pass `loadNotifySonner={() => import('@mgamadeus/ddd-admin-ui/notify-sonner')}`
   only when sonner is installed. A new block gets a showcase sample and a `SHOWCASE_COVERAGE` entry, or the checks fail.
 - **Text contexts are literals.** `m('Failed', { context: 'import-status' })`: extractors (the package manifest and

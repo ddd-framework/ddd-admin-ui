@@ -17,6 +17,9 @@ export {
 } from './pure/conditions.ts';
 export type { FormCondition, FormRule, ResetWhenRule } from './pure/conditions.ts';
 export { DISCARD_CHANGES_CONFIRM } from './pure/confirm.ts';
+export { fromDateInputValue, fromDateTimeInputValue, toDateInputValue, toDateTimeInputValue } from './pure/dateInput.ts';
+export type { DateInputZone } from './pure/dateInput.ts';
+export { withStickyParams } from './pure/stickyParams.ts';
 export { LIST_DISPLAY_MODES, parseListDisplayMode } from './pure/displayMode.ts';
 export type { ListDisplayMode } from './pure/displayMode.ts';
 export type { ConfirmDialogApi, ConfirmOptions } from './pure/confirm.ts';
@@ -89,6 +92,8 @@ export type { UseFormDirtyOptions } from './react/useFormDirty.ts';
 export { useGrowingWindowList } from './react/useGrowingWindowList.ts';
 export type { GrowingWindowList, ListQueryHook, ListQueryResult, UseGrowingWindowListOptions } from './react/useGrowingWindowList.ts';
 export { useInfiniteScrollSentinel } from './react/useInfiniteScrollSentinel.ts';
+export { useLatestSearch } from './react/useLatestSearch.ts';
+export type { LatestSearch } from './react/useLatestSearch.ts';
 export { useLocaleName } from './react/useLocaleName.ts';
 export { useRowActivation } from './react/useRowActivation.ts';
 export type { RowActivationHandlers } from './react/useRowActivation.ts';
@@ -109,3 +114,5 @@ export type { UrlListState, UseUrlListStateOptions } from './react/useUrlListSta
 // Browser
 export { prepareImageFile } from './browser/prepareImageFile.ts';
 export type { PreparedImage } from './browser/prepareImageFile.ts';
+export { buildStorageKey, readStored, writeStored } from './browser/storage.ts';
+export type { StorageArea } from './browser/storage.ts';

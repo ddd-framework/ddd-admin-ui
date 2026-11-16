@@ -83,6 +83,8 @@ export interface EntityListTableProps<TItem> extends EntityListDataProps<TItem> 
   sortRequired?: boolean;
   /** A leading `#` column: the 1-based position of the row among the loaded rows. Pinned with the selection column. */
   showRowIndex?: boolean;
+  /** Extra classes of a body row (`index`: 0-based among the loaded rows), e.g. a muted archived row. */
+  rowClassName?: (item: TItem, index: number) => string | undefined;
 }
 
 /**
@@ -198,23 +200,33 @@ interface EntityListTableRowProps<TItem> {
   /** 1-based position among the loaded rows, when the table shows the row index. */
   rowNumber?: number;
   layout: CellLayout;
+  className?: string;
 }
 
-const EntityListTableRow = <TItem,>({ item, rowKey, columns, action, selection, rowNumber, layout }: EntityListTableRowProps<TItem>) => {
+const EntityListTableRow = <TItem,>({
+  item,
+  rowKey,
+  columns,
+  action,
+  selection,
+  rowNumber,
+  layout,
+  className,
+}: EntityListTableRowProps<TItem>) => {
   const { t } = useTranslate();
   const activation = useRowActivation(action);
   const selected = selection?.isItemSelected(item) ?? false;
   const leading = (selection ? 1 : 0) + (rowNumber !== undefined ? 1 : 0);
   return (
     <TableRow
-      className={cn('group/row', action && 'cursor-pointer')}
+      className={cn('group/row', action && 'cursor-pointer', className)}
       data-state={selected ? 'selected' : undefined}
       role={roleIn(layout, 'row')}
       {...activation}
     >
       {selection && (
         <TableCell className={cn(BODY_CELL_CLASS, SELECT_CELL_CLASS)} data-row-action-ignore role={roleIn(layout, 'cell')} {...pinProps(layout, 0, false)}>
-          {selection.isItemSelectable(item) && (
+          {selection.isItemSelectable(item) ? (
             <Checkbox
               checked={selected}
               onCheckedChange={checked => selection.setItemSelected(item, checked === true)}
@@ -222,6 +234,15 @@ const EntityListTableRow = <TItem,>({ item, rowKey, columns, action, selection, 
               aria-label={selection.rowLabel?.(item) ?? t('Select row %rowKey%', { replacements: { rowKey } })}
               className="align-middle"
             />
+          ) : (
+            selection.isItemSelectionDisabled?.(item) && (
+              <Checkbox
+                checked={false}
+                disabled
+                aria-label={selection.rowLabel?.(item) ?? t('Select row %rowKey%', { replacements: { rowKey } })}
+                className="align-middle"
+              />
+            )
           )}
         </TableCell>
       )}
@@ -291,6 +312,7 @@ export const EntityListTable = <TItem,>({
   onSortChange,
   sortRequired = false,
   showRowIndex = false,
+  rowClassName,
 }: EntityListTableProps<TItem>) => {
   const { t } = useTranslate();
   const headerTopStyle = stickyHeaderTop ? { top: stickyHeaderTop } : undefined;
@@ -510,6 +532,7 @@ export const EntityListTable = <TItem,>({
                   selection={selection}
                   rowNumber={showRowIndex ? index + 1 : undefined}
                   layout={layout}
+                  className={rowClassName?.(item, index)}
                 />
               ))}
         </TableBody>

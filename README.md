@@ -20,7 +20,7 @@ pnpm add @mgamadeus/ddd-admin-ui @mgamadeus/ddd-web radix-ui react react-dom luc
 
 | Entry | What it holds | May import (besides React and its peers) |
 |---|---|---|
-| `./logic` | pure helpers (`formatDate`, `defineStatusMap`, conditions, schemas, `notify`, `runSequential`), React hooks without markup (`useUrlListState`, `useEntityDrawer`, `useRowSelection`, `useEntityTranslations`, …), browser helpers (`prepareImageFile`) | `./i18n` |
+| `./logic` | pure helpers (`formatDate`, `defineStatusMap`, conditions, schemas, `notify`, `runSequential`), React hooks without markup (`useUrlListState`, `useEntityDrawer`, `useRowSelection`, `useEntityTranslations`, …), browser helpers (`prepareImageFile`, `readStored` / `writeStored`, `buildStorageKey`), date input values (`toDateInputValue`, `fromDateTimeInputValue`, …), `withStickyParams`, `useLatestSearch` | `./i18n` |
 | `./i18n` | the UI text store (`m`, `translateText`, `setTranslations`), `useTranslate`, `<Translate>`, number / date formats of the UI locale, server-message translation | — |
 | `./primitives` | buttons, inputs, selects, dialogs, sheets, popovers, menus, tooltips, tables, badges, `SegmentedControl`, `cn`, the portal container | `./i18n` |
 | `./list` | entity list card, toolbar, search, filters, table, grid, load-more, status badge, cells, multi-select, combobox, bulk bar | logic, i18n, primitives |
@@ -155,8 +155,17 @@ It reads the host's `node_modules` (npm and pnpm layouts) and the folders above 
    `ddd-admin-ui.<kind>.<id>`), `portalContainer` (where dialogs, sheets, popovers, selects, menus and tooltips mount;
    default `document.body`), `tooltipDelayMs`, `translations` (a `TranslationAdapter` that feeds the text store from a
    host store), `useUrlStateAdapter`, `useDrawerUrlAdapter`, `upload`, `renderMarkdownEditor`, `aiTranslation`,
-   `preserveSearchParams` (search parameters the URL writer never removes). Without a notification adapter `notify.*`
-   does nothing and warns once outside production.
+   `preserveSearchParams` (search parameters the URL writer never removes), `linkComponent` (the router link of every
+   block that renders a link; wrap it with `withStickyParams` to keep sticky search parameters). Without a
+   notification adapter `notify.*` does nothing and warns once outside production.
+
+   ```tsx
+   const StickyLink: PageLinkComponent = ({ href, ...props }) => {
+     const search = useSearchParams();
+     return <Link href={withStickyParams(href, ['workspace', 'debug'], search)} {...props} />;
+   };
+   <AdminUiProvider linkComponent={StickyLink} …>
+   ```
 
 4. **Confirmations.** Blocks that ask before a step open the package's confirm dialog (`useConfirmDialog`). A host
    with its own confirmation service passes it as `confirm` (`(options: ConfirmOptions) => Promise<boolean>`, a stable
@@ -179,6 +188,13 @@ const STATUS = defineStatusMap({ ACTIVE: { label: 'Active', tone: 'success' } })
 
 Client components (`DateCell`, `EntityListTable`, `Form`, …) render from server components as long as they get no
 function props there.
+
+## Dates in native inputs
+
+`<input type="date">` and `type="datetime-local"` hold wall-clock text. Translate it with an explicit zone, `'local'`
+(the browser's clock) or `'utc'`: `toDateInputValue(date, zone)` / `fromDateInputValue(text, zone)` and
+`toDateTimeInputValue` / `fromDateTimeInputValue` (`./logic`). Empty or invalid gives `''` / `null`; no arithmetic. A
+local time skipped when the clocks go forward resolves an hour later, a repeated one to its first occurrence.
 
 ## Showcase
 

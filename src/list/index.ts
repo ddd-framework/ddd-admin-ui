@@ -52,6 +52,8 @@ export type { RowActivationHandlers } from '../logic/react/useRowActivation.ts';
 export { BooleanCell, DateCell, IdCell, ImageCell } from './cells.tsx';
 export type { BooleanCellProps, DateCellProps, IdCellProps, ImageCellProps } from './cells.tsx';
 export { ChipToggleGroup } from './ChipToggleGroup.tsx';
+export { CopyButton } from './CopyButton.tsx';
+export type { CopyButtonProps } from './CopyButton.tsx';
 export type { ChipToggleGroupProps, ChipToggleOption } from './ChipToggleGroup.tsx';
 export { Combobox } from './Combobox.tsx';
 export type { ComboboxOption, ComboboxProps } from './Combobox.tsx';

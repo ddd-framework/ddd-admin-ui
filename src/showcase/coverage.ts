@@ -34,12 +34,15 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
       SelectScrollDownButton: DRAWN_BY('SelectContent'),
       SelectScrollUpButton: DRAWN_BY('SelectContent'),
       PortalContainerContext: 'a context (PortalContainerProvider is shown)',
+      AnchorLink: 'the default link of every block (drawn by the ./page tabs and back links)',
+      LinkComponentContext: 'a context (set by AdminUiProvider.linkComponent)',
+      LinkComponentProvider: 'mounted by AdminUiProvider when linkComponent is set',
       TooltipProvider: 'mounted once by AdminUiProvider',
     },
   },
   list: {
     shown: [
-      'BooleanCell', 'ChipToggleGroup', 'Combobox', 'DateCell', 'EmptyValue', 'EntityListBody', 'EntityListBulkBar',
+      'BooleanCell', 'ChipToggleGroup', 'Combobox', 'CopyButton', 'DateCell', 'EmptyValue', 'EntityListBody', 'EntityListBulkBar',
       'EntityListCard', 'EntityListEmpty', 'EntityListGrid', 'EntityListGridSkeleton', 'EntityListLoadMore', 'EntityListTable',
       'EntityListToolbar', 'EntityListViewToggle', 'FilterDateRange', 'FilterField', 'FilterMultiSelect', 'FilterPanel',
       'FilterSelect', 'FilterText', 'IdCell', 'ImageCell', 'MultiSelect', 'SearchField', 'StatusBadge', 'Tag',

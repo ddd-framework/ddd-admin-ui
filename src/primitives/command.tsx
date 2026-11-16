@@ -49,7 +49,7 @@ function CommandDialog({
       <DialogHeader className="sr-only">
         <DialogTitle>{title ?? t("Command Palette")}</DialogTitle>
         <DialogDescription>
-          {description ?? t("Search for a command to run...")}
+          {description ?? t("Search for a command to run…")}
         </DialogDescription>
       </DialogHeader>
       <DialogContent

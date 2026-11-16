@@ -39,6 +39,7 @@ export function SegmentedFixture() {
   const rtl = useTracked('day');
   const icons = useTracked('grid');
   const drag = useTracked('a');
+  const narrow = useTracked('today');
   return (
     <main className="space-y-6 p-6">
       <div id="automatic">
@@ -69,6 +70,20 @@ export function SegmentedFixture() {
           ]}
           value={icons.value}
           onValueChange={icons.onValueChange}
+        />
+      </div>
+      <div id="narrow" style={{ width: 358, maxWidth: "100%" }}>
+        <SegmentedControl
+          aria-label="Narrow"
+          options={[
+            { value: 'today', label: 'Today' },
+            { value: 'week', label: 'This week' },
+            { value: 'month', label: 'This month' },
+            { value: 'quarter', label: 'This quarter' },
+            { value: 'year', label: 'This year', translate: false },
+          ]}
+          value={narrow.value}
+          onValueChange={narrow.onValueChange}
         />
       </div>
       <div id="drag">

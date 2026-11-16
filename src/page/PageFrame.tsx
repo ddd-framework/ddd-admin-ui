@@ -17,6 +17,11 @@ export interface PageFrameProps {
   children: ReactNode;
   /** Minimum frame height from `md` (Tailwind class), default `md:min-h-[520px]`. */
   minHeightClassName?: string;
+  /**
+   * Drawn as a specimen inside another page (a showcase, a preview): no `data-page-frame` (the host shell's rules for a
+   * real page frame stay out) and no full-height frame.
+   */
+  asSpecimen?: boolean;
   className?: string;
 }
 
@@ -34,9 +39,13 @@ export const PageFrame = ({
   belowHeader,
   children,
   minHeightClassName = 'md:min-h-[520px]',
+  asSpecimen = false,
   className,
 }: PageFrameProps) => (
-  <div data-page-frame className={cn('flex flex-col md:h-[calc(100dvh_-_var(--nav-h))]', minHeightClassName)}>
+  <div
+    data-page-frame={asSpecimen ? undefined : ''}
+    className={cn('flex flex-col', !asSpecimen && 'md:h-[calc(100dvh_-_var(--nav-h))]', minHeightClassName)}
+  >
     <div className={cn('flex flex-col md:min-h-0 md:flex-1', PAGE_INSET_CLASS, className)}>
       <PageHeader title={title} description={description} actions={actions} leading={leading} className="shrink-0" />
       {belowHeader && <div className="-mt-3 mb-6 shrink-0 empty:hidden">{belowHeader}</div>}

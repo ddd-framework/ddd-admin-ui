@@ -54,6 +54,7 @@ export const PageShowcase = () => {
             title="Projects"
             description="Everything the team is working on."
             minHeightClassName="min-h-0"
+            asSpecimen
             actions={
               <PageToolbar
                 exportAction={<ExportButton onExport={() => {}} />}
@@ -70,7 +71,7 @@ export const PageShowcase = () => {
       </Sample>
       <Sample title="EntityListPage">
         <div className="h-96 w-full overflow-hidden rounded-2xl border">
-          <EntityListPage title="Items" headerActions={<AddEntityButton label="New item" onClick={() => {}} />}>
+          <EntityListPage asSpecimen title="Items" headerActions={<AddEntityButton label="New item" onClick={() => {}} />}>
             <EntityListTable<ShowcaseRow>
               columns={[
                 { id: 'name', header: 'Name', cell: row => row.name },
@@ -147,6 +148,20 @@ export const PageShowcase = () => {
                   { label: 'Owner', value: null },
                   { label: 'Status', value: <StatusBadge value="ACTIVE" map={SHOWCASE_STATUS} />, hint: 'Since March' },
                   { label: 'Description', value: 'A longer description spanning the whole row.', wide: true },
+                ]}
+              />
+            </CardContent>
+          </Card>
+        </Sample>
+        <Sample title="DefinitionList, rows">
+          <Card className="w-full">
+            <CardContent>
+              <DefinitionList
+                layout="rows"
+                items={[
+                  { label: 'Plan', value: 'Team' },
+                  { label: 'Seats', value: '12 of 20', hint: '8 free' },
+                  { label: 'Renews', value: null },
                 ]}
               />
             </CardContent>

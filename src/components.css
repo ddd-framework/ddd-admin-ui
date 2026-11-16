@@ -101,11 +101,11 @@
   }
   /* Sticky glass bars (bulk bar, form action bar). */
   /* Form actions at the top of the form: written last, shown first, sticky under the chrome. */
-  form:has(> [data-form-actions]) {
+  form:has(> [data-form-actions='admin-ui']) {
     display: flex;
     flex-direction: column;
   }
-  form > [data-form-actions] {
+  form > [data-form-actions='admin-ui'] {
     order: -1;
   }
   .glass-bar {

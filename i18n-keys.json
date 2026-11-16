@@ -1,6 +1,6 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.1.0-rc.4",
+  "version": "0.1.0-rc.5",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
@@ -143,8 +143,9 @@
       "hint": "Footer button of the media picker dialog; click to close the dialog without changing the chosen media item."
     },
     {
-      "key": "Cancelled",
+      "key": "Cancelled__translation-status",
       "text": "Cancelled",
+      "context": "translation-status",
       "files": [
         "translations/TranslationControls.tsx"
       ],
@@ -158,6 +159,14 @@
         "media/MediaItemField.tsx"
       ],
       "hint": "Button label under a media field preview; click to open the picker and replace the currently chosen image. Shown only when an image is already set."
+    },
+    {
+      "key": "Clear",
+      "text": "Clear",
+      "files": [
+        "list/Combobox.tsx"
+      ],
+      "hint": "Accessible name and tooltip of the small × inside a picker (combobox) that removes the picked value, leaving the field empty."
     },
     {
       "key": "Clear %label%",
@@ -279,6 +288,14 @@
       "hint": "Button on the right of a generic confirmation dialog that carries out the action asked about. Shown when the caller did not set its own label."
     },
     {
+      "key": "Copied",
+      "text": "Copied",
+      "files": [
+        "list/CopyButton.tsx"
+      ],
+      "hint": "Toast after a copy button put a value (an id, a link, a code) on the clipboard."
+    },
+    {
       "key": "Copy ID",
       "text": "Copy ID",
       "files": [
@@ -294,6 +311,22 @@
         "page/EntityMetadata.tsx"
       ],
       "hint": "Accessible label (screen reader and tooltip) of the small button that copies the record ID to the clipboard, shown in the metadata block of every detail screen. %id% is the record ID, for example 4711 or a UUID. Imperative tone."
+    },
+    {
+      "key": "Could not copy",
+      "text": "Could not copy",
+      "files": [
+        "list/CopyButton.tsx"
+      ],
+      "hint": "Error toast when the browser refused to put a value on the clipboard (no permission or an insecure page)."
+    },
+    {
+      "key": "Create “%term%”",
+      "text": "Create “%term%”",
+      "files": [
+        "list/Combobox.tsx"
+      ],
+      "hint": "Last row of a picker's search list: creates a new entry named by the typed text (%term%) because no existing entry has that name."
     },
     {
       "key": "Created__entity-metadata",
@@ -331,8 +364,9 @@
       "hint": "Button in the AI translation panel that hides the finished progress list of the last translation run. Imperative."
     },
     {
-      "key": "Done",
+      "key": "Done__translation-status",
       "text": "Done",
+      "context": "translation-status",
       "files": [
         "translations/TranslationControls.tsx"
       ],
@@ -364,8 +398,9 @@
       "hint": "Sample text of the outline button specimen in the UI showcase; imperative, exports a list as a spreadsheet. Maintenance UI showcase screen, Buttons section."
     },
     {
-      "key": "Failed",
+      "key": "Failed__translation-status",
       "text": "Failed",
+      "context": "translation-status",
       "files": [
         "translations/TranslationControls.tsx"
       ],
@@ -620,8 +655,8 @@
       "hint": "Accessible label of a search input field in a list toolbar, read by screen readers. Use the plain noun or verb for searching."
     },
     {
-      "key": "Search for a command to run...",
-      "text": "Search for a command to run...",
+      "key": "Search for a command to run…",
+      "text": "Search for a command to run…",
       "files": [
         "primitives/command.tsx"
       ],
@@ -875,8 +910,9 @@
       "hint": "Button in the AI translation panel that starts translating the texts into all language chips the user selected. Imperative."
     },
     {
-      "key": "Translating",
+      "key": "Translating__translation-status",
       "text": "Translating",
+      "context": "translation-status",
       "files": [
         "translations/TranslationControls.tsx"
       ],
@@ -967,8 +1003,9 @@
       "hint": "Label and accessible name of the toggle on the Home screen that switches between the Timeline and Kanban views."
     },
     {
-      "key": "Waiting",
+      "key": "Waiting__translation-status",
       "text": "Waiting",
+      "context": "translation-status",
       "files": [
         "translations/TranslationControls.tsx"
       ],

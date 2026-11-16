@@ -13,7 +13,7 @@ import {
 } from '../primitives/index.ts';
 import { useTranslate } from '../i18n/index.ts';
 import { cn } from '../primitives/cn.ts';
-import { AnchorLink, type PageLinkComponent } from './links.tsx';
+import { type PageLinkComponent, useLinkComponent } from '../primitives/link.tsx';
 
 // ─── Export ────────────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -129,8 +129,9 @@ export type AddEntityButtonProps = AddEntityButtonBaseProps &
  * The page's one primary button, top right: `+ Add <Entity>`, or the host's `label`. A disabled link renders as a
  * disabled button.
  */
-export const AddEntityButton = ({ entity, label, href, linkComponent: Link = AnchorLink, onClick, disabled }: AddEntityButtonProps) => {
+export const AddEntityButton = ({ entity, label, href, linkComponent, onClick, disabled }: AddEntityButtonProps) => {
   const { t } = useTranslate();
+  const Link = useLinkComponent(linkComponent);
   const content = (
     <>
       <Plus aria-hidden />

@@ -1,4 +1,4 @@
-// T2, T3, T7, the sized list table, SegmentedControl and the showcase in a headless browser against `next start`.
+// T2, T3, T7, the sized list table, SegmentedControl, Combobox and the showcase in a headless browser against `next start`.
 // Browser: CHROME_PATH, else the installed Google Chrome (playwright channel "chrome"); no browser download.
 import { chromium } from 'playwright-core';
 
@@ -116,6 +116,22 @@ try {
     report('list: wide, the start pin is declined (no overflow)', wide.idPin === null, String(wide.idPin));
     report('list: the end pin always holds', wide.actionsPin === 'end');
     report('list: the row index counts from 1', wide.firstIndex === '1', String(wide.firstIndex));
+
+    await page.getByRole('checkbox', { name: 'Select all loaded' }).click();
+    const selectionState = await page.evaluate(() => {
+      const rows = [...document.querySelectorAll('[data-entity-list-scroll] tbody [role="checkbox"]')];
+      return {
+        checked: rows.filter((box) => box.getAttribute('aria-checked') === 'true').length,
+        disabled: rows.filter((box) => box.hasAttribute('disabled')).length,
+        header: document.querySelector('[data-entity-list-scroll] thead [role="checkbox"]')?.getAttribute('aria-checked'),
+      };
+    });
+    report(
+      'list: isSelectable — disabled checkboxes, select all takes the selectable rows only',
+      selectionState.checked === 24 && selectionState.disabled === 6 && selectionState.header === 'true',
+      JSON.stringify(selectionState),
+    );
+    await page.getByRole('checkbox', { name: 'Select all loaded' }).click();
 
     const nameHeader = page.locator('thead th', { has: page.getByRole('button', { name: 'Name' }) });
     const sortCycle = [];
@@ -337,7 +353,143 @@ try {
     await page.mouse.up();
     report('segmented: pointer cancel restores and changes nothing', cancelledOnC && (await probe('drag-probe')).changes === 'c');
 
+    // a control wider than its 358 px container scrolls inside itself and keeps the selected / focused option in view
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(200);
+    await page.focus('#narrow [role="radio"][aria-checked="true"]');
+    await page.keyboard.press('End');
+    await page.waitForTimeout(300);
+    const narrow = await page.evaluate(() => {
+      const group = document.querySelector('#narrow [role="radiogroup"]');
+      const frame = group.getBoundingClientRect();
+      const selected = group.querySelector('[aria-checked="true"]').getBoundingClientRect();
+      const focused = document.activeElement.getBoundingClientRect();
+      const inside = (box) => box.left >= frame.left - 1 && box.right <= frame.right + 1;
+      return {
+        groupWidth: Math.round(frame.width),
+        scrollWidth: group.scrollWidth,
+        clientWidth: group.clientWidth,
+        selectedInView: inside(selected),
+        focusedInView: inside(focused),
+        pageScroll: document.documentElement.scrollWidth,
+        viewport: window.innerWidth,
+      };
+    });
+    report(
+      'segmented: at 358 px the control scrolls inside itself, the selected and focused option in view, no page scroll',
+      narrow.groupWidth <= 358 && narrow.scrollWidth > narrow.clientWidth && narrow.selectedInView && narrow.focusedInView && narrow.pageScroll <= narrow.viewport,
+      JSON.stringify(narrow),
+    );
     report('segmented: no hydration warning or console error', consoleProblems.length === 0, consoleProblems.join(' | '));
+    await page.close();
+  }
+
+  // Combobox (app/combobox): out-of-order server answers, picked label outside the results, reset on close, keyboard
+  // through groups and the create row, clearing
+  {
+    const consoleProblems = [];
+    const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
+    page.on('console', (message) => {
+      if (message.type() === 'error' || (message.type() === 'warning' && /hydrat/i.test(message.text()))) {
+        consoleProblems.push(`${message.type()}: ${message.text()}`);
+      }
+    });
+    page.on('pageerror', (error) => consoleProblems.push(`pageerror: ${error.message}`));
+    await page.goto(`${baseUrl}/combobox`, { waitUntil: 'networkidle' });
+    const trigger = (name) => page.getByRole('combobox', { name, exact: true });
+    report('combobox: a picked value outside the results shows its label', (await trigger('Server search').textContent())?.includes('Picked outside the results') === true);
+
+    // record every option text the list ever shows while typing
+    await trigger('Server search').click();
+    await page.waitForSelector('[cmdk-input]');
+    await page.evaluate(() => {
+      window.seenOptions = new Set();
+      const record = () => document.querySelectorAll('[cmdk-item]').forEach((item) => window.seenOptions.add(item.textContent?.trim()));
+      record();
+      window.optionObserver = new MutationObserver(record);
+      window.optionObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
+    });
+    await page.keyboard.type('a');
+    await page.waitForTimeout(450); // the debounce sends 'a' (answered after 900 ms)
+    await page.keyboard.type('b');
+    await page.waitForFunction(() => [...document.querySelectorAll('[cmdk-item]')].some((item) => item.textContent?.includes('for “ab”')), null, { timeout: 5_000 });
+    await page.waitForTimeout(1_200); // the late answer to 'a' arrives and must be dropped
+    const seen = await page.evaluate(() => [...window.seenOptions]);
+    const shown = await page.evaluate(() => [...document.querySelectorAll('[cmdk-item]')].map((item) => item.textContent?.trim()));
+    report(
+      'combobox: out-of-order answers — the stale term never shows, the last term stays',
+      !seen.some((text) => text?.includes('for “a”')) && shown.length === 2 && shown.every((text) => text?.includes('for “ab”')),
+      JSON.stringify({ seen, shown }),
+    );
+    report('combobox: search is debounced (a and ab asked, not every keystroke twice)', JSON.stringify(await page.evaluate(() => window.comboboxSearches)) === '["a","ab"]', JSON.stringify(await page.evaluate(() => window.comboboxSearches)));
+
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(100);
+    const afterClose = await page.evaluate(() => window.comboboxSearches.at(-1));
+    await trigger('Server search').click();
+    const reopenedTerm = await page.inputValue('[cmdk-input]');
+    report('combobox: closing calls onSearch with an empty term and clears the input', afterClose === '' && reopenedTerm === '', `${JSON.stringify(afterClose)} ${JSON.stringify(reopenedTerm)}`);
+    await page.keyboard.press('Escape');
+
+    // keyboard through groups
+    await trigger('Grouped').click();
+    await page.waitForSelector('[cmdk-input]');
+    const highlighted = [];
+    for (let step = 0; step < 4; step += 1) {
+      highlighted.push(await page.evaluate(() => document.querySelector('[cmdk-item][data-selected="true"]')?.textContent?.trim()));
+      await page.keyboard.press('ArrowDown');
+    }
+    const headings = await page.evaluate(() => [...document.querySelectorAll('[cmdk-group-heading]')].map((heading) => heading.textContent));
+    report(
+      'combobox: arrows walk the options across groups in order',
+      highlighted.join('|') === 'North|South|Operations|Sales3' && headings.join('|') === 'Regions|Teams',
+      `${highlighted.join('|')} / ${headings.join('|')}`,
+    );
+    // the create row: a term matching no label, reached with the arrows
+    await page.keyboard.type('Nor');
+    await page.waitForTimeout(100);
+    const createAbsent = await page.evaluate(() => ![...document.querySelectorAll('[cmdk-item]')].some((item) => item.textContent?.startsWith('Create')));
+    await page.keyboard.type('th'); // "North" equals a label (case-insensitive): no create row
+    await page.waitForTimeout(100);
+    const exactAbsent = await page.evaluate(() => ![...document.querySelectorAll('[cmdk-item]')].some((item) => item.textContent?.startsWith('Create')));
+    await page.keyboard.press('Backspace');
+    await page.keyboard.press('Backspace');
+    await page.keyboard.type('dic');
+    await page.waitForTimeout(100);
+    for (let step = 0; step < 3; step += 1) {
+      if (await page.evaluate(() => document.querySelector('[cmdk-item][data-selected="true"]')?.textContent?.startsWith('Create'))) break;
+      await page.keyboard.press('ArrowDown');
+    }
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => document.querySelectorAll('[cmdk-input]').length === 0, null, { timeout: 2_000 }).catch(() => {});
+    const createdState = await page.$eval('#grouped-value', (element) => element.dataset.created);
+    const closed = (await page.$$('[cmdk-input]')).length === 0;
+    report(
+      'combobox: the create row appears when no label equals the term, is reached by keyboard, closes and passes the trimmed term',
+      createAbsent === false && exactAbsent && createdState === 'Nordic' && closed,
+      JSON.stringify({ createAbsent, exactAbsent, createdState, closed }),
+    );
+
+    // clearing: the clear control, and re-picking only with clearable
+    await trigger('Grouped').click();
+    await page.getByRole('option', { name: 'South' }).click();
+    const picked = await page.$eval('#grouped-value', (element) => element.dataset.value);
+    await page.getByRole('button', { name: 'Clear' }).click();
+    const cleared = await page.$eval('#grouped-value', (element) => element.dataset.value);
+    await trigger('Grouped').click();
+    await page.getByRole('option', { name: 'South' }).click();
+    await trigger('Grouped').click();
+    await page.getByRole('option', { name: 'South' }).click();
+    const repicked = await page.$eval('#grouped-value', (element) => element.dataset.value);
+    await trigger('Not clearable').click();
+    await page.getByRole('option', { name: 'North' }).click();
+    const kept = await page.$eval('#kept-value', (element) => element.dataset.value);
+    report(
+      'combobox: clear control and re-pick clear with clearable; without it the value is kept',
+      picked === 'south' && cleared === '' && repicked === '' && kept === 'north' && (await page.getByRole('button', { name: 'Clear' }).count()) === 0,
+      JSON.stringify({ picked, cleared, repicked, kept }),
+    );
+    report('combobox: no hydration warning or console error', consoleProblems.length === 0, consoleProblems.join(' | '));
     await page.close();
   }
 
@@ -364,6 +516,12 @@ try {
     report('showcase: a light and a dark pane in the host theme', state.panes === 'light,dark' && state.darkBackground !== state.lightBackground, JSON.stringify(state));
     report('showcase: ./notify-sonner loaded lazily through the host loader', state.loaded === 2);
     report('showcase: the host section renders in both panes', state.host === 2);
+    const frames = await page.evaluate(() => document.querySelectorAll('[data-showcase] [data-page-frame]').length);
+    report('showcase: page specimens emit no data-page-frame', frames === 0, String(frames));
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(300);
+    const phone = await page.evaluate(() => ({ pageScroll: document.documentElement.scrollWidth, viewport: window.innerWidth }));
+    report('showcase: at 390 px the page does not scroll sideways', phone.pageScroll <= phone.viewport, JSON.stringify(phone));
     report('showcase: no hydration warning or console error', consoleProblems.length === 0, consoleProblems.join(' | '));
     await page.close();
   }

@@ -5,6 +5,10 @@ import { m } from '../../i18n/store.ts';
 /** What a confirmation dialog shows (`useConfirmDialog().confirm(options)`). */
 export interface ConfirmOptions {
   title: string;
+  /**
+   * The body. May be a React node for a host's own dialog content; the package's own confirmations (discard changes,
+   * clear translations) always pass plain text, so a host confirmation service that takes text only can render them.
+   */
   description?: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;

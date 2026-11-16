@@ -57,9 +57,12 @@ const COLUMNS: EntityListColumn<Row>[] = [
   },
 ];
 
+/** Every fifth row cannot be selected: a disabled checkbox; select all and the count skip it. */
+const isSelectable = (row: Row) => row.id % 5 !== 0;
+
 export function SizedList() {
   const [sort, setSort] = useState<EntityListSort | null>(null);
-  const selection = useRowSelection({ items: ROWS, getKey: row => row.id });
+  const selection = useRowSelection({ items: ROWS, getKey: row => row.id, isSelectable });
   return (
     <EntityListPage title="Entries" toolbar={<EntityListToolbar trailing={<output id="sort">{formatListSort(sort)}</output>} />}>
       <EntityListBody
