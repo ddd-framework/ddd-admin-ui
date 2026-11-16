@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      COREPACK_ENABLE_DOWNLOAD_PROMPT: 0
+      # Words that must not appear in shipped files (repository variable, comma-separated; not committed).
+      CHECK_PACKAGE_DENY: ${{ vars.CHECK_PACKAGE_DENY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Enable corepack (pnpm version from package.json)
+        run: npm i -g corepack@latest && corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      # node --test with type stripping: unit tests and a failing fixture per check-package rule
+      - run: pnpm test
+      - run: pnpm build
+      - name: Published manifest has no workspace-only specifiers
+        run: |
+          if grep -E '"(workspace|link|file):' package.json; then
+            echo "package.json contains workspace:/link:/file: specifiers" >&2
+            exit 1
+          fi
+      - name: i18n-keys.json is current
+        run: node scripts/build-i18n-manifest.mjs --check
+      - name: Package checks on the build
+        run: node scripts/check-package.mjs . --require-skills
+      - name: Pack
+        run: pnpm pack --pack-destination "$RUNNER_TEMP"
+      # Per package manager: check-package on the tarball, Node imports and strict type checks without the optional
+      # peers, a Next 16 production build, the built CSS, hydration and overlays in headless Chrome, link-skills.
+      - name: Consumer check with npm
+        run: test/consumer/run.sh "$(ls "$RUNNER_TEMP"/mgamadeus-ddd-admin-ui-*.tgz)" npm "$RUNNER_TEMP/consumer-npm"
+      - name: Consumer check with pnpm
+        run: test/consumer/run.sh "$(ls "$RUNNER_TEMP"/mgamadeus-ddd-admin-ui-*.tgz)" pnpm "$RUNNER_TEMP/consumer-pnpm"
+      # the oldest @mgamadeus/ddd-web and lucide-react the peer ranges admit
+      - name: Consumer check with the peer floors
+        run: |
+          DDD_WEB_VERSION=0.13.0 LUCIDE_VERSION=0.550.0 \
+            test/consumer/run.sh "$(ls "$RUNNER_TEMP"/mgamadeus-ddd-admin-ui-*.tgz)" npm "$RUNNER_TEMP/consumer-floors"

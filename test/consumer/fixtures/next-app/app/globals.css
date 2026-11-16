@@ -1,0 +1,92 @@
+/* T5: the host stylesheet imports both package stylesheets; the host source never names the package's classes, so
+   they reach the build only through the package's own `@source`. */
+@import 'tailwindcss';
+@import '@mgamadeus/ddd-admin-ui/theme.css';
+@import '@mgamadeus/ddd-admin-ui/components.css';
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --primary-emphasis: #1d4ed8;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #475569;
+  --accent: #eff6ff;
+  --accent-foreground: #1e3a8a;
+  --destructive: #dc2626;
+  --success: #16a34a;
+  --warning: #d97706;
+  --info: #0284c7;
+  --brand: #7c3aed;
+  --brand-emphasis: #6d28d9;
+  --brand-light: #ede9fe;
+  --brand-ink: #4c1d95;
+  --border: #e2e8f0;
+  --input: #cbd5e1;
+  --ring: #2563eb;
+  --tint: rgb(15 23 42 / 0.06);
+  --tint-strong: rgb(15 23 42 / 0.1);
+  --segment-active: #ffffff;
+  --field-edge: rgb(15 23 42 / 0.3);
+  --field-edge-strong: rgb(15 23 42 / 0.5);
+  --nav-h: 4rem;
+  --content-max: 72rem;
+  --radius: 0.5rem;
+  --surface-alpha: 90%;
+  --surface-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  --surface-shadow-raised: 0 4px 12px rgb(0 0 0 / 0.08);
+  --glass-alpha: 70%;
+  --surface-glass-alpha: 60%;
+  --surface-glass-strong-alpha: 80%;
+  --glass-shadow: 0 8px 24px rgb(0 0 0 / 0.08);
+  --glass-control-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+}
+
+.dark {
+  --background: #020617;
+  --foreground: #f8fafc;
+  --card: #0f172a;
+  --card-foreground: #f8fafc;
+  --popover: #0f172a;
+  --popover-foreground: #f8fafc;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --primary-emphasis: #93c5fd;
+  --secondary: #1e293b;
+  --secondary-foreground: #f8fafc;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #1e3a8a;
+  --accent-foreground: #eff6ff;
+  --destructive: #f87171;
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --info: #38bdf8;
+  --brand: #a78bfa;
+  --brand-emphasis: #c4b5fd;
+  --brand-light: #2e1065;
+  --brand-ink: #ddd6fe;
+  --border: #1e293b;
+  --input: #334155;
+  --ring: #3b82f6;
+  --tint: rgb(248 250 252 / 0.06);
+  --tint-strong: rgb(248 250 252 / 0.1);
+  --segment-active: #1e293b;
+  --field-edge: rgb(248 250 252 / 0.3);
+  --field-edge-strong: rgb(248 250 252 / 0.5);
+  --surface-alpha: 85%;
+  --surface-shadow: none;
+  --surface-shadow-raised: none;
+  --glass-alpha: 60%;
+  --surface-glass-alpha: 50%;
+  --surface-glass-strong-alpha: 70%;
+  --glass-shadow: none;
+  --glass-control-shadow: none;
+}

@@ -1,0 +1,44 @@
+/*
+ * @mgamadeus/ddd-admin-ui — theme binding.
+ * Registers the colour roles of tokens.json as Tailwind theme colours for a host that declares them as complete CSS
+ * colours under their bare names (`--card: #fff` on :root, other values under .dark). A host with another encoding
+ * provides the same utility names its own way and does not import this file.
+ * Import after `@import "tailwindcss";`.
+ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-emphasis: var(--primary-emphasis);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-brand: var(--brand);
+  --color-brand-emphasis: var(--brand-emphasis);
+  --color-brand-light: var(--brand-light);
+  --color-brand-ink: var(--brand-ink);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-tint: var(--tint);
+  --color-tint-strong: var(--tint-strong);
+  --color-segment-active: var(--segment-active);
+  --color-field-edge: var(--field-edge);
+  --color-field-edge-strong: var(--field-edge-strong);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}

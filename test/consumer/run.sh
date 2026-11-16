@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+# Installs a packed @mgamadeus/ddd-admin-ui tarball into fresh consumer projects and checks it as a host would.
+#
+#   tarball   check-package on the extracted tarball (exports, directives, specifiers, edges, manifests, tokens)
+#   plain     a project without next, sonner and recharts:
+#     T4  Node imports of every entry but ./next and ./notify-sonner (those two fail on the missing peer) and a
+#         strict tsc (skipLibCheck false) with moduleResolution bundler and nodenext
+#     T3  a form from ./form holding fields from ./translations and ./media shares the field-label context
+#     T6  one translation store across entries (./i18n sets the language, ./logic and ./list use it)
+#   next      a Next 16 app router project with Tailwind 4:
+#     T1  `next build`; the server page's metadata title is m('Users'), pure helpers render on the server
+#     T5  the production CSS has the package's component rules and utilities; check-tokens passes on it
+#     T2  (browser) a client page sets German translations: date, text and number are German after hydration,
+#         without a hydration warning
+#     T7  (browser) a select inside a dialog inside a sheet, and inside a host overlay at z-index 10000 with
+#         --layer-popover: 10001, is clickable (with a negative control at the default layer)
+#   link-skills  `ddd-admin-ui link-skills` links the shipped skill
+#
+# T8 / T9: DDD_WEB_VERSION (default: the latest 0.x from 0.13.0 on) and LUCIDE_VERSION (default: latest) choose the
+# peer versions; CI runs once more with the floors (DDD_WEB_VERSION=0.13.0 LUCIDE_VERSION=0.550.0).
+# SKIP_BROWSER=1 skips T2 and T7. CHROME_PATH chooses the browser (default: the installed Google Chrome).
+#
+# Usage: test/consumer/run.sh <tarball> <npm|pnpm> <workDir>
+set -euo pipefail
+
+TARBALL=$(cd "$(dirname "$1")" && pwd)/$(basename "$1")
+PM=$2
+WORK=$3
+HERE=$(cd "$(dirname "$0")" && pwd)
+ROOT=$(cd "$HERE/../.." && pwd)
+DDD_WEB_SPEC="@mgamadeus/ddd-web@${DDD_WEB_VERSION:->=0.13.0 <1}"
+LUCIDE_SPEC="lucide-react@${LUCIDE_VERSION:-latest}"
+
+rm -rf "$WORK" && mkdir -p "$WORK/extracted"
+WORK=$(cd "$WORK" && pwd)
+case "$WORK/" in
+  "$ROOT"/*) echo "workDir must be outside the repository: Node would resolve this repository's node_modules" >&2; exit 2 ;;
+esac
+tar -xzf "$TARBALL" -C "$WORK/extracted"
+echo "── tarball: check-package"
+node "$ROOT/scripts/check-package.mjs" "$WORK/extracted/package" --require-skills --source "$ROOT/src"
+
+# A fresh project in $1 with the tarball and the given packages.
+install_into() {
+  local dir=$1
+  shift
+  mkdir -p "$dir"
+  echo '{"name":"consumer","private":true,"type":"module"}' > "$dir/package.json"
+  if [ "$PM" = pnpm ]; then
+    # Freshly released packages of this framework may be younger than pnpm's minimum release age.
+    printf "minimumReleaseAgeExclude:\n  - '@mgamadeus/*'\n" > "$dir/pnpm-workspace.yaml"
+    (cd "$dir" && pnpm add "$TARBALL" "$@")
+  else
+    (cd "$dir" && npm install --no-audit --no-fund "$TARBALL" "$@")
+  fi
+}
+
+PEERS=("$DDD_WEB_SPEC" "$LUCIDE_SPEC" react react-dom react-hook-form zod)
+TYPES=("typescript@^6" @types/react @types/react-dom @types/node)
+
+echo "── plain project ($PM, $DDD_WEB_SPEC, $LUCIDE_SPEC)"
+PLAIN="$WORK/plain"
+install_into "$PLAIN" "${PEERS[@]}" "${TYPES[@]}"
+cp "$HERE/fixtures/plain/"* "$PLAIN/"
+cd "$PLAIN"
+node -e "for (const name of ['next','sonner','recharts']) { try { require.resolve(name); console.error(name + ' is installed'); process.exit(1); } catch {} }"
+node -p "'installed: ddd-web ' + require('@mgamadeus/ddd-web/package.json').version + ', lucide-react ' + require('lucide-react/package.json').version"
+echo "── T4 Node imports"
+node smoke.mjs
+for MODE in bundler nodenext; do
+  if [ "$MODE" = bundler ]; then MODULE=esnext; else MODULE=nodenext; fi
+  cat > "tsconfig.$MODE.json" <<JSON
+{
+  "compilerOptions": {
+    "target": "ES2022", "lib": ["ES2022", "DOM", "DOM.Iterable"], "module": "$MODULE", "moduleResolution": "$MODE",
+    "jsx": "react-jsx", "strict": true, "noUncheckedIndexedAccess": true, "skipLibCheck": false, "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["consumer.ts"]
+}
+JSON
+  echo "── T4 strict tsc ($MODE)"
+  ./node_modules/.bin/tsc -p "tsconfig.$MODE.json"
+done
+echo "── T3 form context across entries"
+node form-context.mjs
+echo "── T6 one translation store"
+node one-store.mjs
+
+echo "── Next project ($PM)"
+APP="$WORK/next-app"
+install_into "$APP" "${PEERS[@]}" "${TYPES[@]}" "next@^16" sonner "tailwindcss@^4" "@tailwindcss/postcss@^4" playwright-core
+cp -R "$HERE/fixtures/next-app/." "$APP/"
+cd "$APP"
+echo "── T1 next build"
+NEXT_TELEMETRY_DISABLED=1 ./node_modules/.bin/next build
+echo "── T1 / T5 build output"
+node check-build.mjs
+echo "── T5 check-tokens on the built CSS"
+# shellcheck disable=SC2046
+node node_modules/@mgamadeus/ddd-admin-ui/scripts/check-tokens.mjs $(cat built-css-files.txt)
+
+if [ "${SKIP_BROWSER:-}" = 1 ]; then
+  echo "── T2 / T7 skipped (SKIP_BROWSER=1)"
+else
+  PORT=$(node -e "const server = require('node:net').createServer().listen(0, () => { console.log(server.address().port); server.close(); })")
+  NEXT_TELEMETRY_DISABLED=1 ./node_modules/.bin/next start -p "$PORT" > next-start.log 2>&1 &
+  SERVER_PID=$!
+  trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+  for _ in $(seq 1 60); do
+    if curl -sf "http://127.0.0.1:$PORT/" > /dev/null; then break; fi
+    sleep 0.5
+  done
+  echo "── T2 / T7 headless browser"
+  node browser.mjs "http://127.0.0.1:$PORT"
+  kill $SERVER_PID 2>/dev/null || true
+fi
+
+echo "── link-skills"
+if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui link-skills; else pnpm exec ddd-admin-ui link-skills; fi
+test -f .claude/skills/ddd-admin-ui-specialist/SKILL.md
+echo "consumer check ($PM) passed"

@@ -1,0 +1,5 @@
+{
+  "Clear filters": "Button in a list toolbar that resets every filter of the list.",
+  "Close__dialog": "Screen-reader label of the close button of a dialog.",
+  "The request failed": "Fallback message when a failed request carries no message of its own."
+}

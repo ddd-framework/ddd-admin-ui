@@ -1,0 +1,42 @@
+/*
+ * @mgamadeus/ddd-admin-ui — structure the blocks rely on.
+ * Colours are read only through the host's Tailwind theme (--theme(--color-…)), never through bare role variables;
+ * layout values and alphas are plain custom properties the host sets (see tokens.json).
+ * Import after `@import "tailwindcss";` (and after theme.css when the host uses it).
+ */
+
+/* Lets the host's Tailwind scan this package's built files for class names. */
+@source "./";
+
+/* Layer scale: defaults with zero specificity, so any host value wins. */
+:where(:root) {
+  --layer-raised: 10;
+  --layer-sticky: 20;
+  --layer-overlay: 50;
+  --layer-popover: 50;
+}
+
+@utility text-title-page {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+@layer components {
+  .surface {
+    background-color: color-mix(in oklab, --theme(--color-card) var(--surface-alpha), transparent);
+    box-shadow: var(--surface-shadow);
+  }
+
+  .surface-glass {
+    background-color: color-mix(in oklab, --theme(--color-card) var(--surface-glass-alpha), transparent);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(12px);
+  }
+
+  /* Form actions render first, above the fields. */
+  form > [data-form-actions] {
+    order: -1;
+  }
+}
