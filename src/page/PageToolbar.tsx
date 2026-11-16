@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '../primitives/index.ts';
 import { useTranslate } from '../i18n/index.ts';
+import { useWriteAccess } from '../logic/react/writeAccess.ts';
 import { cn } from '../primitives/cn.ts';
 import { type PageLinkComponent, useLinkComponent } from '../primitives/link.tsx';
 
@@ -127,10 +128,12 @@ export type AddEntityButtonProps = AddEntityButtonBaseProps &
 
 /**
  * The page's one primary button, top right: `+ Add <Entity>`, or the host's `label`. A disabled link renders as a
- * disabled button.
+ * disabled button. As a button (`onClick`) it is also disabled while a `WriteAccessProvider` disallows writes; a link
+ * (`href`) never is: the create screen keeps its own guard.
  */
 export const AddEntityButton = ({ entity, label, href, linkComponent, onClick, disabled }: AddEntityButtonProps) => {
   const { t } = useTranslate();
+  const writeAccess = useWriteAccess();
   const Link = useLinkComponent(linkComponent);
   const content = (
     <>
@@ -145,8 +148,14 @@ export const AddEntityButton = ({ entity, label, href, linkComponent, onClick, d
       </Button>
     );
   }
+  const writeBlocked = !href && !writeAccess.allowed;
   return (
-    <Button type="button" onClick={onClick} disabled={disabled || (!onClick && !href)}>
+    <Button
+      type="button"
+      onClick={onClick}
+      disabled={disabled || (!onClick && !href) || writeBlocked}
+      title={writeBlocked ? writeAccess.reason : undefined}
+    >
       {content}
     </Button>
   );

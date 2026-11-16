@@ -1,12 +1,14 @@
 'use client';
 
-import { type ReactNode, useEffect, useRef } from 'react';
+import { type ReactNode, type Ref, type RefObject, useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { type Control, useFormContext } from 'react-hook-form';
 
 import { useTranslate } from '../i18n/index.ts';
 import { cn } from '../primitives/cn.ts';
-import { DrawerFooter } from './DrawerFooter.tsx';
+import { useFormActionsSlotFor } from '../primitives/formActionsSlot.tsx';
+import { DrawerFooterView } from './DrawerFooter.tsx';
 import { useIsInDrawer } from './drawerSlots.ts';
+import { SAVE_SHORTCUT_CONTAINER_SELECTOR, useSaveShortcut } from './saveShortcut.ts';
 import { useFormDirty } from '../logic/react/useFormDirty.ts';
 
 export interface FormActionsProps {
@@ -14,21 +16,24 @@ export interface FormActionsProps {
   secondary?: ReactNode;
   tertiary?: ReactNode;
   /**
-   * On a page: the glass action pill at the top right of the form, sticky under the header (default);
-   * `false` keeps a plain row (a dialog). Ignored in a drawer: its pinned footer gets the plain row with
-   * the change status.
+   * On a page: the glass action pill at the top right of the form, sticky under the header (default); `false` keeps a
+   * plain row. Inside a dialog (`[role="dialog"]` / `[role="alertdialog"]`, not a `FormDrawer`) the plain row is the
+   * default; `true` keeps the pill there. Ignored in a drawer: its pinned footer gets the plain row with the change
+   * status.
    */
   sticky?: boolean;
   /**
-   * Where the sticky pill sits from `md` up: `auto` (default) moves it up beside the tabs when the page has an
-   * `EntityTabs` row (`data-entity-tabs`) and keeps a row of its own on pages without tabs (create pages, plain details),
-   * where it would otherwise cover the page header; `row` always keeps its own row (a tab row too wide to share).
+   * Where the sticky pill sits: `auto` (default) moves it into the header slot closest above the form
+   * (`FormActionsSlot`, e.g. `EntityDetailShell formActionsSlot`) when one is mounted, and otherwise, from `md` up,
+   * beside the tabs when the page has an `EntityTabs` row (`data-entity-tabs`), else into a row of its own (create
+   * pages, plain details, where it would cover the page header); `header` asks for the slot (without one: as `auto`);
+   * `row` always keeps its own row (a tab row too wide to share), never the slot.
    */
-  placement?: 'auto' | 'row';
+  placement?: 'auto' | 'row' | 'header';
   /**
    * The change status for a form without react-hook-form (state-based forms): shows "Unsaved changes" / "No changes"
    * like an RHF form does. Ignored inside an RHF form (its own dirty state wins). ⌘S works in either case as long as
-   * the actions sit inside a `<form>` with a `type="submit"` primary.
+   * the actions are written inside a `<form>` that owns a `type="submit"` button.
    */
   isDirty?: boolean;
   /** Applies where the actions are written; dropped once they move into a drawer's footer. */
@@ -84,87 +89,201 @@ const ChangeStatus = ({ control, isDirty }: { control: Control | undefined; isDi
   return null;
 };
 
-/** ⌘S / Ctrl+S inside the form submits it (the primary is `type="submit"`, so the form's own validation runs). */
-const useSaveShortcut = (anchor: React.RefObject<HTMLElement | null>) => {
-  useEffect(() => {
-    const form = anchor.current?.closest('form');
-    if (!form) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() !== 's' || !(event.metaKey || event.ctrlKey) || event.altKey) return;
-      event.preventDefault();
-      // In a drawer the buttons sit in the portalled footer, linked back to the form by its `form` attribute.
-      const submit =
-        form.querySelector<HTMLButtonElement>('button[type="submit"]') ??
-        (form.id ? document.querySelector<HTMLButtonElement>(`button[type="submit"][form="${CSS.escape(form.id)}"]`) : null);
-      if (submit && !submit.disabled) form.requestSubmit(submit);
+/** Measures `--nav-h` in px (0 without it): a hidden probe of that height. */
+const useNavHeightProbe = () => {
+  const probe = useRef<HTMLDivElement | null>(null);
+  useLayoutEffect(() => {
+    const element = document.createElement('div');
+    element.setAttribute('aria-hidden', 'true');
+    element.style.cssText = 'position:fixed;top:0;left:0;width:0;height:var(--nav-h,0px);visibility:hidden;pointer-events:none';
+    document.body.append(element);
+    probe.current = element;
+    return () => {
+      element.remove();
+      probe.current = null;
     };
-    form.addEventListener('keydown', onKeyDown);
-    return () => form.removeEventListener('keydown', onKeyDown);
-  }, [anchor]);
+  }, []);
+  return useCallback(() => probe.current?.offsetHeight ?? 0, []);
+};
+
+interface FloatingBox {
+  width: number;
+  height: number;
+  right: number;
+}
+
+interface SlotPillProps {
+  children: ReactNode;
+  pillRef: Ref<HTMLDivElement>;
+  /** The actions' anchor in the form: the pill floats only while the form is still in view. */
+  anchorRef: RefObject<HTMLSpanElement | null>;
+}
+
+/**
+ * The pill in a header slot: in the header while it is in view; once the header scrolls under the top bar
+ * (`--nav-h`), fixed under the bar at the slot's right edge while the form is still in view, the slot keeping its size
+ * so the header does not move.
+ */
+const SlotPill = ({ children, pillRef, anchorRef }: SlotPillProps) => {
+  const holder = useRef<HTMLDivElement>(null);
+  const pill = useRef<HTMLDivElement | null>(null);
+  const [floating, setFloating] = useState<FloatingBox | null>(null);
+  const navHeight = useNavHeightProbe();
+
+  useLayoutEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const holderElement = holder.current;
+      const pillElement = pill.current;
+      if (!holderElement || !pillElement) return;
+      const box = holderElement.getBoundingClientRect();
+      // the pill's own top offset under the bar: 0.5rem, as the sticky pill on pages
+      const gap = parseFloat(getComputedStyle(document.documentElement).fontSize || '16') * 0.5;
+      const top = navHeight() + gap;
+      const formElement = anchorRef.current?.closest('form') ?? anchorRef.current?.parentElement ?? null;
+      const formBottom = formElement ? formElement.getBoundingClientRect().bottom : Number.POSITIVE_INFINITY;
+      const shouldFloat = box.top < top && formBottom > top + pillElement.offsetHeight;
+      setFloating(current => {
+        if (!shouldFloat) return null;
+        const size = current ?? { width: pillElement.offsetWidth, height: pillElement.offsetHeight, right: 0 };
+        const right = Math.max(0, document.documentElement.clientWidth - box.right);
+        return current && current.right === right ? current : { ...size, right };
+      });
+    };
+    const schedule = () => {
+      if (frame === 0) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', schedule, { capture: true, passive: true });
+    window.addEventListener('resize', schedule);
+    return () => {
+      if (frame !== 0) cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', schedule, { capture: true });
+      window.removeEventListener('resize', schedule);
+    };
+  }, [navHeight, anchorRef]);
+
+  const setPill = useCallback(
+    (element: HTMLDivElement | null) => {
+      pill.current = element;
+      if (typeof pillRef === 'function') pillRef(element);
+      else if (pillRef) pillRef.current = element;
+    },
+    [pillRef]
+  );
+
+  return (
+    <div
+      ref={holder}
+      data-form-actions={FORM_ACTIONS_MARKER}
+      data-form-actions-placement="header"
+      style={floating ? { width: floating.width, height: floating.height } : undefined}
+    >
+      <div
+        ref={setPill}
+        data-form-actions-floating={floating ? '' : undefined}
+        className={cn(STICKY_PILL_CLASS, 'max-sm:w-auto', floating && 'fixed top-[calc(var(--nav-h)+0.5rem)] z-(--layer-sticky)')}
+        style={floating ? { right: floating.right } : undefined}
+      >
+        {children}
+      </div>
+    </div>
+  );
 };
 
 /**
- * A form's Save / Cancel actions — the one standard of every entity create / edit screen. On a
- * page: a glass pill at the top right of the form, sticky under the header, with the change status ("Unsaved
- * changes" / "No changes", from the surrounding RHF form), tertiary, secondary (Cancel) and the primary next to each
- * other, primary last; ⌘S / Ctrl+S submits. Inside a `FormDrawer` the buttons move into the drawer's pinned footer;
- * `sticky={false}` is a plain row.
+ * A form's Save / Cancel actions — the one standard of every entity create / edit screen. On a page: a glass pill at
+ * the top right of the form, sticky under the header, with the change status ("Unsaved changes" / "No changes", from
+ * the surrounding RHF form), tertiary, secondary (Cancel) and the primary next to each other, primary last; in a
+ * header slot (`placement`) the same pill in the header. Inside a `FormDrawer` the buttons move into the drawer's
+ * pinned footer; inside another dialog, and with `sticky={false}`, a plain row. ⌘S / Ctrl+S submits
+ * (`useSaveShortcut`: in a dialog or drawer anywhere inside it; on a page with focus in the form, on the actions or
+ * nowhere).
  */
 export const FormActions = ({
   primary,
   secondary,
   tertiary,
-  sticky = true,
+  sticky,
   placement = 'auto',
   isDirty,
   className,
 }: FormActionsProps) => {
   const formContext = useFormContext();
   const isInDrawer = useIsInDrawer();
-  const anchor = useRef<HTMLDivElement>(null);
-  useSaveShortcut(anchor);
+  const anchorRef = useRef<HTMLSpanElement | null>(null);
+  const actionsRef = useRef<HTMLDivElement | null>(null);
+  const [anchor, setAnchorState] = useState<HTMLSpanElement | null>(null);
+  const [isInDialog, setIsInDialog] = useState(false);
+  const setAnchor = useCallback((element: HTMLSpanElement | null) => {
+    anchorRef.current = element;
+    setAnchorState(element);
+  }, []);
+
+  useLayoutEffect(() => {
+    setIsInDialog(anchor?.closest(SAVE_SHORTCUT_CONTAINER_SELECTOR) != null);
+  }, [anchor]);
+
+  useSaveShortcut(() => ({ form: anchorRef.current?.closest('form') ?? null, actions: actionsRef.current }));
+
+  const slotElement = useFormActionsSlotFor(placement === 'row' ? null : anchor);
+  const status = <ChangeStatus control={formContext?.control} isDirty={isDirty} />;
 
   if (isInDrawer) {
     // The drawer's pinned footer: the change status left, the buttons right, primary last.
     return (
-      <DrawerFooter inlineClassName={cn('pt-6', className)}>
-        <div ref={anchor} className="flex flex-wrap-reverse items-center gap-2">
-          {(formContext || isDirty !== undefined) && (
-            <div className="mr-auto">
-              <ChangeStatus control={formContext?.control} isDirty={isDirty} />
-            </div>
-          )}
+      <DrawerFooterView anchorRef={setAnchor} inlineClassName={cn('pt-6', className)}>
+        <div ref={actionsRef} className="flex flex-wrap-reverse items-center gap-2">
+          {(formContext || isDirty !== undefined) && <div className="mr-auto">{status}</div>}
           {tertiary && <div className={ACTION_CLASS}>{tertiary}</div>}
           {secondary && <div className={ACTION_CLASS}>{secondary}</div>}
           {primary && <div className={ACTION_CLASS}>{primary}</div>}
         </div>
-      </DrawerFooter>
+      </DrawerFooterView>
     );
   }
 
-  if (!sticky) {
+  if (sticky === false || (sticky === undefined && isInDialog)) {
     return (
-      <DrawerFooter inlineClassName={cn('pt-6', className)}>
-        <div ref={anchor} className="flex flex-wrap-reverse items-center gap-2">
+      <DrawerFooterView anchorRef={setAnchor} inlineClassName={cn('pt-6', className)}>
+        <div ref={actionsRef} className="flex flex-wrap-reverse items-center gap-2">
           {secondary && <div className={ACTION_CLASS}>{secondary}</div>}
           {tertiary && <div className={ACTION_CLASS}>{tertiary}</div>}
           {primary && <div className={cn(ACTION_CLASS, 'sm:ml-auto')}>{primary}</div>}
         </div>
-      </DrawerFooter>
+      </DrawerFooterView>
+    );
+  }
+
+  const buttons = (
+    <>
+      {status}
+      {tertiary && <div className={ACTION_CLASS}>{tertiary}</div>}
+      {secondary && <div className={ACTION_CLASS}>{secondary}</div>}
+      {primary && <div className={ACTION_CLASS}>{primary}</div>}
+    </>
+  );
+
+  if (slotElement) {
+    return (
+      <DrawerFooterView anchorRef={setAnchor} portalInto={slotElement} className={className}>
+        <SlotPill pillRef={actionsRef} anchorRef={anchorRef}>
+          {buttons}
+        </SlotPill>
+      </DrawerFooterView>
     );
   }
 
   return (
-    <DrawerFooter
-      inlineClassName={cn(STICKY_WRAPPER_CLASS, placement === 'auto' && BESIDE_TABS_CLASS, className)}
+    <DrawerFooterView
+      anchorRef={setAnchor}
+      inlineClassName={cn(STICKY_WRAPPER_CLASS, placement !== 'row' && BESIDE_TABS_CLASS, className)}
       inlineProps={{ 'data-form-actions': FORM_ACTIONS_MARKER }}
     >
-      <div ref={anchor} className={STICKY_PILL_CLASS}>
-        <ChangeStatus control={formContext?.control} isDirty={isDirty} />
-        {tertiary && <div className={ACTION_CLASS}>{tertiary}</div>}
-        {secondary && <div className={ACTION_CLASS}>{secondary}</div>}
-        {primary && <div className={ACTION_CLASS}>{primary}</div>}
+      <div ref={actionsRef} className={STICKY_PILL_CLASS}>
+        {buttons}
       </div>
-    </DrawerFooter>
+    </DrawerFooterView>
   );
 };

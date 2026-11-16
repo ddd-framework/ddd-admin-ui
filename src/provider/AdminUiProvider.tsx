@@ -1,16 +1,19 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useMemo } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
 import { setTranslations } from '../i18n/store.ts';
+import type { ConfirmOptions } from '../logic/pure/confirm.ts';
+import { createConfirmQueue } from '../logic/pure/confirmQueue.ts';
 import { setNotificationAdapter } from '../logic/pure/notify.ts';
+import { ConfirmContext } from '../logic/react/useConfirm.ts';
 import { LinkComponentProvider } from '../primitives/link.tsx';
 import { PortalContainerProvider } from '../primitives/portal.tsx';
 import { TooltipProvider } from '../primitives/tooltip.tsx';
 import { AdminUiContext } from './adminUiContext.ts';
+import { ConfirmHost } from './ConfirmHost.tsx';
 import { defaultStorageKey } from './storageKey.ts';
 import type { AdminUiContextValue, AdminUiProviderProps, TranslationAdapter } from './types.ts';
-
 
 /** Keeps the package's translation store on the host store's current snapshot. */
 const TranslationBridge = ({ adapter }: { adapter: TranslationAdapter }) => {
@@ -28,8 +31,9 @@ const TranslationBridge = ({ adapter }: { adapter: TranslationAdapter }) => {
 /**
  * The one provider of the package: registers the host's notification adapter, feeds the translation store from a
  * host store, renders the tooltip provider and the portal container, and hands the host adapters (storage keys,
- * router hooks, upload, markdown editor, AI translation) to packaged screens through `useAdminUi()`, and sets the link
- * component of every block (`linkComponent`). Blocks never read `useAdminUi()`: they take adapters as props.
+ * router hooks, upload, markdown editor, AI translation) to packaged screens through `useAdminUi()`, sets the link
+ * component of every block (`linkComponent`), and answers `useConfirm()` (the package dialog, or the host's `confirm`).
+ * Blocks never read `useAdminUi()`: they take adapters as props.
  */
 export const AdminUiProvider = ({
   children,
@@ -45,7 +49,11 @@ export const AdminUiProvider = ({
   aiTranslation,
   preserveSearchParams,
   linkComponent,
+  confirm: hostConfirm,
 }: AdminUiProviderProps) => {
+  const [confirmQueue] = useState(() => createConfirmQueue<ConfirmOptions>());
+  const confirm = hostConfirm ?? confirmQueue.request;
+
   // A layout effect: registered before any child's ordinary effect can raise a toast.
   useLayoutEffect(() => {
     if (!notifications) return;
@@ -71,7 +79,10 @@ export const AdminUiProvider = ({
       {translations && <TranslationBridge adapter={translations} />}
       <TooltipProvider delayDuration={tooltipDelayMs}>
         <PortalContainerProvider container={portalContainer}>
-          {linkComponent ? <LinkComponentProvider linkComponent={linkComponent}>{children}</LinkComponentProvider> : children}
+          <ConfirmContext.Provider value={confirm}>
+            {linkComponent ? <LinkComponentProvider linkComponent={linkComponent}>{children}</LinkComponentProvider> : children}
+            {hostConfirm ? null : <ConfirmHost queue={confirmQueue} />}
+          </ConfirmContext.Provider>
         </PortalContainerProvider>
       </TooltipProvider>
     </AdminUiContext.Provider>

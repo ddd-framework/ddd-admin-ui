@@ -17,6 +17,8 @@ export {
 } from './pure/conditions.ts';
 export type { FormCondition, FormRule, ResetWhenRule } from './pure/conditions.ts';
 export { DISCARD_CHANGES_CONFIRM } from './pure/confirm.ts';
+export { createConfirmQueue } from './pure/confirmQueue.ts';
+export type { ConfirmQueue, ConfirmQueueEntry } from './pure/confirmQueue.ts';
 export { fromDateInputValue, fromDateTimeInputValue, toDateInputValue, toDateTimeInputValue } from './pure/dateInput.ts';
 export type { DateInputZone } from './pure/dateInput.ts';
 export { withStickyParams } from './pure/stickyParams.ts';
@@ -64,6 +66,8 @@ export type {
   ListTrack,
   ListTrackLayout,
 } from './pure/listTracks.ts';
+export { narrowWriteAccess, WRITE_ACCESS_ALLOWED } from './pure/writeAccess.ts';
+export type { WriteAccess } from './pure/writeAccess.ts';
 export { toFormSubmitError } from './pure/submitError.ts';
 export type { FormSubmitError } from './pure/submitError.ts';
 export {
@@ -79,6 +83,7 @@ export type { UrlStateAdapter } from './pure/urlListState.ts';
 
 // React
 export { useCondition, useDisabledWhen, useRequiredWhen, useResetWhen, useVisibleWhen } from './react/conditionHooks.ts';
+export { ConfirmContext, useConfirm } from './react/useConfirm.ts';
 export { useCopyToClipboard } from './react/useCopyToClipboard.ts';
 export type { CopyToClipboard } from './react/useCopyToClipboard.ts';
 export { useDebouncedValue } from './react/useDebouncedValue.ts';
@@ -108,6 +113,8 @@ export type {
 } from './react/useTranslationRunner.ts';
 export { UnsavedChangesContext, useUnsavedChangesBoundary, useUnsavedChangesGuard } from './react/useUnsavedChangesGuard.ts';
 export type { ConfirmFn, UnsavedChangesRegistry } from './react/useUnsavedChangesGuard.ts';
+export { useWriteAccess, WriteAccessContext, WriteAccessProvider } from './react/writeAccess.ts';
+export type { WriteAccessProviderProps } from './react/writeAccess.ts';
 export { useUrlListState } from './react/useUrlListState.ts';
 export type { UrlListState, UseUrlListStateOptions } from './react/useUrlListState.ts';
 

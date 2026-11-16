@@ -1,6 +1,6 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.1.0-rc.5",
+  "version": "0.1.0-rc.6",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
@@ -129,9 +129,18 @@
       "text": "Cancel",
       "context": "confirm-dialog",
       "files": [
-        "form/useConfirmDialog.tsx"
+        "primitives/confirmDialogView.tsx"
       ],
       "hint": "Button on the left of a generic confirmation dialog that dismisses it without doing the action. Shown when the caller did not set its own label."
+    },
+    {
+      "key": "Cancel__form-dialog",
+      "text": "Cancel",
+      "context": "form-dialog",
+      "files": [
+        "form/FormDialog.tsx"
+      ],
+      "hint": "Button on the left of a dialog that holds a short form (rename, create, delete with a reason); closes the dialog without saving. Asks first when the form has unsaved changes. Shown when the caller did not set its own label."
     },
     {
       "key": "Cancel__media-picker",
@@ -283,7 +292,7 @@
       "text": "Confirm",
       "context": "confirm-dialog",
       "files": [
-        "form/useConfirmDialog.tsx"
+        "primitives/confirmDialogView.tsx"
       ],
       "hint": "Button on the right of a generic confirmation dialog that carries out the action asked about. Shown when the caller did not set its own label."
     },
@@ -934,6 +943,14 @@
         "logic/react/useTranslationRunner.ts"
       ],
       "hint": "Fallback error message shown in the tooltip of a failed language in the translation progress list when the server gave no message."
+    },
+    {
+      "key": "Type “%phrase%” to confirm",
+      "text": "Type “%phrase%” to confirm",
+      "files": [
+        "primitives/confirmDialogView.tsx"
+      ],
+      "hint": "Label above the text field of a confirmation dialog for an irreversible step; the confirm button stays off until the user types the phrase exactly. %phrase% is the phrase to type (for example the name of the item to delete). Keep the quotation marks around it."
     },
     {
       "key": "Unauthorized",

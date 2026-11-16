@@ -3,11 +3,14 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
+import { EntityListBulkBar } from '../../list/index.ts';
+import { AddEntityButton } from '../../page/index.ts';
 import {
   DrawerFooter,
   Form,
   FORM_PANEL_SCROLL_MARGIN_CLASS,
   FormActions,
+  FormDialog,
   FormDrawer,
   FormErrors,
   FormField,
@@ -19,8 +22,8 @@ import {
   FormWrapper,
   VisibleWhen,
 } from '../../form/index.ts';
-import { fieldEquals, type FormSubmitError } from '../../logic/index.ts';
-import { Button, Input, Switch } from '../../primitives/index.ts';
+import { fieldEquals, type FormSubmitError, useConfirm, WriteAccessProvider } from '../../logic/index.ts';
+import { Button, FormActionsSlotProvider, Input, Label, Switch } from '../../primitives/index.ts';
 import { Sample, Samples } from './PrimitivesShowcase.tsx';
 
 interface ShowcaseFormValues {
@@ -85,6 +88,148 @@ const ShowcaseFormBody = ({ idPrefix, onClose }: { idPrefix: string; onClose?: (
   );
 };
 
+interface ShowcaseDialogValues {
+  name: string;
+}
+
+const FormDialogSample = () => {
+  const [open, setOpen] = useState(false);
+  const [plainOpen, setPlainOpen] = useState(false);
+  const [plainName, setPlainName] = useState('');
+  const [pending, setPending] = useState(false);
+  const form = useForm<ShowcaseDialogValues>({ defaultValues: { name: 'Sample' } });
+  const save = () => {
+    setPending(true);
+    window.setTimeout(() => {
+      setPending(false);
+      setOpen(false);
+    }, 600);
+  };
+  return (
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        Open form dialog
+      </Button>
+      <FormDialog<ShowcaseDialogValues>
+        open={open}
+        onOpenChange={setOpen}
+        title="Rename item"
+        description="A react-hook-form instance, so FormField works inside."
+        form={form}
+        onSubmit={save}
+        submitLabel="Save"
+        pendingLabel="Saving…"
+        isPending={pending}
+        isDirty={form.formState.isDirty}
+      >
+        <FormField<ShowcaseDialogValues, 'name'> name="name" label="Name" required>
+          {({ field, control }) => <Input {...control} {...field} />}
+        </FormField>
+      </FormDialog>
+      <Button variant="outline" onClick={() => setPlainOpen(true)}>
+        Open plain form dialog
+      </Button>
+      <FormDialog
+        open={plainOpen}
+        onOpenChange={setPlainOpen}
+        title="Delete item"
+        description="No form library: plain state."
+        onSubmit={() => setPlainOpen(false)}
+        submitLabel="Delete"
+        submitVariant="destructive"
+        submitDisabled={plainName.trim() === ''}
+        isPending={false}
+      >
+        <div className="grid gap-2">
+          <Label htmlFor="showcase-form-dialog-reason">Reason</Label>
+          <Input id="showcase-form-dialog-reason" value={plainName} onChange={event => setPlainName(event.target.value)} />
+        </div>
+      </FormDialog>
+    </>
+  );
+};
+
+const ConfirmSample = () => {
+  const confirm = useConfirm();
+  const [answer, setAnswer] = useState('–');
+  return (
+    <>
+      <Button
+        variant="outline"
+        onClick={async () =>
+          setAnswer(String(await confirm({ title: 'Archive item?', description: 'It leaves the active list.', confirmLabel: 'Archive' })))
+        }
+      >
+        useConfirm()
+      </Button>
+      <Button
+        variant="outline"
+        onClick={async () =>
+          setAnswer(
+            String(
+              await confirm({
+                title: 'Delete “Main site”?',
+                description: 'This cannot be undone.',
+                confirmLabel: 'Delete',
+                confirmVariant: 'destructive',
+                requirePhrase: 'Main site',
+              })
+            )
+          )
+        }
+      >
+        With a phrase
+      </Button>
+      <span className="self-center text-sm text-muted-foreground">Answer: {answer}</span>
+    </>
+  );
+};
+
+const HeaderSlotSample = () => {
+  const form = useForm<ShowcaseDialogValues>({ defaultValues: { name: 'Sample' } });
+  return (
+    <FormActionsSlotProvider>
+      <div className="w-full space-y-4">
+        {/* a host header renders <FormActionsSlot /> itself; FormHeader and EntityDetailShell take formActionsSlot */}
+        <FormHeader title="Edit item" description="The actions sit in the header." formActionsSlot />
+        <Form form={form} onSubmit={() => form.reset(form.getValues())}>
+          <FormSection title="General">
+            <FormField<ShowcaseDialogValues, 'name'> name="name" label="Name">
+              {({ field, control }) => <Input {...control} {...field} />}
+            </FormField>
+          </FormSection>
+          <FormActions placement="header" primary={<FormSubmitButton>Save</FormSubmitButton>} />
+        </Form>
+      </div>
+    </FormActionsSlotProvider>
+  );
+};
+
+const WriteAccessSample = () => {
+  const form = useForm<ShowcaseDialogValues>({ defaultValues: { name: 'Sample' } });
+  return (
+    <WriteAccessProvider value={{ allowed: false, reason: 'This workspace is read-only' }}>
+      <div className="flex w-full flex-col gap-3">
+        <div className="flex flex-wrap gap-2">
+          <AddEntityButton entity="Item" onClick={() => {}} />
+          <AddEntityButton entity="Item" href="#create" />
+        </div>
+        <EntityListBulkBar
+          selection={{ count: 2, clear: () => {} }}
+          actions={[{ id: 'export', label: 'Export', onClick: () => {}, ignoreWriteAccess: true }]}
+          onDelete={() => {}}
+        />
+        <Form form={form} onSubmit={() => {}}>
+          <div className="flex gap-2">
+            <FormSubmitButton>Save</FormSubmitButton>
+            <FormSubmitButton ignoreWriteAccess>Preview</FormSubmitButton>
+          </div>
+        </Form>
+      </div>
+    </WriteAccessProvider>
+  );
+};
+
 /** The `./form` section. */
 export const FormShowcase = () => {
   const [open, setOpen] = useState(false);
@@ -108,6 +253,18 @@ export const FormShowcase = () => {
             <span className="text-xs text-muted-foreground">DrawerFooter content</span>
           </DrawerFooter>
         </FormDrawer>
+      </Sample>
+      <Sample title="FormDialog">
+        <FormDialogSample />
+      </Sample>
+      <Sample title="useConfirm (./logic, drawn by AdminUiProvider)">
+        <ConfirmSample />
+      </Sample>
+      <Sample title="FormActionsSlotProvider, FormActionsSlot, FormActions placement header">
+        <HeaderSlotSample />
+      </Sample>
+      <Sample title="WriteAccessProvider (./logic): write controls off, links and reads stay">
+        <WriteAccessSample />
       </Sample>
     </Samples>
   );

@@ -3,6 +3,7 @@
 import { Loader2, Trash2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import { useWriteAccess } from '../logic/react/writeAccess.ts';
 import { Button } from '../primitives/index.ts';
 import { useTranslate } from '../i18n/index.ts';
 import { cn } from '../primitives/cn.ts';
@@ -16,6 +17,8 @@ export interface EntityListBulkAction {
   disabled?: boolean;
   /** This action is running: spinner instead of the icon. */
   busy?: boolean;
+  /** An action that only reads (export, copy ids): not disabled by `WriteAccessProvider`. */
+  ignoreWriteAccess?: boolean;
 }
 
 export interface EntityListBulkBarProps {
@@ -27,7 +30,11 @@ export interface EntityListBulkBarProps {
   onDelete?: () => void;
   deleteLabel?: string;
   deleteBusy?: boolean;
-  /** Disables every action (writes not allowed, another bulk action running); Clear stays usable unless `busy`. */
+  /**
+   * Disables every action (writes not allowed, another bulk action running); Clear stays usable unless `busy`. A
+   * `WriteAccessProvider` with `allowed: false` disables the actions and Delete as well (not Clear, not an action with
+   * `ignoreWriteAccess`).
+   */
   disabled?: boolean;
   /** A bulk action is running: Clear is locked too. */
   busy?: boolean;
@@ -53,8 +60,11 @@ export const EntityListBulkBar = ({
   className,
 }: EntityListBulkBarProps) => {
   const { t } = useTranslate();
+  const writeAccess = useWriteAccess();
   const { count, clear } = selection;
   if (count === 0) return null;
+  const writeBlocked = !writeAccess.allowed;
+  const blockedTitle = writeBlocked ? writeAccess.reason : undefined;
 
   return (
     <div
@@ -83,7 +93,8 @@ export const EntityListBulkBar = ({
             size="sm"
             variant="outline"
             onClick={action.onClick}
-            disabled={disabled || busy || action.disabled}
+            disabled={disabled || busy || action.disabled || (writeBlocked && !action.ignoreWriteAccess)}
+            title={action.ignoreWriteAccess ? undefined : blockedTitle}
             className="h-8 bg-card"
           >
             {action.busy ? <Loader2 className="animate-spin" aria-hidden /> : action.icon}
@@ -96,7 +107,8 @@ export const EntityListBulkBar = ({
             size="sm"
             variant="outline"
             onClick={onDelete}
-            disabled={disabled || busy}
+            disabled={disabled || busy || writeBlocked}
+            title={blockedTitle}
             className="h-8 border-destructive/40 bg-card text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
             {deleteBusy ? <Loader2 className="animate-spin" aria-hidden /> : <Trash2 aria-hidden />}

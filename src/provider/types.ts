@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import type { WritingStyle } from '../i18n/store.ts';
 import type { NotificationAdapter } from '../logic/pure/notify.ts';
+import type { ConfirmOptions } from '../logic/pure/confirm.ts';
 import type { EntityDrawerUrlAdapter } from '../logic/pure/entityDrawer.ts';
 import type { UrlStateAdapter } from '../logic/pure/urlListState.ts';
 import type { MediaUploadAdapter } from '../media/types.ts';
@@ -64,6 +65,11 @@ export interface AdminUiProviderProps {
    * `linkComponent` prop still wins. Wrap the router link with `withStickyParams` to keep sticky search parameters.
    */
   linkComponent?: PageLinkComponent;
+  /**
+   * The host's confirmation service behind `useConfirm()` (`(options) => Promise<boolean>`, a stable function); the
+   * package dialog does not render then. Absent: the package dialog, one confirmation after the other.
+   */
+  confirm?: (options: ConfirmOptions) => Promise<boolean>;
 }
 
 export interface AdminUiContextValue extends Required<Pick<AdminUiProviderProps, 'storageKey'>> {

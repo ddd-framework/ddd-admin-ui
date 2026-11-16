@@ -3,6 +3,69 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x prereleases.
 
+## 0.1.0-rc.6
+
+All additions are optional props or new exports: a caller that uses none of them renders the same DOM as in
+0.1.0-rc.5, proven by a server-render snapshot taken from 0.1.0-rc.5 (`form-actions-snapshot.html`: `FormActions`,
+`FormSubmitButton`, `AddEntityButton`, `EntityListBulkBar`, `EntityDetailShell`, `FormHeader`, `DetailHeader`), next to
+the list snapshot from 0.1.0-rc.2 (`pnpm test:render`; icons are reduced to their own classes, so the snapshot holds
+at every lucide-react the peer range admits).
+
+- `FormDialog` in `./form` (type `FormDialogProps`): a form in a dialog with or without a form library. Props `open`,
+  `onOpenChange`, `title`, `description`, `children`, `submitLabel`, `pendingLabel`, `cancelLabel`, `isPending`,
+  `isDirty` (a close request asks "Discard changes?"), `submitDisabled`, `submitVariant` (`default` / `destructive`),
+  `ignoreWriteAccess`, `className`, `onSubmit`, and an optional react-hook-form instance `form` (then `FormField` works
+  inside and `onSubmit` gets the parsed values; react-hook-form stays a peer). A real `<form>`: Enter in a text field
+  and ⌘S submit it; a dialog opened from it is its own form (its submit never reaches this one). Escape, the backdrop
+  and Cancel are ignored while pending or while the promise `onSubmit` returns runs; after a failed submit the dialog
+  is usable again. The focus returns to the element that had it when the dialog opened.
+- `FormActions`:
+  - ⌘S / Ctrl+S listens on `document`. Inside a dialog or drawer (`[role="dialog"]`, `[role="alertdialog"]`) it answers
+    anywhere inside the innermost container holding the focus; elsewhere with focus in the form, on the actions (also
+    portalled) or nowhere (`body`). In scope it prevents the default, also while the primary is disabled (then nothing
+    submits); an event already `defaultPrevented` is left alone, so of two forms only one answers. It submits with
+    `form.requestSubmit(submitter)`, the actions' own submit button linked to the form first, else any submit button the
+    form owns. (Before: a listener on the form only; focus on `body` or on a portalled footer did nothing.)
+  - `placement: 'auto' | 'row' | 'header'` (`header` is new). `auto` moves the pill into the header slot closest above
+    the form when one is mounted, else it stays as before; `header` asks for the slot (without one: as `auto`); `row`
+    never moves. In a slot the actions are the same pill, floating under the top bar (`--nav-h`) once the header
+    scrolls away while the form is in view; the portalled submit button is linked back with the `form` attribute.
+  - Inside a dialog that is not a `FormDrawer` the actions render the plain row by themselves (as `sticky={false}`);
+    `sticky` without a value is now "pill on a page, row in a dialog", an explicit `sticky` keeps the pill there.
+- Header slot in `./primitives`: `FormActionsSlotProvider`, `FormActionsSlot` (types `FormActionsSlotProviderProps`,
+  `FormActionsSlotProps`); `EntityDetailShell formActionsSlot` (brings its own provider; a nested shell takes the
+  actions of its own forms), `FormHeader formActionsSlot` and `DetailHeader formActionsSlot` (inside a provider around
+  header and form). Of several slots in one provider the one closest above the form wins.
+- `useConfirm()` in `./logic` (with `ConfirmContext`): `confirm(options): Promise<boolean>` of the nearest
+  `AdminUiProvider`, which draws the dialog; nothing to render in the screen. Calls queue; each settles exactly once; an
+  unmounted provider settles its pending calls with `false`; Strict Mode safe; the focus returns to the element that
+  asked. Without a provider every call answers `false` with one warning outside production. `AdminUiProvider.confirm`
+  takes the host's own service (then `useConfirm()` calls it and the package dialog does not render).
+  `createConfirmQueue` (types `ConfirmQueue`, `ConfirmQueueEntry`) is the queue behind it. `useConfirmDialog` stays.
+- `ConfirmOptions.requirePhrase` and `requirePhraseLabel`: the confirm button stays off until the phrase is typed
+  (trimmed, exact), in `useConfirm` and `useConfirmDialog` alike. `useConfirmDialog` now also returns the focus to the
+  element that had it when the dialog opened (before: Radix focused no trigger).
+- Write access in `./logic`: `WriteAccessProvider value={{ allowed, reason? }}` (nestable, a subtree only narrows; no
+  provider = allowed), `useWriteAccess()`, `WriteAccessContext`, `narrowWriteAccess`, `WRITE_ACCESS_ALLOWED`, types
+  `WriteAccess`, `WriteAccessProviderProps`. Honoured by `FormSubmitButton`, `FormDialog`'s submit, the actions and
+  Delete of `EntityListBulkBar` (not Clear) and `AddEntityButton` as a button (never as a link); the reason is the
+  disabled control's title. `ignoreWriteAccess` on `FormSubmitButton`, `FormDialog` and `EntityListBulkAction` for a
+  control that only reads. A presentation aid: it replaces no handler guard and no server check.
+- Showcase: samples of `FormDialog`, `useConfirm` (with a phrase), the header slot and write access;
+  `SHOWCASE_COVERAGE` lists `FormDialog`, `FormActionsSlotProvider`, `FormActionsSlot`.
+- Text keys: new `Cancel__form-dialog`, `Type “%phrase%” to confirm`. `Cancel__confirm-dialog` and
+  `Confirm__confirm-dialog` are now used by `primitives/confirmDialogView.tsx` (the shared dialog).
+- DOM of the new paths only: `data-form-actions-slot` on a slot, `data-form-actions-placement="header"` and
+  `data-form-actions-floating` on the pill in a slot, `data-confirm-phrase` around the phrase field.
+- Docs: `STANDARDS.md` § 14 (form dialogs and confirmations) and § 15 (write access; the toolbar and bulk sections no
+  longer pass the write flag to every control), § 8 header slots; README provider props and confirmations; the skill.
+- Consumer checks: the snapshot from 0.1.0-rc.5 and write access (server render); in the browser `FormDialog` (Enter,
+  pending, failed submit, a nested dialog, two forms on a page, focus return), the shortcut (focus on `body`, a drawer
+  footer button outside the form, focus in another form, a disabled primary, two nested dialogs), header slots (closest
+  slot, nested shells, `row`, the `form` attribute, the floating pill) and `useConfirm` (Escape, focus back to the
+  trigger, queue, phrase, inside a drawer, two providers, Strict Mode, unmount); unit tests for the confirm queue, the
+  missing-provider answer and the write access merge.
+
 ## 0.1.0-rc.5
 
 - `EntityListTable` / `EntityListBody`: `rowClassName(item, index)` for extra row classes.

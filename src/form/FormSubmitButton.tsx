@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { useFormState } from 'react-hook-form';
 
+import { useWriteAccess } from '../logic/react/writeAccess.ts';
 import { Button } from '../primitives/index.ts';
 
 export interface FormSubmitButtonProps {
@@ -13,6 +14,11 @@ export interface FormSubmitButtonProps {
   disabled?: boolean;
   /** Extra pending source outside the submit handler (a mutation still loading). */
   isPending?: boolean;
+  /**
+   * A submit that only reads (a search, a preview): not disabled by `WriteAccessProvider`. Without it the button is
+   * disabled while writes are not allowed, with the reason as its title.
+   */
+  ignoreWriteAccess?: boolean;
   className?: string;
 }
 
@@ -25,12 +31,20 @@ export const FormSubmitButton = ({
   pendingLabel,
   disabled = false,
   isPending = false,
+  ignoreWriteAccess = false,
   className,
 }: FormSubmitButtonProps) => {
   const { isSubmitting } = useFormState();
+  const writeAccess = useWriteAccess();
   const pending = isSubmitting || isPending;
+  const writeBlocked = !ignoreWriteAccess && !writeAccess.allowed;
   return (
-    <Button type="submit" disabled={disabled || pending} className={className}>
+    <Button
+      type="submit"
+      disabled={disabled || pending || writeBlocked}
+      title={writeBlocked ? writeAccess.reason : undefined}
+      className={className}
+    >
       {pending && pendingLabel ? pendingLabel : children}
     </Button>
   );

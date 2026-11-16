@@ -8,15 +8,16 @@ Where the names below come from (setup and the entry list: [`README.md`](./READM
 
 | Entry | Names used here |
 |---|---|
-| `@mgamadeus/ddd-admin-ui/logic` | `useUrlListState`, `useRowSelection`, `useEntityDrawer`, `drawerKey`, `defineStatusMap`, `formatDate`, `formatDateTime`, `runSequentialWithSummary`, `nextListSort`, `parseListSort`, `formatListSort` |
+| `@mgamadeus/ddd-admin-ui/logic` | `useUrlListState`, `useRowSelection`, `useEntityDrawer`, `drawerKey`, `defineStatusMap`, `formatDate`, `formatDateTime`, `runSequentialWithSummary`, `nextListSort`, `parseListSort`, `formatListSort`, `useConfirm`, `WriteAccessProvider`, `useWriteAccess` |
 | `@mgamadeus/ddd-admin-ui/list` | `EntityListToolbar`, `EntityListBody`, `EntityListTable`, `EntityListViewToggle`, `EntityListBulkBar`, `FilterPanel`, `FilterText`, `FilterSelect`, `FilterMultiSelect`, `FilterDateRange`, `YES_NO_FILTER_OPTIONS`, `StatusBadge`, `IdCell`, `DateCell`, `BooleanCell`, `ImageCell`, `EmptyValue`, `orEmpty`, `MultiSelect`, `ChipToggleGroup`, `Combobox`, `Tag` |
 | `@mgamadeus/ddd-admin-ui/page` | `EntityListPage`, `PageToolbar`, `ExportButton`, `AddEntityButton`, `EntityDetailShell`, `SectionHeader`, `DefinitionList`, `EditableCard`, `IconValue`, `IconValueRow`, `PageSections`, `CardGrid`, `PageFrame`, `PageHeader` |
-| `@mgamadeus/ddd-admin-ui/form` | `FormDrawer`, `FormActions`, `FormField`, `FormSection`, `useConfirmDialog` |
+| `@mgamadeus/ddd-admin-ui/form` | `FormDrawer`, `FormDialog`, `FormActions`, `FormField`, `FormSection`, `FormHeader`, `useConfirmDialog` |
 | `@mgamadeus/ddd-admin-ui/glass` | `QuickFilterPills`, `CollapsibleCard`, `GlassGroup`, `ActionRow` |
-| `@mgamadeus/ddd-admin-ui/primitives` | `Button`, `Card`, `CardContent`, `SegmentedControl` |
+| `@mgamadeus/ddd-admin-ui/primitives` | `Button`, `Card`, `CardContent`, `SegmentedControl`, `FormActionsSlotProvider`, `FormActionsSlot` |
 | `@mgamadeus/ddd-admin-ui/next` | `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useListViewParam` |
 
-Every screen renders below `AdminUiProvider`.
+Every screen renders below `AdminUiProvider`. A screen that may not write sets that once with `WriteAccessProvider`
+(§ 15).
 
 ## 1. List state — `useUrlListState`
 
@@ -78,18 +79,21 @@ below. Filters go **only** in the panel (never in `trailing`, never as an inline
 
 Order: outline secondaries → `ExportButton` → `MoreActionsMenu` (rare / maintenance) → **one** primary
 `AddEntityButton` ("Add <Entity>", singular, top right; `label` replaces the whole text when an entity name does not
-fit, already translated). Every write control `disabled={!writesAllowed}`.
+fit, already translated). Write controls follow the screen's `WriteAccessProvider` (§ 15); a write the blocks cannot
+know (a menu item, a row button) takes `disabled={!writeAccess.allowed}` from `useWriteAccess()`. Reading controls
+(Export) stay enabled.
 
 ```tsx
+const writeAccess = useWriteAccess();     // from the screen's WriteAccessProvider (§ 15)
+
 <EntityListPage
   title="Projects"
   headerActions={
     <PageToolbar
-      exportAction={<ExportButton onExport={handleExport} disabled={!writesAllowed} />}
+      exportAction={<ExportButton onExport={handleExport} />}
       moreActions={[{ id: 'recalc', label: 'Recalculate totals', icon: <RefreshCw />, onSelect: handleRecalc,
-        disabled: !writesAllowed }]}
-      primaryAction={<AddEntityButton entity="Project" href="/projects/create" linkComponent={Link}
-        disabled={!writesAllowed} />}
+        disabled: !writeAccess.allowed }]}
+      primaryAction={<AddEntityButton entity="Project" href="/projects/create" linkComponent={Link} />}
     >
       <Button variant="outline" onClick={openImport}>Import</Button>
     </PageToolbar>
@@ -98,7 +102,9 @@ fit, already translated). Every write control `disabled={!writesAllowed}`.
 >
 ```
 
-`ExportButton` label defaults to "Export to Excel"; a returned promise shows the spinner.
+`ExportButton` label defaults to "Export to Excel"; a returned promise shows the spinner. `AddEntityButton` with `href`
+is a link and stays enabled whatever the write access (the create screen guards itself); with `onClick` it is a button
+and follows the write access.
 
 ## 4. Selection and bulk actions
 
@@ -111,8 +117,9 @@ const selection = useRowSelection({
   isSelectable: canDelete,                 // optional: other rows get a disabled checkbox, "select all" skips them
 });
 
+const confirm = useConfirm();               // the provider's dialog: nothing to render in the screen
 const handleBulkDelete = async () => {
-  if (!writesAllowed || !(await confirm({ title: `Delete ${selection.count} task(s)?`, confirmVariant: 'destructive',
+  if (!writeAccess.allowed || !(await confirm({ title: `Delete ${selection.count} task(s)?`, confirmVariant: 'destructive',
     confirmLabel: 'Delete' }))) return;
   setBusy(true);
   await runSequentialWithSummary(selection.selectedKeys, id => deleteTask({ taskId: id }).unwrap(),
@@ -126,7 +133,6 @@ const bulkBar = (
     selection={selection}
     actions={[{ id: 'recreate', label: 'Recreate', icon: <RotateCcw />, onClick: handleBulkRecreate }]}
     onDelete={handleBulkDelete}
-    disabled={!writesAllowed}
     busy={busy}
   />
 );
@@ -134,8 +140,9 @@ const bulkBar = (
 <EntityListBody … selection={selection} />
 ```
 
-Never a hand-made checkbox column, never `Promise.all` for bulk writes. A job that needs a result summary or a typed
-confirmation uses the host's dialogs.
+The bar's actions and Delete follow the write access; an action that only reads (export, copy ids) passes
+`ignoreWriteAccess`. Never a hand-made checkbox column, never `Promise.all` for bulk writes. A typed confirmation is
+`confirm({ …, requirePhrase: entity.name })`; a job that needs a result summary uses the host's dialogs.
 
 ## 5. Columns and cells
 
@@ -159,7 +166,7 @@ const columns: EntityListColumn<Project>[] = [
     <div className="flex justify-end gap-1">
       <Button variant="ghost" size="icon-sm" aria-label={`Edit ${c.name}`} …><Pencil /></Button>
       <Button variant="ghost" size="icon-sm" aria-label={`Delete ${c.name}`} className="text-destructive"
-        disabled={!writesAllowed} …><Trash2 /></Button>
+        disabled={!writeAccess.allowed} …><Trash2 /></Button>
     </div>
   ) },
 ];
@@ -319,6 +326,13 @@ Every link a block renders (tabs, the back link, the Add button, breadcrumb link
 `AdminUiProvider.linkComponent` (a block's own `linkComponent` prop still wins). A host with sticky search parameters
 wraps its router link with `withStickyParams(href, names, currentSearch)`.
 
+Edit screens put the form's actions into the header with `formActionsSlot` on the shell: `FormActions` (default
+`placement="auto"`) portals there as the pill, after `actions`, and floats under the top bar once the header scrolls
+away (while the form is in view); the portalled Save stays linked to its form (`form` attribute), ⌘S still submits.
+A nested shell with `formActionsSlot` takes the actions of its own forms. A form page with `FormHeader formActionsSlot`
+(or a host header rendering `FormActionsSlot`) wraps header and form in one `FormActionsSlotProvider`; of several
+slots the one closest above the form wins. `placement="row"` keeps the actions in the form.
+
 Create screens: no `metadata` id yet → the strip renders nothing. Edit screens outside a shell keep
 `<EntityMetadata id={…} changeHistory={…} />` right under their `FormHeader`.
 
@@ -351,21 +365,21 @@ The look lives in the blocks; a screen never re-draws it.
   (compact). Never a hand-made underline or pill bar.
 - **Two-tone titles**: wrap the brand part in `<em>` — `title={<>Item <em>Types</em></>}` (pass `label="Item Types"` to
   `EntityListPage` then). Only where a title earns it (Home, section headers), not on every list.
-- **Sticky glass bars**: page forms get them from `FormActions` (`sticky={false}` inside a dialog); the bulk bar from
-  `EntityListBulkBar`.
+- **Sticky glass bars**: page forms get them from `FormActions` (in a header slot when the page has one, § 8; inside a
+  dialog the plain row comes by itself); the bulk bar from `EntityListBulkBar`.
 
 ```tsx
 <PageSections>
   <section>
     <SectionHeader title={<>General <em>settings</em></>} />
     <CardGrid>
-      <EditableCard title="Access" onEdit={openAccessForm} editLabel="Edit access" editDisabled={!writesAllowed}>
+      <EditableCard title="Access" onEdit={openAccessForm} editLabel="Edit access" editDisabled={!writeAccess.allowed}>
         <IconValueRow>
           <IconValue icon={<KeyRound />}>{workspace.accessCode ?? <EmptyValue />}</IconValue>
           <IconValue icon={<Calendar />}><DateCell value={workspace.startDate} format="date" /></IconValue>
         </IconValueRow>
       </EditableCard>
-      <EditableCard title="Languages" onEdit={openLanguagesForm} editLabel="Edit languages" editDisabled={!writesAllowed}>
+      <EditableCard title="Languages" onEdit={openLanguagesForm} editLabel="Edit languages" editDisabled={!writeAccess.allowed}>
         <div className="flex flex-wrap gap-2">
           {locales.map(locale => <Tag key={locale} tone={locale === defaultLocale ? 'primary' : 'default'}>{locale}</Tag>)}
         </div>
@@ -419,7 +433,7 @@ button).
 // The list screen (inside <Suspense>): drawer state in the URL next to the filters — `?edit=<id>` / `?create=1`.
 const drawer = useEntityDrawer({ adapter: useNextDrawerUrlAdapter() });   // ./next, or the host's own adapter
 
-<AddEntityButton entity="Supplier" onClick={drawer.openCreate} disabled={!writesAllowed} />
+<AddEntityButton entity="Supplier" onClick={drawer.openCreate} />   // a button: follows the write access
 rowAction={supplier => () => drawer.openEdit(id)}
 <Link href={supplierEditRoute(id)} onClick={drawer.editLinkClick(id)}>{supplier.name}</Link>   // middle click = new tab
 <SupplierFormDrawer drawer={drawer} />
@@ -449,7 +463,8 @@ const entity = id ? (query.currentData?.supplier ?? null) : null;   // currentDa
   (`supplierEditRoute`) live in a non-client file (a server page calls them).
 - A list hosting two drawers passes its own `editKey` / `createKey`.
 - **Confirm**: the drawer asks through the package dialog; a host with its own confirmation service passes
-  `confirm={hostConfirm}` (stable function, same Radix copy). The same prop exists on the translatable fields.
+  `confirm={hostConfirm}` (stable function, same Radix copy). The same prop exists on the translatable fields. Screen
+  code asks with `useConfirm()` (§ 14).
   `ConfirmOptions.description` may be a React node; the package's own confirmations always pass plain text, so a
   service that renders text only can show them.
 - One column inside the drawer (≤ 760 px): no `md:grid-cols-2` form grids.
@@ -481,3 +496,60 @@ const entity = id ? (query.currentData?.supplier ?? null) : null;   // currentDa
 - Labels are English UI texts, translated by the control (`context` for an ambiguous word, marked as literal
   `m('Open', { context: 'filter' })`); already translated text (names from the server) passes `translate: false`.
 - A disabled option says why (`disabledReason`); a count goes in `badge` and, when it matters, in `description`.
+
+## 14. Short forms in a dialog, confirmations — `FormDialog`, `useConfirm`
+
+A form of a few fields that belongs to the screen it is opened from (rename, move, a reason for a delete) is a
+`FormDialog`; anything larger is a drawer (§ 12) or a page.
+
+```tsx
+const form = useForm<RenameValues>({ defaultValues: { name: item.name } });
+const rename = useRenameMutation();
+
+<FormDialog<RenameValues>
+  open={open}
+  onOpenChange={setOpen}
+  title="Rename item"
+  form={form}                                   // optional: FormField works inside; without it, plain state
+  onSubmit={async values => {
+    try { await rename.mutateAsync(values); setOpen(false); } catch (error) { notify.submitError(toFormSubmitError(error, 'Could not save')); }
+  }}
+  submitLabel="Save"
+  pendingLabel="Saving…"
+  isPending={rename.isPending}
+  isDirty={form.formState.isDirty}             // a close request asks "Discard changes?"
+>
+  <FormField<RenameValues, 'name'> name="name" label="Name" required>
+    {({ field, control }) => <Input {...control} {...field} />}
+  </FormField>
+</FormDialog>
+```
+
+- A real `<form>`: Enter in a text field and ⌘S submit it; a dialog opened from it is its own form.
+- While pending (or while the promise `onSubmit` returns runs) Escape, the backdrop and Cancel do nothing. After a
+  failed save the handler shows the error and the dialog is usable again; the screen closes it after a success.
+- `submitVariant="destructive"` for an irreversible submit, `submitDisabled` while nothing can be saved.
+
+Confirmations ask through the provider: `const confirm = useConfirm()` (`./logic`) and
+`if (!(await confirm({ title, description, confirmLabel, confirmVariant: 'destructive' }))) return;`. Nothing renders
+in the screen; calls queue and each answers once; the focus returns to the control that asked. A deletion that must
+not happen by accident names the entity: `requirePhrase: entity.name` (the confirm button stays off until it is typed,
+`requirePhraseLabel` replaces the label). A host with its own confirmation service passes it as
+`AdminUiProvider confirm`; `useConfirmDialog` stays for a block that renders its own dialog.
+
+## 15. Write access — `WriteAccessProvider`
+
+```tsx
+<WriteAccessProvider value={{ allowed: canEdit, reason: canEdit ? undefined : 'This workspace is read-only' }}>
+  <ProjectScreen />
+</WriteAccessProvider>
+```
+
+A presentation aid, set once per screen (or per section; a nested provider can only narrow, never allow again):
+`FormSubmitButton`, `FormDialog`'s submit, the actions and Delete of `EntityListBulkBar` and `AddEntityButton` as a
+button are disabled while `allowed` is `false`, with `reason` as their title. A link never is (`AddEntityButton href`).
+A control that only reads (a search submit, an export bulk action) passes `ignoreWriteAccess`. Other write controls
+read `useWriteAccess()` (`disabled={!writeAccess.allowed}`).
+
+It replaces no guard: every write handler keeps its own check (`if (!writeAccess.allowed) return;`), and the server
+checks every request. Without a provider writes are allowed.

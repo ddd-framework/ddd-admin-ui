@@ -1,12 +1,12 @@
 // T4: in a project without next, sonner and recharts, every entry except ./next and ./notify-sonner imports in Node;
 // those two fail because their optional peer is missing. Also loads the JSON manifests.
 const expectations = {
-  logic: ['formatDate', 'formatDateTime', 'defineStatusMap', 'notify', 'setNotificationAdapter', 'toFormSubmitError', 'useUrlListState', 'useEntityTranslations', 'prepareImageFile', 'nextListSort', 'parseListSort', 'formatListSort', 'computeListTracks', 'resolveListPins'],
+  logic: ['formatDate', 'formatDateTime', 'defineStatusMap', 'notify', 'setNotificationAdapter', 'toFormSubmitError', 'useUrlListState', 'useEntityTranslations', 'prepareImageFile', 'nextListSort', 'parseListSort', 'formatListSort', 'computeListTracks', 'resolveListPins', 'useConfirm', 'ConfirmContext', 'createConfirmQueue', 'WriteAccessProvider', 'useWriteAccess', 'narrowWriteAccess'],
   i18n: ['setTranslations', 'translateText', 'm', 'useTranslate', 'Translate', 'translationKeyOf', 'formatUiNumber', 'translateServerMessage'],
-  primitives: ['cn', 'SegmentedControl', 'Button', 'Dialog', 'DialogContent', 'Sheet', 'SheetContent', 'Select', 'SelectContent', 'Tooltip', 'TooltipProvider'],
+  primitives: ['cn', 'SegmentedControl', 'Button', 'Dialog', 'DialogContent', 'Sheet', 'SheetContent', 'Select', 'SelectContent', 'Tooltip', 'TooltipProvider', 'FormActionsSlot', 'FormActionsSlotProvider'],
   list: ['EntityListCard', 'EntityListToolbar', 'EntityListBody', 'EntityListTable', 'EntityListEmpty', 'DateCell', 'StatusBadge', 'FilterPanel'],
   page: ['PageFrame', 'PageHeader', 'EntityListPage', 'EntityDetailShell', 'StatusCallout'],
-  form: ['Form', 'FormField', 'FormActions', 'FormDrawer', 'FormErrors', 'FormSubmitButton', 'useConfirmDialog'],
+  form: ['Form', 'FormField', 'FormActions', 'FormDrawer', 'FormErrors', 'FormSubmitButton', 'useConfirmDialog', 'FormDialog'],
   translations: ['FormTranslatableInput', 'FormTranslatableMarkdown', 'TranslatableInput', 'TranslationControls'],
   media: ['FormMediaItemField', 'MediaItemField', 'MediaItemPickerDialog', 'MediaPreview'],
   glass: ['GlassPill', 'QuickFilterPills', 'CollapsibleCard', 'GlassGroup', 'ActionRow'],

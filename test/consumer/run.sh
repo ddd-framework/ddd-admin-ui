@@ -11,6 +11,8 @@
 #     T3  (server render) bound fields from ./translations and ./media find the form of ./form
 #     T6  one translation store across entries (./i18n sets the language, ./logic and ./list use it)
 #         list tables, bodies and badges without the optional table props render as in 0.1.0-rc.2 (list-snapshot.html)
+#         FormActions, FormSubmitButton, AddEntityButton, EntityListBulkBar and the headers without the props of
+#         0.1.0-rc.6 render as in 0.1.0-rc.5 (form-actions-snapshot.html); WriteAccessProvider disables write controls
 #         a status map's translation context reaches StatusBadge
 #     the shipped i18n manifest matches the installed package (ddd-admin-ui-i18n-manifest --check)
 #   next      a Next 16 app router project with Tailwind 4:
@@ -25,6 +27,10 @@
 #         through groups and the create row, clearing; SegmentedControl incl. a 358 px container; the showcase at 390 px
 #         (browser) a list table with column tracks, pins, sort and a row index: tracks, the pin guard at three widths,
 #         at 390 px the table scrolls inside its card and the page does not, the sort cycle, no hydration warning
+#         (browser) FormDialog (Enter, pending, failed submit, a nested dialog, two forms), the ⌘S / Ctrl+S rule of
+#         FormActions (focus nowhere, in another form, a disabled primary, a drawer footer, nested dialogs), header slots
+#         (closest slot, form attribute, floating pill) and useConfirm (Escape, focus, queue, phrase, drawer, two
+#         providers, Strict Mode, unmount)
 #     T7  (browser) a select inside a dialog inside a sheet, and inside a host overlay at z-index 10000 with
 #         --layer-popover: 10001, is clickable (with a negative control at the default layer)
 #   link-skills  `ddd-admin-ui link-skills` links the shipped skill
@@ -102,6 +108,10 @@ echo "── T6 one translation store"
 node one-store.mjs
 echo "── list tables without the optional props: same DOM as 0.1.0-rc.2"
 node list-snapshot.mjs
+echo "── form actions and write controls without the new props: same DOM as 0.1.0-rc.5"
+node form-actions-snapshot.mjs
+echo "── write access as a presentation aid"
+node write-access.mjs
 echo "── status map translation context"
 node status-context.mjs
 echo "── showcase without the optional peers: server render, coverage, lazy ./notify-sonner skipped, browser bundle"
@@ -141,6 +151,8 @@ else
   done
   echo "── T2 / T3 / T7 / list table headless browser"
   node browser.mjs "http://127.0.0.1:$PORT"
+  echo "── form dialog, save shortcut, header slot, confirmations (headless browser)"
+  node browser-dialogs.mjs "http://127.0.0.1:$PORT"
   kill $SERVER_PID 2>/dev/null || true
 fi
 

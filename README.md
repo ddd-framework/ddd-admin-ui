@@ -20,16 +20,16 @@ pnpm add @mgamadeus/ddd-admin-ui @mgamadeus/ddd-web radix-ui react react-dom luc
 
 | Entry | What it holds | May import (besides React and its peers) |
 |---|---|---|
-| `./logic` | pure helpers (`formatDate`, `defineStatusMap`, conditions, schemas, `notify`, `runSequential`), React hooks without markup (`useUrlListState`, `useEntityDrawer`, `useRowSelection`, `useEntityTranslations`, …), browser helpers (`prepareImageFile`, `readStored` / `writeStored`, `buildStorageKey`), date input values (`toDateInputValue`, `fromDateTimeInputValue`, …), `withStickyParams`, `useLatestSearch` | `./i18n` |
+| `./logic` | pure helpers (`formatDate`, `defineStatusMap`, conditions, schemas, `notify`, `runSequential`), React hooks without markup (`useUrlListState`, `useEntityDrawer`, `useRowSelection`, `useEntityTranslations`, …), browser helpers (`prepareImageFile`, `readStored` / `writeStored`, `buildStorageKey`), date input values (`toDateInputValue`, `fromDateTimeInputValue`, …), `withStickyParams`, `useLatestSearch`, `useConfirm` (the provider's confirmation), `WriteAccessProvider` / `useWriteAccess` | `./i18n` |
 | `./i18n` | the UI text store (`m`, `translateText`, `setTranslations`), `useTranslate`, `<Translate>`, number / date formats of the UI locale, server-message translation | — |
-| `./primitives` | buttons, inputs, selects, dialogs, sheets, popovers, menus, tooltips, tables, badges, `SegmentedControl`, `cn`, the portal container | `./i18n` |
+| `./primitives` | buttons, inputs, selects, dialogs, sheets, popovers, menus, tooltips, tables, badges, `SegmentedControl`, `cn`, the portal container, the header slot of form actions (`FormActionsSlotProvider`, `FormActionsSlot`) | `./i18n` |
 | `./list` | entity list card, toolbar, search, filters, table, grid, load-more, status badge, cells, multi-select, combobox, bulk bar | logic, i18n, primitives |
 | `./page` | page header and frame, `EntityListPage`, detail shell and header, tabs, section header, definition list, page toolbar, editable card, status callout, entity metadata | logic, i18n, primitives; from list only `EmptyValue`, `EntityListEmpty`, `EntityListCard` |
-| `./form` | `Form`, `FormField`, `FormSection`, `FormActions`, `FormDrawer`, `FormHeader`, `FormWrapper`, `FormJumpBar`, `FormErrors`, `FormSubmitButton`, `useConfirmDialog` | logic, i18n, primitives; from page only `DetailHeader`, `EntityMetadata` |
+| `./form` | `Form`, `FormField`, `FormSection`, `FormActions`, `FormDrawer`, `FormDialog`, `FormHeader`, `FormWrapper`, `FormJumpBar`, `FormErrors`, `FormSubmitButton`, `useConfirmDialog` | logic, i18n, primitives; from page only `DetailHeader`, `EntityMetadata` |
 | `./translations` | `TranslatableInput`, `TranslatableMarkdown` (editor injected), their form-bound variants, `TranslationControls` | logic, i18n, primitives; from form only `fieldLabels`, `useConfirmDialog` |
 | `./media` | `MediaItemField`, `FormMediaItemField`, `MediaItemPickerDialog`, `MediaPreview` | logic, i18n, primitives, list, form |
 | `./glass` | `GlassPill`, `QuickFilterPills`, `CollapsibleCard`, `GlassGroup`, `ActionRow` | logic, i18n, primitives |
-| `./provider` | `AdminUiProvider`, `useAdminUi`, `defaultStorageKey` | logic, i18n, primitives; types only from media and translations |
+| `./provider` | `AdminUiProvider` (also the dialog behind `useConfirm`), `useAdminUi`, `defaultStorageKey` | logic, i18n, primitives; types only from media and translations |
 | `./next` | Next.js adapters: `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useListViewParam`, the one URL writer (`queueSearchParamsWrite`) | logic, provider; the only entry importing `next/*` |
 | `./notify-sonner` | `sonnerNotifications` (the notification adapter on `sonner`) and its `Toaster` | logic; the only entry importing `sonner` |
 | `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE` | logic, i18n, primitives, list, page, form, translations, media, glass; never `./next` or `./notify-sonner` |
@@ -156,8 +156,9 @@ It reads the host's `node_modules` (npm and pnpm layouts) and the folders above 
    default `document.body`), `tooltipDelayMs`, `translations` (a `TranslationAdapter` that feeds the text store from a
    host store), `useUrlStateAdapter`, `useDrawerUrlAdapter`, `upload`, `renderMarkdownEditor`, `aiTranslation`,
    `preserveSearchParams` (search parameters the URL writer never removes), `linkComponent` (the router link of every
-   block that renders a link; wrap it with `withStickyParams` to keep sticky search parameters). Without a
-   notification adapter `notify.*` does nothing and warns once outside production.
+   block that renders a link; wrap it with `withStickyParams` to keep sticky search parameters), `confirm` (the
+   host's confirmation service behind `useConfirm()`). Without a notification adapter `notify.*` does nothing and
+   warns once outside production.
 
    ```tsx
    const StickyLink: PageLinkComponent = ({ href, ...props }) => {
@@ -167,7 +168,13 @@ It reads the host's `node_modules` (npm and pnpm layouts) and the folders above 
    <AdminUiProvider linkComponent={StickyLink} …>
    ```
 
-4. **Confirmations.** Blocks that ask before a step open the package's confirm dialog (`useConfirmDialog`). A host
+4. **Confirmations.** Screen code asks with `useConfirm()` (`./logic`): `confirm(options)` of the nearest
+   `AdminUiProvider`, which draws the package dialog (calls queue, each settles once, an unmounted provider answers its
+   pending calls `false`; `requirePhrase` keeps the confirm button off until a phrase is typed). Without a provider
+   every call answers `false` and warns once outside production. A host with its own service passes it as the
+   provider's `confirm`; `useConfirm()` then calls it and the package dialog does not render.
+
+   Blocks that ask before a step open the package's confirm dialog (`useConfirmDialog`). A host
    with its own confirmation service passes it as `confirm` (`(options: ConfirmOptions) => Promise<boolean>`, a stable
    function): `FormDrawer` ("Discard changes?") and `TranslatableInput` / `TranslatableMarkdown` and their form-bound
    variants ("Clear all translations?"). The package dialog then does not render. The host's dialog must come from the
@@ -267,7 +274,7 @@ pnpm install
 pnpm typecheck
 pnpm test                       # unit tests beside the sources, script tests and a failing fixture per check-package rule
 pnpm build                      # tsc → dist, declaration specifiers, stylesheets, manifests and shipped scripts
-pnpm test:render                # after the build: list snapshot (as in 0.1.0-rc.2), status contexts, the showcase
+pnpm test:render                # after the build: list snapshot (as in 0.1.0-rc.2), form actions snapshot (as in 0.1.0-rc.5), write access, status contexts, the showcase
 node scripts/check-package.mjs --dir .
 pnpm pack --pack-destination "$TMPDIR" && test/consumer/run.sh "$TMPDIR"/mgamadeus-ddd-admin-ui-*.tgz pnpm "$TMPDIR/consumer-pnpm"
 ```
@@ -277,7 +284,7 @@ pnpm pack --pack-destination "$TMPDIR" && test/consumer/run.sh "$TMPDIR"/mgamade
 | `node scripts/build.mjs` (`pnpm build`) | removes `dist`, `tsc -p tsconfig.build.json` (one JS and declaration file per source file, directives kept, `.js` specifiers), rewrites the declarations' specifiers to `.js`, copies CSS, JSON and the shipped scripts into `dist` |
 | `node scripts/check-package.mjs --dir <package root or extracted tarball>` | the 13 package rules: exports and bins, directives, specifiers, no app alias, deny list (`--deny a,b` or `CHECK_PACKAGE_DENY`; `--require-deny-list` on release), declared dependencies, entry edges and reach, module state once, `files` and `sideEffects`, declarations in a strict consumer, no tests, fresh text manifest, tokens |
 | `node scripts/tokens-utilities.mjs [--write]` | checks (or regenerates) the `utilities` lists of `tokens.json` from the source |
-| `pnpm test:render` | server-renders list tables, bodies and badges from the build: without the optional table props the markup equals `test/consumer/fixtures/plain/list-snapshot.html` (taken from 0.1.0-rc.2); a status map's translation context reaches `StatusBadge`; the showcase renders (light, dark, every section) and its coverage list matches the exports |
+| `pnpm test:render` | server-renders list tables, bodies and badges from the build: without the optional table props the markup equals `test/consumer/fixtures/plain/list-snapshot.html` (taken from 0.1.0-rc.2); `FormActions`, `FormSubmitButton`, `AddEntityButton`, `EntityListBulkBar` and the headers without the props of 0.1.0-rc.6 equal `form-actions-snapshot.html` (taken from 0.1.0-rc.5); `WriteAccessProvider` disables the write controls; a status map's translation context reaches `StatusBadge`; the showcase renders (light, dark, every section) and its coverage list matches the exports |
 | `node scripts/build-i18n-manifest.mjs [--check]` (`pnpm i18n:manifest`) | regenerates `i18n-keys.json` from the source and `i18n/hints.json`; run it after changing a text or the version |
 | `node scripts/check-tokens.mjs <css> [tokens.json]` | the host check above (shipped as `ddd-admin-ui-check-tokens`) |
 | `node scripts/check-radix.mjs [host folder]` | the Radix copy check above (shipped as `ddd-admin-ui-check-radix`) |
@@ -285,7 +292,8 @@ pnpm pack --pack-destination "$TMPDIR" && test/consumer/run.sh "$TMPDIR"/mgamade
 Source files import each other with explicit `.ts` / `.tsx` extensions and never through a directory. The consumer
 tests (`test/consumer/run.sh <tarball> <npm|pnpm> <workDir>`) install the packed tarball into a project without the
 optional peers and into a Next 16 app, and check imports, strict type checks, the production build and CSS, hydration,
-form labels across entries and nested overlays in headless Chrome.
+form labels across entries, nested overlays, form dialogs, the save shortcut, header slots and confirmations in
+headless Chrome.
 
 ## License
 

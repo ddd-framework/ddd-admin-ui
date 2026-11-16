@@ -27,7 +27,8 @@ jobs:
       # node --test with type stripping: unit tests and a failing fixture per check-package rule
       - run: pnpm test
       - run: pnpm build
-      # list tables without the optional props render as in 0.1.0-rc.2; status map contexts reach the badge
+      # list tables without the optional props render as in 0.1.0-rc.2, form actions and write controls as in
+      # 0.1.0-rc.5; write access disables write controls; status map contexts reach the badge
       - run: pnpm test:render
       - name: Published manifest has no workspace-only specifiers
         run: |

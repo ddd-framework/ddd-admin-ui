@@ -18,13 +18,18 @@ import {
   type NotificationAdapter,
   type StatusMap,
   type UrlStateAdapter,
+  type ConfirmOptions,
+  type WriteAccess,
+  useConfirm,
+  useWriteAccess,
+  WriteAccessProvider,
 } from '@mgamadeus/ddd-admin-ui/logic';
 import { formatUiNumber, m, setTranslations, translateText, useTranslate, type WritingStyle } from '@mgamadeus/ddd-admin-ui/i18n';
-import { Button, cn, DialogContent, SegmentedControl, type SegmentedControlProps, SelectContent, SheetContent, TooltipProvider } from '@mgamadeus/ddd-admin-ui/primitives';
+import { Button, cn, DialogContent, FormActionsSlot, FormActionsSlotProvider, SegmentedControl, type SegmentedControlProps, SelectContent, SheetContent, TooltipProvider } from '@mgamadeus/ddd-admin-ui/primitives';
 import { Showcase, type ShowcaseProps, type ShowcaseSection } from '@mgamadeus/ddd-admin-ui/showcase';
 import { DateCell, EntityListBody, EntityListToolbar, StatusBadge, type DateCellProps, type EntityListColumn } from '@mgamadeus/ddd-admin-ui/list';
 import { EntityDetailShell, PageFrame, type PageFrameProps } from '@mgamadeus/ddd-admin-ui/page';
-import { Form, FormErrors, FormField, type FormErrorsProps } from '@mgamadeus/ddd-admin-ui/form';
+import { Form, FormActions, FormDialog, FormErrors, FormField, type FormActionsProps, type FormDialogProps, type FormErrorsProps } from '@mgamadeus/ddd-admin-ui/form';
 import { FormTranslatableInput, TranslatableInput } from '@mgamadeus/ddd-admin-ui/translations';
 import { FormMediaItemField, MediaItemPickerDialog, type MediaUploadAdapter } from '@mgamadeus/ddd-admin-ui/media';
 import { GlassPill, QuickFilterPills } from '@mgamadeus/ddd-admin-ui/glass';
@@ -87,4 +92,18 @@ export const components = [
   StatusBadge, EntityDetailShell, PageFrame, Form, FormErrors, FormField, FormTranslatableInput, TranslatableInput,
   FormMediaItemField, MediaItemPickerDialog, GlassPill, QuickFilterPills, AdminUiProvider,
 ];
-export const hooks = [useTranslate, useAdminUi];
+export const hooks = [useTranslate, useAdminUi, useConfirm, useWriteAccess];
+export const confirmOptions: ConfirmOptions = { title: 'Delete?', requirePhrase: 'Main site', requirePhraseLabel: 'Type the name' };
+export const writeAccess: WriteAccess = { allowed: false, reason: 'Read-only' };
+export const plainDialogProps: FormDialogProps = {
+  open: true,
+  onOpenChange: () => {},
+  title: 'Rename',
+  children: null,
+  submitLabel: 'Save',
+  isPending: false,
+  onSubmit: event => event.currentTarget.reset(),
+};
+export const headerActionsProps: FormActionsProps = { placement: 'header', primary: null };
+export const providerConfirm: AdminUiProviderProps['confirm'] = async () => true;
+export const dialogComponents = [FormDialog, FormActions, FormActionsSlot, FormActionsSlotProvider, WriteAccessProvider];

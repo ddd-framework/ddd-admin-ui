@@ -2,66 +2,38 @@
 
 import { useCallback, useRef, useState } from 'react';
 
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '../primitives/index.ts';
-import { useTranslate } from '../i18n/index.ts';
+import { ConfirmDialogView, type ConfirmDialogViewEntry } from '../primitives/confirmDialogView.tsx';
 import type { ConfirmDialogApi, ConfirmOptions } from '../logic/pure/confirm.ts';
 
 /** @deprecated moved to logic/pure/confirm — the re-export is removed in a later minor */
 export type { ConfirmDialogApi, ConfirmOptions } from '../logic/pure/confirm.ts';
 
 /**
- * A promise-returning confirmation, as a hook: this block has no global modal host. Dialogs are only for
- * confirmations.
+ * A promise-returning confirmation, as a hook: the dialog renders where the hook's `dialog` is placed. A new call while
+ * one is open answers the open one `false`. Screens below `AdminUiProvider` use `useConfirm()` (`./logic`) instead:
+ * nothing to render, calls queue. Dialogs are only for confirmations.
  */
 export const useConfirmDialog = (): ConfirmDialogApi => {
-  const { t } = useTranslate();
-  const [options, setOptions] = useState<ConfirmOptions | null>(null);
-  const resolverRef = useRef<((confirmed: boolean) => void) | null>(null);
+  const [entry, setEntry] = useState<ConfirmDialogViewEntry | null>(null);
+  const pending = useRef<{ id: number; resolve: (confirmed: boolean) => void } | null>(null);
+  const nextId = useRef(1);
 
-  const settle = useCallback((confirmed: boolean) => {
-    resolverRef.current?.(confirmed);
-    resolverRef.current = null;
-    setOptions(null);
+  const settle = useCallback((id: number, confirmed: boolean) => {
+    if (pending.current?.id !== id) return;
+    pending.current.resolve(confirmed);
+    pending.current = null;
+    setEntry(null);
   }, []);
 
-  const confirm = useCallback((next: ConfirmOptions) => {
-    resolverRef.current?.(false);
-    setOptions(next);
+  const confirm = useCallback((options: ConfirmOptions) => {
+    pending.current?.resolve(false);
+    const id = nextId.current;
+    nextId.current += 1;
+    setEntry({ id, options });
     return new Promise<boolean>(resolve => {
-      resolverRef.current = resolve;
+      pending.current = { id, resolve };
     });
   }, []);
 
-  const dialog = (
-    <Dialog open={options !== null} onOpenChange={open => !open && settle(false)}>
-      <DialogContent showCloseButton={false} className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{options?.title}</DialogTitle>
-          {options?.description && <DialogDescription>{options.description}</DialogDescription>}
-        </DialogHeader>
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => settle(false)}>
-            {options?.cancelLabel ?? t('Cancel', { context: 'confirm-dialog' })}
-          </Button>
-          <Button
-            type="button"
-            variant={options?.confirmVariant === 'destructive' ? 'destructive' : 'default'}
-            onClick={() => settle(true)}
-          >
-            {options?.confirmLabel ?? t('Confirm', { context: 'confirm-dialog' })}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-
-  return { confirm, dialog };
+  return { confirm, dialog: <ConfirmDialogView entry={entry} onSettle={settle} /> };
 };

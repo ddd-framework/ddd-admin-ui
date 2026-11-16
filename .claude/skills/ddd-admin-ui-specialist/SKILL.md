@@ -1,6 +1,6 @@
 ---
 name: ddd-admin-ui-specialist
-description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend the package. Covers entries, import matrix, host setup (AdminUiProvider above every page, theme.css and components.css, tokens.json with ddd-admin-ui-check-tokens, one Radix copy with ddd-admin-ui-check-radix), list pages with URL filters, grid/table view, selection and bulk actions, wide tables (column tracks, pins, sortable headers, row index), the segmented control, the showcase, detail shells, form drawers, server errors, the unsaved-changes guard, translations on full locale::style keys, media fields, toasts, layers, the portal container, i18n-keys.json and text contexts, server vs client files, and adding a block. Use when building or reviewing a list, detail or form screen with these blocks, a page fails with Tooltip must be used within TooltipProvider, a wide table squeezes or needs pinned columns or sorting, a colour, layer or overlay misbehaves, translations lose a style variant, URL filters get lost, or a block is added."
+description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend the package. Covers entries, import matrix, host setup (AdminUiProvider above every page, theme.css, components.css, tokens.json with ddd-admin-ui-check-tokens, one Radix copy with ddd-admin-ui-check-radix), list pages with URL filters, bulk actions, wide tables (tracks, pins, sort), the segmented control, the showcase, detail shells, form drawers and dialogs (FormDialog), the save shortcut, FormActions in a header slot, useConfirm with typed phrases, write access (WriteAccessProvider), server errors, the unsaved-changes guard, locale::style translations, media fields, layers, i18n-keys.json, server vs client files, adding a block. Use when building or reviewing a list, detail, form or dialog screen, a page fails with Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form or none, a confirm answers false, write controls must go off for read-only users, a table squeezes, an overlay misbehaves, or URL filters get lost."
 metadata:
   author: mgamadeus
   version: 0.1.0
@@ -32,10 +32,14 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | a view that loads its own data (a tree) in the list card | `EntityListBody.renderOwnView` | list |
 | an entity detail with tabs | `EntityDetailShell` (+ `SectionHeader`, `DefinitionList`) | page |
 | a form page or drawer | `Form` + `FormField` / `FormSection` + `FormActions`, in `FormDrawer` | form |
+| the Save / Cancel pill in the page header | `EntityDetailShell formActionsSlot`, or `FormHeader formActionsSlot` / a host `FormActionsSlot` inside one `FormActionsSlotProvider` | page, form, primitives |
+| a short form in a dialog (rename, a reason) | `FormDialog` (`form` optional: react-hook-form or plain state) | form |
 | drawer state in the URL (`?edit=<id>`, `?create=1`) | `useEntityDrawer` with `useNextDrawerUrlAdapter` | logic, next |
 | a text per content locale | `useEntityTranslations` + `FormTranslatableInput` / `FormTranslatableMarkdown` | logic, translations |
 | a media reference | `FormMediaItemField` (+ the host's `MediaItemPickerDialog`) | media |
-| a confirmation | `useConfirmDialog` (returns `{ confirm, dialog }`) | form |
+| a confirmation from screen code | `useConfirm()` → `confirm(options)` (the provider draws it; `requirePhrase` for a typed name) | logic |
+| a confirmation inside a block with its own dialog | `useConfirmDialog` (returns `{ confirm, dialog }`) | form |
+| write controls off for a read-only user | `WriteAccessProvider value={{ allowed, reason }}`, `useWriteAccess()`, `ignoreWriteAccess` on reading controls | logic |
 | a toast | `notify.success / info / error / loading / submitError` | logic |
 
 ## Rules that fail silently
@@ -70,6 +74,18 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
   terms); the block debounces and never shows the previous term's options. A picked value outside the results needs
   `selectedOption`.
 - **Links**: set `linkComponent` once on `AdminUiProvider`; without it blocks render plain `<a>` (full page loads).
+- **⌘S / Ctrl+S** (`FormActions`, `FormDialog`) listens on `document`: in a dialog or drawer it answers anywhere inside
+  the innermost one holding the focus; on a page with focus in the form, on its actions (also portalled) or nowhere.
+  It prevents the default whenever it is in scope (also with a disabled primary, then nothing submits); an event
+  already prevented is left alone, so of two forms only the first answers. It submits with `requestSubmit` through the
+  actions' own submit button, so a form needs a `type="submit"` button it owns.
+- **FormActions placement**: inside a dialog that is not a `FormDrawer` the plain row comes by itself; `auto` moves the
+  pill into the slot closest above the form when the page mounts one (else as before); `row` never moves.
+- **Confirmations** ask through `useConfirm()`: no dialog to render; without `AdminUiProvider` every call answers
+  `false` (one warning outside production). A host service goes into the provider's `confirm`.
+- **Write access is a presentation aid.** `WriteAccessProvider` disables `FormSubmitButton`, `FormDialog`'s submit, the
+  bulk bar's actions and `AddEntityButton` as a button (never a link); a nested provider only narrows. Handlers keep
+  their guard and the server its check.
 - **Showcase** needs no optional peer: pass `loadNotifySonner={() => import('@mgamadeus/ddd-admin-ui/notify-sonner')}`
   only when sonner is installed. A new block gets a showcase sample and a `SHOWCASE_COVERAGE` entry, or the checks fail.
 - **Text contexts are literals.** `m('Failed', { context: 'import-status' })`: extractors (the package manifest and
@@ -122,7 +138,7 @@ export const ItemsScreen = () => {
 ```tsx
 const drawer = useEntityDrawer({ adapter: useNextDrawerUrlAdapter() });
 const form = useForm<Values>({ defaultValues });
-const { confirm, dialog } = useConfirmDialog();
+const confirm = useConfirm();                          // ./logic: the provider's dialog
 const { confirmDiscard } = useUnsavedChangesGuard(useFormDirty(form), confirm);
 
 <FormDrawer open={drawer.isOpen} onClose={drawer.close} title="Edit item">
@@ -139,8 +155,19 @@ const { confirmDiscard } = useUnsavedChangesGuard(useFormDirty(form), confirm);
       primary={<FormSubmitButton>Save</FormSubmitButton>}
     />
   </Form>
-  {dialog}
 </FormDrawer>
+```
+
+### Form in a dialog, a typed confirmation
+
+```tsx
+<FormDialog<Values> open={open} onOpenChange={setOpen} title="Rename item" form={form}
+  onSubmit={async values => { await rename(values); setOpen(false); }}
+  submitLabel="Save" pendingLabel="Saving…" isPending={isRenaming} isDirty={form.formState.isDirty}>
+  <FormField<Values, 'name'> name="name" label="Name">{({ field, control }) => <Input {...control} {...field} />}</FormField>
+</FormDialog>
+
+if (await confirm({ title: `Delete ${site.name}?`, confirmVariant: 'destructive', confirmLabel: 'Delete', requirePhrase: site.name })) …
 ```
 
 ### Translations and media in one form

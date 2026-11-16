@@ -23,6 +23,8 @@
   "Bulk actions": "Accessible name (screen-reader label) of the toolbar that appears above a list when rows are selected, holding actions that apply to all selected rows.",
   "Cancel": "Button at the bottom of the world form that discards the entries and returns to the world list; asks for confirmation if there are unsaved changes.",
   "Cancel__confirm-dialog": "Button on the left of a generic confirmation dialog that dismisses it without doing the action. Shown when the caller did not set its own label.",
+  "Cancel__form-dialog": "Button on the left of a dialog that holds a short form (rename, create, delete with a reason); closes the dialog without saving. Asks first when the form has unsaved changes. Shown when the caller did not set its own label.",
+  "Type “%phrase%” to confirm": "Label above the text field of a confirmation dialog for an irreversible step; the confirm button stays off until the user types the phrase exactly. %phrase% is the phrase to type (for example the name of the item to delete). Keep the quotation marks around it.",
   "Cancel__media-picker": "Footer button of the media picker dialog; click to close the dialog without changing the chosen media item.",
   "Change__media-field-action": "Button label under a media field preview; click to open the picker and replace the currently chosen image. Shown only when an image is already set.",
   "Clear %label%": "Accessible label of the small X button inside a text filter that empties it. %label% is the filter name, e.g. Name or Account ID.",

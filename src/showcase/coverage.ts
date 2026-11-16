@@ -20,7 +20,7 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
       'CommandShortcut', 'Dialog', 'DialogClose', 'DialogContent', 'DialogDescription', 'DialogFooter', 'DialogHeader',
       'DialogTitle', 'DialogTrigger', 'DropdownMenu', 'DropdownMenuCheckboxItem', 'DropdownMenuContent', 'DropdownMenuGroup',
       'DropdownMenuItem', 'DropdownMenuLabel', 'DropdownMenuSeparator', 'DropdownMenuSub', 'DropdownMenuSubContent',
-      'DropdownMenuSubTrigger', 'DropdownMenuTrigger', 'Input', 'Label', 'Popover', 'PopoverAnchor', 'PopoverContent',
+      'DropdownMenuSubTrigger', 'DropdownMenuTrigger', 'FormActionsSlot', 'FormActionsSlotProvider', 'Input', 'Label', 'Popover', 'PopoverAnchor', 'PopoverContent',
       'PopoverDescription', 'PopoverHeader', 'PopoverTitle', 'PopoverTrigger', 'PortalContainerProvider', 'SegmentedControl',
       'Select', 'SelectContent', 'SelectGroup', 'SelectItem', 'SelectLabel', 'SelectSeparator', 'SelectTrigger', 'SelectValue',
       'Separator', 'Sheet', 'SheetClose', 'SheetContent', 'SheetDescription', 'SheetFooter', 'SheetHeader', 'SheetTitle',
@@ -59,7 +59,7 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
   },
   form: {
     shown: [
-      'DrawerFooter', 'Form', 'FormActions', 'FormDrawer', 'FormErrors', 'FormField', 'FormFieldFrame', 'FormHeader',
+      'DrawerFooter', 'Form', 'FormActions', 'FormDialog', 'FormDrawer', 'FormErrors', 'FormField', 'FormFieldFrame', 'FormHeader',
       'FormJumpBar', 'FormSection', 'FormSubmitButton', 'FormWrapper', 'VisibleWhen',
     ],
     notShown: { UnsavedChangesContext: 'a context (used by FormDrawer)' },

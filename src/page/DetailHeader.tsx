@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { Skeleton } from '../primitives/index.ts';
+import { FormActionsSlot, Skeleton } from '../primitives/index.ts';
 import { cn } from '../primitives/cn.ts';
 
 export interface DetailHeaderProps {
@@ -18,6 +18,11 @@ export interface DetailHeaderProps {
    * title is an `h2` in the section size — the page keeps one `h1` and the outer header stays the dominant one.
    */
   nested?: boolean;
+  /**
+   * A `FormActionsSlot` at the end of the right column: the actions of the form below move up into the header (needs
+   * a `FormActionsSlotProvider` around header and form; `EntityDetailShell formActionsSlot` brings one).
+   */
+  formActionsSlot?: boolean;
   className?: string;
 }
 
@@ -34,6 +39,7 @@ export const DetailHeader = ({
   aside,
   isLoading = false,
   nested = false,
+  formActionsSlot = false,
   className,
 }: DetailHeaderProps) => {
   const Heading = nested ? 'h2' : 'h1';
@@ -58,6 +64,7 @@ export const DetailHeader = ({
     )}
     <div className="flex flex-wrap items-center justify-center gap-3 md:flex-1 md:basis-0 md:justify-end">
       {!isLoading && aside}
+      {formActionsSlot && <FormActionsSlot />}
     </div>
   </header>
   );

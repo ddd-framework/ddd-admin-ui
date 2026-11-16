@@ -22,6 +22,8 @@ export { Form, VisibleWhen } from './Form.tsx';
 export type { FormProps, VisibleWhenProps } from './Form.tsx';
 export { FormActions } from './FormActions.tsx';
 export type { FormActionsProps } from './FormActions.tsx';
+export { FormDialog } from './FormDialog.tsx';
+export type { FormDialogProps } from './FormDialog.tsx';
 export { FormDrawer } from './FormDrawer.tsx';
 export type { FormDrawerProps } from './FormDrawer.tsx';
 export { FormErrors } from './FormErrors.tsx';

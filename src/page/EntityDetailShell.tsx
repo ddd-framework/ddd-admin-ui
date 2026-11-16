@@ -4,7 +4,7 @@ import type { ChangeHistory } from '@mgamadeus/ddd-web/contract';
 import { ArrowLeft } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-import { Button } from '../primitives/index.ts';
+import { Button, FormActionsSlotProvider } from '../primitives/index.ts';
 import { useTranslate } from '../i18n/index.ts';
 import { cn } from '../primitives/cn.ts';
 import { EntityListEmpty } from '../list/EntityListEmpty.tsx';
@@ -45,6 +45,12 @@ export interface EntityDetailShellProps {
   nested?: boolean;
   /** Load failed or the entity does not exist: one error block with the back button instead of the page. */
   error?: ReactNode;
+  /**
+   * The actions of a form in the page (`FormActions`) sit in the header, after `actions`, as a pill that floats under
+   * the top bar once the header scrolls away. The shell brings the `FormActionsSlotProvider`; a nested shell with its
+   * own slot takes the actions of its forms.
+   */
+  formActionsSlot?: boolean;
   children: ReactNode;
   className?: string;
 }
@@ -68,6 +74,7 @@ export const EntityDetailShell = ({
   isLoading = false,
   nested = false,
   error,
+  formActionsSlot = false,
   children,
   className,
 }: EntityDetailShellProps) => {
@@ -99,7 +106,7 @@ export const EntityDetailShell = ({
     </Button>
   );
 
-  return (
+  const page = (
     <div className={cn('w-full', className)}>
       <DetailHeader
         back={backButton}
@@ -107,6 +114,7 @@ export const EntityDetailShell = ({
         description={description}
         isLoading={isLoading}
         nested={nested}
+        formActionsSlot={formActionsSlot}
         className={tabs && tabs.length > 0 ? 'mb-5' : undefined}
         aside={
           <>
@@ -129,4 +137,5 @@ export const EntityDetailShell = ({
       {children}
     </div>
   );
+  return formActionsSlot ? <FormActionsSlotProvider>{page}</FormActionsSlotProvider> : page;
 };
