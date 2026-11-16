@@ -1,55 +1,75 @@
-// The package's one translation store (module state). It must exist exactly once in a host bundle:
-// every entry imports it from here, and scripts/check-package.mjs fails when a second copy appears.
+import { formatIcuPlural } from './plural.ts';
+
+/**
+ * UI text store: the key is the English text, an ambiguous word adds a
+ * context (`Open` + `bill-status` → key `Open__bill-status`). The bundle of the active language is a flat map
+ * `key → text`; a key without a translation shows its English text. Module state with subscribers, so `useTranslate`
+ * re-renders on a language or bundle change.
+ */
 
 export type WritingStyle = 'FORMAL' | 'INFORMAL';
 
-export interface TranslationsSnapshot {
+export interface TranslateOptions {
+  /** Disambiguates a short word (`Open` as a status vs. as an action); the key becomes `<text>__<context>`. */
+  context?: string;
+  /** Selects the branch of an ICU plural message and fills `#` and `%count%`. */
+  count?: number;
+  /** Values for `%name%` placeholders. */
+  replacements?: Record<string, string | number>;
+}
+
+interface TranslationState {
   languageCode: string;
   writingStyle: WritingStyle;
-  /** Key = `<text>` or `<text>__<context>` (see {@link translationKeyOf}). */
   translations: Readonly<Record<string, string>>;
+  version: number;
 }
 
-export interface TranslateOptions {
-  /** Disambiguates equal texts with different meanings. */
-  context?: string;
-  /** Replaces `%name%` placeholders. */
-  replacements?: Readonly<Record<string, string | number>>;
-}
-
-let snapshot: TranslationsSnapshot = { languageCode: 'en', writingStyle: 'FORMAL', translations: {} };
+let state: TranslationState = { languageCode: 'en', writingStyle: 'FORMAL', translations: {}, version: 0 };
 const listeners = new Set<() => void>();
 
-/** The store key of a text: the text itself, or `<text>__<context>`. */
-export const translationKeyOf = (text: string, context?: string): string => (context ? `${text}__${context}` : text);
-
-/** Replaces the active language and its translations; notifies every subscriber. */
-export const setTranslations = (
-  languageCode: string,
-  writingStyle: WritingStyle,
-  translations: Readonly<Record<string, string>>,
-): void => {
-  snapshot = { languageCode, writingStyle, translations };
+const emit = () => {
   for (const listener of listeners) listener();
 };
 
-/** The current language, writing style and translations. Stable identity until the next {@link setTranslations}. */
-export const getTranslationsSnapshot = (): TranslationsSnapshot => snapshot;
-
-/** Subscribes to store changes; returns the unsubscribe function. */
 export const subscribeTranslations = (listener: () => void): (() => void) => {
   listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
+  return () => listeners.delete(listener);
 };
 
-/** Translates a text with the active translations; an untranslated text is returned as written. */
-export const translateText = (text: string, options: TranslateOptions = {}): string => {
-  const message = snapshot.translations[translationKeyOf(text, options.context)] ?? text;
-  const replacements = options.replacements;
-  if (!replacements) return message;
-  return message.replace(/%([A-Za-z_]\w*)%/g, (match, name: string) =>
-    name in replacements ? String(replacements[name]) : match,
-  );
+export const getTranslationState = (): TranslationState => state;
+
+/** Replaces the active bundle (the loader calls it once the language's map arrived; English = empty map). */
+export const setTranslations = (
+  languageCode: string,
+  writingStyle: WritingStyle,
+  translations: Readonly<Record<string, string>>
+): void => {
+  state = { languageCode, writingStyle, translations, version: state.version + 1 };
+  emit();
 };
+
+/** The store key of a text with its optional context. */
+export const translationKeyOf = (text: string, context?: string): string => (context ? `${text}__${context}` : text);
+
+const applyReplacements = (message: string, replacements: Record<string, string | number>): string =>
+  message.replace(/%([A-Za-z_][\w]*)%/g, (match, name: string) =>
+    name in replacements ? String(replacements[name]) : match
+  );
+
+/** Translates `text` in the active language (English text when no translation exists). */
+export const translateText = (text: string, options: TranslateOptions = {}): string => {
+  const { context, count, replacements } = options;
+  let message = state.translations[translationKeyOf(text, context)] ?? text;
+  if (typeof count === 'number') {
+    message = formatIcuPlural(message, count, state.languageCode);
+  }
+  const values = typeof count === 'number' ? { count, ...replacements } : replacements;
+  return values ? applyReplacements(message, values) : message;
+};
+
+/**
+ * Marks an English UI text that is defined outside a component (status maps, column definitions, option lists) for
+ * the key export, unchanged. The component that renders it translates it with `t(value)`.
+ */
+export const m = <TText extends string>(text: TText): TText => text;

@@ -1,26 +1,38 @@
 // T4 / T9: a strict TypeScript consumer of every entry that runs without next and sonner. Compiled with
 // moduleResolution bundler and nodenext and skipLibCheck false: it passes only if the published declarations are
-// complete and resolve.
-import { describeRequestError, defineStatusMap, formatDate, formatUiNumber, notify, setNotificationAdapter, type NotificationAdapter, type StatusMap } from '@mgamadeus/ddd-admin-ui/logic';
-import { m, setTranslations, useTranslate, type TranslationsSnapshot } from '@mgamadeus/ddd-admin-ui/i18n';
-import { Button, cn, DialogContent, SelectContent, SheetContent, type ButtonProps } from '@mgamadeus/ddd-admin-ui/primitives';
-import { ClearFiltersButton, DateCell, type DateCellProps } from '@mgamadeus/ddd-admin-ui/list';
-import { PageFrame } from '@mgamadeus/ddd-admin-ui/page';
-import { Form, useFieldLabel, type FieldLabels, type FormProps } from '@mgamadeus/ddd-admin-ui/form';
-import { TranslatableInputField } from '@mgamadeus/ddd-admin-ui/translations';
-import { MediaItemField, type MediaUploadAdapter } from '@mgamadeus/ddd-admin-ui/media';
-import { GlassPanel } from '@mgamadeus/ddd-admin-ui/glass';
-import { StatTile } from '@mgamadeus/ddd-admin-ui/data';
+// complete and resolve (lucide-react types included, at the version under test).
+import {
+  defineStatusMap,
+  formatDate,
+  formatDateTime,
+  notify,
+  setNotificationAdapter,
+  toFormSubmitError,
+  type FormSubmitError,
+  type NotificationAdapter,
+  type StatusMap,
+  type UrlStateAdapter,
+} from '@mgamadeus/ddd-admin-ui/logic';
+import { formatUiNumber, m, setTranslations, translateText, useTranslate, type WritingStyle } from '@mgamadeus/ddd-admin-ui/i18n';
+import { Button, cn, DialogContent, SelectContent, SheetContent, TooltipProvider } from '@mgamadeus/ddd-admin-ui/primitives';
+import { DateCell, EntityListBody, EntityListToolbar, StatusBadge, type DateCellProps, type EntityListColumn } from '@mgamadeus/ddd-admin-ui/list';
+import { EntityDetailShell, PageFrame, type PageFrameProps } from '@mgamadeus/ddd-admin-ui/page';
+import { Form, FormErrors, FormField, type FormErrorsProps } from '@mgamadeus/ddd-admin-ui/form';
+import { FormTranslatableInput, TranslatableInput } from '@mgamadeus/ddd-admin-ui/translations';
+import { FormMediaItemField, MediaItemPickerDialog, type MediaUploadAdapter } from '@mgamadeus/ddd-admin-ui/media';
+import { GlassPill, QuickFilterPills } from '@mgamadeus/ddd-admin-ui/glass';
 import { AdminUiProvider, useAdminUi, type AdminUiProviderProps, type StorageKeyFn } from '@mgamadeus/ddd-admin-ui/provider';
 
-setTranslations('de', 'FORMAL', { Users: 'Benutzer' });
+const writingStyle: WritingStyle = 'FORMAL';
+setTranslations('de', writingStyle, { Users: 'Benutzer' });
 export const title: string = m('Users');
-export const date: string = formatDate(new Date(), { timeZone: 'UTC' });
+export const translated: string = translateText('Users');
+export const date: string = formatDate('2026-03-04');
+export const dateTime: string = formatDateTime('2026-03-04 10:05:00');
 export const amount: string = formatUiNumber(3);
-export const message: string = describeRequestError(new Error('x'));
 export const statuses: StatusMap<'ACTIVE' | 'BLOCKED'> = defineStatusMap({
   ACTIVE: { label: 'Active', tone: 'success' },
-  BLOCKED: { label: 'Blocked', tone: 'destructive' },
+  BLOCKED: { label: 'Blocked', tone: 'danger' },
 });
 const adapter: NotificationAdapter = {
   success: () => 1,
@@ -32,17 +44,19 @@ const adapter: NotificationAdapter = {
 setNotificationAdapter(adapter);
 notify.success('Saved');
 
+export const submitError: FormSubmitError = toFormSubmitError(new Error('x'), 'Could not save');
+export const formErrorsProps: FormErrorsProps = { error: submitError };
+export const urlState: UrlStateAdapter = { get: () => null, replace: () => {} };
 export const storageKey: StorageKeyFn = (kind, id) => `host.${kind}.${id}`;
-export const upload: MediaUploadAdapter = async () => ({ url: 'https://example.com/a.png' });
+export const upload: MediaUploadAdapter = async () => ({ id: '1', previewUrl: null, title: 'a.png' });
 export const providerProps: Omit<AdminUiProviderProps, 'children'> = { storageKey, upload, portalContainer: null };
-export const labels: FieldLabels = { name: 'Name' };
-export const formProps: Omit<FormProps<{ name: string }>, 'children'> = { defaultValues: { name: '' }, labels, onSubmit: () => {} };
-export const buttonProps: ButtonProps = { variant: 'outline', size: 'sm' };
-export const dateCellProps: DateCellProps = { value: '2026-03-04', timeZone: 'UTC' };
+export const pageFrameProps: Omit<PageFrameProps, 'children'> = { title: 'Users' };
+export const dateCellProps: DateCellProps = { value: '2026-03-04', format: 'date' };
+export const columns: EntityListColumn<{ id: number; name: string }>[] = [{ id: 'name', header: 'Name', cell: item => item.name }];
 export const className: string = cn('p-2', 'p-4');
-export const snapshotType = (snapshot: TranslationsSnapshot): string => snapshot.languageCode;
 export const components = [
-  Button, DialogContent, SelectContent, SheetContent, ClearFiltersButton, DateCell, PageFrame, Form,
-  TranslatableInputField, MediaItemField, GlassPanel, StatTile, AdminUiProvider,
+  Button, DialogContent, SelectContent, SheetContent, TooltipProvider, DateCell, EntityListBody, EntityListToolbar,
+  StatusBadge, EntityDetailShell, PageFrame, Form, FormErrors, FormField, FormTranslatableInput, TranslatableInput,
+  FormMediaItemField, MediaItemPickerDialog, GlassPill, QuickFilterPills, AdminUiProvider,
 ];
-export const hooks = [useTranslate, useFieldLabel, useAdminUi];
+export const hooks = [useTranslate, useAdminUi];

@@ -1,8 +1,11 @@
 /* T5: the host stylesheet imports both package stylesheets; the host source never names the package's classes, so
    they reach the build only through the package's own `@source`. */
 @import 'tailwindcss';
+@import 'tw-animate-css';
 @import '@mgamadeus/ddd-admin-ui/theme.css';
 @import '@mgamadeus/ddd-admin-ui/components.css';
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
   --background: #ffffff;

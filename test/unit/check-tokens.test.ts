@@ -1,68 +1,80 @@
+// scripts/check-tokens.mjs (shipped as `ddd-admin-ui-check-tokens`) against small host stylesheets.
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { describe, it } from 'node:test';
-import { checkTokens, escapeClass, isCssColor } from '../../scripts/check-tokens.mjs';
+import { afterEach, describe, it } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
-const tokens = {
-  colors: { card: { themed: true } },
-  properties: { '--nav-h': { themed: false } },
+const CHECK_TOKENS = fileURLToPath(new URL('../../scripts/check-tokens.mjs', import.meta.url));
+
+const TOKENS = {
+  colors: { card: { utilities: ['bg-card'] } },
+  properties: { '--nav-h': { themed: false }, '--surface-alpha': { themed: true } },
+  layers: { '--layer-popover': { default: 50 } },
+  dataAttributes: { 'data-form-actions': { readBy: 'components.css' } },
 };
 
-/** A package dist with one class literal and the tokens above, plus a host CSS file. */
-const setup = (hostCss: string) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'check-tokens-'));
-  fs.mkdirSync(path.join(root, 'dist', 'page'), { recursive: true });
-  fs.writeFileSync(path.join(root, 'dist', 'tokens.json'), JSON.stringify(tokens));
-  fs.writeFileSync(
-    path.join(root, 'dist', 'page', 'Frame.js'),
-    "export const Frame = () => _jsx('div', { className: 'bg-card md:h-[calc(100dvh_-_var(--nav-h))] group' });\n",
-  );
-  fs.writeFileSync(path.join(root, 'host.css'), hostCss);
-  return { root, run: () => checkTokens({ packageDir: root, cssFiles: [path.join(root, 'host.css')] }) };
-};
-
+const PACKAGE_RULES = ':where(:root){--layer-popover:50}form>[data-form-actions]{margin-top:1rem}';
 const COMPLETE_HOST_CSS =
-  ':root{--card:#fff;--nav-h:4rem}.dark{--card:oklch(20% 0 0)}.bg-card{background:var(--card)}' +
-  '@media (width>=48rem){.md\\:h-\\[calc\\(100dvh_-_var\\(--nav-h\\)\\)\\]{height:calc(100dvh - var(--nav-h))}}';
+  ':root{--card:#fff;--nav-h:4rem;--surface-alpha:90%}.dark{--card:oklch(20% 0 0);--surface-alpha:80%}' +
+  `.bg-card{background-color:var(--card)}.hover\\:bg-card:hover{background-color:var(--card)}${PACKAGE_RULES}`;
+
+const roots: string[] = [];
+afterEach(() => {
+  for (const root of roots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
+});
+
+/** Runs the check on `css` with the tokens above; returns the exit code and the output. */
+const checkTokens = (css: string): { status: number | null; output: string } => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'check-tokens-'));
+  roots.push(root);
+  fs.writeFileSync(path.join(root, 'tokens.json'), JSON.stringify(TOKENS));
+  fs.writeFileSync(path.join(root, 'host.css'), css);
+  const run = spawnSync(process.execPath, [CHECK_TOKENS, path.join(root, 'host.css'), path.join(root, 'tokens.json')], {
+    encoding: 'utf8',
+  });
+  return { status: run.status, output: `${run.stdout}${run.stderr}` };
+};
 
 describe('check-tokens', () => {
-  it('recognises complete CSS colours', () => {
-    for (const value of ['#fff', '#ffffffcc', 'white', 'rgb(0 0 0 / 50%)', 'oklch(0.5 0.1 200)', 'hsl(0 0% 100%)', 'var(--x)']) {
-      assert.ok(isCssColor(value), value);
-    }
-    for (const value of ['0 0% 100%', '12px', '']) assert.ok(!isCssColor(value), value);
+  it('passes a host that provides every utility, property, layer default and data-attribute rule', () => {
+    const { status, output } = checkTokens(COMPLETE_HOST_CSS);
+    assert.equal(status, 0, output);
   });
 
-  it('escapes class names like CSS', () => {
-    assert.equal(escapeClass('md:h-[1px]'), 'md\\:h-\\[1px\\]');
-    assert.equal(escapeClass('bg-primary/90'), 'bg-primary\\/90');
+  it('names a colour utility without a rule', () => {
+    const { status, output } = checkTokens(COMPLETE_HOST_CSS.replace(/\.bg-card\{[^}]*\}\.hover\\:bg-card:hover\{[^}]*\}/, ''));
+    assert.equal(status, 1);
+    assert.match(output, /colour role "card": no rule for bg-card/);
   });
 
-  it('passes a host that covers classes and tokens', () => {
-    const { root, run } = setup(COMPLETE_HOST_CSS);
-    try {
-      assert.deepEqual(run(), []);
-    } finally {
-      fs.rmSync(root, { recursive: true, force: true });
-    }
+  it('accepts a utility that exists only under a variant', () => {
+    const { status, output } = checkTokens(COMPLETE_HOST_CSS.replace(/\.bg-card\{[^}]*\}/, ''));
+    assert.equal(status, 0, output);
   });
 
-  it('reports a missing class rule, a missing declaration and a non-colour value', () => {
-    const { root, run } = setup(':root{--card:0 0% 100%}.dark{}.bg-card{color:red}');
-    try {
-      assert.deepEqual(
-        run().map((problem) => `${problem.check} ${problem.message}`),
-        [
-          "a no rule for class 'md:h-[calc(100dvh_-_var(--nav-h))]'",
-          "c --card on :root is not a CSS colour: '0 0% 100%'",
-          'b --card is not declared on .dark',
-          'b --nav-h is not declared on :root',
-        ],
-      );
-    } finally {
-      fs.rmSync(root, { recursive: true, force: true });
-    }
+  it('names a property missing on :root and a themed one missing on .dark', () => {
+    const { status, output } = checkTokens(COMPLETE_HOST_CSS.replace('--nav-h:4rem;', '').replace(';--surface-alpha:80%', ''));
+    assert.equal(status, 1);
+    assert.match(output, /property --nav-h: not declared on :root/);
+    assert.match(output, /property --surface-alpha: themed, but not declared on \.dark/);
+  });
+
+  it('refuses channels in a role read as a whole colour, accepts them inside a channel function', () => {
+    const channels = COMPLETE_HOST_CSS.replace('--card:#fff', '--card:0 0% 100%').replace('--card:oklch(20% 0 0)', '--card:0 0% 10%');
+    const plainRead = checkTokens(channels);
+    assert.equal(plainRead.status, 1);
+    assert.match(plainRead.output, /--card in ":root" is not a colour, but read as background-color/);
+    const channelRead = checkTokens(channels.replaceAll('var(--card)', 'hsl(var(--card))'));
+    assert.equal(channelRead.status, 0, channelRead.output);
+  });
+
+  it('names a missing layer default and a data attribute no rule reads (components.css not imported)', () => {
+    const { status, output } = checkTokens(COMPLETE_HOST_CSS.replace(PACKAGE_RULES, ''));
+    assert.equal(status, 1);
+    assert.match(output, /layer --layer-popover: default 50 not declared/);
+    assert.match(output, /data attribute data-form-actions: no rule reads it/);
   });
 });

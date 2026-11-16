@@ -1,42 +1,187 @@
 /*
- * @mgamadeus/ddd-admin-ui — structure the blocks rely on.
- * Colours are read only through the host's Tailwind theme (--theme(--color-…)), never through bare role variables;
- * layout values and alphas are plain custom properties the host sets (see tokens.json).
- * Import after `@import "tailwindcss";` (and after theme.css when the host uses it).
- */
+  Structural CSS of the blocks and primitives. Import it after `tailwindcss` (and `theme.css`). Colours come from the
+  host's Tailwind theme (`--theme(--color-…)`), alphas and shadows from plain custom properties the host sets on
+  `:root` and `.dark` (`--surface-alpha`, `--surface-shadow`, `--glass-alpha`, `--surface-glass-alpha`,
+  `--surface-glass-strong-alpha`, `--glass-shadow`, `--glass-control-shadow`).
+*/
+@source './';
 
-/* Lets the host's Tailwind scan this package's built files for class names. */
-@source "./";
-
-/* Layer scale: defaults with zero specificity, so any host value wins. */
-:where(:root) {
-  --layer-raised: 10;
-  --layer-sticky: 20;
-  --layer-overlay: 50;
-  --layer-popover: 50;
+/* Layer scale. The blocks and primitives stack with `z-(--layer-<name>)`; these are only defaults: zero specificity
+   (`:where`) in the lowest cascade layer (`theme`), so any host declaration of a `--layer-*` variable wins, layered or
+   not. Equal overlay / popover values: a later portal paints on top. */
+@layer theme {
+  :where(:root) {
+    --layer-raised: 10;
+    --layer-sticky: 20;
+    --layer-overlay: 50;
+    --layer-popover: 50;
+  }
 }
 
+/* Fluid heading scale: page title 28–36 px, section 20–24 px, card title 18–20 px. */
 @utility text-title-page {
-  font-size: 1.5rem;
-  line-height: 2rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-size: clamp(1.75rem, 1.4rem + 0.6vw, 2.25rem);
+  line-height: 1.2;
 }
 
+@utility text-title-section {
+  font-size: clamp(1.25rem, 1.1rem + 0.3vw, 1.5rem);
+  line-height: 1.3;
+}
+
+@utility text-title-card {
+  font-size: clamp(1.125rem, 1.05rem + 0.15vw, 1.25rem);
+  line-height: 1.4;
+}
+
+@utility animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* The card surface over the page background: translucent card colour, 12 px backdrop blur, three-layer soft shadow,
+   no border. The radius comes from the element (`rounded-2xl`). A surface inside a surface (grid cards in the list
+   card, cards in a card) skips the blur: its backdrop is already frosted. In `components` so a `shadow-*` / `bg-*`
+   utility on the same element still wins. */
 @layer components {
   .surface {
     background-color: color-mix(in oklab, --theme(--color-card) var(--surface-alpha), transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
     box-shadow: var(--surface-shadow);
   }
-
-  .surface-glass {
-    background-color: color-mix(in oklab, --theme(--color-card) var(--surface-glass-alpha), transparent);
-    box-shadow: var(--glass-shadow);
+  .surface .surface {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .surface:has([data-entity-grid]) [data-entity-grid] .surface {
+    -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
   }
-
-  /* Form actions render first, above the fields. */
+  /* The glass tone: quick-filter pills, collapsible glass cards, group panels, header pills. A solid surface or a card
+     inside keeps its own (stronger) fill. */
+  .surface-glass {
+    background-color: color-mix(in oklab, --theme(--color-card) var(--surface-glass-alpha), transparent);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    box-shadow: var(--glass-shadow);
+  }
+  .surface-glass-strong {
+    background-color: color-mix(in oklab, --theme(--color-card) var(--surface-glass-strong-alpha), transparent);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    box-shadow: var(--glass-shadow);
+  }
+  /* Glass inside a card (a collapsible group in a form section): no second blur, the quiet ink tint instead of
+     white-on-white, no shadow; open a step stronger. */
+  .surface .surface-glass {
+    background-color: --theme(--color-tint);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+  .surface .surface-glass-strong {
+    background-color: color-mix(in oklab, --theme(--color-card) 60%, --theme(--color-tint-strong));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: inset 0 0 0 1px --theme(--color-tint-strong);
+  }
+  /* Sticky glass bars (bulk bar, form action bar). */
+  /* Form actions at the top of the form: written last, shown first, sticky under the chrome. */
+  form:has(> [data-form-actions]) {
+    display: flex;
+    flex-direction: column;
+  }
   form > [data-form-actions] {
     order: -1;
   }
+  .glass-bar {
+    background-color: color-mix(in oklab, --theme(--color-card) var(--glass-alpha), transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  /* Grid view without cards (empty, no results, error): the state sits in a glass panel instead of floating bare on the
+     page background. Layered: no utility of the panel sets these properties, and a host's own look rule can win. */
+  .surface:has([data-entity-grid]) [data-entity-grid] [data-list-empty] {
+    background-color: color-mix(in oklab, --theme(--color-card) var(--surface-glass-alpha), transparent);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    /* the same shadow as every list card / table card, so grid and table views look alike */
+    box-shadow: var(--surface-shadow);
+  }
+  /* List card in table view: only the table below the toolbar is a card (radius 24 px). Layered: its element carries no
+     utility for these properties, and a host's own look rule (a flat card) can win. */
+  .surface:has(> [data-list-toolbar]):not(:has([data-entity-grid])) > [data-list-toolbar] + * {
+    overflow: hidden;
+    border-radius: 1.5rem;
+    background-color: color-mix(in oklab, --theme(--color-card) var(--surface-alpha), transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    box-shadow: var(--surface-shadow);
+  }
+}
+
+/* List cards: the toolbar and the filter panel sit straight on the page background — no card background, no rule;
+   only the table below is a card (radius 24 px). In grid view the grid cards sit on the background as well, each with
+   its own frosted surface. Unlayered: it beats the card's and the toolbar's utilities (`overflow-hidden`,
+   `rounded-3xl`, `border-b px-4 py-3`); inside `@layer components` those utilities would win. */
+.surface:has(> [data-list-toolbar]) {
+  background-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+  overflow: visible;
+  border-radius: 0;
+}
+.surface:has(> [data-list-toolbar]) > [data-list-toolbar] {
+  border-bottom-width: 0;
+  padding-inline: 0;
+  padding-top: 0;
+  padding-bottom: 1rem;
+}
+
+/* Filter controls on the page background in the glass tone: search, filter fields and the outline buttons of the
+   toolbar as frosted fields with a soft glass shadow. Shape by role: the pills — the search (`data-control="pill"`), a
+   toolbar menu (`SelectTrigger variant="pill"`) and the pill buttons (Filters, Clear filters) — drop their edge; a form
+   field in the Filters panel keeps its quiet edge over the glass. */
+.surface:has(> [data-list-toolbar]) > [data-list-toolbar]
+  :is(
+    [data-slot="input"],
+    [data-slot="select-trigger"],
+    [data-slot="multi-select"],
+    [role="combobox"]:not([data-slot="multi-select"] *),
+    [data-slot="button"][data-variant="outline"]
+  ) {
+  background-color: color-mix(in oklab, --theme(--color-card) var(--surface-glass-strong-alpha), transparent);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  /* A short glass shadow: the filter panel clips 12 px around its fields (collapse animation). */
+  box-shadow: var(--glass-control-shadow);
+}
+.surface:has(> [data-list-toolbar]) > [data-list-toolbar]
+  :is([data-control="pill"], [data-slot="button"][data-variant="outline"]) {
+  border-color: transparent;
+}
+/* Chips inside the glass multi-select: the quiet ink tint instead of the grey `secondary` block. */
+.surface:has(> [data-list-toolbar]) > [data-list-toolbar] [data-slot="multi-select-chip"] {
+  background-color: --theme(--color-tint-strong);
+}
+
+/* Grid view: the cards line up flush with the toolbar bar above. The scroll container clips overflow, so it keeps
+   room for the card shadow and pulls itself out by the same amount (negative margin) — flush edges, uncut shadows.
+   Unlayered so it beats the grid's `p-4`. Room for the full `--surface-shadow` (offset 8 px + blur 24 px) on the sides
+   and below. */
+.surface:has([data-entity-grid]) [data-entity-grid] {
+  padding-inline: 2rem;
+  margin-inline: -2rem;
+  padding-bottom: 2.5rem;
+  margin-bottom: -2.5rem;
 }

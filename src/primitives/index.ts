@@ -1,13 +1,26 @@
+// The primitives entry: the shadcn primitives and the class-name helper. Blocks import it relatively.
 export { cn } from './cn.ts';
-export { Button, buttonVariants, type ButtonProps } from './button.tsx';
-export { PortalContainerProvider, usePortalContainer } from './portalContainer.tsx';
-export {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-  DialogTrigger,
-} from './dialog.tsx';
-export { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from './sheet.tsx';
-export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select.tsx';
+export * from './alert.tsx';
+export * from './badge.tsx';
+export * from './breadcrumb.tsx';
+export * from './button.tsx';
+export * from './card.tsx';
+export * from './checkbox.tsx';
+export * from './collapsible.tsx';
+export * from './input.tsx';
+export * from './label.tsx';
+export * from './separator.tsx';
+export * from './sheet.tsx';
+export * from './skeleton.tsx';
+export * from './table.tsx';
+export * from './tooltip.tsx';
+export * from './command.tsx';
+export * from './dialog.tsx';
+export * from './popover.tsx';
+export * from './dropdown-menu.tsx';
+export * from './select.tsx';
+export * from './switch.tsx';
+export * from './portal.tsx';
+export * from './listSurface.ts';
+export * from './fieldSurface.ts';
+export * from './textarea.tsx';

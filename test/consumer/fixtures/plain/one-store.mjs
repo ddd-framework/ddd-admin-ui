@@ -2,17 +2,25 @@
 // with, and what the list block renders.
 import { createElement } from 'react';
 import { renderToString } from 'react-dom/server';
-import { setTranslations, m } from '@mgamadeus/ddd-admin-ui/i18n';
-import { formatDate, formatUiNumber } from '@mgamadeus/ddd-admin-ui/logic';
-import { ClearFiltersButton, DateCell } from '@mgamadeus/ddd-admin-ui/list';
+import { setTranslations, translateText } from '@mgamadeus/ddd-admin-ui/i18n';
+import { DateCell, EntityListEmpty } from '@mgamadeus/ddd-admin-ui/list';
+import { formatDate } from '@mgamadeus/ddd-admin-ui/logic';
+import { TooltipProvider } from '@mgamadeus/ddd-admin-ui/primitives';
 
-setTranslations('de', 'FORMAL', { 'Clear filters': 'Filter zurücksetzen', Users: 'Benutzer' });
+setTranslations('de', 'FORMAL', { 'Clear search': 'Suche zurücksetzen', Users: 'Benutzer' });
 const checks = [
-  ['formatDate (./logic)', formatDate('2026-03-04T10:05:00Z', { timeZone: 'UTC' }), '04.03.2026'],
-  ['formatUiNumber (./logic)', formatUiNumber(1234.5), '1.234,5'],
-  ['m (./i18n)', m('Users'), 'Benutzer'],
-  ['DateCell (./list)', renderToString(createElement(DateCell, { value: '2026-03-04T10:05:00Z', timeZone: 'UTC' })), /04\.03\.2026/],
-  ['ClearFiltersButton (./list)', renderToString(createElement(ClearFiltersButton, { onClear: () => {} })), /Filter zurücksetzen/],
+  ['formatDate (./logic)', formatDate('2026-03-04'), '04.03.2026'],
+  ['translateText (./i18n)', translateText('Users'), 'Benutzer'],
+  [
+    'DateCell (./list)',
+    renderToString(createElement(TooltipProvider, null, createElement(DateCell, { value: '2026-03-04' }))),
+    /04\.03\.2026/,
+  ],
+  [
+    'EntityListEmpty (./list)',
+    renderToString(createElement(EntityListEmpty, { message: 'Keine Einträge', onClearSearch: () => {} })),
+    /Suche zurücksetzen/,
+  ],
 ];
 let failed = false;
 for (const [label, actual, expected] of checks) {

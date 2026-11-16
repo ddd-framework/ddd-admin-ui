@@ -35,12 +35,15 @@ jobs:
           fi
       - name: i18n-keys.json is current
         run: node scripts/build-i18n-manifest.mjs --check
+      - name: tokens.json utilities lists are current
+        run: node scripts/tokens-utilities.mjs
       - name: Package checks on the build
-        run: node scripts/check-package.mjs . --require-skills
+        run: node scripts/check-package.mjs --dir .
       - name: Pack
         run: pnpm pack --pack-destination "$RUNNER_TEMP"
       # Per package manager: check-package on the tarball, Node imports and strict type checks without the optional
-      # peers, a Next 16 production build, the built CSS, hydration and overlays in headless Chrome, link-skills.
+      # peers, a Next 16 production build, the built CSS, the Radix copy check, hydration, form labels and overlays in
+      # headless Chrome, link-skills.
       - name: Consumer check with npm
         run: test/consumer/run.sh "$(ls "$RUNNER_TEMP"/mgamadeus-ddd-admin-ui-*.tgz)" npm "$RUNNER_TEMP/consumer-npm"
       - name: Consumer check with pnpm

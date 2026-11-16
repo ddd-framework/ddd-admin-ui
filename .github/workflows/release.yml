@@ -61,15 +61,17 @@ jobs:
           fi
       - name: i18n-keys.json is current
         run: node scripts/build-i18n-manifest.mjs --check
+      - name: tokens.json utilities lists are current
+        run: node scripts/tokens-utilities.mjs
       - name: Package checks on the build
-        run: node scripts/check-package.mjs . --require-skills --require-deny-list
+        run: node scripts/check-package.mjs --dir . --require-deny-list
       - name: Pack
         run: pnpm pack --pack-destination "$RUNNER_TEMP"
       - name: Package checks on the extracted tarball
         run: |
           mkdir -p "$RUNNER_TEMP/extracted"
           tar -xzf "$(ls "$RUNNER_TEMP"/mgamadeus-ddd-admin-ui-*.tgz)" -C "$RUNNER_TEMP/extracted"
-          node scripts/check-package.mjs "$RUNNER_TEMP/extracted/package" --source src --require-skills --require-deny-list
+          node scripts/check-package.mjs --dir "$RUNNER_TEMP/extracted/package" --modules node_modules --require-deny-list
       - name: Consumer check with npm
         run: test/consumer/run.sh "$(ls "$RUNNER_TEMP"/mgamadeus-ddd-admin-ui-*.tgz)" npm "$RUNNER_TEMP/consumer-npm"
       - name: Consumer check with pnpm

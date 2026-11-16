@@ -1,44 +1,56 @@
-import { getTranslationsSnapshot } from '../../i18n/store.ts';
+import { parseDddDateTime } from '@mgamadeus/ddd-web/contract';
 
-export interface FormatOptions {
-  /** BCP 47 locale; default: the active language of the translation store. */
-  locale?: string;
-  /** IANA time zone; default: the runtime's. Pass one for output that is equal on server and client. */
-  timeZone?: string;
-}
+import { uiDateTimeFormat, uiRelativeTimeFormat } from '../../i18n/format.ts';
 
-const toDate = (value: Date | string | number): Date => (value instanceof Date ? value : new Date(value));
+/** The one empty marker of every cell, metadata item and definition list. */
+export const EMPTY_MARKER = '—';
 
-const activeLocale = (options: FormatOptions): string => options.locale ?? getTranslationsSnapshot().languageCode;
+/** A DDD date (`Y-m-d`): a calendar day, not an instant — formatted in UTC so it never shifts by a day. */
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
-/** A date as `dd.mm.yyyy` / `mm/dd/yyyy` … in the active (or given) locale. Empty for an invalid value. */
-export const formatDate = (value: Date | string | number, options: FormatOptions = {}): string => {
-  const date = toDate(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return new Intl.DateTimeFormat(activeLocale(options), {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    ...(options.timeZone ? { timeZone: options.timeZone } : {}),
-  }).format(date);
+// Formatters in the UI language, fetched at format time so a language switch takes effect (cached per locale).
+const dateTimeFormat = () => uiDateTimeFormat({ dateStyle: 'medium', timeStyle: 'short' });
+const dateFormat = () => uiDateTimeFormat({ dateStyle: 'medium' });
+const calendarDayFormat = () => uiDateTimeFormat({ dateStyle: 'medium', timeZone: 'UTC' });
+const relativeFormat = () => uiRelativeTimeFormat({ numeric: 'auto' });
+
+const RELATIVE_STEPS: [Intl.RelativeTimeFormatUnit, number][] = [
+  ['year', 365 * 24 * 3600],
+  ['month', 30 * 24 * 3600],
+  ['week', 7 * 24 * 3600],
+  ['day', 24 * 3600],
+  ['hour', 3600],
+  ['minute', 60],
+];
+
+/** True for a value that carries a date only (`Y-m-d`), so a cell shows no time for it. */
+export const isDddDateOnly = (value: string | null | undefined): boolean => !!value && DATE_ONLY_PATTERN.test(value);
+
+/**
+ * A backend date-time (offsetless UTC `Y-m-d H:i:s`) as `Nov 1, 2026, 2:03 PM` in the UI language and the viewer's zone — the
+ * `EntityMetadata` format, used by every date column. A plain date (`Y-m-d`) prints without a time. Empty → the
+ * fallback (`—`); an unparsable value is shown as stored, never hidden.
+ */
+export const formatDateTime = (value: string | null | undefined, fallback: string = EMPTY_MARKER): string => {
+  if (!value) return fallback;
+  if (isDddDateOnly(value)) return formatDate(value, fallback);
+  const date = parseDddDateTime(value);
+  return date ? dateTimeFormat().format(date) : value;
 };
 
-/** A date with hours and minutes in the active (or given) locale. Empty for an invalid value. */
-export const formatDateTime = (value: Date | string | number, options: FormatOptions = {}): string => {
-  const date = toDate(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return new Intl.DateTimeFormat(activeLocale(options), {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    ...(options.timeZone ? { timeZone: options.timeZone } : {}),
-  }).format(date);
+/** The day of a backend date or date-time (`Nov 1, 2026`); a plain `Y-m-d` is the calendar day as stored. */
+export const formatDate = (value: string | null | undefined, fallback: string = EMPTY_MARKER): string => {
+  if (!value) return fallback;
+  const date = parseDddDateTime(value);
+  if (!date) return value;
+  return isDddDateOnly(value) ? calendarDayFormat().format(date) : dateFormat().format(date);
 };
 
-/** A number with the grouping and decimal separator of the active (or given) locale. */
-export const formatUiNumber = (value: number, options: FormatOptions & { maximumFractionDigits?: number } = {}): string =>
-  new Intl.NumberFormat(activeLocale(options), { maximumFractionDigits: options.maximumFractionDigits ?? 2 }).format(
-    value,
-  );
+/** `in 3 days`, `2 hours ago`, `now` (the hover text of date cells and `EntityMetadata`). */
+export const formatRelativeTime = (date: Date, now: number = Date.now()): string => {
+  const seconds = Math.round((date.getTime() - now) / 1000);
+  for (const [unit, size] of RELATIVE_STEPS) {
+    if (Math.abs(seconds) >= size) return relativeFormat().format(Math.round(seconds / size), unit);
+  }
+  return relativeFormat().format(0, 'minute');
+};

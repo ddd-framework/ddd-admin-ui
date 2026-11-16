@@ -1,16 +1,15 @@
 // T4: in a project without next, sonner and recharts, every entry except ./next and ./notify-sonner imports in Node;
 // those two fail because their optional peer is missing. Also loads the JSON manifests.
 const expectations = {
-  logic: ['formatDate', 'formatDateTime', 'formatUiNumber', 'defineStatusMap', 'notify', 'setNotificationAdapter', 'describeRequestError', 'useToggle'],
-  i18n: ['setTranslations', 'translateText', 'm', 'useTranslate', 'Translate', 'translationKeyOf'],
-  primitives: ['cn', 'Button', 'Dialog', 'DialogContent', 'Sheet', 'SheetContent', 'Select', 'SelectContent', 'PortalContainerProvider'],
-  list: ['DateCell', 'ClearFiltersButton'],
-  page: ['PageFrame'],
-  form: ['Form', 'FieldLabelsProvider', 'useFieldLabel'],
-  translations: ['TranslatableInputField'],
-  media: ['MediaItemField'],
-  glass: ['GlassPanel'],
-  data: ['StatTile'],
+  logic: ['formatDate', 'formatDateTime', 'defineStatusMap', 'notify', 'setNotificationAdapter', 'toFormSubmitError', 'useUrlListState', 'useEntityTranslations', 'prepareImageFile'],
+  i18n: ['setTranslations', 'translateText', 'm', 'useTranslate', 'Translate', 'translationKeyOf', 'formatUiNumber', 'translateServerMessage'],
+  primitives: ['cn', 'Button', 'Dialog', 'DialogContent', 'Sheet', 'SheetContent', 'Select', 'SelectContent', 'Tooltip', 'TooltipProvider'],
+  list: ['EntityListCard', 'EntityListToolbar', 'EntityListBody', 'EntityListTable', 'EntityListEmpty', 'DateCell', 'StatusBadge', 'FilterPanel'],
+  page: ['PageFrame', 'PageHeader', 'EntityListPage', 'EntityDetailShell', 'StatusCallout'],
+  form: ['Form', 'FormField', 'FormActions', 'FormDrawer', 'FormErrors', 'FormSubmitButton', 'useConfirmDialog'],
+  translations: ['FormTranslatableInput', 'FormTranslatableMarkdown', 'TranslatableInput', 'TranslationControls'],
+  media: ['FormMediaItemField', 'MediaItemField', 'MediaItemPickerDialog', 'MediaPreview'],
+  glass: ['GlassPill', 'QuickFilterPills', 'CollapsibleCard', 'GlassGroup', 'ActionRow'],
   provider: ['AdminUiProvider', 'useAdminUi', 'defaultStorageKey'],
 };
 

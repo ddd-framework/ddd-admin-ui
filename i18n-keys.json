@@ -1,32 +1,1069 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0-rc.2",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
+      "key": "%done% %count% %noun%",
+      "text": "%done% %count% %noun%",
+      "files": [
+        "logic/pure/runSequential.ts"
+      ],
+      "hint": "Success toast after a bulk action finished on all selected rows. %done% is a past-tense verb like Deleted, %count% a number like 5, %noun% the item name like tracks."
+    },
+    {
+      "key": "%done% %succeeded% of %total% %noun% · %failed% failed",
+      "text": "%done% %succeeded% of %total% %noun% · %failed% failed",
+      "files": [
+        "logic/pure/runSequential.ts"
+      ],
+      "hint": "Error toast after a bulk action where some rows failed. %done% is a verb like Deleted, %succeeded% e.g. 3, %total% e.g. 5, %noun% like tracks, %failed% e.g. 2."
+    },
+    {
+      "key": "%entity% not found or current authenticated Account is not authorized to access it",
+      "text": "%entity% not found or current authenticated Account is not authorized to access it",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Error message from the server when a record cannot be loaded: it does not exist or the signed-in user may not see it. %entity% is the technical English record type name (e.g. Campaign, Challenge) and stays as it is."
+    },
+    {
+      "key": "%label% (%count%)",
+      "text": "%label% (%count%)",
+      "files": [
+        "list/EntityListBulkBar.tsx"
+      ],
+      "hint": "Button text of a bulk action in a list's selection bar: the action name followed by the number of selected rows, e.g. 'Delete (3)'. %label% is the action name, %count% the number of selected rows."
+    },
+    {
+      "key": "%label% from",
+      "text": "%label% from",
+      "files": [
+        "list/filters.tsx"
+      ],
+      "hint": "Accessible label of the start-date input in a date-range filter. %label% is the filter caption, e.g. \"Starts at\", so the result reads \"Starts at from\"."
+    },
+    {
+      "key": "%label% to",
+      "text": "%label% to",
+      "files": [
+        "list/filters.tsx"
+      ],
+      "hint": "Accessible label of the end-date input in a date-range filter. %label% is the filter caption, e.g. \"Ends at\", so the result reads \"Ends at to\"."
+    },
+    {
+      "key": "%name% is not an image",
+      "text": "%name% is not an image",
+      "files": [
+        "logic/browser/prepareImageFile.ts"
+      ],
+      "hint": "Error message shown when a picked file is not an image during upload. %name% is the file name, for example holiday-photo.pdf."
+    },
+    {
+      "key": "%progress% %nouns%… %done%/%total%",
+      "text": "%progress% %nouns%… %done%/%total%",
+      "files": [
+        "logic/pure/runSequential.ts"
+      ],
+      "hint": "Progress toast of a bulk action running on many selected rows. %progress% is a verb like Deleting, %nouns% the plural item name like tracks, %done%/%total% e.g. 2/5."
+    },
+    {
+      "key": "%title% sections",
+      "text": "%title% sections",
+      "files": [
+        "page/SectionHeader.tsx"
+      ],
+      "hint": "Accessible name (screen reader label) of the sub-tab bar below a section heading. %title% is the section title, e.g. Top riders."
+    },
+    {
+      "key": "Account not found or current Auth Account is not authorized to access it",
+      "text": "Account not found or current Auth Account is not authorized to access it",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Error message from the server when a user account cannot be loaded: it does not exist or the signed-in user may not see it."
+    },
+    {
+      "key": "Add %entity%",
+      "text": "Add %entity%",
+      "files": [
+        "page/PageToolbar.tsx"
+      ],
+      "hint": "Label of the primary button at the top right of a list page that creates a new item. %entity% is the singular item name, e.g. World or Push Notification. Imperative."
+    },
+    {
+      "key": "All__filter-option",
+      "text": "All",
+      "context": "filter-option",
+      "files": [
+        "list/filters.tsx"
+      ],
+      "hint": "On the admin UI Showcase page (Maintenance), label of the quick-filter pill that clears the status filter and shows every item. Single word."
+    },
+    {
+      "key": "Auto-translate",
+      "text": "Auto-translate",
+      "files": [
+        "translations/TranslatableField.tsx"
+      ],
+      "hint": "Button next to a translatable text field that fills the other languages automatically from the current text by AI. Imperative."
+    },
+    {
+      "key": "Bulk actions",
+      "text": "Bulk actions",
+      "files": [
+        "list/EntityListBulkBar.tsx"
+      ],
+      "hint": "Accessible name (screen-reader label) of the toolbar that appears above a list when rows are selected, holding actions that apply to all selected rows."
+    },
+    {
+      "key": "Cancel",
+      "text": "Cancel",
+      "files": [
+        "translations/TranslationControls.tsx"
+      ],
+      "hint": "Button at the bottom of the world form that discards the entries and returns to the world list; asks for confirmation if there are unsaved changes."
+    },
+    {
+      "key": "Cancel__confirm-dialog",
+      "text": "Cancel",
+      "context": "confirm-dialog",
+      "files": [
+        "form/useConfirmDialog.tsx"
+      ],
+      "hint": "Button on the left of a generic confirmation dialog that dismisses it without doing the action. Shown when the caller did not set its own label."
+    },
+    {
+      "key": "Cancel__media-picker",
+      "text": "Cancel",
+      "context": "media-picker",
+      "files": [
+        "media/MediaItemPickerDialog.tsx"
+      ],
+      "hint": "Footer button of the media picker dialog; click to close the dialog without changing the chosen media item."
+    },
+    {
+      "key": "Cancelled",
+      "text": "Cancelled",
+      "files": [
+        "translations/TranslationControls.tsx"
+      ],
+      "hint": "Status badge label (short pill) in lists, cards and detail views, describing the state of a partner contract. Keep it short, like a status word."
+    },
+    {
+      "key": "Change__media-field-action",
+      "text": "Change",
+      "context": "media-field-action",
+      "files": [
+        "media/MediaItemField.tsx"
+      ],
+      "hint": "Button label under a media field preview; click to open the picker and replace the currently chosen image. Shown only when an image is already set."
+    },
+    {
+      "key": "Clear %label%",
+      "text": "Clear %label%",
+      "files": [
+        "list/filters.tsx"
+      ],
+      "hint": "Accessible label of the small X button inside a text filter that empties it. %label% is the filter name, e.g. Name or Account ID."
+    },
+    {
+      "key": "Clear all",
+      "text": "Clear all",
+      "files": [
+        "list/MultiSelect.tsx"
+      ],
+      "hint": "Button at the bottom of a multi-select dropdown that deselects every option in the list."
+    },
+    {
+      "key": "Clear all translations",
+      "text": "Clear all translations",
+      "files": [
+        "translations/TranslatableField.tsx"
+      ],
+      "hint": "Tooltip and accessible label of the small trash-can icon button in the label row of a translatable text field in an admin form; it deletes the text of every language of that field after a confirmation."
+    },
+    {
+      "key": "Clear all translations?",
+      "text": "Clear all translations?",
+      "files": [
+        "translations/TranslatableField.tsx"
+      ],
+      "hint": "Title of a confirmation dialog in translatable text fields of admin forms; asks whether to delete the texts of every language of the field."
+    },
+    {
+      "key": "Clear all__translations-action",
+      "text": "Clear all",
+      "context": "translations-action",
+      "files": [
+        "translations/TranslatableField.tsx"
+      ],
+      "hint": "Button that deletes the text of every language of one translatable field, and the confirm button of the dialog that follows. Imperative."
+    },
+    {
       "key": "Clear filters",
       "text": "Clear filters",
-      "hint": "Button in a list toolbar that resets every filter of the list.",
       "files": [
-        "list/ClearFiltersButton.tsx"
-      ]
+        "list/EntityListToolbar.tsx"
+      ],
+      "hint": "Button in a list toolbar that resets all active filters at once. It only appears while at least one filter is set."
     },
     {
-      "key": "Close__dialog",
+      "key": "Clear search",
+      "text": "Clear search",
+      "files": [
+        "list/EntityListEmpty.tsx",
+        "list/SearchField.tsx"
+      ],
+      "hint": "Outlined button in the empty state of a list when a search or filter found nothing; it resets the search so all rows show again. Imperative."
+    },
+    {
+      "key": "Clear__selection-action",
+      "text": "Clear",
+      "context": "selection-action",
+      "files": [
+        "list/EntityListBulkBar.tsx"
+      ],
+      "hint": "Link-style button in the bulk-action bar that deselects all currently selected list rows. Imperative, short."
+    },
+    {
+      "key": "Close__dialog-close-button",
       "text": "Close",
-      "context": "dialog",
-      "hint": "Screen-reader label of the close button of a dialog.",
+      "context": "dialog-close-button",
       "files": [
         "primitives/dialog.tsx"
-      ]
+      ],
+      "hint": "Close button of a popup dialog, either an icon with screen-reader text in the top corner or a footer button. Imperative: dismisses the dialog."
     },
     {
-      "key": "The request failed",
-      "text": "The request failed",
-      "hint": "Fallback message when a failed request carries no message of its own.",
+      "key": "Close__drawer-close-button",
+      "text": "Close",
+      "context": "drawer-close-button",
       "files": [
-        "logic/pure/errors.ts"
-      ]
+        "form/FormDrawer.tsx"
+      ],
+      "hint": "Accessible label (screen reader and tooltip) of the small X icon button in the corner of a right-side form drawer. Closes the drawer and may ask to discard unsaved changes."
+    },
+    {
+      "key": "Close__sheet-close-button",
+      "text": "Close",
+      "context": "sheet-close-button",
+      "files": [
+        "primitives/sheet.tsx"
+      ],
+      "hint": "Screen-reader label of the X icon in the corner of a side panel (sheet) that slides in from the screen edge. Imperative: closes the panel."
+    },
+    {
+      "key": "Collapse %title%",
+      "text": "Collapse %title%",
+      "files": [
+        "glass/GlassGroup.tsx"
+      ],
+      "hint": "Accessible label (screen reader and tooltip) of the round chevron button that collapses a group panel on a dashboard. %title% is the group name, for example 'Running'."
+    },
+    {
+      "key": "Command Palette",
+      "text": "Command Palette",
+      "files": [
+        "primitives/command.tsx"
+      ],
+      "hint": "Hidden (screen-reader only) title of the command palette dialog, a search popup for jumping to pages and actions in the admin app."
+    },
+    {
+      "key": "Confirm__confirm-dialog",
+      "text": "Confirm",
+      "context": "confirm-dialog",
+      "files": [
+        "form/useConfirmDialog.tsx"
+      ],
+      "hint": "Button on the right of a generic confirmation dialog that carries out the action asked about. Shown when the caller did not set its own label."
+    },
+    {
+      "key": "Copy ID",
+      "text": "Copy ID",
+      "files": [
+        "list/cells.tsx"
+      ],
+      "hint": "Tooltip of the small copy icon button next to an ID in a list table; copies the ID to the clipboard. Imperative."
+    },
+    {
+      "key": "Copy ID %id%",
+      "text": "Copy ID %id%",
+      "files": [
+        "list/cells.tsx",
+        "page/EntityMetadata.tsx"
+      ],
+      "hint": "Accessible label (screen reader and tooltip) of the small button that copies the record ID to the clipboard, shown in the metadata block of every detail screen. %id% is the record ID, for example 4711 or a UUID. Imperative tone."
+    },
+    {
+      "key": "Created__entity-metadata",
+      "text": "Created",
+      "context": "entity-metadata",
+      "files": [
+        "page/EntityMetadata.tsx"
+      ],
+      "hint": "Label in the metadata block of a detail screen, placed before the date and time the record was created, for example 'Created 12 Nov 2026, 10:15'. Keep it short."
+    },
+    {
+      "key": "Discard changes?",
+      "text": "Discard changes?",
+      "files": [
+        "logic/pure/confirm.ts",
+        "logic/react/useUnsavedChangesGuard.ts"
+      ],
+      "hint": "Title of the confirmation dialog shown when the user closes a form drawer that has unsaved edits. Phrased as a question."
+    },
+    {
+      "key": "Discard__unsaved-changes-confirm",
+      "text": "Discard",
+      "context": "unsaved-changes-confirm",
+      "files": [
+        "logic/react/useUnsavedChangesGuard.ts"
+      ],
+      "hint": "Destructive confirm button of the discard dialog; clicking it closes the form and loses the unsaved edits. Imperative verb."
+    },
+    {
+      "key": "Dismiss",
+      "text": "Dismiss",
+      "files": [
+        "translations/TranslationControls.tsx"
+      ],
+      "hint": "Button in the AI translation panel that hides the finished progress list of the last translation run. Imperative."
+    },
+    {
+      "key": "Done",
+      "text": "Done",
+      "files": [
+        "translations/TranslationControls.tsx"
+      ],
+      "hint": "Status badge of one language in the translation progress list: the translation finished successfully."
+    },
+    {
+      "key": "Edit__action",
+      "text": "Edit",
+      "context": "action",
+      "files": [
+        "page/EditableCard.tsx"
+      ],
+      "hint": "Default accessible name and tooltip of the small pencil icon button in the top-right corner of a settings card; clicking it opens the edit form for that card. Imperative verb."
+    },
+    {
+      "key": "Enter %language% text…",
+      "text": "Enter %language% text…",
+      "files": [
+        "translations/TranslatableInput.tsx"
+      ],
+      "hint": "Placeholder of a text input in a translatable field; %language% is the name of the active language tab, e.g. 'German'."
+    },
+    {
+      "key": "Export to Excel",
+      "text": "Export to Excel",
+      "files": [
+        "page/PageToolbar.tsx"
+      ],
+      "hint": "Sample text of the outline button specimen in the UI showcase; imperative, exports a list as a spreadsheet. Maintenance UI showcase screen, Buttons section."
+    },
+    {
+      "key": "Failed",
+      "text": "Failed",
+      "files": [
+        "translations/TranslationControls.tsx"
+      ],
+      "hint": "Status badge label (short pill) in lists, cards and detail views, describing the state of a push notification or mail delivery attempt. Keep it short, like a status word. Also used for other status families."
+    },
+    {
+      "key": "Filters",
+      "text": "Filters",
+      "files": [
+        "list/EntityListToolbar.tsx"
+      ],
+      "hint": "Button text in a list toolbar that opens or closes the collapsible panel with extra filters. Hidden on phones, where only the icon shows."
+    },
+    {
+      "key": "Form sections",
+      "text": "Form sections",
+      "files": [
+        "form/FormJumpBar.tsx"
+      ],
+      "hint": "Accessible label (aria-label) of the small sticky navigation bar at the top of a long admin form (challenge, campaign) that jumps between its panels."
+    },
+    {
+      "key": "Grid view",
+      "text": "Grid view",
+      "files": [
+        "list/EntityListViewToggle.tsx"
+      ],
+      "hint": "Tooltip and accessible label of the icon button in a list toolbar that switches the list to a grid of cards."
+    },
+    {
+      "key": "ID__entity-id",
+      "text": "ID",
+      "context": "entity-id",
+      "files": [
+        "page/EntityMetadata.tsx"
+      ],
+      "hint": "Label in the metadata block of a detail screen, placed before the record's unique identifier, for example 'ID 4711'. Keep it short, uppercase-friendly."
+    },
+    {
+      "key": "Informal__writing-style",
+      "text": "Informal",
+      "context": "writing-style",
+      "files": [
+        "logic/react/useLocaleName.ts"
+      ],
+      "hint": "Writing style option: texts address the user informally (German 'du', French 'tu'). Shown in the language menu and account forms. One word, an adjective."
+    },
+    {
+      "key": "Keep editing",
+      "text": "Keep editing",
+      "files": [
+        "logic/pure/confirm.ts",
+        "logic/react/useUnsavedChangesGuard.ts"
+      ],
+      "hint": "Cancel button of the discard dialog; clicking it returns the user to the open form so no edits are lost. Imperative."
+    },
+    {
+      "key": "Languages",
+      "text": "Languages",
+      "files": [
+        "translations/TranslatableField.tsx"
+      ],
+      "hint": "Navigation menu entry in the admin sidebar that opens the Languages area. Keep it short, as it is a single menu label."
+    },
+    {
+      "key": "Loading",
+      "text": "Loading",
+      "files": [
+        "list/EntityListStatus.tsx"
+      ],
+      "hint": "Accessible label of a spinning loader shown while a chart on the activity statistics screens is loading. Screen readers announce it."
+    },
+    {
+      "key": "Loading more",
+      "text": "Loading more",
+      "files": [
+        "list/EntityListLoadMore.tsx"
+      ],
+      "hint": "Accessible name (screen-reader label) of the spinner at the end of a list while the next page of rows is being loaded during infinite scroll."
+    },
+    {
+      "key": "More actions",
+      "text": "More actions",
+      "files": [
+        "page/PageToolbar.tsx"
+      ],
+      "hint": "Accessible label (tooltip for screen readers) of an icon-only button showing three dots that opens more actions. Sample in the UI showcase, Buttons section."
+    },
+    {
+      "key": "More__breadcrumb-ellipsis",
+      "text": "More",
+      "context": "breadcrumb-ellipsis",
+      "files": [
+        "primitives/breadcrumb.tsx"
+      ],
+      "hint": "Screen reader only text next to the '...' icon in a shortened breadcrumb trail; announces that further, hidden path levels exist."
+    },
+    {
+      "key": "No",
+      "text": "No",
+      "files": [
+        "list/filterOptions.ts"
+      ],
+      "hint": "Option of a yes/no filter in the filter panel of a list; selecting it shows only records where the flag is not set."
+    },
+    {
+      "key": "No changes",
+      "text": "No changes",
+      "files": [
+        "form/FormActions.tsx"
+      ],
+      "hint": "Status text next to the Save and Cancel buttons of an edit form, shown while nothing has been changed since the form was loaded or saved."
+    },
+    {
+      "key": "No image",
+      "text": "No image",
+      "files": [
+        "media/MediaPreview.tsx"
+      ],
+      "hint": "Empty-state text inside a dashed placeholder box where an image preview would be, shown when a media item has no image or the file fails to load."
+    },
+    {
+      "key": "No media items found",
+      "text": "No media items found",
+      "files": [
+        "media/MediaItemPickerDialog.tsx"
+      ],
+      "hint": "Empty-state message in the media picker dialog when the search or filter returns no media items (images) to choose from."
+    },
+    {
+      "key": "No results",
+      "text": "No results",
+      "files": [
+        "list/Combobox.tsx",
+        "list/MultiSelect.tsx"
+      ],
+      "hint": "Empty-state message inside an opened dropdown picker when the typed search matches none of the options."
+    },
+    {
+      "key": "No__boolean-flag",
+      "text": "No",
+      "context": "boolean-flag",
+      "files": [
+        "list/cells.tsx"
+      ],
+      "hint": "Default label of a yes/no flag cell in a list table, shown with a grey minus when the flag is off, e.g. Active column."
+    },
+    {
+      "key": "Nothing here yet",
+      "text": "Nothing here yet",
+      "files": [
+        "list/EntityListStatus.tsx"
+      ],
+      "hint": "Empty-state message shown in a list or table that contains no entries at all, before any search or filter is applied."
+    },
+    {
+      "key": "Nothing matches your search",
+      "text": "Nothing matches your search",
+      "files": [
+        "list/EntityListStatus.tsx"
+      ],
+      "hint": "Empty-state message shown in a list or table when the current search or filters return no rows. A Clear search button is shown below it."
+    },
+    {
+      "key": "One or more of the given values is invalid.",
+      "text": "One or more of the given values is invalid.",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. A multi-select field contains a value that is not one of the allowed options."
+    },
+    {
+      "key": "Open original of %title%",
+      "text": "Open original of %title%",
+      "files": [
+        "media/MediaItemPickerDialog.tsx"
+      ],
+      "hint": "Screen-reader label of the small link on a media tile that opens the full-size original in a new tab; %title% is the item's title, e.g. 'Logo'."
+    },
+    {
+      "key": "Property \"%propertyName%\" in class \"%className%\" has to be unique but value \"%value%\" is already in use",
+      "text": "Property \"%propertyName%\" in class \"%className%\" has to be unique but value \"%value%\" is already in use",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. Another record already uses this value for a field that must be unique. %propertyName% and %className% are technical English names, %value% is the entered value; all stay as they are."
+    },
+    {
+      "key": "Refresh token invalid",
+      "text": "Refresh token invalid",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Error message from the server when the stored login session can no longer be renewed; the user has to sign in again."
+    },
+    {
+      "key": "Refreshing list",
+      "text": "Refreshing list",
+      "files": [
+        "list/EntityListCard.tsx"
+      ],
+      "hint": "Accessible name (screen-reader label) of the thin loading bar shown over a list's toolbar while the list reloads in the background."
+    },
+    {
+      "key": "Remove %label%",
+      "text": "Remove %label%",
+      "files": [
+        "list/MultiSelect.tsx"
+      ],
+      "hint": "Accessible label of the small X button on a chip in a multi-select, removing that choice. %label% is the chosen value, for example German."
+    },
+    {
+      "key": "Remove__media-field-action",
+      "text": "Remove",
+      "context": "media-field-action",
+      "files": [
+        "media/MediaItemField.tsx"
+      ],
+      "hint": "Button label next to a media field; click to clear the chosen image reference from the form. Takes effect only after the form is saved."
+    },
+    {
+      "key": "Request contains invalid data",
+      "text": "Request contains invalid data",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Title of the red error toast and error box above a form after the server rejected a save because one or more fields are invalid (the fields are listed below it)."
+    },
+    {
+      "key": "Save changes",
+      "text": "Save changes",
+      "files": [
+        "i18n/Translate.tsx"
+      ],
+      "hint": "Sample text of the primary button specimen in the UI showcase; imperative, a typical save action. Maintenance UI showcase screen, Buttons section."
+    },
+    {
+      "key": "Search",
+      "text": "Search",
+      "files": [
+        "list/EntityListToolbar.tsx",
+        "list/SearchField.tsx"
+      ],
+      "hint": "Accessible label of a search input field in a list toolbar, read by screen readers. Use the plain noun or verb for searching."
+    },
+    {
+      "key": "Search for a command to run...",
+      "text": "Search for a command to run...",
+      "files": [
+        "primitives/command.tsx"
+      ],
+      "hint": "Hidden (screen-reader only) description of the command palette dialog, telling the user to search for a command or page to run."
+    },
+    {
+      "key": "Search…",
+      "text": "Search…",
+      "files": [
+        "list/Combobox.tsx",
+        "list/EntityListToolbar.tsx",
+        "list/MultiSelect.tsx"
+      ],
+      "hint": "Placeholder text inside a search box above a list or table, and the generic placeholder of a dropdown's search field. Ends with an ellipsis."
+    },
+    {
+      "key": "Sections",
+      "text": "Sections",
+      "files": [
+        "page/SectionHeader.tsx"
+      ],
+      "hint": "Accessible name (screen reader label) of the sub-tab bar below a section heading when the heading is not plain text."
+    },
+    {
+      "key": "Sections__tab-navigation",
+      "text": "Sections",
+      "context": "tab-navigation",
+      "files": [
+        "page/EntityDetailShell.tsx"
+      ],
+      "hint": "Default accessible name (screen reader label, not visible) of the tab bar under the header of a detail screen, whose tabs switch between sections of the record such as General, Teams or Rides. Plural noun."
+    },
+    {
+      "key": "Select %title%",
+      "text": "Select %title%",
+      "files": [
+        "media/MediaItemPickerDialog.tsx"
+      ],
+      "hint": "Screen-reader label of a media tile button in the picker dialog; %title% is the media item's title, e.g. 'Summer campaign banner'."
+    },
+    {
+      "key": "Select all",
+      "text": "Select all",
+      "files": [
+        "list/MultiSelect.tsx"
+      ],
+      "hint": "Button at the bottom of a multi-select dropdown that selects every option in the list at once."
+    },
+    {
+      "key": "Select all loaded",
+      "text": "Select all loaded",
+      "files": [
+        "list/EntityListTable.tsx"
+      ],
+      "hint": "Tooltip and accessible label of the checkbox in the table header that selects every row currently loaded in the list. Used for bulk actions."
+    },
+    {
+      "key": "Select row %rowKey%",
+      "text": "Select row %rowKey%",
+      "files": [
+        "list/EntityListTable.tsx"
+      ],
+      "hint": "Accessible label of a row checkbox in a selectable table, read by screen readers. %rowKey% is the row's technical ID, for example 1042."
+    },
+    {
+      "key": "Select__media-field-action",
+      "text": "Select",
+      "context": "media-field-action",
+      "files": [
+        "media/MediaItemField.tsx"
+      ],
+      "hint": "Button label under an empty media field; click to open the picker and choose an existing media item (image). Shown when nothing is chosen yet."
+    },
+    {
+      "key": "Select…",
+      "text": "Select…",
+      "files": [
+        "list/Combobox.tsx",
+        "list/MultiSelect.tsx"
+      ],
+      "hint": "Placeholder of a multi-select dropdown while nothing is picked. Prompts the user to open the list and choose values. Ends with an ellipsis."
+    },
+    {
+      "key": "Show all (%count%)",
+      "text": "Show all (%count%)",
+      "files": [
+        "glass/GlassGroup.tsx"
+      ],
+      "hint": "Small floating pill button at the bottom edge of a group panel; clicking it reveals all rows. %count% is the total number of rows, for example 12."
+    },
+    {
+      "key": "Show less",
+      "text": "Show less",
+      "files": [
+        "glass/GlassGroup.tsx"
+      ],
+      "hint": "Small floating pill button at the bottom edge of an expanded group panel; clicking it shows only the first few rows again."
+    },
+    {
+      "key": "Sort by__media-picker",
+      "text": "Sort by",
+      "context": "media-picker",
+      "files": [
+        "media/MediaItemPickerDialog.tsx"
+      ],
+      "hint": "Small label above the sort dropdown in the media picker dialog; the dropdown picks the order of the media tiles, e.g. newest first."
+    },
+    {
+      "key": "Sort__media-picker",
+      "text": "Sort",
+      "context": "media-picker",
+      "files": [
+        "media/MediaItemPickerDialog.tsx"
+      ],
+      "hint": "Fallback label of the sort dropdown button in the media picker dialog, shown when no sort option is currently selected."
+    },
+    {
+      "key": "Table view",
+      "text": "Table view",
+      "files": [
+        "list/EntityListViewToggle.tsx"
+      ],
+      "hint": "Tooltip and accessible label of the icon button in a list toolbar that switches the list to a table with rows and columns."
+    },
+    {
+      "key": "The file is not an image this browser can read",
+      "text": "The file is not an image this browser can read",
+      "files": [
+        "logic/browser/prepareImageFile.ts"
+      ],
+      "hint": "Error message shown when a picked file cannot be decoded as an image by the browser while preparing an upload in the media picker."
+    },
+    {
+      "key": "The value you selected is not a valid choice.",
+      "text": "The value you selected is not a valid choice.",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. A dropdown field contains a value that is not one of the allowed options."
+    },
+    {
+      "key": "This removes the text for every language. It is gone once you save.",
+      "text": "This removes the text for every language. It is gone once you save.",
+      "files": [
+        "translations/TranslatableField.tsx"
+      ],
+      "hint": "Body of the confirmation dialog for clearing all translations of one field; warns that the removal becomes permanent after saving the form."
+    },
+    {
+      "key": "This value is not a valid URL.",
+      "text": "This value is not a valid URL.",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. The entered web address (link) is not a valid URL."
+    },
+    {
+      "key": "This value is not a valid email address.",
+      "text": "This value is not a valid email address.",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. The entered e-mail address is not a valid e-mail address."
+    },
+    {
+      "key": "This value should be %limit% or less.",
+      "text": "This value should be %limit% or less.",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. The number is above the allowed maximum %limit%."
+    },
+    {
+      "key": "This value should be %limit% or more.",
+      "text": "This value should be %limit% or more.",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. The number is below the allowed minimum %limit%."
+    },
+    {
+      "key": "This value should be a valid number.",
+      "text": "This value should be a valid number.",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. A number field contains something that is not a number."
+    },
+    {
+      "key": "This value should be between %min% and %max%.",
+      "text": "This value should be between %min% and %max%.",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. The number is outside the allowed range; %min% and %max% are the limits."
+    },
+    {
+      "key": "This value should not be blank.",
+      "text": "This value should not be blank.",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. A required text field was left empty or contains only spaces."
+    },
+    {
+      "key": "This value should not be null.",
+      "text": "This value should not be null.",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. A required field was left empty."
+    },
+    {
+      "key": "Toggle filters",
+      "text": "Toggle filters",
+      "files": [
+        "list/EntityListToolbar.tsx"
+      ],
+      "hint": "Accessible label of the Filters button in a list toolbar that opens or closes the filter panel while no filter is set."
+    },
+    {
+      "key": "Toggle filters (%count% active)",
+      "text": "Toggle filters (%count% active)",
+      "files": [
+        "list/EntityListToolbar.tsx"
+      ],
+      "hint": "Accessible label of the Filters button in a list toolbar when filters are set. %count% is the number of active filters, for example 3."
+    },
+    {
+      "key": "Token authentication failed",
+      "text": "Token authentication failed",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Error message from the server when the login session token is invalid or expired; the user has to sign in again."
+    },
+    {
+      "key": "Translate to",
+      "text": "Translate to",
+      "files": [
+        "translations/TranslationControls.tsx"
+      ],
+      "hint": "Form label above the language chips in the AI translation panel of an admin form; the chips are the target languages."
+    },
+    {
+      "key": "Translate to selected locales",
+      "text": "Translate to selected locales",
+      "files": [
+        "translations/TranslationControls.tsx"
+      ],
+      "hint": "Button in the AI translation panel that starts translating the texts into all language chips the user selected. Imperative."
+    },
+    {
+      "key": "Translating",
+      "text": "Translating",
+      "files": [
+        "translations/TranslationControls.tsx"
+      ],
+      "hint": "Status badge of one language in the translation progress list: the translation request is running right now."
+    },
+    {
+      "key": "Translating…",
+      "text": "Translating…",
+      "files": [
+        "translations/TranslatableField.tsx",
+        "translations/TranslationControls.tsx"
+      ],
+      "hint": "Label of a button while the automatic AI translation is running for the selected languages; progress state, keep the ellipsis."
+    },
+    {
+      "key": "Translation failed",
+      "text": "Translation failed",
+      "files": [
+        "logic/react/useTranslationRunner.ts"
+      ],
+      "hint": "Fallback error message shown in the tooltip of a failed language in the translation progress list when the server gave no message."
+    },
+    {
+      "key": "Unauthorized",
+      "text": "Unauthorized",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Short error message from the server when the request needs a valid login (session expired or missing); the user has to sign in again."
+    },
+    {
+      "key": "Unknown error",
+      "text": "Unknown error",
+      "files": [
+        "logic/pure/serverViolations.ts"
+      ],
+      "hint": "Fallback text for a single server-side validation message that arrived without any error text. Shown in the error list above a form after a failed save."
+    },
+    {
+      "key": "Unreadable file",
+      "text": "Unreadable file",
+      "files": [
+        "logic/browser/prepareImageFile.ts"
+      ],
+      "hint": "Error message shown when a picked file could not be read by the browser during an image upload in the media picker."
+    },
+    {
+      "key": "Unsaved changes",
+      "text": "Unsaved changes",
+      "files": [
+        "form/FormActions.tsx"
+      ],
+      "hint": "Status text next to the Save and Cancel buttons of an edit form, shown while the user has changed fields that are not saved yet."
+    },
+    {
+      "key": "Updated__entity-metadata",
+      "text": "Updated",
+      "context": "entity-metadata",
+      "files": [
+        "page/EntityMetadata.tsx"
+      ],
+      "hint": "Label in the metadata block of a detail screen, placed before the date and time the record was last modified, for example 'Updated 12 Nov 2026, 10:15'. Keep it short."
+    },
+    {
+      "key": "Upload__media-picker",
+      "text": "Upload",
+      "context": "media-picker",
+      "files": [
+        "media/MediaItemPickerDialog.tsx"
+      ],
+      "hint": "Button in the media picker dialog header; click to choose image files from the computer and upload them as new media items."
+    },
+    {
+      "key": "Uploading…__media-picker",
+      "text": "Uploading…",
+      "context": "media-picker",
+      "files": [
+        "media/MediaItemPickerDialog.tsx"
+      ],
+      "hint": "Button label in the media picker dialog while selected image files are being uploaded; the button is disabled meanwhile."
+    },
+    {
+      "key": "View",
+      "text": "View",
+      "files": [
+        "list/EntityListViewToggle.tsx"
+      ],
+      "hint": "Label and accessible name of the toggle on the Home screen that switches between the Timeline and Kanban views."
+    },
+    {
+      "key": "Waiting",
+      "text": "Waiting",
+      "files": [
+        "translations/TranslationControls.tsx"
+      ],
+      "hint": "Short form of the status 'Waiting for Customer', on a compact status button in the support ticket sidebar. Keep it to one short word."
+    },
+    {
+      "key": "Wrong credentials.",
+      "text": "Wrong credentials.",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Error message on the login page when the e-mail address / username or the password is wrong."
+    },
+    {
+      "key": "Yes",
+      "text": "Yes",
+      "files": [
+        "list/filterOptions.ts"
+      ],
+      "hint": "Option of a yes/no filter in the filter panel of a list; selecting it shows only records where the flag is set."
+    },
+    {
+      "key": "Yes__boolean-flag",
+      "text": "Yes",
+      "context": "boolean-flag",
+      "files": [
+        "list/cells.tsx"
+      ],
+      "hint": "Default label of a yes/no flag cell in a list table, shown with a green check when the flag is on, e.g. Active column."
+    },
+    {
+      "key": "You have unsaved changes. Closing now will lose them.",
+      "text": "You have unsaved changes. Closing now will lose them.",
+      "files": [
+        "logic/pure/confirm.ts",
+        "logic/react/useUnsavedChangesGuard.ts"
+      ],
+      "hint": "Body text of the discard confirmation dialog, warning that closing the form drawer throws away the user's unsaved edits."
+    },
+    {
+      "key": "breadcrumb__navigation",
+      "text": "breadcrumb",
+      "context": "navigation",
+      "files": [
+        "primitives/breadcrumb.tsx"
+      ],
+      "hint": "Accessible name (screen reader label) of the breadcrumb navigation trail at the top of admin pages; use a short lowercase noun like the English."
+    },
+    {
+      "key": "{count, plural, one {# validation error} other {# validation errors}}",
+      "text": "{count, plural, one {# validation error} other {# validation errors}}",
+      "files": [
+        "logic/pure/notify.ts"
+      ],
+      "hint": "Second line of the red error toast after a failed save: how many fields the server rejected (the list is shown above the form)."
+    },
+    {
+      "key": "{count, plural, one {This collection should contain # element or less.} other {This collection should contain # elements or less.}}",
+      "text": "{count, plural, one {This collection should contain # element or less.} other {This collection should contain # elements or less.}}",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. The list field holds too many entries; # is the maximum number of entries."
+    },
+    {
+      "key": "{count, plural, one {This collection should contain # element or more.} other {This collection should contain # elements or more.}}",
+      "text": "{count, plural, one {This collection should contain # element or more.} other {This collection should contain # elements or more.}}",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. The list field holds too few entries; # is the minimum number of entries."
+    },
+    {
+      "key": "{count, plural, one {This value is too long. It should have # character or less.} other {This value is too long. It should have # characters or less.}}",
+      "text": "{count, plural, one {This value is too long. It should have # character or less.} other {This value is too long. It should have # characters or less.}}",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. The text entered is too long; # is the maximum number of characters."
+    },
+    {
+      "key": "{count, plural, one {This value is too short. It should have # character or more.} other {This value is too short. It should have # characters or more.}}",
+      "text": "{count, plural, one {This value is too short. It should have # character or more.} other {This value is too short. It should have # characters or more.}}",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. The text entered is too short; # is the minimum number of characters."
+    },
+    {
+      "key": "{count, plural, one {This value should have exactly # character.} other {This value should have exactly # characters.}}",
+      "text": "{count, plural, one {This value should have exactly # character.} other {This value should have exactly # characters.}}",
+      "files": [
+        "i18n/serverMessages.ts"
+      ],
+      "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. The text must have exactly this many characters (e.g. a code)."
+    },
+    {
+      "key": "{count, plural, other {# selected}}",
+      "text": "{count, plural, other {# selected}}",
+      "files": [
+        "list/EntityListBulkBar.tsx"
+      ],
+      "hint": "Label in the bulk-action bar of a list showing how many rows the user has ticked, e.g. '3 selected'. # is the number of selected rows."
     }
   ]
 }

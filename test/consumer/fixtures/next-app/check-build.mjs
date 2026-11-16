@@ -22,7 +22,7 @@ const htmlFile = listFiles(path.join('.next', 'server', 'app')).find((file) => /
 const html = htmlFile ? fs.readFileSync(htmlFile, 'utf-8') : '';
 report('T1 prerendered / exists', Boolean(htmlFile), htmlFile ?? 'no .next/server/app/index.html');
 report('T1 <title> is m(\'Users\')', /<title>Users<\/title>/.test(html), html.match(/<title>[^<]*<\/title>/)?.[0] ?? 'no title');
-report('T1 formatDateTime on the server', /03\/04\/2026, 10:05\s?AM/.test(html));
+report('T1 formatDate on the server (UI language English: en-GB)', /4 Mar 2026/.test(html));
 report('T1 defineStatusMap on the server', html.includes('>Active<'));
 
 // T5

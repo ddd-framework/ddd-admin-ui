@@ -1,25 +1,28 @@
 'use client';
 
+// @translations-ignore-file — the doc examples below are not UI texts
+
 import { useCallback, useSyncExternalStore } from 'react';
-import {
-  getTranslationsSnapshot,
-  subscribeTranslations,
-  translateText,
-  type TranslateOptions,
-  type WritingStyle,
-} from './store.ts';
 
-export interface UseTranslateResult {
-  t: (text: string, options?: TranslateOptions) => string;
-  languageCode: string;
-  writingStyle: WritingStyle;
-}
+import { getTranslationState, subscribeTranslations, type TranslateOptions, translateText } from './store.ts';
 
-/** Re-renders when the active language or its translations change. */
-export const useTranslate = (): UseTranslateResult => {
-  const snapshot = useSyncExternalStore(subscribeTranslations, getTranslationsSnapshot, getTranslationsSnapshot);
-  // `snapshot` is a dependency on purpose: a new snapshot must give a new `t`.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const t = useCallback((text: string, options?: TranslateOptions) => translateText(text, options), [snapshot]);
-  return { t, languageCode: snapshot.languageCode, writingStyle: snapshot.writingStyle };
+export type TranslateFn = (text: string, options?: TranslateOptions) => string;
+
+const serverState = () => getTranslationState();
+
+/**
+ * `t()` bound to the active language; the component re-renders when the language or its bundle changes.
+ *
+ * @example
+ * const { t } = useTranslate();
+ * t('Save changes');
+ * t('Open', { context: 'ticket-status' });
+ * t('%count% winners', { count: total });            // or an ICU plural message
+ * t('Hello %name%', { replacements: { name } });
+ */
+export const useTranslate = (): { t: TranslateFn; languageCode: string } => {
+  const translationState = useSyncExternalStore(subscribeTranslations, getTranslationState, serverState);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a new bundle (version) must give a new t()
+  const t = useCallback<TranslateFn>((text, options) => translateText(text, options), [translationState.version]);
+  return { t, languageCode: translationState.languageCode };
 };

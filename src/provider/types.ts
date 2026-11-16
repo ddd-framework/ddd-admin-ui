@@ -1,14 +1,21 @@
+import type { TranslationsStore } from '@mgamadeus/ddd-web/contract';
 import type { ReactNode } from 'react';
+
 import type { WritingStyle } from '../i18n/store.ts';
 import type { NotificationAdapter } from '../logic/pure/notify.ts';
+import type { EntityDrawerUrlAdapter } from '../logic/pure/entityDrawer.ts';
+import type { UrlStateAdapter } from '../logic/pure/urlListState.ts';
 import type { MediaUploadAdapter } from '../media/types.ts';
+import type { MarkdownEditorRenderArgs } from '../translations/TranslatableMarkdown.tsx';
 
-/** Feeds the package's translation store from a host-owned store. Absent: the host calls `setTranslations`. */
+export type { NotificationAdapter, NotifyAction, NotifyOptions } from '../logic/pure/notify.ts';
+
+/** Feeds the package's one translation store from a host-owned store. Absent: the host calls `setTranslations`. */
 export interface TranslationAdapter {
   subscribe: (listener: () => void) => () => void;
   getSnapshot: () => {
     languageCode: string;
-    /** A host without writing styles answers 'FORMAL'. */
+    /** A host without writing styles answers `'FORMAL'`. */
     writingStyle: WritingStyle;
     /** Key = `<text>` or `<text>__<context>`. */
     translations: Readonly<Record<string, string>>;
@@ -19,18 +26,45 @@ export type StorageKind = 'list-filters' | 'list-view';
 /** Builds a browser storage key. Default `ddd-admin-ui.<kind>.<id>`. Must be pure and stable. */
 export type StorageKeyFn = (kind: StorageKind, id: string) => string;
 
+/** Hooks passed by reference: module-level functions, the same identity on every render (rules of hooks). */
+export type UseUrlStateAdapter = (options: { listId: string }) => UrlStateAdapter;
+export type UseDrawerUrlAdapter = () => EntityDrawerUrlAdapter;
+
+export interface EntityTranslationRequest {
+  entity: unknown;
+  locale: string;
+  signal: AbortSignal;
+}
+export type AiTranslationAdapter = (request: EntityTranslationRequest) => Promise<TranslationsStore>;
+
 export interface AdminUiProviderProps {
   children: ReactNode;
   translations?: TranslationAdapter;
-  /** Registered with `setNotificationAdapter` (`./logic`) while the provider is mounted. */
+  /** Registered with `setNotificationAdapter` in a layout effect; unregistered on unmount. */
   notifications?: NotificationAdapter;
   storageKey?: StorageKeyFn;
-  /** Overlays portal into this element; absent = `document.body`. */
+  useUrlStateAdapter?: UseUrlStateAdapter;
+  useDrawerUrlAdapter?: UseDrawerUrlAdapter;
+  /** Where portalled primitives mount; `null` / absent = `document.body`. */
   portalContainer?: HTMLElement | null;
+  /** Delay of the package `TooltipProvider` (ms); the primitive's default when absent. */
+  tooltipDelayMs?: number;
   upload?: MediaUploadAdapter;
+  renderMarkdownEditor?: (args: MarkdownEditorRenderArgs) => ReactNode;
+  /** Absent = AI translation off. */
+  aiTranslation?: AiTranslationAdapter;
+  /**
+   * Search parameters the URL writer never removes (a host's sticky parameters such as `debug` or `locale`); a write
+   * may still set them. Absent = none.
+   */
+  preserveSearchParams?: readonly string[];
 }
 
-export interface AdminUiContextValue {
-  storageKey: StorageKeyFn;
+export interface AdminUiContextValue extends Required<Pick<AdminUiProviderProps, 'storageKey'>> {
+  useUrlStateAdapter?: UseUrlStateAdapter;
+  useDrawerUrlAdapter?: UseDrawerUrlAdapter;
   upload?: MediaUploadAdapter;
+  renderMarkdownEditor?: AdminUiProviderProps['renderMarkdownEditor'];
+  aiTranslation?: AiTranslationAdapter;
+  preserveSearchParams?: readonly string[];
 }

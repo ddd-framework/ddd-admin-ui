@@ -1,7 +1,7 @@
 {
   "name": "@mgamadeus/ddd-admin-ui",
-  "version": "0.1.0-rc.1",
-  "description": "Admin UI building blocks for React 19 / Next 16 / Tailwind 4 apps built on the mgamadeus/ddd framework: pure helpers and React hooks, shadcn-style primitives, list, page, form, translation, media and glass blocks, Next adapters, a provider, two stylesheets and two JSON manifests.",
+  "version": "0.1.0-rc.2",
+  "description": "Admin UI building blocks for React 19 / Next 16 / Tailwind 4 apps on @mgamadeus/ddd-web: entity lists (table and card grid, filters, selection, bulk actions), page frames and detail shells, form shells with conditional fields and server validation, translatable inputs, media pickers, Next adapters, a provider, and the shadcn-style primitives they are drawn with, plus two stylesheets and two JSON manifests.",
   "keywords": [
     "ddd",
     "mgamadeus",
@@ -27,82 +27,79 @@
     "**/*.css"
   ],
   "exports": {
+    "./package.json": "./package.json",
     "./logic": {
       "types": "./dist/logic/index.d.ts",
-      "import": "./dist/logic/index.js"
+      "default": "./dist/logic/index.js"
     },
     "./i18n": {
       "types": "./dist/i18n/index.d.ts",
-      "import": "./dist/i18n/index.js"
+      "default": "./dist/i18n/index.js"
     },
     "./primitives": {
       "types": "./dist/primitives/index.d.ts",
-      "import": "./dist/primitives/index.js"
+      "default": "./dist/primitives/index.js"
     },
     "./list": {
       "types": "./dist/list/index.d.ts",
-      "import": "./dist/list/index.js"
+      "default": "./dist/list/index.js"
     },
     "./page": {
       "types": "./dist/page/index.d.ts",
-      "import": "./dist/page/index.js"
+      "default": "./dist/page/index.js"
     },
     "./form": {
       "types": "./dist/form/index.d.ts",
-      "import": "./dist/form/index.js"
+      "default": "./dist/form/index.js"
     },
     "./translations": {
       "types": "./dist/translations/index.d.ts",
-      "import": "./dist/translations/index.js"
+      "default": "./dist/translations/index.js"
     },
     "./media": {
       "types": "./dist/media/index.d.ts",
-      "import": "./dist/media/index.js"
+      "default": "./dist/media/index.js"
     },
     "./glass": {
       "types": "./dist/glass/index.d.ts",
-      "import": "./dist/glass/index.js"
-    },
-    "./data": {
-      "types": "./dist/data/index.d.ts",
-      "import": "./dist/data/index.js"
+      "default": "./dist/glass/index.js"
     },
     "./next": {
       "types": "./dist/next/index.d.ts",
-      "import": "./dist/next/index.js"
+      "default": "./dist/next/index.js"
     },
     "./provider": {
       "types": "./dist/provider/index.d.ts",
-      "import": "./dist/provider/index.js"
+      "default": "./dist/provider/index.js"
     },
     "./notify-sonner": {
       "types": "./dist/notify-sonner/index.d.ts",
-      "import": "./dist/notify-sonner/index.js"
+      "default": "./dist/notify-sonner/index.js"
     },
     "./theme.css": "./dist/theme.css",
     "./components.css": "./dist/components.css",
     "./tokens.json": "./dist/tokens.json",
-    "./i18n-keys.json": "./dist/i18n-keys.json",
-    "./package.json": "./package.json"
+    "./i18n-keys.json": "./dist/i18n-keys.json"
   },
   "bin": {
-    "ddd-admin-ui": "./dist/cli/ddd-admin-ui.js"
+    "ddd-admin-ui": "./dist/cli/ddd-admin-ui.js",
+    "ddd-admin-ui-check-radix": "./dist/scripts/check-radix.mjs",
+    "ddd-admin-ui-check-tokens": "./dist/scripts/check-tokens.mjs",
+    "ddd-admin-ui-i18n-manifest": "./dist/scripts/build-i18n-manifest.mjs"
   },
   "files": [
     "dist",
-    "docs",
     ".claude/skills",
-    "scripts/check-tokens.mjs",
-    "scripts/lib",
     "README.md",
+    "STANDARDS.md",
     "CHANGELOG.md",
     "LICENSE"
   ],
   "scripts": {
-    "build": "node scripts/clean.mjs && tsc -p tsconfig.build.json && node scripts/rewrite-declaration-specifiers.mjs && node scripts/copy-assets.mjs",
+    "build": "node scripts/build.mjs",
     "typecheck": "tsc -p .",
-    "test": "node --experimental-strip-types --no-warnings --test \"test/unit/**/*.test.ts\" \"test/check-package/**/*.test.ts\"",
-    "check-package": "node scripts/check-package.mjs .",
+    "test": "node --experimental-strip-types --no-warnings --test \"src/**/*.test.ts\" \"test/unit/**/*.test.ts\" \"test/check-package/**/*.test.ts\"",
+    "check-package": "node scripts/check-package.mjs --dir .",
     "i18n:manifest": "node scripts/build-i18n-manifest.mjs",
     "prepack": "pnpm build"
   },
@@ -117,13 +114,13 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
-    "radix-ui": "^1.8.1",
     "tailwind-merge": "^3.3.1"
   },
   "peerDependencies": {
-    "@mgamadeus/ddd-web": ">=0.13.0 <1.0.0",
+    "@mgamadeus/ddd-web": ">=0.13.0 <1",
     "lucide-react": ">=0.550.0 <2",
     "next": "^16.0.0",
+    "radix-ui": "^1.8.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.65.0",
@@ -153,6 +150,7 @@
     "@types/react-dom": "^19.3.0",
     "lucide-react": "^1.73.0",
     "next": "^16.4.6",
+    "radix-ui": "^1.8.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-hook-form": "^7.92.0",

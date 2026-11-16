@@ -1,4 +1,4 @@
-// T2 and T7 in a headless browser against `next start`.
+// T2, T3 and T7 in a headless browser against `next start`.
 // Browser: CHROME_PATH, else the installed Google Chrome (playwright channel "chrome"); no browser download.
 import { chromium } from 'playwright-core';
 
@@ -50,14 +50,26 @@ try {
     });
     page.on('pageerror', (error) => consoleProblems.push(`pageerror: ${error.message}`));
     await page.goto(`${baseUrl}/client`, { waitUntil: 'networkidle' });
-    await page.getByRole('button', { name: 'Filter zurücksetzen' }).click();
+    await page.getByRole('button', { name: 'Suche zurücksetzen' }).click();
     await page.waitForFunction(() => document.querySelector('#hydrated')?.textContent === 'yes', null, { timeout: 10_000 });
     report('T2 hydrated (button handler ran)', true);
     report('T2 date cell in German', (await page.textContent('#date')) === '04.03.2026', await page.textContent('#date'));
-    report('T2 translated text', (await page.textContent('#text')) === 'Filter zurücksetzen', await page.textContent('#text'));
+    report('T2 translated text', (await page.textContent('#text')) === 'Suche zurücksetzen', await page.textContent('#text'));
     report('T2 number in German', (await page.textContent('#number')) === '1.234,5', await page.textContent('#number'));
     report('T2 no hydration warning or console error', consoleProblems.length === 0, consoleProblems.join(' | '));
     report('T2 no failed request', failedResponses.length === 0, failedResponses.join(' | '));
+    await page.close();
+  }
+
+  // T3: server violations named by the labels the translatable and the media field registered with the form
+  {
+    const page = await browser.newPage();
+    await page.goto(`${baseUrl}/form`, { waitUntil: 'networkidle' });
+    await page.getByRole('button', { name: 'Save' }).click();
+    await page.waitForSelector('#form-errors li', { timeout: 10_000 });
+    const rows = await page.$$eval('#form-errors li', (items) => items.map((item) => item.textContent?.trim()));
+    report('T3 violation on the translatable field named by its label', rows.includes('Display name: must not be blank'), rows.join(' | '));
+    report('T3 violation on the media field named by its label', rows.includes('Cover image: is required'), rows.join(' | '));
     await page.close();
   }
 

@@ -1,480 +1,562 @@
 #!/usr/bin/env node
-// Checks a package directory: the repository root after `pnpm build`, or the `package/` folder of an extracted
-// tarball. Fails on:
-//   1  a missing `exports` target (and `./package.json` must be exported), or a missing `bin` target
-//   2  a 'use client' directive that does not match the file: a file carries one exactly when it uses a React hook,
-//      createContext or react-dom; barrels (index.js) never
-//   3  a relative specifier that does not end in `.js` or does not resolve inside dist; any `.ts`/`.tsx` specifier
-//   4  an app alias specifier (`@/`, `~/`) or an absolute path, in JS, declarations and CSS
-//   5  a denied word in dist, docs, README, CHANGELOG, skills or the manifests: the comma-separated list in the
-//      environment variable CHECK_PACKAGE_DENY (and --deny), plus built-in home-directory path patterns
-//   6  a bare specifier that is neither a dependency nor a peer (Node built-ins only in the CLI), or node_modules
-//      inside dist
-//   7  a run-time import edge between entries outside the allowed matrix; `next` reached from any entry but ./next,
-//      `sonner` from any but ./notify-sonner, `recharts` from any file but a chart file of ./data;
-//      `@reduxjs/toolkit` or `@mgamadeus/ddd-web/api` from anywhere; Tailwind helpers, Radix or lucide from
-//      ./logic or ./i18n
-//   8  a module-state file that is missing or exists twice, or a context name created more than once
-//   9  `files` not covering dist, docs and skills, or `sideEffects` missing a shipped CSS file
-//   10 a JS file without its `.d.ts`
-//   11 a test file in dist
-//   12 an i18n-keys.json (dist and repository root) that differs from a fresh generator run over the source
-//   13 a CSS custom property read by shipped CSS, or a custom property in a class name (`z-(--layer-…)`,
-//      `var(--…)`), that tokens.json does not list
+// check-package: rules 1–13 of the package contract, run on the built repository (after `pnpm build`) or on the
+// extracted `pack` tarball (`<extracted>/package`).
 //
-// Usage: node scripts/check-package.mjs <packageDir> [--source <srcDir>] [--deny a,b] [--require-skills]
-//                                                    [--require-deny-list]
-//   --source             source tree for rule 12 (default: <packageDir>/src, else this repository's src)
-//   --require-skills     at least one .claude/skills/<name>/SKILL.md must be shipped
-//   --require-deny-list  fail when no deny word is configured (release)
-import * as fs from 'node:fs';
-import { builtinModules } from 'node:module';
-import * as path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { buildI18nManifest, serializeManifest } from './lib/i18n-manifest.mjs';
+//   1  every exports and bin target exists (bins start with a node shebang); ./package.json is exported
+//   2  'use client' wherever a hook, createContext or react-dom is used; never on barrels and logic/pure (a directive
+//      on another file without a hook is a client boundary: listed, not failed)
+//   3  every relative specifier (JS and declarations) ends in .js and resolves inside dist
+//   4  no app alias (@/, ~/) and no absolute path: specifiers, CSS imports, source map sources
+//   5  no denied word and no home-directory path in shipped files
+//   6  every bare specifier is a dependency or a peer (Node built-ins only in dist/scripts and dist/cli); nothing
+//      vendored
+//   7  entry edges within the import matrix, runtime and type-only apart; per-entry package reach (next, sonner,
+//      recharts, Redux, ddd-web/api; ./logic and ./i18n draw nothing; logic/pure runs without React)
+//   8  module state exists once; every context is defined once
+//   9  `files` covers dist, the docs and .claude/skills (each skill with name and description); `sideEffects` lists
+//      every CSS file
+//   10 every .js has a .d.ts; the declarations compile in a strict consumer (skipLibCheck false) with
+//      moduleResolution bundler and nodenext (./next under bundler only)
+//   11 no test file shipped
+//   12 dist/i18n-keys.json equals a fresh generator run over the built JS and is sorted
+//   13 every var(--x) of the shipped CSS and every --layer-* class is in tokens.json; its utilities lists equal a
+//      fresh extraction from the built JS
+//
+// Usage: node check-package.mjs --dir <package dir> [--modules <node_modules dir>] [--deny-env <VAR>] [--deny a,b]
+//                               [--require-deny-list]
+//   --dir                the package root holding package.json and dist (required)
+//   --modules            a node_modules folder with the peers, dependencies and a TypeScript compiler, for rule 10
+//                        (default: the first node_modules found upwards from the package root, then from the working
+//                        directory)
+//   --deny-env           name of an environment variable with a comma-separated deny list for rule 5
+//                        (default CHECK_PACKAGE_DENY; the CI workflows fill it from a repository variable)
+//   --deny               comma-separated deny list (added to the one from the environment)
+//   --require-deny-list  rule 5 fails when the deny list is empty (release)
+// Exit 0 when every rule passes (skipped rules say so), 1 otherwise.
+import { spawnSync } from 'node:child_process';
 import {
-  classTokensOf,
-  clientReasons,
-  cssRules,
-  extractClassLiterals,
-  extractSpecifiers,
-  hasUseClientDirective,
-  listFiles,
-  packageNameOf,
-  stripCssComments,
-} from './lib/source-scan.mjs';
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join, relative, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const REPOSITORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+import { classNameFiles, extractRoleUtilities, staleRoles } from './tokens-utilities.mjs';
 
-/** Run-time import edges allowed between entries (row → columns). Type-only imports are not edges. */
-export const ALLOWED_EDGES = {
-  logic: ['i18n'],
-  i18n: [],
-  primitives: ['i18n'],
-  list: ['logic', 'i18n', 'primitives'],
-  page: ['list', 'logic', 'i18n', 'primitives'],
-  form: ['page', 'logic', 'i18n', 'primitives'],
-  translations: ['form', 'logic', 'i18n', 'primitives'],
-  media: ['list', 'form', 'logic', 'i18n', 'primitives'],
-  glass: ['logic', 'i18n', 'primitives'],
-  data: ['logic', 'i18n', 'primitives'],
-  next: ['logic', 'provider'],
-  provider: ['logic', 'i18n', 'primitives'],
-  'notify-sonner': ['logic'],
-};
+const scriptDir = dirname(fileURLToPath(import.meta.url));
 
-/** Folders of dist that are not entries: the CLI may use Node built-ins and no entry may import it. */
-export const NON_ENTRY_FOLDERS = ['cli'];
-
-/** Files that hold module state; each must exist exactly once. */
-export const MODULE_STATE_FILES = ['i18n/store.js', 'logic/pure/notify.js', 'next/searchParamsWriter.js'];
-
-/** Packages only one entry (or file pattern) may reach. */
-const RESTRICTED_PACKAGES = [
-  { name: 'next', allowedEntry: 'next' },
-  { name: 'sonner', allowedEntry: 'notify-sonner' },
-  { name: 'recharts', allowedEntry: 'data', allowedFile: /(^|\/)[^/]*chart[^/]*\.js$/i },
-];
-/** Specifiers no entry may reach. */
-const FORBIDDEN_SPECIFIERS = [/^@reduxjs\/toolkit(\/|$)/, /^@mgamadeus\/ddd-web\/api(\/|$)/];
-/** Packages ./logic and ./i18n must not reach (they run without Tailwind, Radix or icons). */
-const STYLING_PACKAGES = [
-  'clsx',
-  'tailwind-merge',
-  'class-variance-authority',
-  'radix-ui',
-  'cmdk',
-  'lucide-react',
-];
-const STYLING_FREE_ENTRIES = ['logic', 'i18n'];
-
-/** Home-directory paths, always denied. */
-const BUILT_IN_DENY_PATTERNS = [/\/Users\/[^/\s'"`]+/, /\/home\/[^/\s'"`]+/, /[A-Za-z]:\\Users\\/];
-
-const TEXT_FILE = /\.(js|mjs|cjs|ts|mts|tsx|map|json|css|md|txt|ya?ml)$/;
-
-/** Every string leaf of an `exports` value. */
-const targetsOf = (value) =>
-  typeof value === 'string' ? [value] : value && typeof value === 'object' ? Object.values(value).flatMap(targetsOf) : [];
-
-const normalize = (target) => target.replace(/^\.\//, '');
-
-/** A `files` / `sideEffects` glob as a regular expression over package-relative paths. */
-export function globToRegExp(glob) {
-  const source = normalize(glob)
-    .split(/(\*\*\/|\*\*|\*)/)
-    .map((part) =>
-      part === '**/' ? '(?:.*/)?' : part === '**' ? '.*' : part === '*' ? '[^/]*' : part.replace(/[.+?^${}()|[\]\\]/g, '\\$&'),
-    )
-    .join('');
-  return new RegExp(`^${source}$`);
-}
-
-/** Whether a package-relative path is covered by the `files` list (a directory entry covers everything below it). */
-const coveredByFiles = (files, relativePath) =>
-  files.some((entry) => {
-    const pattern = normalize(entry).replace(/\/$/, '');
-    return relativePath === pattern || relativePath.startsWith(`${pattern}/`) || globToRegExp(pattern).test(relativePath);
-  });
-
-const parseDenyList = (value) =>
-  (value ?? '')
-    .split(',')
-    .map((word) => word.trim())
-    .filter((word) => word !== '');
-
-const denyPattern = (word) =>
-  new RegExp(`(?<![A-Za-z0-9])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z0-9])`, 'i');
+export const DEFAULT_DENY_ENV = 'CHECK_PACKAGE_DENY';
 
 /**
- * Runs every rule over a package directory.
+ * Runs the rules over a package directory.
  *
- * @param {string} packageDir
- * @param {{ source?: string, deny?: string[], requireSkills?: boolean, requireDenyList?: boolean, log?: (line: string) => void }} [options]
- * @returns {{ rule: number, message: string }[]} the problems; empty when the package passes
+ * @param {string} packageDirectory the package root holding package.json and dist
+ * @param {{ modules?: string, denyEnv?: string, deny?: string[], requireDenyList?: boolean, rules?: number[] }} [options]
+ *   `rules` limits the run to these rule numbers (default: all)
+ * @returns {{ rule: number, title: string, failures: string[], notes: string[] }[]}
  */
-export function checkPackage(packageDir, options = {}) {
-  const log = options.log ?? (() => {});
-  const root = path.resolve(packageDir);
-  const dist = path.join(root, 'dist');
-  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf-8'));
-  const problems = [];
-  const fail = (rule, message) => problems.push({ rule, message });
-  const ruleDone = (rule, label) => {
-    const count = problems.filter((problem) => problem.rule === rule).length;
-    log(`${count === 0 ? 'ok    ' : 'FAILED'} [${String(rule).padStart(2)}] ${label}${count ? ` (${count})` : ''}`);
-  };
+export function checkPackage(packageDirectory, options = {}) {
+  const packageDir = resolve(packageDirectory);
+  const dist = join(packageDir, 'dist');
+  const manifest = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8'));
 
-  const distFiles = listFiles(dist);
-  const jsFiles = distFiles.filter((file) => file.endsWith('.js'));
-  const dtsFiles = distFiles.filter((file) => file.endsWith('.d.ts'));
-  const cssFiles = distFiles.filter((file) => file.endsWith('.css'));
-  const read = (file) => fs.readFileSync(path.join(dist, file), 'utf-8');
-  const entryOf = (file) => file.split('/')[0];
-  const isEntryFile = (file) => file.includes('/') && !NON_ENTRY_FOLDERS.includes(entryOf(file));
-  const tokens = fs.existsSync(path.join(dist, 'tokens.json'))
-    ? JSON.parse(read('tokens.json'))
-    : fs.existsSync(path.join(root, 'tokens.json'))
-      ? JSON.parse(fs.readFileSync(path.join(root, 'tokens.json'), 'utf-8'))
-      : null;
-
-  // 1 — exports and bin targets
-  const exportsMap = manifest.exports ?? {};
-  for (const target of targetsOf(exportsMap)) {
-    if (!fs.existsSync(path.join(root, target))) fail(1, `missing exports target ${target}`);
-  }
-  if (!('./package.json' in exportsMap)) fail(1, '`./package.json` is not exported');
-  const binTargets = typeof manifest.bin === 'string' ? [manifest.bin] : Object.values(manifest.bin ?? {});
-  for (const target of binTargets) {
-    if (!fs.existsSync(path.join(root, target))) fail(1, `missing bin target ${target}`);
-  }
-  if (options.requireSkills) {
-    const skillsDir = path.join(root, '.claude', 'skills');
-    const skills = fs.existsSync(skillsDir)
-      ? fs.readdirSync(skillsDir).filter((name) => fs.existsSync(path.join(skillsDir, name, 'SKILL.md')))
+  const toPosix = path => path.split(sep).join('/');
+  const rel = path => toPosix(relative(packageDir, path));
+  const walk = dir =>
+    existsSync(dir)
+      ? readdirSync(dir).flatMap(name => {
+          const path = join(dir, name);
+          return statSync(path).isDirectory() ? walk(path) : [path];
+        })
       : [];
-    if (skills.length === 0) fail(1, 'no .claude/skills/<name>/SKILL.md shipped');
-  }
-  ruleDone(1, `exports / bin targets exist (${targetsOf(exportsMap).length + binTargets.length})`);
 
-  // 2 — 'use client' matches the content
-  for (const file of jsFiles) {
-    const code = read(file);
-    const hasDirective = hasUseClientDirective(code);
-    const isBarrel = path.posix.basename(file) === 'index.js';
-    const reasons = clientReasons(code);
-    if (isBarrel && hasDirective) fail(2, `dist/${file}: a barrel must not carry 'use client'`);
-    else if (!isBarrel && reasons.length > 0 && !hasDirective) {
-      fail(2, `dist/${file}: uses ${reasons.join(', ')} but has no 'use client'`);
-    } else if (!isBarrel && reasons.length === 0 && hasDirective) {
-      fail(2, `dist/${file}: has 'use client' but uses no hook, createContext or react-dom`);
-    }
-  }
-  ruleDone(2, `'use client' matches the content (${jsFiles.length} files)`);
-
-  // 3, 4, 6 — specifiers
-  const allowedPackages = new Set([
-    ...Object.keys(manifest.dependencies ?? {}),
-    ...Object.keys(manifest.peerDependencies ?? {}),
-  ]);
-  const builtins = new Set(builtinModules);
-  /** file → run-time relative targets (dist-relative) and bare specifiers */
-  const graph = new Map();
-  for (const file of [...jsFiles, ...dtsFiles]) {
-    const isJs = file.endsWith('.js');
-    const node = { files: [], packages: [] };
-    for (const { specifier, isTypeOnly } of extractSpecifiers(read(file))) {
-      if (/^(@\/|~\/)/.test(specifier)) {
-        fail(4, `dist/${file}: app alias specifier '${specifier}'`);
-      } else if (/^(\/|[A-Za-z]:[\\/]|file:)/.test(specifier)) {
-        fail(4, `dist/${file}: absolute specifier '${specifier}'`);
-      } else if (specifier.startsWith('.')) {
-        if (/\.(ts|tsx|mts|cts)$/.test(specifier) && !/\.d\.ts$/.test(specifier)) {
-          fail(3, `dist/${file}: TypeScript specifier '${specifier}' left in the output`);
-        } else if (!specifier.endsWith('.js')) {
-          fail(3, `dist/${file}: relative specifier '${specifier}' does not end in .js`);
-        }
-        const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(file), specifier));
-        if (resolved.startsWith('..')) fail(3, `dist/${file}: '${specifier}' resolves outside dist`);
-        else if (specifier.endsWith('.js') && !fs.existsSync(path.join(dist, resolved))) {
-          fail(3, `dist/${file}: '${specifier}' does not resolve to a file in dist`);
-        } else if (isJs && !isTypeOnly) node.files.push(resolved);
-      } else if (specifier.startsWith('node:') || builtins.has(specifier)) {
-        if (!NON_ENTRY_FOLDERS.includes(entryOf(file))) fail(6, `dist/${file}: Node built-in '${specifier}' in browser code`);
-      } else {
-        const name = packageNameOf(specifier);
-        if (!allowedPackages.has(name)) fail(6, `dist/${file}: '${specifier}' is neither a dependency nor a peer`);
-        if (isJs && !isTypeOnly) node.packages.push(specifier);
-      }
-    }
-    if (isJs) graph.set(file, node);
-  }
-  for (const file of cssFiles) {
-    const css = stripCssComments(read(file));
-    for (const match of css.matchAll(/@(?:import|source|plugin|config|reference)\s+(?:url\()?\s*(['"])([^'"]+)\1/g)) {
-      const specifier = match[2];
-      if (/^(@\/|~\/)/.test(specifier)) fail(4, `dist/${file}: app alias '${specifier}'`);
-      else if (/^(\/|[A-Za-z]:[\\/]|file:)/.test(specifier)) fail(4, `dist/${file}: absolute path '${specifier}'`);
-    }
-  }
-  ruleDone(3, 'relative specifiers end in .js and resolve inside dist');
-  ruleDone(4, 'no app alias, no absolute path');
-
-  // 5 — denied words and home-directory paths
-  const denyWords = [...parseDenyList(process.env.CHECK_PACKAGE_DENY), ...(options.deny ?? [])];
-  if (options.requireDenyList && denyWords.length === 0) {
-    fail(5, 'no deny list configured (CHECK_PACKAGE_DENY is empty)');
-  }
-  const denyPatterns = [...BUILT_IN_DENY_PATTERNS, ...denyWords.map(denyPattern)];
-  const scanned = [
-    ...distFiles.map((file) => `dist/${file}`),
-    ...listFiles(path.join(root, 'docs')).map((file) => `docs/${file}`),
-    ...listFiles(path.join(root, '.claude', 'skills')).map((file) => `.claude/skills/${file}`),
-    ...['README.md', 'CHANGELOG.md', 'package.json', 'tokens.json', 'i18n-keys.json'].filter((file) =>
-      fs.existsSync(path.join(root, file)),
-    ),
-  ].filter((file) => TEXT_FILE.test(file));
-  for (const file of scanned) {
-    const content = fs.readFileSync(path.join(root, file), 'utf-8');
-    for (const pattern of denyPatterns) {
-      const match = pattern.exec(content);
-      if (match) {
-        const line = content.slice(0, match.index).split('\n').length;
-        // the denied word itself is not printed: the list is not public
-        const shown = BUILT_IN_DENY_PATTERNS.includes(pattern) ? `home-directory path '${match[0]}'` : 'a denied word';
-        fail(5, `${file}:${line}: ${shown}`);
-      }
-    }
-  }
-  ruleDone(5, `no denied word or home-directory path (${scanned.length} files, ${denyWords.length} deny words)`);
-
-  // 6 — node_modules inside dist
-  for (const file of distFiles) {
-    if (file.split('/').includes('node_modules')) fail(6, `dist/${file}: node_modules inside dist`);
-  }
-  ruleDone(6, 'bare specifiers are dependencies or peers; no node_modules in dist');
-
-  // 7 — entry edges and restricted packages
-  for (const [file, node] of graph) {
-    const from = entryOf(file);
-    const fromIsEntry = isEntryFile(file);
-    for (const target of node.files) {
-      const to = entryOf(target);
-      if (from === to) continue;
-      if (!isEntryFile(target)) {
-        fail(7, `dist/${file} imports dist/${target}: entries must not import non-entry files`);
-      } else if (!fromIsEntry) {
-        fail(7, `dist/${file} imports dist/${target}: non-entry files must not import entries`);
-      } else if (!(ALLOWED_EDGES[from] ?? []).includes(to)) {
-        fail(7, `dist/${file} imports dist/${target}: edge ${from} → ${to} is not allowed`);
-      }
-    }
-    for (const specifier of node.packages) {
-      if (FORBIDDEN_SPECIFIERS.some((pattern) => pattern.test(specifier))) {
-        fail(7, `dist/${file} imports '${specifier}', which no entry may import`);
-      }
-      for (const restricted of RESTRICTED_PACKAGES) {
-        if (packageNameOf(specifier) !== restricted.name) continue;
-        const allowed = from === restricted.allowedEntry && (!restricted.allowedFile || restricted.allowedFile.test(file));
-        if (!allowed) fail(7, `dist/${file} imports '${specifier}', which only ${restricted.allowedEntry} may import`);
-      }
-    }
-  }
-  /** Packages an entry reaches through its own files and everything they import. */
-  const reachedPackages = (entry) => {
-    const queue = jsFiles.filter((file) => entryOf(file) === entry);
-    const seen = new Set();
-    const packages = new Set();
-    while (queue.length > 0) {
-      const file = queue.pop();
-      if (seen.has(file) || !graph.has(file)) continue;
-      seen.add(file);
-      for (const target of graph.get(file).files) queue.push(target);
-      for (const specifier of graph.get(file).packages) packages.add(specifier);
-    }
-    return packages;
+  // ── Import model of the built files ────────────────────────────────────────────────────────────────────────────────
+  // statement-anchored, so a `from` inside a string (`'… from'`) is no import
+  const STATIC = /^\s*(?:import|export)\b[^;'"]*?\bfrom\s*['"]([^'"]+)['"]/gm;
+  const SIDE_EFFECT = /^\s*import\s*['"]([^'"]+)['"]/gm;
+  const DYNAMIC = /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
+  const stripComments = text => text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  const specifiersOf = file => {
+    const code = stripComments(readFileSync(file, 'utf8'));
+    return [STATIC, SIDE_EFFECT, DYNAMIC].flatMap(pattern => [...code.matchAll(pattern)].map(match => match[1]));
   };
-  for (const entry of Object.keys(ALLOWED_EDGES)) {
-    const reached = [...reachedPackages(entry)];
-    for (const restricted of RESTRICTED_PACKAGES) {
-      if (entry === restricted.allowedEntry) continue;
-      const hit = reached.find((specifier) => packageNameOf(specifier) === restricted.name);
-      if (hit) fail(7, `./${entry} reaches '${hit}'`);
-    }
-    if (STYLING_FREE_ENTRIES.includes(entry)) {
-      for (const specifier of reached) {
-        const name = packageNameOf(specifier);
-        if (STYLING_PACKAGES.includes(name) || name.startsWith('@radix-ui/')) fail(7, `./${entry} reaches '${specifier}'`);
-      }
-    }
-  }
-  ruleDone(7, 'entry edges and restricted packages');
+  const packageNameOf = specifier =>
+    specifier.startsWith('@') ? specifier.split('/').slice(0, 2).join('/') : specifier.split('/')[0];
 
-  // 8 — module state once
-  for (const stateFile of MODULE_STATE_FILES) {
-    if (!jsFiles.includes(stateFile)) fail(8, `module-state file dist/${stateFile} is missing`);
-    const copies = jsFiles.filter((file) => path.posix.basename(file) === path.posix.basename(stateFile));
-    if (copies.length > 1) fail(8, `module-state file ${path.posix.basename(stateFile)} exists ${copies.length} times: ${copies.join(', ')}`);
-  }
-  const contexts = new Map();
-  for (const file of jsFiles) {
-    for (const match of read(file).matchAll(/(?:const|let|var)\s+([\w$]+)\s*=\s*(?:[\w$]+\.)?createContext\s*[(<]/g)) {
-      contexts.set(match[1], [...(contexts.get(match[1]) ?? []), file]);
-    }
-  }
-  for (const [name, files] of contexts) {
-    if (files.length > 1) fail(8, `context ${name} is created ${files.length} times: ${files.join(', ')}`);
-  }
-  ruleDone(8, `module state exists once (${MODULE_STATE_FILES.length} files, ${contexts.size} contexts)`);
+  const distFiles = walk(dist);
+  const jsFiles = distFiles.filter(path => path.endsWith('.js'));
+  const dtsFiles = distFiles.filter(path => path.endsWith('.d.ts'));
+  const entryOf = file => rel(file).split('/')[1];
 
-  // 9 — files and sideEffects
-  const files = Array.isArray(manifest.files) ? manifest.files : [];
-  for (const required of ['dist', 'docs', '.claude/skills']) {
-    if (!files.map((entry) => normalize(entry).replace(/\/$/, '')).includes(required)) fail(9, `\`files\` does not list ${required}`);
-  }
-  for (const target of targetsOf(exportsMap).map(normalize)) {
-    if (target !== 'package.json' && !coveredByFiles(files, target)) fail(9, `\`files\` does not cover ${target}`);
-  }
-  const sideEffects = Array.isArray(manifest.sideEffects) ? manifest.sideEffects : [];
-  for (const file of cssFiles) {
-    if (!sideEffects.some((glob) => globToRegExp(glob).test(`dist/${file}`))) {
-      fail(9, `\`sideEffects\` does not list dist/${file}`);
-    }
-  }
-  ruleDone(9, '`files` and `sideEffects` cover the shipped files');
+  const results = [];
+  const runs = rule => !options.rules || options.rules.includes(rule);
+  const record = (rule, title, failures, notes = []) => results.push({ rule, title, failures, notes });
 
-  // 10 — declarations
-  for (const file of jsFiles) {
-    if (!distFiles.includes(file.replace(/\.js$/, '.d.ts'))) fail(10, `dist/${file} has no .d.ts`);
+  // ── 1. exports and bin targets ─────────────────────────────────────────────────────────────────────────────────────────────
+  if (runs(1)) {
+    const failures = [];
+    const targets = [];
+    for (const [key, value] of Object.entries(manifest.exports ?? {})) {
+      if (typeof value === 'string') targets.push([key, value]);
+      else for (const [condition, target] of Object.entries(value)) targets.push([`${key} (${condition})`, target]);
+    }
+    for (const [key, target] of targets) if (!existsSync(join(packageDir, target))) failures.push(`${key} → ${target} missing`);
+    if (!manifest.exports?.['./package.json']) failures.push('./package.json is not exported');
+    const bins = Object.entries(manifest.bin ?? {});
+    for (const [name, target] of bins) {
+      const path = join(packageDir, target);
+      if (!existsSync(path)) failures.push(`bin ${name} → ${target} missing`);
+      else if (!readFileSync(path, 'utf8').startsWith('#!/usr/bin/env node')) failures.push(`bin ${name} → ${target} has no node shebang`);
+    }
+    record(1, 'every exports and bin target exists; ./package.json exported', failures, [`${targets.length} targets, ${bins.length} bins`]);
   }
-  ruleDone(10, 'every .js has a .d.ts');
 
-  // 11 — tests
-  for (const file of distFiles) {
-    if (/\.(test|spec)\.[cm]?[jt]sx?(\.map)?$/.test(file) || file.split('/').includes('__tests__')) {
-      fail(11, `test file dist/${file}`);
-    }
-  }
-  ruleDone(11, 'no test file in dist');
-
-  // 12 — i18n manifest is fresh
-  const sourceDir =
-    options.source ?? (fs.existsSync(path.join(root, 'src')) ? path.join(root, 'src') : path.join(REPOSITORY_ROOT, 'src'));
-  const hintsFile = path.join(path.dirname(sourceDir), 'i18n', 'hints.json');
-  if (!fs.existsSync(sourceDir)) {
-    fail(12, `no source tree at ${path.relative(process.cwd(), sourceDir) || '.'} to compare i18n-keys.json against`);
-  } else {
-    const fresh = serializeManifest(
-      buildI18nManifest({ sourceDir, hintsFile, packageName: manifest.name, version: manifest.version }).manifest,
-    );
-    for (const candidate of ['dist/i18n-keys.json', 'i18n-keys.json']) {
-      const file = path.join(root, candidate);
-      if (!fs.existsSync(file)) {
-        if (candidate.startsWith('dist/')) fail(12, `${candidate} is missing`);
-        continue;
-      }
-      if (fs.readFileSync(file, 'utf-8') !== fresh) fail(12, `${candidate} differs from a fresh run (run \`pnpm i18n:manifest\`)`);
-    }
-  }
-  ruleDone(12, 'i18n-keys.json equals a fresh generator run');
-
-  // 13 — custom properties are listed in tokens.json
-  if (!tokens) {
-    fail(13, 'tokens.json is missing');
-  } else {
-    const listed = new Set([
-      ...Object.keys(tokens.colors ?? {}).map((name) => `--${name}`),
-      ...Object.keys(tokens.properties ?? {}),
-      ...Object.keys(tokens.layers ?? {}),
-    ]);
-    const colorThemeVariables = new Set(Object.keys(tokens.colors ?? {}).map((name) => `--color-${name}`));
-    /** Theme variables the package's own @theme blocks declare (e.g. --radius-lg). */
-    const ownThemeVariables = new Set();
-    for (const file of cssFiles) {
-      for (const block of stripCssComments(read(file)).matchAll(/@theme[^{]*\{([^}]*)\}/g)) {
-        for (const declaration of block[1].matchAll(/(--[\w-]+)\s*:/g)) ownThemeVariables.add(declaration[1]);
-      }
-    }
-    /** Custom properties declared by the shipped CSS itself (e.g. the layer defaults). */
-    const declaredByCss = new Set();
-    for (const file of cssFiles) {
-      for (const rule of cssRules(read(file))) {
-        for (const declaration of rule.body.matchAll(/(--[\w-]+)\s*:/g)) declaredByCss.add(declaration[1]);
-      }
-    }
-    for (const name of declaredByCss) {
-      if (!listed.has(name) && !ownThemeVariables.has(name)) fail(13, `shipped CSS declares ${name}, which tokens.json does not list`);
-    }
-    for (const file of cssFiles) {
-      const css = stripCssComments(read(file));
-      for (const match of css.matchAll(/(?<![\w-])var\(\s*(--[\w-]+)/g)) {
-        if (!listed.has(match[1]) && !ownThemeVariables.has(match[1]) && !match[1].startsWith('--tw-')) {
-          fail(13, `dist/${file} reads ${match[1]}, which tokens.json does not list`);
-        }
-      }
-      for (const match of css.matchAll(/--theme\(\s*(--[\w-]+)/g)) {
-        if (!colorThemeVariables.has(match[1]) && !ownThemeVariables.has(match[1])) {
-          fail(13, `dist/${file} reads the theme variable ${match[1]}, which is no colour of tokens.json`);
-        }
-      }
-    }
+  // ── 2. directives ──────────────────────────────────────────────────────────────────────────────────────────────────
+  if (runs(2)) {
+    const failures = [];
+    const notes = [];
     for (const file of jsFiles) {
-      for (const token of classTokensOf(extractClassLiterals(read(file)))) {
-        for (const match of token.matchAll(/(?:var\(|\()(--[\w-]+)/g)) {
-          if (!listed.has(match[1]) && !match[1].startsWith('--tw-')) {
-            fail(13, `dist/${file}: class '${token}' reads ${match[1]}, which tokens.json does not list`);
-          }
+      if (rel(file).startsWith('dist/scripts/')) continue;
+      const code = stripComments(readFileSync(file, 'utf8'));
+      const hasDirective = /^\s*['"]use client['"]/.test(code);
+      const trigger =
+        /(?<![\w.$])use[A-Z]\w*\s*\(/.test(code) || /\bcreateContext\s*\(/.test(code) || /from\s*['"]react-dom['"]/.test(code);
+      const barrelOrPure = rel(file).endsWith('/index.js') || rel(file).startsWith('dist/logic/pure/');
+      if (trigger && !hasDirective) failures.push(`${rel(file)}: calls a hook / createContext / react-dom without 'use client'`);
+      if (hasDirective && barrelOrPure) failures.push(`${rel(file)}: barrel or logic/pure file carries 'use client'`);
+      if (hasDirective && !trigger && !barrelOrPure) notes.push(rel(file));
+    }
+    record(2, "'use client' exactly where a hook, createContext or react-dom is used; never on barrels and logic/pure", failures, [
+      `${notes.length} client boundaries without a hook (allowed: they render client-only components): ${notes.join(', ')}`,
+    ]);
+  }
+
+  // ── 3. relative specifiers ─────────────────────────────────────────────────────────────────────────────────────────
+  if (runs(3)) {
+    const failures = [];
+    for (const file of [...jsFiles, ...dtsFiles]) {
+      for (const specifier of specifiersOf(file)) {
+        if (!specifier.startsWith('.')) continue;
+        if (/\.tsx?$/.test(specifier)) failures.push(`${rel(file)}: ${specifier} (TypeScript specifier)`);
+        else if (!specifier.endsWith('.js')) failures.push(`${rel(file)}: ${specifier} (no .js)`);
+        else {
+          const target = resolve(dirname(file), specifier);
+          const exists = file.endsWith('.d.ts') ? existsSync(target.replace(/\.js$/, '.d.ts')) : existsSync(target);
+          if (!exists || !target.startsWith(dist)) failures.push(`${rel(file)}: ${specifier} does not resolve inside dist`);
         }
       }
     }
+    record(3, 'every relative specifier ends in .js and resolves inside dist', failures, [`${jsFiles.length} JS, ${dtsFiles.length} declarations`]);
   }
-  ruleDone(13, 'custom properties of shipped CSS and class names are listed in tokens.json');
 
-  return problems;
+  // shipped files: everything `files` names plus package.json
+  const shipped = [
+    join(packageDir, 'package.json'),
+    ...(manifest.files ?? []).flatMap(entry => {
+      const path = join(packageDir, entry);
+      if (!existsSync(path)) return [];
+      return statSync(path).isDirectory() ? walk(path) : [path];
+    }),
+  ];
+  const textFiles = shipped.filter(path => /\.(js|mjs|d\.ts|map|css|json|md)$/.test(path));
+
+  // ── 4. no app alias, no absolute path ──────────────────────────────────────────────────────────────────────────────
+  if (runs(4)) {
+    const failures = [];
+    for (const file of textFiles) {
+      if (file.endsWith('.js') || file.endsWith('.d.ts') || file.endsWith('.mjs')) {
+        for (const specifier of specifiersOf(file)) {
+          if (/^[@~]\//.test(specifier)) failures.push(`${rel(file)}: app alias ${specifier}`);
+          if (/^(\/|[A-Za-z]:\\|file:)/.test(specifier)) failures.push(`${rel(file)}: absolute specifier ${specifier}`);
+        }
+      }
+      if (file.endsWith('.css')) {
+        const css = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+        for (const match of css.matchAll(/@(?:import|source|plugin|config|reference)\s+(?:url\()?\s*(['"])([^'"]+)\1/g)) {
+          if (/^[@~]\//.test(match[2])) failures.push(`${rel(file)}: app alias ${match[2]}`);
+          if (/^(\/|[A-Za-z]:[\\/]|file:)/.test(match[2])) failures.push(`${rel(file)}: absolute path ${match[2]}`);
+        }
+      }
+      if (file.endsWith('.map')) {
+        const map = JSON.parse(readFileSync(file, 'utf8'));
+        for (const source of map.sources ?? []) if (/^(\/|[A-Za-z]:|file:)/.test(source)) failures.push(`${rel(file)}: absolute source ${source}`);
+      }
+    }
+    record(4, 'no app alias (@/, ~/) and no absolute path in shipped files', failures, [`${textFiles.length} files`]);
+  }
+
+  // ── 5. deny list ───────────────────────────────────────────────────────────────────────────────────────────────────
+  if (runs(5)) {
+    const envName = options.denyEnv ?? DEFAULT_DENY_ENV;
+    const fromEnv = (process.env[envName] ?? '').split(',');
+    const words = [...fromEnv, ...(options.deny ?? [])].map(word => word.trim()).filter(Boolean);
+    const patterns = [
+      ...words.map(word => ({ label: '(deny list entry)', regex: new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') })),
+      // home-directory roots, built from parts so this file itself carries no such path
+      ...['Users', 'home'].map(root => ({ label: `/${root}/`, regex: new RegExp(`/${root}/`) })),
+      { label: 'C:\\', regex: /[A-Z]:\\\\/ },
+    ];
+    const failures = [];
+    if (options.requireDenyList && words.length === 0) failures.push(`no deny list configured (${envName} is empty)`);
+    for (const file of textFiles) {
+      const lines = readFileSync(file, 'utf8').split('\n');
+      lines.forEach((line, index) => {
+        for (const pattern of patterns) if (pattern.regex.test(line)) failures.push(`${rel(file)}:${index + 1} ${pattern.label}`);
+      });
+    }
+    record(5, 'no denied name and no home-directory path in shipped files', failures, [
+      words.length > 0 ? `${words.length} deny entries from ${envName} / --deny` : `deny list empty (set ${envName}); built-in path patterns only`,
+    ]);
+  }
+
+  // ── 6. bare specifiers declared, nothing vendored ──────────────────────────────────────────────────────────────────
+  if (runs(6)) {
+    const declared = new Set([
+      ...Object.keys(manifest.dependencies ?? {}),
+      ...Object.keys(manifest.peerDependencies ?? {}),
+    ]);
+    const failures = [];
+    const used = new Set();
+    for (const file of [...jsFiles, ...dtsFiles, ...distFiles.filter(path => path.endsWith('.mjs'))]) {
+      for (const specifier of specifiersOf(file)) {
+        if (specifier.startsWith('.')) continue;
+        if (specifier.startsWith('node:')) {
+          if (!/^dist\/(scripts|cli)\//.test(rel(file))) failures.push(`${rel(file)}: ${specifier} outside dist/scripts and dist/cli`);
+          continue;
+        }
+        const name = packageNameOf(specifier);
+        used.add(name);
+        if (!declared.has(name)) failures.push(`${rel(file)}: ${specifier} is neither a dependency nor a peer`);
+      }
+    }
+    if (shipped.some(path => `/${rel(path)}`.includes('/node_modules/'))) failures.push('node_modules inside the shipped files');
+    const vendorMarkers = [/\bfunction useForm\s*\(/, /__SECRET_INTERNALS|ReactCurrentDispatcher/, /\$ZodType\b/, /\bfunction createElement\s*\(/];
+    for (const file of jsFiles) {
+      const text = readFileSync(file, 'utf8');
+      if (text.length > 200_000) failures.push(`${rel(file)}: ${text.length} bytes (a bundled peer?)`);
+      for (const marker of vendorMarkers) if (marker.test(text)) failures.push(`${rel(file)}: looks like a copied peer (${marker})`);
+    }
+    record(6, 'every bare specifier is a dependency or a peer; nothing vendored', failures, [`used: ${[...used].sort().join(', ')}`]);
+  }
+
+  // ── 7. entry edges and reach ───────────────────────────────────────────────────────────────────────────────────────
+  if (runs(7)) {
+    const ALLOWED = {
+      form: ['logic', 'i18n', 'primitives', 'page'],
+      glass: ['logic', 'i18n', 'primitives'],
+      i18n: [],
+      list: ['logic', 'i18n', 'primitives'],
+      logic: ['i18n'],
+      media: ['logic', 'i18n', 'primitives', 'list', 'form'],
+      next: ['logic', 'provider'],
+      'notify-sonner': ['logic'],
+      page: ['logic', 'i18n', 'primitives', 'list'],
+      primitives: ['i18n'],
+      provider: ['logic', 'i18n', 'primitives'],
+      translations: ['logic', 'i18n', 'primitives', 'form'],
+    };
+    const TYPE_ONLY = { provider: ['media', 'translations'] };
+    const FILE_LIMITS = {
+      'form->page': ['page/DetailHeader', 'page/EntityMetadata'],
+      'page->list': ['list/EmptyValue', 'list/EntityListEmpty', 'list/EntityListCard'],
+      'translations->form': ['form/fieldLabels', 'form/useConfirmDialog'],
+    };
+    // known and documented: the deprecated re-export of EntityListPage (removed with the rewrite of old import paths)
+    const EXCEPTIONS = ['list/index -> page/EntityListPage'];
+    const failures = [];
+    const stem = file => rel(file).replace(/^dist\//, '').replace(/\.d\.ts$|\.js$/, '');
+
+    const edgesOf = (files, kind) => {
+      for (const file of files) {
+        const from = entryOf(file);
+        for (const specifier of specifiersOf(file)) {
+          if (!specifier.startsWith('.')) continue;
+          const target = resolve(dirname(file), specifier);
+          if (!target.startsWith(dist)) continue;
+          const to = entryOf(target);
+          if (from === to || !(from in ALLOWED)) continue;
+          const edge = `${stem(file)} -> ${stem(target.replace(/\.js$/, kind === 'type' ? '.d.ts' : '.js'))}`;
+          if (EXCEPTIONS.includes(edge)) continue;
+          const allowed = ALLOWED[from].includes(to) || (kind === 'type' && (TYPE_ONLY[from] ?? []).includes(to));
+          const limit = FILE_LIMITS[`${from}->${to}`];
+          const targetStem = stem(target.replace(/\.js$/, '.js'));
+          if (!allowed) failures.push(`${kind} edge ${from} → ${to}: ${edge}`);
+          else if (limit && !limit.includes(targetStem)) failures.push(`${kind} edge ${from} → ${to} only to ${limit.join(', ')}: ${edge}`);
+        }
+      }
+    };
+    edgesOf(jsFiles, 'runtime');
+    edgesOf(dtsFiles, 'type');
+
+    // reach: the packages each entry's runtime graph reaches (transitively through relative imports)
+    const graph = new Map(jsFiles.map(file => [file, specifiersOf(file)]));
+    const reach = start => {
+      const seen = new Set();
+      const packages = new Set();
+      const stack = [start];
+      while (stack.length > 0) {
+        const file = stack.pop();
+        if (seen.has(file)) continue;
+        seen.add(file);
+        for (const specifier of graph.get(file) ?? []) {
+          if (specifier.startsWith('.')) stack.push(resolve(dirname(file), specifier));
+          else packages.add(specifier);
+        }
+      }
+      return { packages, files: seen };
+    };
+    const RULES = [
+      { test: name => name === 'next' || name.startsWith('next/'), only: ['next'], label: 'next/*' },
+      { test: name => name === 'sonner', only: ['notify-sonner'], label: 'sonner' },
+      { test: name => name === 'recharts', only: [], label: 'recharts' },
+      { test: name => name.startsWith('@reduxjs/') || name.startsWith('@mgamadeus/ddd-web/api'), only: [], label: 'Redux / ddd-web/api' },
+    ];
+    const UI_ONLY = name => /^(radix-ui|@radix-ui\/|class-variance-authority$|cmdk$|clsx$|tailwind-merge$|lucide-react$)/.test(name);
+    for (const file of jsFiles.filter(path => !rel(path).startsWith('dist/scripts/'))) {
+      const entry = entryOf(file);
+      const { packages } = reach(file);
+      for (const name of packages) {
+        for (const rule of RULES) if (rule.test(name) && !rule.only.includes(entry)) failures.push(`${rel(file)} reaches ${rule.label} (${name})`);
+        if ((entry === 'logic' || entry === 'i18n') && UI_ONLY(name)) failures.push(`${rel(file)} reaches ${name} (logic and i18n draw nothing)`);
+        if (rel(file).startsWith('dist/logic/pure/') && /^(react|react-dom|react-hook-form)(\/|$)/.test(name)) {
+          failures.push(`${rel(file)} reaches ${name} at run time (logic/pure runs without React)`);
+        }
+      }
+    }
+    record(7, 'entry edges within the import matrix (runtime and type-only apart); package reach per entry', failures, [
+      `${jsFiles.length} JS, ${dtsFiles.length} declarations; exceptions: ${EXCEPTIONS.join(', ')}`,
+    ]);
+  }
+
+  // ── 8. module state and contexts once ─────────────────────────────────────────────────────────────────────────────
+  if (runs(8)) {
+    const failures = [];
+    for (const path of ['dist/i18n/store.js', 'dist/next/searchParamsWriter.js', 'dist/logic/pure/notify.js']) {
+      if (!existsSync(join(packageDir, path))) failures.push(`${path} missing`);
+    }
+    const contexts = new Map();
+    for (const file of jsFiles) {
+      for (const match of readFileSync(file, 'utf8').matchAll(/(?:const|let|var)\s+(\w+)\s*=\s*createContext\s*\(/g)) {
+        contexts.set(match[1], [...(contexts.get(match[1]) ?? []), rel(file)]);
+      }
+    }
+    for (const [name, files] of contexts) if (files.length > 1) failures.push(`context ${name} defined in ${files.join(', ')}`);
+    for (const name of ['setTranslations', 'setNotificationAdapter', 'queueSearchParamsWrite']) {
+      const definers = jsFiles.filter(file => new RegExp(`export\\s+const\\s+${name}\\s*=`).test(readFileSync(file, 'utf8')));
+      if (definers.length !== 1) failures.push(`${name} defined ${definers.length}× (${definers.map(rel).join(', ')})`);
+    }
+    record(8, 'module state exists once; every context is defined once', failures, [`${contexts.size} contexts`]);
+  }
+
+  // ── 9. files and sideEffects ───────────────────────────────────────────────────────────────────────────────────────
+  if (runs(9)) {
+    const failures = [];
+    const notes = [];
+    const files = manifest.files ?? [];
+    if (!files.includes('dist')) failures.push('files does not include dist');
+    for (const doc of ['README.md', 'STANDARDS.md', 'CHANGELOG.md', 'LICENSE']) {
+      if (existsSync(join(packageDir, doc)) && !files.includes(doc)) failures.push(`files does not include ${doc}`);
+    }
+    // the skills sit where `ddd-admin-ui link-skills` looks for them in the installed package
+    if (!files.includes('.claude/skills')) failures.push('files does not include .claude/skills');
+    const skillFiles = walk(join(packageDir, '.claude', 'skills')).filter(path => path.endsWith('/SKILL.md'));
+    if (skillFiles.length === 0) failures.push('no .claude/skills/<name>/SKILL.md');
+    for (const file of skillFiles) {
+      const text = readFileSync(file, 'utf8');
+      const description = /^description:\s*(.*)$/m.exec(text.split('---')[1] ?? '')?.[1] ?? '';
+      if (!/^name:\s*\S/m.test(text) || description === '') failures.push(`${rel(file)}: frontmatter needs name and description`);
+      else if (description.replace(/^"|"$/g, '').length > 1024) failures.push(`${rel(file)}: description longer than 1,024 characters`);
+    }
+    notes.push(`${skillFiles.length} skill(s)`);
+    const globToRegex = glob =>
+      new RegExp(`^${glob.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*\*\//g, '(?:.*/)?').replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*')}$`);
+    const sideEffects = Array.isArray(manifest.sideEffects) ? manifest.sideEffects.map(globToRegex) : null;
+    for (const css of distFiles.filter(path => path.endsWith('.css'))) {
+      if (manifest.sideEffects !== true && !(sideEffects ?? []).some(regex => regex.test(rel(css)))) {
+        failures.push(`${rel(css)} is not listed in sideEffects`);
+      }
+    }
+    record(9, 'files covers dist, CSS, JSON, docs, .claude/skills; sideEffects lists every CSS file', failures, notes);
+  }
+
+  // ── 10. declarations ───────────────────────────────────────────────────────────────────────────────────────────────
+  if (runs(10)) {
+    const failures = [];
+    const notes = [];
+    for (const file of jsFiles) if (!existsSync(file.replace(/\.js$/, '.d.ts'))) failures.push(`${rel(file)} has no .d.ts`);
+    const findModules = start => {
+      for (let dir = start; ; dir = dirname(dir)) {
+        if (existsSync(join(dir, 'node_modules', '.bin', 'tsc'))) return join(dir, 'node_modules');
+        if (dirname(dir) === dir) return null;
+      }
+    };
+    const modules = options.modules ? resolve(options.modules) : (findModules(packageDir) ?? findModules(process.cwd()));
+    if (!modules) {
+      failures.push('no node_modules with a TypeScript compiler found for the consumer compile (pass --modules)');
+    } else {
+      const consumer = mkdtempSync(join(tmpdir(), 'ddd-admin-ui-consumer-'));
+      try {
+        const nodeModules = join(consumer, 'node_modules');
+        // a copy of the shipped files (not a link): the declarations then resolve their peers from this consumer only
+        const installed = join(nodeModules, '@mgamadeus', 'ddd-admin-ui');
+        for (const file of shipped) {
+          const target = join(installed, relative(packageDir, file));
+          mkdirSync(dirname(target), { recursive: true });
+          copyFileSync(file, target);
+        }
+        const names = [
+          ...Object.keys(manifest.dependencies ?? {}),
+          ...Object.keys(manifest.peerDependencies ?? {}),
+          '@types/react',
+          '@types/react-dom',
+        ];
+        for (const name of names) {
+          const source = join(modules, name);
+          if (!existsSync(source)) {
+            notes.push(`${name} not in ${modules} (optional peers may be absent)`);
+            continue;
+          }
+          mkdirSync(dirname(join(nodeModules, name)), { recursive: true });
+          if (!existsSync(join(nodeModules, name))) symlinkSync(source, join(nodeModules, name), 'dir');
+        }
+        const entries = Object.keys(manifest.exports ?? {}).filter(key => key !== './package.json' && !/\.(css|json)$/.test(key));
+        // ./next serves Next hosts, which resolve like a bundler; `next` has no `exports` map, so its subpaths do not
+        // resolve under nodenext. That entry is compiled in the bundler run only.
+        const consumerSource = list =>
+          `${list.map((key, index) => `import * as entry${index} from '@mgamadeus/ddd-admin-ui${key.slice(1)}';`).join('\n')}\nexport const entries = [${list.map((_, index) => `entry${index}`).join(', ')}];\n`;
+        writeFileSync(join(consumer, 'index.bundler.ts'), consumerSource(entries));
+        writeFileSync(join(consumer, 'index.nodenext.ts'), consumerSource(entries.filter(key => key !== './next')));
+        writeFileSync(join(consumer, 'package.json'), '{ "type": "module" }\n');
+        const tsc = join(modules, '.bin', 'tsc');
+        for (const mode of ['bundler', 'nodenext']) {
+          const config = {
+            compilerOptions: {
+              strict: true,
+              skipLibCheck: false,
+              noEmit: true,
+              target: 'es2022',
+              lib: ['dom', 'dom.iterable', 'esnext'],
+              jsx: 'react-jsx',
+              module: mode === 'bundler' ? 'esnext' : 'nodenext',
+              moduleResolution: mode,
+              types: [],
+            },
+            files: [`index.${mode}.ts`],
+          };
+          writeFileSync(join(consumer, `tsconfig.${mode}.json`), JSON.stringify(config));
+          const run = spawnSync(tsc, ['-p', join(consumer, `tsconfig.${mode}.json`)], { encoding: 'utf8' });
+          if (run.status !== 0) {
+            const lines = `${run.stdout}${run.stderr}`.split('\n').filter(Boolean);
+            failures.push(`strict consumer (${mode}) fails: ${lines.length} line(s); first: ${lines.slice(0, 5).join(' | ')}`);
+          } else notes.push(`strict consumer compiles (${mode}, skipLibCheck false)`);
+        }
+      } finally {
+        rmSync(consumer, { recursive: true, force: true });
+      }
+    }
+    record(10, 'every .js has a .d.ts; the declarations compile in a strict consumer (bundler and nodenext)', failures, notes);
+  }
+
+  // ── 11. no tests shipped ───────────────────────────────────────────────────────────────────────────────────────────
+  if (runs(11)) record(
+    11,
+    'no test file shipped',
+    shipped.filter(path => /\.test\.(js|ts|d\.ts|mjs)$|\.test\.d\.ts$/.test(path)).map(path => `${rel(path)} is a test`)
+  );
+
+  // ── 12. i18n manifest ──────────────────────────────────────────────────────────────────────────────────────────────
+  if (runs(12)) {
+    const manifestPath = [join(dist, 'i18n-keys.json'), join(packageDir, 'i18n-keys.json')].find(existsSync);
+    if (!manifestPath) {
+      record(12, 'i18n-keys.json equals a fresh generator run and is sorted', [], ['skipped: no i18n-keys.json yet']);
+    } else {
+      const failures = [];
+      const keys = JSON.parse(readFileSync(manifestPath, 'utf8'));
+      const list = Array.isArray(keys) ? keys : Array.isArray(keys.keys) ? keys.keys : Object.keys(keys);
+      const names = list.map(item => (typeof item === 'string' ? item : item.key));
+      if (names.some((name, index) => index > 0 && names[index - 1] > name)) failures.push('not sorted');
+      const generator = join(scriptDir, 'build-i18n-manifest.mjs');
+      if (!existsSync(generator)) failures.push('no generator (scripts/build-i18n-manifest.mjs) to compare against');
+      else {
+        const run = spawnSync(process.execPath, [generator, '--check', '--built', '--dir', packageDir], { encoding: 'utf8' });
+        if (run.status !== 0) failures.push(`stale: ${`${run.stdout}${run.stderr}`.trim().split('\n')[0]}`);
+      }
+      record(12, 'i18n-keys.json equals a fresh generator run and is sorted', failures);
+    }
+  }
+
+  // ── 13. tokens.json covers the CSS and the layer classes ───────────────────────────────────────────────────────────
+  if (runs(13)) {
+    const failures = [];
+    const tokensPath = [join(dist, 'tokens.json'), join(packageDir, 'tokens.json')].find(existsSync);
+    if (!tokensPath) failures.push('tokens.json missing');
+    else {
+      const tokens = JSON.parse(readFileSync(tokensPath, 'utf8'));
+      const known = new Set([
+        ...Object.keys(tokens.properties ?? {}),
+        ...Object.keys(tokens.layers ?? {}),
+        ...Object.keys(tokens.colors ?? {}).flatMap(role => [`--${role}`, `--color-${role}`]),
+      ]);
+      for (const css of distFiles.filter(path => path.endsWith('.css'))) {
+        const text = readFileSync(css, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+        const defined = new Set([...text.matchAll(/(--[\w-]+)\s*:/g)].map(match => match[1]));
+        for (const match of text.matchAll(/(?:var|--theme)\(\s*(--[\w-]+)/g)) {
+          const name = match[1];
+          if (!known.has(name) && !defined.has(name)) failures.push(`${rel(css)} reads ${name}, not in tokens.json`);
+        }
+      }
+      for (const file of jsFiles) {
+        for (const match of readFileSync(file, 'utf8').matchAll(/z-\((--layer-[\w-]+)\)/g)) {
+          if (!(match[1] in (tokens.layers ?? {}))) failures.push(`${rel(file)} uses ${match[1]}, not in tokens.json layers`);
+        }
+      }
+      const stale = staleRoles(tokens, extractRoleUtilities(classNameFiles(packageDir, 'dist'), Object.keys(tokens.colors ?? {})));
+      for (const line of stale) failures.push(`stale utilities list: ${line}`);
+    }
+    record(13, 'every var(--x) of the shipped CSS and every --layer-* class is in tokens.json; utilities lists fresh', failures);
+  }
+
+  return results.sort((left, right) => left.rule - right.rule);
 }
 
+// ── report ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 // realpath: a package manager may run this file through a symlink (pnpm's node_modules layout)
-const isMain =
-  process.argv[1] !== undefined && import.meta.url === pathToFileURL(fs.realpathSync(path.resolve(process.argv[1]))).href;
+const isMain = process.argv[1] !== undefined && realpathSync(resolve(process.argv[1])) === fileURLToPath(import.meta.url);
 if (isMain) {
-  const args = process.argv.slice(2);
-  const valueOf = (flag) => {
-    const index = args.indexOf(flag);
-    return index === -1 ? undefined : args[index + 1];
+  const argument = name => {
+    const index = process.argv.indexOf(name);
+    return index !== -1 ? process.argv[index + 1] : undefined;
   };
-  const flagValues = new Set([valueOf('--source'), valueOf('--deny')]);
-  const packageDir = args.find((arg) => !arg.startsWith('--') && !flagValues.has(arg)) ?? '.';
-  const problems = checkPackage(packageDir, {
-    ...(valueOf('--source') ? { source: path.resolve(valueOf('--source')) } : {}),
-    deny: parseDenyList(valueOf('--deny')),
-    requireSkills: args.includes('--require-skills'),
-    requireDenyList: args.includes('--require-deny-list'),
-    log: (line) => console.log(line),
-  });
-  if (problems.length > 0) {
-    for (const problem of problems) console.error(`[rule ${problem.rule}] ${problem.message}`);
-    console.error(`${path.resolve(packageDir)}: ${problems.length} problem(s)`);
-    process.exit(1);
+  if (!argument('--dir')) {
+    console.error('usage: node check-package.mjs --dir <package root or extracted tarball> [--modules <node_modules>]');
+    process.exit(2);
   }
-  console.log(`${path.resolve(packageDir)}: package checks passed`);
+  const packageDir = resolve(argument('--dir'));
+  const results = checkPackage(packageDir, {
+    modules: argument('--modules'),
+    denyEnv: argument('--deny-env'),
+    deny: (argument('--deny') ?? '').split(','),
+    requireDenyList: process.argv.includes('--require-deny-list'),
+  });
+  let failed = 0;
+  for (const result of results) {
+    const status = result.failures.length === 0 ? (result.notes.some(note => note.startsWith('skipped')) ? 'skip' : 'ok') : 'FAIL';
+    if (status === 'FAIL') failed += 1;
+    console.log(`rule ${String(result.rule).padStart(2)} ${status.padEnd(4)} ${result.title}`);
+    for (const note of result.notes) console.log(`         · ${note}`);
+    for (const failure of result.failures.slice(0, 25)) console.log(`         ✗ ${failure}`);
+    if (result.failures.length > 25) console.log(`         … ${result.failures.length - 25} more`);
+  }
+  console.log(`check-package: ${failed === 0 ? 'ok' : `${failed} rule(s) failed`} (${packageDir})`);
+  process.exit(failed === 0 ? 0 : 1);
 }

@@ -1,24 +1,28 @@
 #!/usr/bin/env bash
 # Installs a packed @mgamadeus/ddd-admin-ui tarball into fresh consumer projects and checks it as a host would.
 #
-#   tarball   check-package on the extracted tarball (exports, directives, specifiers, edges, manifests, tokens)
+#   tarball   check-package on the extracted tarball (rules 1–13, the strict consumer compile included)
 #   plain     a project without next, sonner and recharts:
 #     T4  Node imports of every entry but ./next and ./notify-sonner (those two fail on the missing peer) and a
 #         strict tsc (skipLibCheck false) with moduleResolution bundler and nodenext
-#     T3  a form from ./form holding fields from ./translations and ./media shares the field-label context
+#     T3  (server render) bound fields from ./translations and ./media find the form of ./form
 #     T6  one translation store across entries (./i18n sets the language, ./logic and ./list use it)
+#     the shipped i18n manifest matches the installed package (ddd-admin-ui-i18n-manifest --check)
 #   next      a Next 16 app router project with Tailwind 4:
 #     T1  `next build`; the server page's metadata title is m('Users'), pure helpers render on the server
-#     T5  the production CSS has the package's component rules and utilities; check-tokens passes on it
+#     T5  the production CSS has the package's component rules and utilities; ddd-admin-ui-check-tokens passes on it
+#         one Radix copy in the host (ddd-admin-ui-check-radix)
 #     T2  (browser) a client page sets German translations: date, text and number are German after hydration,
 #         without a hydration warning
+#     T3  (browser) server violations on a translatable and a media field are named by the fields' labels (the label
+#         registry of ./form is one context across ./form, ./translations and ./media)
 #     T7  (browser) a select inside a dialog inside a sheet, and inside a host overlay at z-index 10000 with
 #         --layer-popover: 10001, is clickable (with a negative control at the default layer)
 #   link-skills  `ddd-admin-ui link-skills` links the shipped skill
 #
 # T8 / T9: DDD_WEB_VERSION (default: the latest 0.x from 0.13.0 on) and LUCIDE_VERSION (default: latest) choose the
 # peer versions; CI runs once more with the floors (DDD_WEB_VERSION=0.13.0 LUCIDE_VERSION=0.550.0).
-# SKIP_BROWSER=1 skips T2 and T7. CHROME_PATH chooses the browser (default: the installed Google Chrome).
+# SKIP_BROWSER=1 skips the browser checks (T2, T3, T7). CHROME_PATH chooses the browser (default: the installed Google Chrome).
 #
 # Usage: test/consumer/run.sh <tarball> <npm|pnpm> <workDir>
 set -euo pipefail
@@ -38,7 +42,7 @@ case "$WORK/" in
 esac
 tar -xzf "$TARBALL" -C "$WORK/extracted"
 echo "── tarball: check-package"
-node "$ROOT/scripts/check-package.mjs" "$WORK/extracted/package" --require-skills --source "$ROOT/src"
+node "$ROOT/scripts/check-package.mjs" --dir "$WORK/extracted/package" --modules "$ROOT/node_modules"
 
 # A fresh project in $1 with the tarball and the given packages.
 install_into() {
@@ -55,7 +59,7 @@ install_into() {
   fi
 }
 
-PEERS=("$DDD_WEB_SPEC" "$LUCIDE_SPEC" react react-dom react-hook-form zod)
+PEERS=("$DDD_WEB_SPEC" "$LUCIDE_SPEC" radix-ui react react-dom react-hook-form zod)
 TYPES=("typescript@^6" @types/react @types/react-dom @types/node)
 
 echo "── plain project ($PM, $DDD_WEB_SPEC, $LUCIDE_SPEC)"
@@ -82,14 +86,16 @@ JSON
   echo "── T4 strict tsc ($MODE)"
   ./node_modules/.bin/tsc -p "tsconfig.$MODE.json"
 done
-echo "── T3 form context across entries"
-node form-context.mjs
+echo "── T3 bound fields across entries (server render)"
+node form-fields.mjs
 echo "── T6 one translation store"
 node one-store.mjs
+echo "── shipped i18n manifest"
+if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-i18n-manifest --check; else pnpm exec ddd-admin-ui-i18n-manifest --check; fi
 
 echo "── Next project ($PM)"
 APP="$WORK/next-app"
-install_into "$APP" "${PEERS[@]}" "${TYPES[@]}" "next@^16" sonner "tailwindcss@^4" "@tailwindcss/postcss@^4" playwright-core
+install_into "$APP" "${PEERS[@]}" "${TYPES[@]}" "next@^16" sonner "tailwindcss@^4" "@tailwindcss/postcss@^4" tw-animate-css playwright-core
 cp -R "$HERE/fixtures/next-app/." "$APP/"
 cd "$APP"
 echo "── T1 next build"
@@ -97,11 +103,14 @@ NEXT_TELEMETRY_DISABLED=1 ./node_modules/.bin/next build
 echo "── T1 / T5 build output"
 node check-build.mjs
 echo "── T5 check-tokens on the built CSS"
-# shellcheck disable=SC2046
-node node_modules/@mgamadeus/ddd-admin-ui/scripts/check-tokens.mjs $(cat built-css-files.txt)
+# every built stylesheet in one folder: the check reads them as one stylesheet
+mkdir -p built-css && xargs -I{} cp {} built-css/ < built-css-files.txt
+if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-check-tokens built-css; else pnpm exec ddd-admin-ui-check-tokens built-css; fi
+echo "── one Radix copy"
+if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-check-radix; else pnpm exec ddd-admin-ui-check-radix; fi
 
 if [ "${SKIP_BROWSER:-}" = 1 ]; then
-  echo "── T2 / T7 skipped (SKIP_BROWSER=1)"
+  echo "── T2 / T3 / T7 skipped (SKIP_BROWSER=1)"
 else
   PORT=$(node -e "const server = require('node:net').createServer().listen(0, () => { console.log(server.address().port); server.close(); })")
   NEXT_TELEMETRY_DISABLED=1 ./node_modules/.bin/next start -p "$PORT" > next-start.log 2>&1 &
@@ -111,7 +120,7 @@ else
     if curl -sf "http://127.0.0.1:$PORT/" > /dev/null; then break; fi
     sleep 0.5
   done
-  echo "── T2 / T7 headless browser"
+  echo "── T2 / T3 / T7 headless browser"
   node browser.mjs "http://127.0.0.1:$PORT"
   kill $SERVER_PID 2>/dev/null || true
 fi
