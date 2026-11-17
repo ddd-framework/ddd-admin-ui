@@ -99,7 +99,11 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
     notShown: {},
   },
   crons: {
-    shown: [],
+    shown: [
+      'CronActionErrorCallout', 'CronDetailsDrawer', 'CronDurationChart', 'CronExecutionDialog', 'CronFormDrawer', 'CronLastRun',
+      'CronNextRun', 'CronRowActions', 'CronRunStrip', 'CronRunnerBanner', 'CronRunsView', 'CronScheduleText',
+      'CronSchedulePreview', 'CronSummaryTiles', 'CronTimeline', 'CronTimelineCard', 'CronsScreen', 'CronsTable',
+    ],
     notShown: {},
   },
   media: {
