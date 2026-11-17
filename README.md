@@ -29,6 +29,9 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./form` | `Form`, `FormField`, `FormSection`, `FormActions`, `FormDrawer`, `FormDialog`, `FormHeader`, `FormWrapper`, `FormJumpBar`, `FormErrors`, `FormSubmitButton`, `useConfirmDialog`, `ColorValueField` | logic, i18n, primitives; from page only `DetailHeader`, `EntityMetadata` |
 | `./translations` | `TranslatableInput`, `TranslatableMarkdown` (editor injected), their form-bound variants, `TranslationControls`, `focusFirstOverLimitTranslation`; the admin screens on the host's api (`createTranslationsApi`): `AppTranslationsScreen` with `AppTranslationKeyDrawer` and `TranslationCompleteness`, `LanguagesScreen`, `LocalesScreen`, `ConfigImportCard`, `useEntityTranslator`, `useContentLocales` | logic, i18n, primitives, list, page; from form only `fieldLabels`, `useConfirmDialog`, `Form`, `FormActions`, `FormDrawer`, `FormField`, `FormSubmitButton` |
 | `./workers` | the screens of the worker monitoring on the host's api (`createWorkersApi`): `WorkersOverviewScreen`, `WorkerTransportScreen` and their parts (tiles, live panel, throughput and transport tables, history charts as SVG, message runs, processes, restart request), the status maps, the payload types | logic, i18n, primitives, list, page |
+| `./issues` | the screen of the issues registry on the host's api (`createIssuesApi`): `IssuesScreen` and its parts (the trend as SVG bars, the window switch, the group drawer with occurrences, frames, causes, job and client blocks, the status actions), `ISSUE_GROUP_STATUS`, the payload types | logic, i18n, primitives, list, page; from form only `FormDrawer` |
+| `./database` | the schema diff screen on the host's api (`createDatabaseApi`): `SchemaDiffScreen`, `SchemaDiffCard`, the generated-code previews (`GeneratedCodePanel`, `CodeBlock`), the status maps `DB_TABLE_CHANGE_TYPE` / `DB_DIFF_SEVERITY`, the diff helpers, the payload types | logic, i18n, primitives, list, page |
+| `./crons` | the Crons screen on the host's api (`createCronsApi`): `CronsScreen` and its parts (summary tiles, runner banner, Crons table with countdown and run strip, row actions, details drawer with the duration chart, runs with their output, timeline, create / edit form with the schedule preview), `useCronActions`, the status maps `CRON_STATUS`, `CRON_EXECUTION_RESULT`, the payload types | logic, i18n, primitives, list, page, form, data |
 | `./media` | `MediaItemField`, `FormMediaItemField`, `MediaItemPickerDialog`, `MediaPreview`, `ImageCropDialog` (crop surface: file and aspect options in; cropped blob, skip or cancel out) | logic, i18n, primitives, list, form |
 | `./glass` | `GlassPill`, `QuickFilterPills`, `CollapsibleCard`, `GlassGroup`, `ActionRow` | logic, i18n, primitives |
 | `./shell` | the application frame `AppShell` (top bar with slots, sidebar with groups, badges and locks, the icon rail and its `[` shortcut, the mobile menu, the content frame), `ShellBreadcrumbs`, `ShellDocumentTitle`, `AccountMenu`, `LanguageMenu`, their parts and hooks (`useSidebarCollapsed`, `useShellShortcut`) | logic, i18n, primitives |
@@ -36,7 +39,7 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./provider` | `AdminUiProvider` (also the dialog behind `useConfirm`), `useAdminUi`, `defaultStorageKey` | logic, i18n, primitives; types only from media and translations |
 | `./next` | Next.js adapters: `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useNextPathname`, `useListViewParam`, the one URL writer (`queueSearchParamsWrite`) | logic, provider; the only entry importing `next/*` |
 | `./notify-sonner` | `sonnerNotifications` (the notification adapter on `sonner`) and its `Toaster` | logic; the only entry importing `sonner` |
-| `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE`; the sample payloads of the screens (`showcaseWorkersData`, `showcaseTranslationsData`) | logic, i18n, primitives, list, page, form, translations, media, glass, data, workers, shell, shell-background; never `./next`, `./notify-sonner` or `./markdown` (its section loads through `loadMarkdown`) |
+| `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE`; the sample payloads of the screens (`showcaseWorkersData`, `showcaseTranslationsData`, `showcaseIssuesData`, `showcaseDatabaseData`, `showcaseCronsData`) | logic, i18n, primitives, list, page, form, translations, media, glass, data, workers, issues, database, crons, shell, shell-background; never `./next`, `./notify-sonner` or `./markdown` (its section loads through `loadMarkdown`) |
 | `./data` | key figures: `MetricTile` (label, value, delta, hint, sparkline slot, skeleton), `MetricTileSkeleton`, `MetricGrid`, `DeltaText`, `NoteList`, the delta helpers `resolveDelta`, `relativeChange`, `deltaDirectionOf`, `deltaToneOf` | logic, i18n, primitives |
 | `./markdown` | `MarkdownEditor`, `MarkdownPreview` (sanitised), `renderMarkdownEditor` (the `renderEditor` slot of `./translations` and `AdminUiProvider.renderMarkdownEditor`); loads `@uiw/react-md-editor` and `rehype-sanitize` after hydration | logic, i18n, primitives; translations type-only; the only entry reaching its optional peers |
 | `./design-studio` | `designStudioComponents`: the `components` of `@mgamadeus/ddd-design-studio`'s provider, every slot mapped to the block of the same name; the slot types (`DesignStudioComponentsContract`, structural copy) | primitives, list, page, glass; never imports the studio |
@@ -277,7 +280,8 @@ local time skipped when the clocks go forward resolves an hour later, a repeated
 
 ## Screens on the host's API
 
-`./workers` and `./translations` bring whole admin screens for endpoints of the framework. They never import a host
+`./workers`, `./translations`, `./issues`, `./database` and `./crons` bring whole admin screens for endpoints of the
+framework. They never import a host
 SDK and never reach RTK at run time: the host passes the RTK Query api it already has (`createApi` from
 `@reduxjs/toolkit/query/react`, its base query carrying origin, session and refresh, e.g. `createDddBaseQuery` of
 `@mgamadeus/ddd-web/api`), the entry injects its operations once and returns the hooks; every screen takes them as
@@ -290,16 +294,21 @@ import { createWorkersApi } from '@mgamadeus/ddd-admin-ui/workers';
 
 export const workersApi = createWorkersApi({ baseApi: adminApi, apiPrefix: '/api/admin/maintenance/workers' });
 export const translationsApi = createTranslationsApi({ baseApi: adminApi, apiPrefix: '/api/admin/common' });
+export const issuesApi = createIssuesApi({ baseApi: adminApi, apiPrefix: '/api/admin/common/issues' });
+export const databaseApi = createDatabaseApi({ baseApi: adminApi, apiPrefix: '/api/admin/common/databaseModels' });
+export const cronsApi = createCronsApi({ baseApi: adminApi, apiPrefix: '/api/admin/common/crons' });
 ```
 
 A second call with the same api and prefix returns the first result. The cache tags are the entry's own
-(`AdminUiWorkers`, `AdminUiAppTranslations`, `AdminUiLanguages`, `AdminUiLocales`); a write invalidates what it
+(`AdminUiWorkers`, `AdminUiAppTranslations`, `AdminUiLanguages`, `AdminUiLocales`, `AdminUiIssues`,
+`AdminUiDatabase`, `AdminUiCrons`); a write invalidates what it
 changes. The screens follow the host's setup: links through `AdminUiProvider.linkComponent`, writes (restart,
 generation, toggles, imports, saves) disabled under `WriteAccessProvider` with its reason, confirmations through
 `useConfirm`, toasts through `notify`. Filters, tabs, windows and the drawer live in the URL when the host passes its
-adapters (`urlStateAdapter`, `drawerUrlAdapter`), in component state otherwise. `createStaticWorkersApi` /
-`createStaticTranslationsApi` answer fixed payloads (the showcase's `showcaseWorkersData` /
-`showcaseTranslationsData`) for design reviews and tests.
+adapters (`urlStateAdapter`, `drawerUrlAdapter`), in component state otherwise. `createStaticWorkersApi`,
+`createStaticTranslationsApi`, `createStaticIssuesApi`, `createStaticDatabaseApi` and `createStaticCronsApi` answer
+fixed payloads (the showcase's `showcaseWorkersData`, `showcaseTranslationsData`, `showcaseIssuesData`,
+`showcaseDatabaseData`, `showcaseCronsData`) for design reviews and tests.
 
 ### `./workers`
 
@@ -382,6 +391,168 @@ export const ImportsPage = () => <ConfigImportCard api={translationsApi} kind="l
 `useTranslationRunner` (`./logic`); `useContentLocales(translationsApi, { fallback })` gives the content locale keys of
 the active locales. `ConfigImportCard` is a `MaintenanceActionCard` (`./page`): title, description, run, the outcome of
 the last run.
+
+### `./issues`
+
+The error groups of the issues registry, on Core's `IssuesControllerTrait` (mgamadeus/ddd **3.35.1** or later: the
+trait and its access hook `throwForbiddenUnlessIssuesAccessAllowed()`; a 403 shows as the screen's error). The registry
+fills itself from the log backend (`app:issues:sync-registry-from-log-backend`); the screen reads it and sets status.
+
+| Hook | Endpoint (below `apiPrefix`) |
+|---|---|
+| `useIssueGroupsQuery` | `GET /groups/list?environment&status&search&section&release&limit&offset` |
+| `useIssuesTrendQuery` | `GET /trend?environment&groupHash&status&search&section&release&from&to` |
+| `useIssueGroupDetailQuery` | `GET /groups/{environment}/{groupHash}` |
+| `useResolveIssueGroupMutation`, `useIgnoreIssueGroupMutation`, `useReopenIssueGroupMutation` | `POST /groups/{environment}/{groupHash}/resolve`, `/ignore`, `/reopen` (invalidate the list and the details) |
+
+```tsx
+'use client';
+// adminApi.ts: export const issuesApi = createIssuesApi({ baseApi: adminApi, apiPrefix: '/api/admin/common/issues' });
+import { IssuesScreen } from '@mgamadeus/ddd-admin-ui/issues';
+import { useNextDrawerUrlAdapter, useNextUrlStateAdapter } from '@mgamadeus/ddd-admin-ui/next';
+
+export const IssuesPage = () => (
+  <IssuesScreen
+    api={issuesApi}
+    urlStateAdapter={useNextUrlStateAdapter({ listId: 'issues' })}
+    drawerUrlAdapter={useNextDrawerUrlAdapter()}
+  />
+);
+```
+
+- **Filters**: the environment switch (the registry's environments and "All", a single environment is a line, not a
+  switch), the status tabs Open / Resolved / Ignored / All with the counts of `statusCounts`, the search, the section and
+  release filters, the trend window (1 hour – 30 days) and the page live in the URL (`environment`, `status`, `q`,
+  `section`, `release`, `window`, `page`; the drawer in `issue=<environment>:<groupHash>`). An omitted environment is
+  the registry's first; the response names it and the switch shows it.
+- **Order and paging**: the groups come last seen first, as the trait sorts them (it takes no sort parameter), 50 per
+  page with Previous / Next (`limit` / `offset`).
+- **Trend**: bars per bucket (SVG drawn by the entry, no chart library), labelled with the step; the same environment
+  and filters as the list, so a filtered trend says "sum of N of M matching groups" and "a lower bound" when truncated;
+  `trendError` is a note under the chart (a 0 is not "no errors" then).
+- **Health**: a stalled registry job is a warning with `lastError`; an empty list then reads "unknown", never "no
+  errors". A silent collector alone is a muted line.
+- **Drawer**: status, flags (new, regression), facts, the group's own trend, "Where it happens" (the issues), the last
+  occurrences (application frames open with their code context and the current line marked, framework frames folded,
+  client frames at the position a source map resolved, the raw stack as fallback, causes, request, console command,
+  the failed job, the client and its breadcrumbs), `eventsError` in place of the occurrences, "Open in log backend"
+  (only with `logBackendUrl`, a new tab), "Copy for agent" (the `app:issues:show` command and `agentJson`).
+- **Status changes**: Resolve (fixed in a deploy; a later event reopens it as a regression) and Ignore (silenced for
+  good), Reopen; the returned group replaces the row at once and the list is fetched again. They follow
+  `WriteAccessProvider`. Counts are approximate (the collector may replay events) and say so.
+- The payloads carry stack traces, request parameters and account ids: mount the screen for trusted admins only.
+
+`createStaticIssuesApi(showcaseIssuesData)` answers the sample payloads of `./showcase` (two environments, six groups,
+a stalled staging registry, every occurrence kind).
+
+### `./database`
+
+The schema diff screen on Core's `DatabaseModelsControllerTrait` (mgamadeus/ddd **3.35.1** or later: the trait, its
+DTOs and the access hook `throwForbiddenUnlessDatabaseModelsAccessAllowed()` called first by every action). The
+application mounts the trait on one controller of its own (e.g. `#[Route('/common/databaseModels')]`) and restricts the
+path to its highest admin role; the screens need nothing else.
+
+| Hook | Endpoint (below `apiPrefix`) |
+|---|---|
+| `useSchemaDiffQuery` | `GET /diff` → `{ diffs }` |
+| `useApplyDiffMutation` | `POST /applyDiff` with `{ sqlTableName, expectedDiffSignature, disableForeignKeyChecks }` → `{ diffs }` |
+| `useApplyDiffsMutation` | `POST /applyDiffs` with `{ sqlTableNames: string[] \| null, expectedDiffSignatures: { elements: [{ sqlTableName, signature }] }, disableForeignKeyChecks }` → `{ diffs }` |
+| `useDatabaseTablesSqlQuery` | `GET /generateDatabaseTables` (text/plain, `responseHandler: 'text'`) |
+| `useDoctrineModelsCodeQuery` | `GET /generateDoctrineModels` (text/plain) |
+| `useDoctrineModelForEntityQuery` | `GET /generateForEntity?entityName=` (text/plain; 400 ambiguous, 404 unknown) |
+
+```tsx
+'use client';
+// adminApi.ts — module scope, once
+export const databaseApi = createDatabaseApi({ baseApi: adminApi, apiPrefix: '/api/admin/common/databaseModels' });
+
+// app/maintenance/database/page.tsx
+import { SchemaDiffScreen } from '@mgamadeus/ddd-admin-ui/database';
+
+export const SchemaDiffPage = () => <SchemaDiffScreen api={databaseApi} />;
+```
+
+- **Signature gate.** Every apply sends the `diffSignature` of every diff the screen shows (the server narrows them to
+  the applied tables); a diff that changed since it was shown answers `[DIFF_SIGNATURE_MISMATCH]` and the screen shows
+  "The schema changed since you loaded it" with Reload. `[DIFF_APPLY_LOCK_BUSY]` (another apply runs) says to retry in
+  a few seconds; any other 400 (the large-table production guard, an invalid table list) shows the server's message; a
+  404 (no pending diff) asks for a reload.
+- **The answer replaces the list.** Both applies answer the diff computed afterwards: the screen shows it at once, with
+  no second request (the applies invalidate no tag). Reload asks again.
+- **Confirmations** through `useConfirm`: an additive table asks plainly, a destructive or mixed one needs its table name
+  typed (and says to decide first whether the entity or the database is wrong), "Apply selected" and "Apply all" their
+  phrases (`APPLY SELECTED`, `APPLY ALL`) with the counts per severity. "Apply all" sends `sqlTableNames: null`, or the
+  unblocked table names when a blocked one is pending.
+- **Blocked tables** (`directApplyBlocked`, the large-table guard): no Apply action and no checkbox, the size and rows
+  against the thresholds (100 MB / 100,000 rows), the operations that force a table copy, and the online-schema-change
+  path; never a bypass (the trait offers none over HTTP).
+- **Schema writes disabled** (`APP_SCHEMA_WRITES_DISABLED=1` on a process that shares another stage's database): the
+  trait answers 403 on both applies and on `generateDatabaseTables`. The screen shows the message and switches every
+  write off from then on (a narrowed `WriteAccessProvider` with that reason); the tables SQL panel shows the refusal.
+- **Generated code**: `GeneratedCodePanel` (`kind` `tables`, `models`, `entity`) requests the text routes only when
+  asked, shows them read-only with copy and download, and never runs anything. `SchemaDiffScreen showGeneratedCode={false}`
+  leaves the panels out.
+- Writes follow the screen's `WriteAccessProvider`; the switch "Foreign key checks off while applying" sends
+  `disableForeignKeyChecks` (default true, as the trait).
+
+### `./crons`
+
+The Crons screen on Core's `CronsControllerTrait` (mgamadeus/ddd **3.35.1** or later: the trait, `#[CronSchedulable]`
+and the access hook `throwForbiddenUnlessCronsAccessAllowed()`, which an application whose rule is not a role
+overrides on its controller; a 403 shows as the screen's error).
+
+| Hook | Endpoint (below `apiPrefix`) |
+|---|---|
+| `useCronsListQuery` | `GET /list` |
+| `useCronExecutionsQuery` | `GET /executions/list?cronId&result&limit&offset` (`result` ALL / FAILED / RUNNING / SUCCESSFUL) |
+| `useCronExecutionQuery` | `GET /executions/{executionId}` (the full output) |
+| `useCronsTimelineQuery` | `GET /timeline?hours` (1–168) |
+| `useCronCommandsQuery` | `GET /commands` |
+| `useCronSchedulePreviewQuery` | `GET /schedule-preview?schedule` |
+| `useCronQuery` | `GET /{cronId}` |
+| `useCreateCronMutation` | `POST` on the prefix itself (`{ name, description, schedule, commandName, arguments, isActive }`) |
+| `useUpdateCronMutation` | `PATCH /{cronId}` with the changed fields only (`arguments: ''` clears them) |
+| `useDeleteCronMutation` | `DELETE /{cronId}` |
+| `useActivateCronMutation`, `useDeactivateCronMutation`, `useRunCronNowMutation` | `POST /{cronId}/activate`, `/deactivate`, `/run-now` |
+
+Cache tag `AdminUiCrons` (`LIST`, `DETAIL`, `RUNS`, `COMMANDS`): every write refetches the list and the details;
+create, update and delete the commands' "used by"; delete the runs.
+
+```tsx
+'use client';
+// adminApi.ts, module scope: export const cronsApi = createCronsApi({ baseApi: adminApi, apiPrefix: '/api/admin/common/crons' });
+import { CronsScreen } from '@mgamadeus/ddd-admin-ui/crons';
+import { useNextDrawerUrlAdapter, useNextUrlStateAdapter } from '@mgamadeus/ddd-admin-ui/next';
+
+export const CronsPage = () => (
+  <CronsScreen
+    api={cronsApi}
+    urlStateAdapter={useNextUrlStateAdapter({ listId: 'crons' })}
+    drawerUrlAdapter={useNextDrawerUrlAdapter()}
+  />
+);
+```
+
+- **Server clock.** The payload's date-times are wall-clock text on the server (the zone the runner evaluates the
+  schedules in). The screen shows them as they are, labelled "server time", and counts the next run down against
+  `runner.serverNow` (ticking from the moment the list arrived), never against the browser clock. A paused Cron shows
+  no countdown.
+- **Run now queues.** `run-now` makes the Cron due; the runner's next tick (within a minute) runs it. The row says
+  "Queued" until the list shows the new run. Run now is offered only for an active Cron that is not running and whose
+  command exists (no Run now on `MISSING_COMMAND`); a 409 (the runner started it meanwhile, it was switched off) is shown
+  with the server's message and keeps Run now off for a minute.
+- **Commands.** The form offers only `/commands`: the commands marked `#[CronSchedulable]` (and the framework's own),
+  with their description and the Crons that already run them; no free text. Arguments are one line without quotes; the
+  composed command line is shown. The schedule has presets and a debounced live preview (`/schedule-preview`: valid or
+  the server's sentence, the next 5 slots). A save sends only the changed fields; a 400 places its `validationErrors`
+  on the fields they name.
+- **Delete** asks with the Cron's name typed (`useConfirm` `requirePhrase`) and says the run history goes with it; not
+  while the Cron runs.
+- The list refreshes every 30 s while the tab is visible (`pollingIntervalMs`), the first runs page too. The details
+  drawer (`?cron=<id>`) and the form (`?edit=<id>`, `?create=1`) live in the URL with `drawerUrlAdapter`; the view,
+  search, runs filter and timeline window (`view`, `q`, `result`, `hours`) with `urlStateAdapter`. Charts (the duration
+  bars of the last 100 ended runs, the timeline heatmap, the run strip) are drawn by the entry; no chart library. Writes
+  (Add, Run now, the switch, Edit, Delete, the form's save) follow `WriteAccessProvider`.
 
 ## Design studio
 
@@ -541,7 +712,7 @@ pnpm pack --pack-destination "$TMPDIR" && test/consumer/run.sh "$TMPDIR"/mgamade
 | `node scripts/build.mjs` (`pnpm build`) | removes `dist`, `tsc -p tsconfig.build.json` (one JS and declaration file per source file, directives kept, `.js` specifiers), rewrites the declarations' specifiers to `.js`, copies CSS, JSON and the shipped scripts into `dist` |
 | `node scripts/check-package.mjs --dir <package root or extracted tarball>` | the 13 package rules: exports and bins, directives, specifiers, no app alias, deny list (`--deny a,b` or `CHECK_PACKAGE_DENY`; `--require-deny-list` on release), declared dependencies, entry edges and reach, module state once, `files` and `sideEffects`, declarations in a strict consumer, no tests, fresh text manifest, tokens |
 | `node scripts/tokens-utilities.mjs [--write]` | checks (or regenerates) the `utilities` lists of `tokens.json` from the source |
-| `pnpm test:render` | server-renders list tables, bodies and badges from the build: without the optional table props the markup equals `test/consumer/fixtures/plain/list-snapshot.html` (taken from 0.1.0-rc.2); `FormActions`, `FormSubmitButton`, `AddEntityButton`, `EntityListBulkBar` and the headers without the props of 0.1.0-rc.6 equal `form-actions-snapshot.html` (taken from 0.1.0-rc.5); `WriteAccessProvider` disables the write controls; a status map's translation context reaches `StatusBadge`; the showcase renders (light, dark, every section) and its coverage list matches the exports; the `./workers` and `./translations` screens render on the sample payloads and write access disables their writes; the shell renders from one navigation (sidebar, breadcrumbs, title, rights predicate) |
+| `pnpm test:render` | server-renders list tables, bodies and badges from the build: without the optional table props the markup equals `test/consumer/fixtures/plain/list-snapshot.html` (taken from 0.1.0-rc.2); `FormActions`, `FormSubmitButton`, `AddEntityButton`, `EntityListBulkBar` and the headers without the props of 0.1.0-rc.6 equal `form-actions-snapshot.html` (taken from 0.1.0-rc.5); `WriteAccessProvider` disables the write controls; a status map's translation context reaches `StatusBadge`; the showcase renders (light, dark, every section) and its coverage list matches the exports; the `./workers`, `./translations`, `./issues`, `./database` and `./crons` screens render on the sample payloads and write access disables their writes; the shell renders from one navigation (sidebar, breadcrumbs, title, rights predicate) |
 | `node scripts/build-i18n-manifest.mjs [--check]` (`pnpm i18n:manifest`) | regenerates `i18n-keys.json` from the source and `i18n/hints.json`; run it after changing a text or the version |
 | `node scripts/check-tokens.mjs <css> [tokens.json]` | the host check above (shipped as `ddd-admin-ui-check-tokens`) |
 | `node scripts/check-radix.mjs [host folder]` | the Radix copy check above (shipped as `ddd-admin-ui-check-radix`) |

@@ -36,6 +36,9 @@ import { GlassPill, QuickFilterPills } from '@mgamadeus/ddd-admin-ui/glass';
 import { AdminUiProvider, useAdminUi, type AdminUiProviderProps, type StorageKeyFn } from '@mgamadeus/ddd-admin-ui/provider';
 import { type CreateTranslationsApiOptions, type TranslationsApi, createStaticTranslationsApi, LocalesScreen } from '@mgamadeus/ddd-admin-ui/translations';
 import { type WorkersApi, type WorkersOverviewScreenProps, createStaticWorkersApi, WorkersOverviewScreen } from '@mgamadeus/ddd-admin-ui/workers';
+import { type IssuesApi, type IssuesScreenProps, createStaticIssuesApi, IssuesScreen } from '@mgamadeus/ddd-admin-ui/issues';
+import { type DatabaseApi, type SchemaDiffScreenProps, createStaticDatabaseApi, SchemaDiffScreen } from '@mgamadeus/ddd-admin-ui/database';
+import { type CronsApi, type CronsScreenProps, createStaticCronsApi, CronsScreen } from '@mgamadeus/ddd-admin-ui/crons';
 
 const writingStyle: WritingStyle = 'FORMAL';
 setTranslations('de', writingStyle, { Users: 'Benutzer' });
@@ -142,3 +145,13 @@ export const documentTitle: string | null = resolveDocumentTitle('/items/4', nav
 export const usePathname: UsePathname = () => '/items';
 export const backgroundProps: ShaderBackgroundProps = { tint: { primary: [10, 20, 30] }, idleAfterMs: 30_000 };
 export const shellComponents = [AppShell, ShellBreadcrumbs, AccountMenu, LanguageMenu, ShaderBackground];
+
+export const issuesApi: IssuesApi = createStaticIssuesApi({});
+export const issuesScreenProps: IssuesScreenProps = { api: issuesApi, trendAnchorMs: 0 };
+export const issuesScreen = IssuesScreen;
+export const databaseApi: DatabaseApi = createStaticDatabaseApi({});
+export const databaseScreenProps: SchemaDiffScreenProps = { api: databaseApi, showGeneratedCode: false };
+export const databaseScreen = SchemaDiffScreen;
+export const cronsApi: CronsApi = createStaticCronsApi({});
+export const cronsScreenProps: CronsScreenProps = { api: cronsApi, pollingIntervalMs: 0 };
+export const cronsScreen = CronsScreen;

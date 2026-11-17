@@ -3,6 +3,91 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.3.0
+
+Three new screen entries on Core's admin traits, and status text roles. A host that sets none of the new roles renders
+as before (the list snapshot of 0.1.0-rc.2 and the form actions snapshot of 0.1.0-rc.5 are unchanged); the light status
+exceptions of the contrast check are gone, so a host whose status colours fail as text sets the text roles (or writes
+its own exceptions).
+
+New entries (mgamadeus/ddd **3.35.1** or later; each follows `./workers`: `createXApi({ baseApi, apiPrefix })`
+injects its operations into the host's RTK Query api, `createStaticXApi` answers fixed payloads, links through the
+provider's link component, writes under `WriteAccessProvider`, confirmations through `useConfirm`, charts as SVG drawn
+by the entry):
+
+- `./issues`: the screen of Core's issues registry (`IssuesControllerTrait`, mgamadeus/ddd 3.35.1 or later).
+  `createIssuesApi({ baseApi, apiPrefix })` injects six operations into the host's RTK Query api (tag `AdminUiIssues`;
+  resolve, ignore and reopen invalidate the list and the details) and returns the hooks; `createStaticIssuesApi`
+  answers fixed payloads (`showcaseIssuesData` in `./showcase`). `IssuesScreen`: environment switch with "All", status
+  tabs with their counts, search, section and release filters, the trend window, the page and the open group in the URL
+  (optional `urlStateAdapter` / `drawerUrlAdapter`), the registry health (a stalled job makes an empty list "unknown"),
+  the trend of the same selection as SVG bars with its notes (step, sum of groups, lower bound, `trendError`), the
+  groups last seen first with new / regression flags, 50 per page. `IssueGroupDrawer`: facts, the group's trend,
+  where it happens, the last occurrences (`IssueEventDetails`: frames with code context, framework frames folded,
+  resolved client frames, raw stack, causes, request, console command, the failed job, client and breadcrumbs),
+  `eventsError`, "Open in log backend", "Copy for agent", and `IssueGroupStatusActions` (Resolve / Ignore / Reopen,
+  write access; the returned group replaces the row). Also exported: `IssuesTrendBars`, `IssuesTrendCard`,
+  `IssuesWindowSwitch`, `IssueFrameList`, `IssueCodeContext`, `IssueCauses`, `IssueWorkerContext`, `IssueDetailBlock`,
+  `IssueGroupFlags`, `ISSUE_GROUP_STATUS`, `ISSUE_SECTION_OPTIONS`, the pure helpers (`issueGroupKey`,
+  `parseIssueGroupKey`, `resolveIssuesWindow`, `trendBarsOf`, `issueFrameViewsOf`, `segmentIssueFrames`,
+  `codeContextRows`, …) and the payload types.
+- `./database`: the schema diff screen of Core's `DatabaseModelsControllerTrait` (mgamadeus/ddd 3.35.1 or later).
+  `createDatabaseApi({ baseApi, apiPrefix })` injects six operations (tag `AdminUiDatabase`; the three text routes with
+  `responseHandler: 'text'`; the applies invalidate nothing, their answer replaces the diff) and returns the hooks;
+  `createStaticDatabaseApi(data)` answers fixed payloads (`showcaseDatabaseData`). `SchemaDiffScreen`: counts per
+  severity, one `SchemaDiffCard` per table (change type, severity, size and rows, summary per aspect, entity class,
+  folded per-aspect changes with the changed attributes and the statements in execution order), Apply per table,
+  "Apply selected" and "Apply all" with typed-phrase confirmations, the signature of every shown diff on every apply,
+  notices for a signature mismatch (reload), a busy apply lock and a refused apply, a blocked table without any Apply
+  action (thresholds, copy-forcing operations, the online-schema-change path), "Schema matches", the 403 of disabled
+  schema writes switching every write off, the foreign key checks switch. `GeneratedCodePanel` / `CodeBlock`: the
+  SQL of every table, the model code of every entity or of one, on demand, with copy and download. Status maps
+  `DB_TABLE_CHANGE_TYPE`, `DB_DIFF_SEVERITY`; helpers `diffSummary`, `countDiffSeverities`, `formatTableSize`,
+  `classifyApplyFailure`, `expectedSignaturesOf`, …; the payload types.
+- `./crons`: the Crons screen of Core's `CronsControllerTrait` (mgamadeus/ddd 3.35.1 or later).
+  `createCronsApi({ baseApi, apiPrefix })` injects the thirteen operations into the host's RTK Query api (tag
+  `AdminUiCrons`; create posts to the prefix itself, an update sends only the changed fields) and returns the hooks;
+  `createStaticCronsApi` answers fixed payloads (`showcaseCronsData`). `CronsScreen`: the runner's summary as tiles,
+  the banner when every active Cron is overdue (the runner does not tick), the Crons table (status, schedule in words
+  beside the expression, command, the next run counted down against the server's clock, the last run, the newest 30
+  runs as a strip drawn right to left, the 24-hour success rate, Run now / on-off / Edit / Delete), the details drawer
+  (definition, next 5 slots, 14-day stats, the durations of the last 100 ended runs, its runs), the runs view (result
+  tabs, paged by the total, a run's full output in a dialog) with the timeline heatmap (24 h / 3 d / 7 d), the create
+  and edit form (schedulable commands only, composed command line, schedule presets and live preview, 400 field errors
+  on their fields). Run now queues (the row says so) and is not offered for a paused, running or missing-command Cron;
+  a 409 shows the server's message and keeps Run now off for a minute; delete asks for the Cron's name. Parts,
+  `useCronActions`, `useServerClock`, the status maps `CRON_STATUS` and `CRON_EXECUTION_RESULT`, and the pure helpers
+  (`describeCronSchedule`, `cronNextRunState`, `changedCronFields`, `formatCronDuration`, …) are exported.
+
+Status text and soft surfaces:
+
+- Optional colour roles `--success-text`, `--warning-text`, `--destructive-text`, `--info-text` (status as text) and
+  `--success-soft`, `--warning-soft`, `--destructive-soft`, `--info-soft` (the badge surfaces). `theme.css` binds them:
+  `text-success` … read `var(--success-text, var(--success))` (Tailwind's `--text-color-*` namespace), the four 15 %
+  badge tints read `var(--success-soft, color-mix(in oklab, var(--success) 15%, transparent))` — the fallbacks are the
+  values Tailwind drew before, so StatusBadge, StatusCallout, tone rows, DeltaText and field errors render the same DOM
+  and the same colours when a host sets nothing (checked in the consumer run: computed colours with the roles unset
+  equal the 0.2.1 values). A host with its own binding points the same utilities at the roles.
+- `tokens.json`: the eight roles (`required: false`, `fallback`); the contrast pairs test each text role on `card`, on
+  `background` and on its soft surface over a card (12 pairs instead of the five status pairs); `contrast.exceptions`
+  is empty.
+- `ddd-admin-ui-check-contrast`: an undeclared optional role is evaluated by its fallback (named in the output);
+  `color-mix(in <space>, <colour> NN%, transparent)` is understood; a translucent background of a pair with `base` is
+  composited over that base.
+- `ddd-admin-ui-check-tokens`: names an optional role the host declares but no rule reads.
+- The fixture app sets light text roles (`#166534`, `#92400e`, `#b91c1c`, `#0369a1`; dark: the status colours) and
+  passes the gated contrast check without exceptions.
+
+Injected apis (`./logic`):
+
+- `InjectedRequest.responseHandler` (`'text'` for a `text/plain` answer, passed on to the base query).
+- `staticQueryFailure(error)`: a failed answer of `staticQueryHook`; `staticQueryHook` answers nothing while `skip` is
+  set, as RTK Query does.
+
+Checks: server renders of the three entries (`test:render`), a browser run on RTK Query for them
+(`browser-operations.mjs`: filters, drawers, typed-phrase confirmations, the 403 and 409 states, 390 px on a 6x
+throttled CPU), and the showcase 390 px check on a throttled CPU (after a resize and on a fresh load).
+
 ## 0.2.1
 
 The showcase no longer widens the page at phone width; 0.2.0 was tagged but not published, so 0.2.1 is the first

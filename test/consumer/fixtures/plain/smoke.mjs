@@ -16,9 +16,9 @@ const expectations = {
   // its optional peers are imported only after hydration, so the entry loads without them
   markdown: ['MarkdownEditor', 'MarkdownPreview', 'renderMarkdownEditor'],
   workers: ['createWorkersApi', 'createStaticWorkersApi', 'WorkersOverviewScreen', 'WorkerTransportScreen', 'WORKER_TRANSPORT_STATE'],
-  issues: ['createIssuesApi', 'createStaticIssuesApi', 'IssuesScreen', 'ISSUE_GROUP_STATUS'],
-  database: ['createDatabaseApi', 'createStaticDatabaseApi', 'SchemaDiffScreen'],
-  crons: ['createCronsApi', 'createStaticCronsApi', 'CronsScreen', 'CRON_STATUS'],
+  issues: ['createIssuesApi', 'createStaticIssuesApi', 'IssuesScreen', 'ISSUE_GROUP_STATUS', 'IssueGroupDrawer', 'IssueEventDetails', 'IssuesTrendBars', 'IssueGroupStatusActions', 'ISSUES_TAG', 'buildIssuesRequests', 'issuesEndpointDefinitions', 'parseIssueGroupKey'],
+  database: ['createDatabaseApi', 'createStaticDatabaseApi', 'SchemaDiffScreen', 'DATABASE_TAG', 'buildDatabaseRequests', 'databaseEndpointDefinitions', 'SchemaDiffCard', 'GeneratedCodePanel', 'CodeBlock', 'DB_TABLE_CHANGE_TYPE', 'DB_DIFF_SEVERITY', 'classifyApplyFailure', 'diffSummary'],
+  crons: ['createCronsApi', 'createStaticCronsApi', 'CronsScreen', 'CRON_STATUS', 'CRON_EXECUTION_RESULT', 'CronRunsView', 'CronTimeline', 'CronFormDrawer', 'CronDetailsDrawer', 'CRONS_TAG', 'buildCronsRequests', 'describeCronSchedule'],
   shell: ['AppShell', 'ShellBreadcrumbs', 'ShellDocumentTitle', 'AccountMenu', 'LanguageMenu', 'useSidebarCollapsed', 'useShellShortcut'],
   'shell-background': ['ShaderBackground', 'tintShaderPalette'],
   'design-studio': ['designStudioComponents'],

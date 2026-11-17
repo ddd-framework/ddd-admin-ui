@@ -1,9 +1,9 @@
 ---
 name: ddd-admin-ui-specialist
-description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries and import matrix, host setup (AdminUiProvider, theme.css, components.css, tokens.json, ddd-admin-ui-check-tokens, -check-radix, -check-contrast), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title from one navigation; ./shell-background), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route error and loading, form drawers and dialogs, the save shortcut, useConfirm, write access, locale::style translations with limits, media fields with image crop, colour fields, key figures (./data), markdown (./markdown), the workers and translation admin screens (./workers, ./translations), ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form or admin screen, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast fails, or URL filters get lost."
+description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries, import matrix, host setup (AdminUiProvider, theme.css, components.css, tokens.json, ddd-admin-ui-check-tokens, -radix, -contrast), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title from one navigation; ./shell-background), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route states, form drawers and dialogs, the save shortcut, useConfirm, write access, locale::style translations, media with image crop, colour fields, key figures (./data), markdown, the admin screens ./workers, ./translations, ./issues, ./database (schema diff), ./crons, status text roles, ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form or admin screen, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast fails or status text is too light, or URL filters get lost."
 metadata:
   author: mgamadeus
-  version: 0.2.1
+  version: 0.3.0
 ---
 
 # ddd-admin-ui specialist
@@ -60,6 +60,11 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | a colour value | `ColorValueField` with an explicit `format` (`hex` / `hex-alpha`) | form |
 | the workers monitoring (overview, transport, runs, processes, restart) | `createWorkersApi({ baseApi, apiPrefix })` + `WorkersOverviewScreen` / `WorkerTransportScreen` | workers |
 | app translations, languages, locales, import from configuration | `createTranslationsApi({ baseApi, apiPrefix })` + `AppTranslationsScreen` / `LanguagesScreen` / `LocalesScreen` / `ConfigImportCard` | translations |
+| the error groups of the issues registry (environments, status tabs, trend, occurrences, resolve / ignore / reopen) | `createIssuesApi({ baseApi, apiPrefix })` + `IssuesScreen` (`urlStateAdapter`, `drawerUrlAdapter`) | issues |
+| one error occurrence (frames with code, causes, request, job, client) in a host's own view | `IssueEventDetails` (+ `IssueFrameList`, `IssueCauses`) | issues |
+| the schema diff (apply per table or in bulk, blocked tables, the signature gate, generated SQL and model code) | `createDatabaseApi({ baseApi, apiPrefix })` + `SchemaDiffScreen` (`GeneratedCodePanel` alone for the previews) | database |
+| scheduled commands: list with health, run now, on / off, runs and output, timeline, create / edit with schedule preview | `createCronsApi({ baseApi, apiPrefix })` + `CronsScreen` (`urlStateAdapter`, `drawerUrlAdapter`) | crons |
+| status text legible on a host whose status colours are fills | set `--success-text`, `--warning-text`, `--destructive-text`, `--info-text` (light and dark); badges keep `StatusBadge` | theme.css, tokens.json |
 | AI translation of an entity form, content locales from the active locales | `useEntityTranslator(api)` + `useTranslationRunner`, `useContentLocales(api)` | translations, logic |
 | a maintenance action (run, pending, last outcome) | `MaintenanceActionCard` | page |
 
@@ -71,6 +76,13 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 - **CSS and tokens.** `theme.css` and `components.css` after `@import 'tailwindcss'`; every property of `tokens.json`
   on `:root` (themed ones also under `.dark`). Run `ddd-admin-ui-check-tokens <built css>` after a theme change: a
   missing colour role means a utility without a rule, so the element is simply transparent.
+- **Status text roles.** `text-success` … read `--<status>-text` and the badge tints `--<status>-soft` through
+  `theme.css`; unset they are the status colour (and its 15 % tint). The contrast check has no package exceptions: a
+  host whose status colours are fills sets the text roles. A host with its own Tailwind binding must bind them itself
+  (`ddd-admin-ui-check-tokens` names a declared role nothing reads).
+- **Schema writes disabled.** A 403 on a schema-diff apply means `APP_SCHEMA_WRITES_DISABLED` on that process, not
+  missing rights; `SchemaDiffScreen` shows it and turns read-only. Crons' Run now only queues (the next runner tick
+  runs it); a 409 is shown as the server's message.
 - **One Radix copy.** `radix-ui` is a peer; single `@radix-ui/*` packages of the host match the versions `radix-ui`
   pins. Two copies of one Radix package keep separate focus traps and outside-click layers (an overlay closes the wrong
   one, focus jumps). Run `ddd-admin-ui-check-radix` in the host after dependency changes.

@@ -16,6 +16,9 @@ Where the names below come from (setup and the entry list: [`README.md`](./READM
 | `@mgamadeus/ddd-admin-ui/primitives` | `Button`, `Card`, `CardContent`, `SegmentedControl`, `FormActionsSlotProvider`, `FormActionsSlot` |
 | `@mgamadeus/ddd-admin-ui/workers` | `createWorkersApi`, `WorkersOverviewScreen`, `WorkerTransportScreen` |
 | `@mgamadeus/ddd-admin-ui/translations` | `createTranslationsApi`, `AppTranslationsScreen`, `LanguagesScreen`, `LocalesScreen` |
+| `@mgamadeus/ddd-admin-ui/issues` | `createIssuesApi`, `IssuesScreen` |
+| `@mgamadeus/ddd-admin-ui/database` | `createDatabaseApi`, `SchemaDiffScreen` |
+| `@mgamadeus/ddd-admin-ui/crons` | `createCronsApi`, `CronsScreen` |
 | `@mgamadeus/ddd-admin-ui/next` | `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useListViewParam`, `useNextPathname` |
 | `@mgamadeus/ddd-admin-ui/shell` | `AppShell`, `ShellBreadcrumbs`, `ShellDocumentTitle`, `AccountMenu`, `LanguageMenu`, `LanguageMenuSub`, `UseEntityLabel` |
 | `@mgamadeus/ddd-admin-ui/shell-background` | `ShaderBackground` |
@@ -673,9 +676,10 @@ focusFirstOverLimitTranslation(formElement);
 - **Server texts in pickers**: `translate={false}` on `Combobox`, `QuickFilterPills` or `SegmentedControl` (and per
   option) for names from the server; UI texts stay translated.
 
-## 20. Framework screens — `./workers`, `./translations`
+## 20. Framework screens — `./workers`, `./translations`, `./issues`, `./database`, `./crons`
 
-The worker monitoring and the translation admin are package screens: mount them, do not rebuild them.
+The worker monitoring, the translation admin, the issues registry, the schema diff and the Crons are package screens:
+mount them, do not rebuild them.
 
 ```tsx
 // once, at module scope: the operations are injected into the host's RTK Query api
@@ -694,6 +698,17 @@ export const translationsApi = createTranslationsApi({ baseApi: adminApi, apiPre
   request and the confirmation (`useConfirm`), the card shows run, pending and the last outcome.
 - Charts of the workers screens are the entry's SVG charts (`WorkerTimeChart`, `WorkerSparkline`): a `null` reading
   is a gap, never a 0; no chart library is added for them.
+- The issues screen is `IssuesScreen` on `createIssuesApi({ baseApi, apiPrefix: '/api/admin/common/issues' })`: pass the
+  URL adapters (filters, window, page and the open group become links); status changes follow the screen's
+  `WriteAccessProvider`. Mount it for trusted admins only (payloads carry stack traces and account ids); a host rule that
+  is not a role goes into the trait's `throwForbiddenUnlessIssuesAccessAllowed()`.
+- The schema diff is `SchemaDiffScreen` (`./database`) on `createDatabaseApi`: mount it for the highest admin role only;
+  never add an Apply action for a blocked table or a guard bypass, and never apply without the shown signatures (the
+  screen sends them). A process sharing another stage's database sets `APP_SCHEMA_WRITES_DISABLED=1`; the screen shows
+  the 403 and stays read-only.
+- Crons: `createCronsApi` + `CronsScreen` (`urlStateAdapter`, `drawerUrlAdapter`). Times are the server's clock; never
+  compare them with the browser's. Run now is a queue request, not a run: never show it as a result.
+
 ## 21. Application frame — `AppShell` and one navigation
 
 One module of the host owns the navigation tree (`NavigationItem[]`, a module constant with `m()`-marked labels); the
