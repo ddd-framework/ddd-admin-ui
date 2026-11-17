@@ -72,6 +72,28 @@ describe('check-contrast', () => {
     assert.equal(checkContrast(css, excepted).status, 1);
   });
 
+  it('merges a host exception file (array or { exceptions }) and refuses a malformed one', () => {
+    const css = GOOD_HOST.replace('--muted-foreground:rgb(170 170 170)', '--muted-foreground:rgb(70 70 80)');
+    assert.equal(checkContrast(css).status, 1);
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'check-contrast-host-'));
+    roots.push(root);
+    const asArray = path.join(root, 'array.json');
+    fs.writeFileSync(asArray, JSON.stringify([{ foreground: 'muted-foreground', background: 'card', theme: 'dark', reason: 'decorative' }]));
+    const asObject = path.join(root, 'object.json');
+    fs.writeFileSync(asObject, JSON.stringify({ exceptions: [{ foreground: 'muted-foreground', background: 'card', reason: 'decorative' }] }));
+    const arrayRun = checkContrast(css, TOKENS, ['--exceptions', asArray]);
+    assert.equal(arrayRun.status, 0, arrayRun.output);
+    assert.match(arrayRun.output, /except muted-foreground on card: .* — decorative/);
+    assert.equal(checkContrast(css, TOKENS, ['--exceptions', asObject]).status, 0);
+    const wrongTheme = path.join(root, 'light.json');
+    fs.writeFileSync(wrongTheme, JSON.stringify([{ foreground: 'muted-foreground', background: 'card', theme: 'light', reason: 'x' }]));
+    assert.equal(checkContrast(css, TOKENS, ['--exceptions', wrongTheme]).status, 1);
+    const malformed = path.join(root, 'bad.json');
+    fs.writeFileSync(malformed, JSON.stringify([{ foreground: 'muted-foreground', background: 'card' }]));
+    assert.equal(checkContrast(css, TOKENS, ['--exceptions', malformed]).status, 2);
+    assert.equal(checkContrast(css, TOKENS, ['--exceptions']).status, 2);
+  });
+
   it('reads channel triplets through the channel function the stylesheet uses', () => {
     const css =
       ':root{--background:0 0% 100%;--foreground:0 0% 7%;--card:0 0% 100%;--muted-foreground:0 0% 35%;--success:120 80% 20%}' +

@@ -95,8 +95,12 @@ New entries:
   `resolveDelta`, `relativeChange`, `deltaDirectionOf`, `deltaToneOf`.
 - `ddd-admin-ui-check-contrast <css> [tokens.json]` (bin): WCAG 2.x contrast of the pairs `tokens.json` declares
   (`contrast.pairs`, 4.5 for text, 3 for large text and UI parts; `role/NN` backgrounds), light and dark; fails on a pair
-  below its minimum that `contrast.exceptions` does not list, and on a value it cannot compute (unless
-  `--allow-unevaluated`).
+  below its minimum that no exception list names, and on a value it cannot compute (unless `--allow-unevaluated`).
+  `--exceptions <file.json>` adds a host's written exceptions (same entry format) to the package's. The package lists
+  the five light status pairs (`success` on `card`; `success`, `warning`, `destructive`, `info` on their 15 % tints) as
+  exceptions: status colours used as text or on their tint, themed by the host, until an emphasis role exists. Gated in
+  the consumer runs (CI and release) on the fixture app's built CSS, whose dark `--primary` moved from `#3b82f6` to
+  `#3472d8` (white on it: 3.68:1 → 4.62:1).
 
 Provider and contract:
 

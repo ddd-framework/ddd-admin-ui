@@ -45,7 +45,7 @@ jobs:
       - name: Pack
         run: pnpm pack --pack-destination "$RUNNER_TEMP"
       # Per package manager: check-package on the tarball, Node imports and strict type checks without the optional
-      # peers, a Next 16 production build, the built CSS, the Radix copy check, hydration, form labels and overlays in
+      # peers, a Next 16 production build, the built CSS (tokens and contrast, gated), the Radix copy check, hydration, form labels and overlays in
       # headless Chrome, link-skills.
       - name: Consumer check with npm
         run: test/consumer/run.sh "$(ls "$RUNNER_TEMP"/mgamadeus-ddd-admin-ui-*.tgz)" npm "$RUNNER_TEMP/consumer-npm"

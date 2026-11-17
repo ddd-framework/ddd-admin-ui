@@ -15,18 +15,32 @@
 // badges draw it. A translucent foreground is composited over the background; a translucent background over the
 // theme's `background` role.
 //
-// Usage: node check-contrast.mjs <built.css | directory of .css files> [tokens.json] [--allow-unevaluated]
+// Host exceptions: `--exceptions <file.json>` adds a host's written exceptions to the package's (`contrast.exceptions`
+// of tokens.json). The file holds the same entries, as an array or as `{ "exceptions": [...] }`:
+//   { "foreground": "<role>", "background": "<role or role/NN>", "theme": "light" | "dark" (optional: both),
+//     "reason": "<why this pair may stay below its minimum>" }
+//
+// Usage: node check-contrast.mjs <built.css | directory of .css files> [tokens.json] [--exceptions <file.json>]
+//                                [--allow-unevaluated]
 // Exit 0 when every declared pair passes (or is excepted); 1 with one line per failing pair; 2 on bad arguments.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+const USAGE =
+  'usage: node check-contrast.mjs <built.css | directory of .css files> [tokens.json] [--exceptions <file.json>] [--allow-unevaluated]';
 const args = process.argv.slice(2);
 const allowUnevaluated = args.includes('--allow-unevaluated');
-const [cssArg, tokensArg] = args.filter(arg => !arg.startsWith('--'));
+const exceptionsFlag = args.indexOf('--exceptions');
+const hostExceptionsArg = exceptionsFlag === -1 ? undefined : args[exceptionsFlag + 1];
+if (exceptionsFlag !== -1 && (!hostExceptionsArg || hostExceptionsArg.startsWith('--'))) {
+  console.error(`--exceptions needs a file\n${USAGE}`);
+  process.exit(2);
+}
+const [cssArg, tokensArg] = args.filter((arg, index) => !arg.startsWith('--') && (exceptionsFlag === -1 || index !== exceptionsFlag + 1));
 if (!cssArg) {
-  console.error('usage: node check-contrast.mjs <built.css | directory of .css files> [tokens.json] [--allow-unevaluated]');
+  console.error(USAGE);
   process.exit(2);
 }
 const tokensPath = resolve(tokensArg ?? join(dirname(fileURLToPath(import.meta.url)), '..', 'tokens.json'));
@@ -37,7 +51,35 @@ if (!existsSync(cssPath) || !existsSync(tokensPath)) {
 }
 const tokens = JSON.parse(readFileSync(tokensPath, 'utf8'));
 const pairs = tokens.contrast?.pairs ?? [];
-const exceptions = tokens.contrast?.exceptions ?? [];
+/** A host's exception file: an array, or an object with `exceptions` (or `contrast.exceptions`); every entry checked. */
+const readHostExceptions = file => {
+  const path = resolve(file);
+  if (!existsSync(path)) {
+    console.error(`not found: ${path}`);
+    process.exit(2);
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(readFileSync(path, 'utf8'));
+  } catch (error) {
+    console.error(`${path}: not JSON (${error instanceof Error ? error.message : error})`);
+    process.exit(2);
+  }
+  const list = Array.isArray(parsed) ? parsed : (parsed?.exceptions ?? parsed?.contrast?.exceptions);
+  const valid = item =>
+    item &&
+    typeof item.foreground === 'string' &&
+    typeof item.background === 'string' &&
+    typeof item.reason === 'string' &&
+    item.reason.trim() !== '' &&
+    (item.theme === undefined || item.theme === 'light' || item.theme === 'dark');
+  if (!Array.isArray(list) || !list.every(valid)) {
+    console.error(`${path}: expected an array of { foreground, background, theme?: "light" | "dark", reason } (or { "exceptions": [...] })`);
+    process.exit(2);
+  }
+  return list;
+};
+const exceptions = [...(tokens.contrast?.exceptions ?? []), ...(hostExceptionsArg ? readHostExceptions(hostExceptionsArg) : [])];
 if (pairs.length === 0) {
   console.error(`no contrast.pairs in ${tokensPath}`);
   process.exit(2);

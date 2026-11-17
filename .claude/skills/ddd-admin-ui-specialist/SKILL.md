@@ -109,8 +109,9 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
   `language` still sends every loaded `locale::style` key back.
 - **`./markdown` loads its peers after hydration**: the server draws a skeleton; never import the editor library from
   another entry, and never render user markdown with `dangerouslySetInnerHTML` (use `MarkdownPreview`).
-- **Contrast**: run `ddd-admin-ui-check-contrast <built css>` after a palette change; declared pairs below AA fail in
-  both themes.
+- **Contrast**: run `ddd-admin-ui-check-contrast <built css> [--exceptions host.json]` in CI and after a palette
+  change; declared pairs below AA fail in both themes unless the package's or the host's exception list names them
+  (`{ foreground, background, theme?, reason }`).
 - **SegmentedControl options of a host look**: `heightOf="option"` with a track padding class, `coarsePointer="grow"`,
   `badgeStyle="unstyled"`, `translate={false}`, timings as `--segmented-control-*` variables on `style`; the indicator
   follows the option box.

@@ -18,6 +18,7 @@
 #   next      a Next 16 app router project with Tailwind 4:
 #     T1  `next build`; the server page's metadata title is m('Users'), pure helpers render on the server
 #     T5  the production CSS has the package's component rules and utilities; ddd-admin-ui-check-tokens passes on it
+#         ddd-admin-ui-check-contrast passes on it (the package's exceptions only)
 #         one Radix copy in the host (ddd-admin-ui-check-radix)
 #     T2  (browser) a client page sets German translations: date, text and number are German after hydration,
 #         without a hydration warning
@@ -139,6 +140,8 @@ echo "── T5 check-tokens on the built CSS"
 # every built stylesheet in one folder: the check reads them as one stylesheet
 mkdir -p built-css && xargs -I{} cp {} built-css/ < built-css-files.txt
 if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-check-tokens built-css; else pnpm exec ddd-admin-ui-check-tokens built-css; fi
+echo "── contrast of the declared pairs on the built CSS (fails on any miss not on an exception list)"
+if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-check-contrast built-css; else pnpm exec ddd-admin-ui-check-contrast built-css; fi
 echo "── one Radix copy"
 if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-check-radix; else pnpm exec ddd-admin-ui-check-radix; fi
 

@@ -140,12 +140,26 @@ It reads the host's `node_modules` (npm and pnpm layouts) and the folders above 
    4.5:1 for text, 3:1 for large text and UI parts), light and dark:
 
    ```sh
-   npx ddd-admin-ui-check-contrast <built css file or folder> [tokens.json] [--allow-unevaluated]
+   npx ddd-admin-ui-check-contrast <built css file or folder> [tokens.json] [--exceptions <file.json>] [--allow-unevaluated]
    ```
 
-   It prints each pair's ratio per theme and exits 1 on a pair below its minimum that `contrast.exceptions` does not
-   list. A background `role/NN` is that role at NN % over the card (status badges). Values it cannot compute (named
-   colours, `color-mix()`, `lab()`, `light-dark()`, …) count as failures unless `--allow-unevaluated` is passed.
+   It prints each pair's ratio per theme and exits 1 on a pair below its minimum that no exception list names: the
+   package's (`contrast.exceptions` of `tokens.json`) merged with the host's file passed as `--exceptions`. A background
+   `role/NN` is that role at NN % over the card (status badges). Values it cannot compute (named colours, `color-mix()`,
+   `lab()`, `light-dark()`, …) count as failures unless `--allow-unevaluated` is passed. Run it in the host's CI on its
+   built CSS, like `ddd-admin-ui-check-tokens`.
+
+   An exception file is an array (or `{ "exceptions": [...] }`) of entries in the format of the package's list; `theme`
+   is optional (both themes when absent), `reason` is required:
+
+   ```json
+   [
+     { "foreground": "muted-foreground", "background": "card", "theme": "dark", "reason": "captions only, large text" }
+   ]
+   ```
+
+   The package lists the light status pairs (`success` on `card`, and `success`, `warning`, `destructive`, `info` on
+   their 15 % tints): status colours used as text or on their tint, themed by each host, until an emphasis role exists.
 
    **Layers checklist.** The package's dialogs, sheets and drawers open at layer 50 (`--layer-overlay`), its popovers,
    selects, menus and tooltips at 50 too (`--layer-popover`). A host whose own overlay scale is higher (a dialog at
