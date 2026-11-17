@@ -87,6 +87,12 @@ export function FormDialogFixture() {
           open={nestedOpen}
           onOpenChange={setNestedOpen}
           title="Nested"
+          description={
+            <div>
+              <p>Pick a new name.</p>
+              <p>It shows in every list.</p>
+            </div>
+          }
           onSubmit={() => {
             setNestedSubmits(current => [...current, nestedName]);
             setNestedOpen(false);

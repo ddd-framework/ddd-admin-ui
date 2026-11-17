@@ -467,6 +467,8 @@ const entity = id ? (query.currentData?.supplier ?? null) : null;   // currentDa
   code asks with `useConfirm()` (§ 14).
   `ConfirmOptions.description` may be a React node; the package's own confirmations always pass plain text, so a
   service that renders text only can show them.
+  A description (`ConfirmOptions`, `FormDialog`, `FormDrawer`, `MediaItemPickerDialog`) may be block content: a string or
+  number renders in the `<p>`, anything else in a `<div>` with the same classes and `aria-describedby` wiring.
 - One column inside the drawer (≤ 760 px): no `md:grid-cols-2` form grids.
 
 ## 13. One value out of a few — `SegmentedControl`

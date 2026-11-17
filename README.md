@@ -12,7 +12,8 @@ package ships one unbundled JS file and one declaration file per source file.
 ## Install
 
 ```bash
-pnpm add @mgamadeus/ddd-admin-ui @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-form zod
+pnpm add -E @mgamadeus/ddd-admin-ui
+pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-form zod
 # optional, per entry: next (./next), sonner (./notify-sonner); the host's Tailwind 4 build compiles the CSS
 ```
 
@@ -263,9 +264,9 @@ project's `.claude/skills/`. Idempotent; repoints an existing symlink, never tou
 
 ## Versioning
 
-0.x: each minor may break. Pin the exact version while the package is in 0.x prereleases; modules peer on the version
-they were tested with. Pre-releases (`x.y.z-…`) are published under the `next` dist-tag. Changes per release:
-[CHANGELOG.md](CHANGELOG.md).
+0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.1.0"`,
+`pnpm add -E` / `npm install -E`); modules peer on the version they were tested with. Stable releases are published
+under the `latest` dist-tag, pre-releases (`x.y.z-…`) under `next`. Changes per release: [CHANGELOG.md](CHANGELOG.md).
 
 ## Development
 

@@ -84,9 +84,20 @@ try {
     // a dialog opened from the dialog: Enter submits the nested form only; Escape closes only the nested dialog
     await page.click('#open-dialog');
     await opened(dialog);
+    const outerDescription = await dialog.evaluate((element) => document.getElementById(element.getAttribute('aria-describedby') ?? '')?.tagName ?? '');
+    report('FormDialog: a string description stays a <p>', outerDescription === 'P', outerDescription);
     await page.click('#open-nested');
     const nested = page.getByRole('dialog', { name: 'Nested' });
     await opened(nested);
+    const nestedDescription = await nested.evaluate((element) => {
+      const description = document.getElementById(element.getAttribute('aria-describedby') ?? '');
+      return { tag: description?.tagName ?? '', slot: description?.dataset.slot ?? '', nestedParagraph: element.querySelector('p p') !== null };
+    });
+    report(
+      'FormDialog: a block description renders in a <div> referenced by aria-describedby, no <p> in a <p>',
+      nestedDescription.tag === 'DIV' && nestedDescription.slot === 'dialog-description' && !nestedDescription.nestedParagraph,
+      JSON.stringify(nestedDescription),
+    );
     await page.fill('#nested-name', 'Inner');
     await page.press('#nested-name', 'Enter');
     await nested.waitFor({ state: 'hidden', timeout: 3_000 });
@@ -278,6 +289,43 @@ try {
     await settle(page);
     report('Confirm answers true', (await answers()).basic === 'true');
 
+    const describedBy = (dialog) =>
+      dialog.evaluate((element) => {
+        const description = document.getElementById(element.getAttribute('aria-describedby') ?? '');
+        return {
+          tag: description?.tagName ?? '',
+          slot: description?.dataset.slot ?? '',
+          text: description?.textContent ?? '',
+          nestedParagraph: element.querySelector('p p') !== null,
+        };
+      });
+    await page.click('#confirm-basic');
+    await opened(confirmDialog('Archive?'));
+    const stringDescription = await describedBy(confirmDialog('Archive?'));
+    report(
+      'a string description stays a <p> referenced by aria-describedby',
+      stringDescription.tag === 'P' && stringDescription.slot === 'dialog-description' && stringDescription.text === 'It leaves the list.',
+      JSON.stringify(stringDescription),
+    );
+    await page.keyboard.press('Escape');
+    await confirmDialog('Archive?').waitFor({ state: 'hidden' });
+    await settle(page);
+
+    await page.click('#confirm-block');
+    await opened(confirmDialog('Publish both?'));
+    const blockDescription = await describedBy(confirmDialog('Publish both?'));
+    report(
+      'a block description renders in a <div> referenced by aria-describedby, no <p> in a <p>',
+      blockDescription.tag === 'DIV' &&
+        blockDescription.slot === 'dialog-description' &&
+        blockDescription.text === 'Both versions go live.Main siteShop' &&
+        !blockDescription.nestedParagraph,
+      JSON.stringify(blockDescription),
+    );
+    await confirmDialog('Publish both?').getByRole('button', { name: 'Confirm' }).click();
+    await settle(page);
+    report('a block description: Confirm answers true', (await answers()).block === 'true');
+
     await page.click('#confirm-queue');
     await opened(confirmDialog('First?'));
     await confirmDialog('First?').getByRole('button', { name: 'Confirm' }).click();
@@ -308,6 +356,15 @@ try {
     await page.click('#open-drawer');
     const drawer = page.getByRole('dialog', { name: 'Drawer' });
     await opened(drawer);
+    const drawerDescription = await describedBy(drawer);
+    report(
+      'FormDrawer: a block description renders in a <div> referenced by aria-describedby, no <p> in a <p>',
+      drawerDescription.tag === 'DIV' &&
+        drawerDescription.slot === 'sheet-description' &&
+        drawerDescription.text === 'Edits stay in the drawer.Nothing is saved yet.' &&
+        !drawerDescription.nestedParagraph,
+      JSON.stringify(drawerDescription),
+    );
     await page.click('#drawer-confirm');
     await opened(confirmDialog('From the drawer?'));
     await page.keyboard.press('Escape');

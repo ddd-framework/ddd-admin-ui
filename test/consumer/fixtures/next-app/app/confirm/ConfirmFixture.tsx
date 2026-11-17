@@ -38,6 +38,22 @@ export function ConfirmFixture() {
       <output id="host-calls">{hostCalls.join(',')}</output>
       <Trigger id="confirm-basic" onAnswer={record('basic')} ask={one({ title: 'Archive?', description: 'It leaves the list.' })} />
       <Trigger
+        id="confirm-block"
+        onAnswer={record('block')}
+        ask={one({
+          title: 'Publish both?',
+          description: (
+            <>
+              <p>Both versions go live.</p>
+              <ul>
+                <li>Main site</li>
+                <li>Shop</li>
+              </ul>
+            </>
+          ),
+        })}
+      />
+      <Trigger
         id="confirm-queue"
         onAnswer={record('queue')}
         ask={confirm => Promise.all([confirm({ title: 'First?' }), confirm({ title: 'Second?' })]).then(list => list.join(','))}
@@ -50,7 +66,17 @@ export function ConfirmFixture() {
       <Button id="open-drawer" onClick={() => setDrawerOpen(true)}>
         Open drawer
       </Button>
-      <FormDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} title="Drawer">
+      <FormDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        title="Drawer"
+        description={
+          <>
+            <p>Edits stay in the drawer.</p>
+            <p>Nothing is saved yet.</p>
+          </>
+        }
+      >
         <Trigger id="drawer-confirm" onAnswer={record('drawer')} ask={one({ title: 'From the drawer?' })} />
       </FormDrawer>
       <AdminUiProvider confirm={hostConfirm}>

@@ -5,12 +5,14 @@ import { Fragment, type ReactNode, useEffect, useId, useRef, useState } from 're
 import { useTranslate } from '../i18n/index.ts';
 import { Button } from './button.tsx';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './dialog.tsx';
+import { isInlineDescription } from './descriptionContent.ts';
 import { Input } from './input.tsx';
 import { Label } from './label.tsx';
 
 /** What the confirmation shows; the same shape as `ConfirmOptions` of `./logic` (primitives import no logic). */
 export interface ConfirmDialogViewOptions {
   title: string;
+  /** Text or block content: a string or number renders in a `<p>`, anything else in a `<div>`. */
   description?: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
@@ -56,7 +58,14 @@ const ConfirmBody = ({ entry, focusOnMount, answer }: ConfirmBodyProps) => {
     <>
       <DialogHeader>
         <DialogTitle>{options.title}</DialogTitle>
-        {options.description && <DialogDescription>{options.description}</DialogDescription>}
+        {options.description &&
+          (isInlineDescription(options.description) ? (
+            <DialogDescription>{options.description}</DialogDescription>
+          ) : (
+            <DialogDescription asChild>
+              <div>{options.description}</div>
+            </DialogDescription>
+          ))}
       </DialogHeader>
       {options.requirePhrase !== undefined && (
         <div className="grid gap-2" data-confirm-phrase="">

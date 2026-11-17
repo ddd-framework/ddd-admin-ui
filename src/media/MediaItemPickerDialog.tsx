@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
   Label,
 } from '../primitives/index.ts';
+import { isInlineDescription } from '../primitives/descriptionContent.ts';
 import { useTranslate } from '../i18n/index.ts';
 import { cn } from '../primitives/cn.ts';
 import { EntityListEmpty } from '../list/EntityListEmpty.tsx';
@@ -45,6 +46,7 @@ export interface MediaItemPickerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
+  /** Text or block content: a string or number renders in a `<p>`, anything else in a `<div>`. */
   description?: ReactNode;
   items: MediaPickerTile[];
   selectedId: string | null;
@@ -128,7 +130,14 @@ export const MediaItemPickerDialog = ({
       <DialogContent className="flex h-[min(90dvh,900px)] w-full max-w-[calc(100%-2rem)] flex-col gap-0 p-0 sm:max-w-6xl">
         <DialogHeader className="shrink-0 border-b px-6 py-4">
           <DialogTitle>{title}</DialogTitle>
-          {description && <DialogDescription>{description}</DialogDescription>}
+          {description &&
+            (isInlineDescription(description) ? (
+              <DialogDescription>{description}</DialogDescription>
+            ) : (
+              <DialogDescription asChild>
+                <div>{description}</div>
+              </DialogDescription>
+            ))}
         </DialogHeader>
 
         <div className="flex shrink-0 flex-col gap-3 border-b px-6 py-3 md:flex-row md:items-start">

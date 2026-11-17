@@ -8,6 +8,7 @@ export interface ConfirmOptions {
   /**
    * The body. May be a React node for a host's own dialog content; the package's own confirmations (discard changes,
    * clear translations) always pass plain text, so a host confirmation service that takes text only can render them.
+   * Block content (paragraphs, a list) is fine: the package dialog renders a non-text description in a `<div>`.
    */
   description?: ReactNode;
   confirmLabel?: string;

@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../primitives/index.ts';
+import { isInlineDescription } from '../primitives/descriptionContent.ts';
 import { cn } from '../primitives/cn.ts';
 import { DrawerFooterSlotContext, DrawerSurfaceContext } from './drawerSlots.ts';
 import { type FormFieldLabels, FormFieldLabelsContext } from './fieldLabels.ts';
@@ -27,6 +28,7 @@ interface FormDialogBaseProps {
   /** `false` for a close request the dialog accepted (Escape, backdrop, Cancel; never while pending). */
   onOpenChange: (open: boolean) => void;
   title: ReactNode;
+  /** Text or block content: a string or number renders in a `<p>`, anything else in a `<div>`. */
   description?: ReactNode;
   /** The fields; with `form`, `FormField` and the other bound fields work inside. */
   children: ReactNode;
@@ -148,7 +150,14 @@ export const FormDialog = <TFieldValues extends FieldValues = FieldValues, TTran
     >
       <DialogHeader>
         <DialogTitle>{title}</DialogTitle>
-        {description && <DialogDescription>{description}</DialogDescription>}
+        {description &&
+          (isInlineDescription(description) ? (
+            <DialogDescription>{description}</DialogDescription>
+          ) : (
+            <DialogDescription asChild>
+              <div>{description}</div>
+            </DialogDescription>
+          ))}
       </DialogHeader>
       {children}
       <DialogFooter ref={footerRef}>

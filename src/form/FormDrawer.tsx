@@ -5,6 +5,7 @@ import { XIcon } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 
 import { Button, Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '../primitives/index.ts';
+import { isInlineDescription } from '../primitives/descriptionContent.ts';
 import { useTranslate } from '../i18n/index.ts';
 import { cn } from '../primitives/cn.ts';
 import { EntityMetadata } from '../page/EntityMetadata.tsx';
@@ -16,6 +17,7 @@ export interface FormDrawerProps {
   open: boolean;
   onClose: () => void;
   title: ReactNode;
+  /** Text or block content: a string or number renders in a `<p>`, anything else in a `<div>`. */
   description?: ReactNode;
   /**
    * The entity's ID / Created / Updated, one compact line under the title (`EntityMetadata variant="inline"`); nothing
@@ -90,7 +92,14 @@ export const FormDrawer = ({
               )}
             >
               <SheetTitle className="truncate text-base leading-5 font-semibold">{title}</SheetTitle>
-              {description && <SheetDescription className="text-xs leading-4">{description}</SheetDescription>}
+              {description &&
+                (isInlineDescription(description) ? (
+                  <SheetDescription className="text-xs leading-4">{description}</SheetDescription>
+                ) : (
+                  <SheetDescription className="text-xs leading-4" asChild>
+                    <div>{description}</div>
+                  </SheetDescription>
+                ))}
               {hasMetadata && (
                 <EntityMetadata variant="inline" id={metadata?.id} changeHistory={metadata?.changeHistory} />
               )}

@@ -1,7 +1,32 @@
 # Changelog
 
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
-is in 0.x prereleases.
+is in 0.x.
+
+## 0.1.0
+
+First stable release: 0.1.0-rc.6 plus the description fix below. Published under the `latest` dist-tag; prereleases
+stay on `next`. In short, the release candidates brought (details in the sections below):
+
+- the blocks and their entries `./logic`, `./i18n`, `./primitives`, `./list`, `./page`, `./form`, `./translations`,
+  `./media`, `./glass`, `./provider`, `./next`, `./notify-sonner`, the stylesheets `./theme.css` and
+  `./components.css`, the manifests `./tokens.json` and `./i18n-keys.json`, the bins and `STANDARDS.md` (rc.2);
+- list tables with column tracks, pinned columns, sortable headers, a row index, and status contexts (rc.3);
+- `SegmentedControl`, the `./showcase` entry and per-column sort cycles (rc.4);
+- Combobox server search, clearing, groups and a create row, selectable rows, `CopyButton`, date input and storage
+  helpers, the provider's link component with sticky parameters (rc.5);
+- `FormDialog`, the header slot and the document-level save shortcut of `FormActions`, `useConfirm` on the provider
+  with `requirePhrase` and a queue, and write access as a presentation aid (rc.6).
+
+Fix:
+
+- A description that is not a string or number (two paragraphs, a list, a `<div>`) renders in a `<div>` instead of the
+  `<p>` of `DialogDescription` / `SheetDescription`, with the same classes, `data-slot` and `aria-describedby` wiring:
+  no `<p>` nested in a `<p>`, no hydration warning. Covers `useConfirm` / `ConfirmOptions.description`,
+  `FormDialog.description`, `FormDrawer.description` and `MediaItemPickerDialog.description`. A string description
+  renders the same DOM as in 0.1.0-rc.6. Consumer checks in the browser: a block description in `useConfirm`,
+  `FormDialog` and `FormDrawer` (a `<div>` referenced by `aria-describedby`, no `<p>` in a `<p>`, no console error or
+  hydration warning), a string description still a `<p>`.
 
 ## 0.1.0-rc.6
 
