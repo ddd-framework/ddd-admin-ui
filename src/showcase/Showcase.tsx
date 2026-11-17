@@ -11,6 +11,7 @@ import { MediaShowcase } from './sections/MediaShowcase.tsx';
 import { NextShowcase, NotifySonnerShowcase, type NotifySonnerLoader } from './sections/OptionalShowcase.tsx';
 import { PageShowcase } from './sections/PageShowcase.tsx';
 import { PrimitivesShowcase } from './sections/PrimitivesShowcase.tsx';
+import { ShellShowcase } from './sections/ShellShowcase.tsx';
 import { TranslationsShowcase } from './sections/TranslationsShowcase.tsx';
 
 /** One section of the showcase: a heading and what it draws. Hosts append their own (`Showcase.sections`). */
@@ -35,7 +36,7 @@ export interface ShowcaseProps {
    * (the peer is missing), the section says it is skipped.
    */
   loadNotifySonner?: NotifySonnerLoader;
-  /** Leave out package sections by id (`primitives`, `list`, `page`, `form`, `translations`, `media`, `glass`, `notify-sonner`, `next`). */
+  /** Leave out package sections by id (`primitives`, `list`, `page`, `form`, `translations`, `media`, `glass`, `shell`, `notify-sonner`, `next`). */
   omit?: readonly string[];
   className?: string;
 }
@@ -49,6 +50,7 @@ const packageSections = (loadNotifySonner: NotifySonnerLoader | undefined): Show
   { id: 'translations', title: './translations', description: 'Inputs per content locale and the translation controls.', content: <TranslationsShowcase /> },
   { id: 'media', title: './media', description: 'Media field, preview and picker.', content: <MediaShowcase /> },
   { id: 'glass', title: './glass', description: 'Glass pills, quick filters, collapsible cards, groups and rows.', content: <GlassShowcase /> },
+  { id: 'shell', title: './shell', description: 'Application frame, breadcrumbs, account and language menus; the animated background of ./shell-background.', content: <ShellShowcase /> },
   {
     id: 'notify-sonner',
     title: './notify-sonner',

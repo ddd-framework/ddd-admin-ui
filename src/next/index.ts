@@ -10,5 +10,6 @@ export type { SearchParamsWriteOptions, SearchParamUpdates } from './searchParam
 export { LIST_VIEW_PARAM } from './listViewParam.ts';
 export { useListViewParam } from './useListViewParam.ts';
 export { useNextDrawerUrlAdapter } from './useNextDrawerUrlAdapter.ts';
+export { useNextPathname } from './useNextPathname.ts';
 export { useNextUrlStateAdapter } from './useNextUrlStateAdapter.ts';
 export type { NextUrlStateAdapterOptions } from './useNextUrlStateAdapter.ts';

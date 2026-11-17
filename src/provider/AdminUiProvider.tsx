@@ -8,6 +8,7 @@ import { createConfirmQueue } from '../logic/pure/confirmQueue.ts';
 import { setNotificationAdapter } from '../logic/pure/notify.ts';
 import { ConfirmContext } from '../logic/react/useConfirm.ts';
 import { LinkComponentProvider } from '../primitives/link.tsx';
+import { PathnameProvider } from '../primitives/pathname.tsx';
 import { PortalContainerProvider } from '../primitives/portal.tsx';
 import { TooltipProvider } from '../primitives/tooltip.tsx';
 import { AdminUiContext } from './adminUiContext.ts';
@@ -32,7 +33,7 @@ const TranslationBridge = ({ adapter }: { adapter: TranslationAdapter }) => {
  * The one provider of the package: registers the host's notification adapter, feeds the translation store from a
  * host store, renders the tooltip provider and the portal container, and hands the host adapters (storage keys,
  * router hooks, upload, markdown editor, AI translation) to packaged screens through `useAdminUi()`, sets the link
- * component of every block (`linkComponent`), and answers `useConfirm()` (the package dialog, or the host's `confirm`).
+ * component of every block (`linkComponent`) and the pathname hook of the shell (`usePathname`), and answers `useConfirm()` (the package dialog, or the host's `confirm`).
  * Blocks never read `useAdminUi()`: they take adapters as props.
  */
 export const AdminUiProvider = ({
@@ -49,6 +50,7 @@ export const AdminUiProvider = ({
   aiTranslation,
   preserveSearchParams,
   linkComponent,
+  usePathname,
   confirm: hostConfirm,
 }: AdminUiProviderProps) => {
   const [confirmQueue] = useState(() => createConfirmQueue<ConfirmOptions>());
@@ -80,7 +82,15 @@ export const AdminUiProvider = ({
       <TooltipProvider delayDuration={tooltipDelayMs}>
         <PortalContainerProvider container={portalContainer}>
           <ConfirmContext.Provider value={confirm}>
-            {linkComponent ? <LinkComponentProvider linkComponent={linkComponent}>{children}</LinkComponentProvider> : children}
+            {usePathname ? (
+              <PathnameProvider usePathname={usePathname}>
+                {linkComponent ? <LinkComponentProvider linkComponent={linkComponent}>{children}</LinkComponentProvider> : children}
+              </PathnameProvider>
+            ) : linkComponent ? (
+              <LinkComponentProvider linkComponent={linkComponent}>{children}</LinkComponentProvider>
+            ) : (
+              children
+            )}
             {hostConfirm ? null : <ConfirmHost queue={confirmQueue} />}
           </ConfirmContext.Provider>
         </PortalContainerProvider>

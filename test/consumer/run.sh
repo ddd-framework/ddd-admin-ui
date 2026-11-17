@@ -6,6 +6,7 @@
 #         the showcase renders (light, dark, every section, a host section), lists every exported component, skips the
 #         lazily loaded ./notify-sonner section, and bundles for the browser (esbuild) without reaching an optional peer
 #         links rendered by blocks go through AdminUiProvider.linkComponent and keep sticky parameters (withStickyParams)
+#         the shell renders on the server from one navigation (sidebar, breadcrumbs, title) and never reaches ./shell-background
 #     T4  Node imports of every entry but ./next and ./notify-sonner (those two fail on the missing peer) and a
 #         strict tsc (skipLibCheck false) with moduleResolution bundler and nodenext
 #     T3  (server render) bound fields from ./translations and ./media find the form of ./form
@@ -31,6 +32,8 @@
 #         FormActions (focus nowhere, in another form, a disabled primary, a drawer footer, nested dialogs), header slots
 #         (closest slot, form attribute, floating pill) and useConfirm (Escape, focus, queue, phrase, drawer, two
 #         providers, Strict Mode, unmount)
+#         (browser) the shell: one navigation for sidebar, breadcrumbs and title, active entry, rights predicate,
+#         collapse (button, `[`, stored and restored after hydration), rail flyout, mobile menu, folding breadcrumbs, RTL
 #     T7  (browser) a select inside a dialog inside a sheet, and inside a host overlay at z-index 10000 with
 #         --layer-popover: 10001, is clickable (with a negative control at the default layer)
 #   link-skills  `ddd-admin-ui link-skills` links the shipped skill
@@ -119,6 +122,8 @@ node showcase-render.mjs
 node showcase-build.mjs
 echo "── links through the provider's link component keep sticky parameters"
 node sticky-links.mjs
+echo "── the shell on the server: one navigation for sidebar, breadcrumbs and title; rights predicate; no background reach"
+node shell-render.mjs
 echo "── shipped i18n manifest"
 if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-i18n-manifest --check; else pnpm exec ddd-admin-ui-i18n-manifest --check; fi
 
@@ -153,6 +158,8 @@ else
   node browser.mjs "http://127.0.0.1:$PORT"
   echo "── form dialog, save shortcut, header slot, confirmations (headless browser)"
   node browser-dialogs.mjs "http://127.0.0.1:$PORT"
+  echo "── shell: sidebar, rail, shortcut, mobile menu, breadcrumbs, title, RTL (headless browser)"
+  node browser-shell.mjs "http://127.0.0.1:$PORT"
   kill $SERVER_PID 2>/dev/null || true
 fi
 

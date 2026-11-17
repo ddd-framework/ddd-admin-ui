@@ -133,5 +133,18 @@
   "Translating__translation-status": "Status badge of one language in the translation progress list: the translation request is running right now.",
   "Done__translation-status": "Status badge of one language in the translation progress list: the translation finished successfully.",
   "Failed__translation-status": "Status badge label (short pill) in lists, cards and detail views, describing the state of a push notification or mail delivery attempt. Keep it short, like a status word. Also used for other status families.",
-  "Cancelled__translation-status": "Status badge label (short pill) in lists, cards and detail views, describing the state of a partner contract. Keep it short, like a status word."
+  "Cancelled__translation-status": "Status badge label (short pill) in lists, cards and detail views, describing the state of a partner contract. Keep it short, like a status word.",
+  "Account menu of %name%": "Accessible name of the round account button at the right end of the top bar; it opens the account menu. %name% is the signed-in person's name.",
+  "Collapse %label%": "Accessible name of the small arrow button next to a navigation group in the sidebar while the group is open: it hides the group's entries. %label% is the group's name.",
+  "Collapse sidebar": "Button at the foot of the left navigation column: shrinks the column to a narrow strip of icons.",
+  "Expand %label%": "Accessible name of the small arrow button next to a navigation group in the sidebar while the group is closed: it shows the group's entries. %label% is the group's name.",
+  "Expand sidebar": "Button at the foot of the narrow icon strip: widens it back to the full navigation column with labels.",
+  "Language": "Heading above the list of languages in the language menu of the top bar.",
+  "Language: %language%": "The language menu's button in the top bar, and its entry in the account menu: names the current interface language. %language% is the language's own name (Deutsch, Français).",
+  "Main__navigation": "Accessible name of the main navigation (the sidebar and the mobile menu), read by screen readers as a landmark: 'Main navigation'.",
+  "Navigation": "Accessible title of the panel that slides in with the navigation on phones and small windows.",
+  "Open navigation": "Accessible name of the round menu button at the left of the top bar on phones: opens the navigation panel.",
+  "Opens outside this app": "Read by screen readers after a navigation entry that leads to another application or an older screen (a full page load).",
+  "Show full path": "Accessible name of the '…' button in the breadcrumb trail when it is shortened on narrow screens: lists the hidden levels.",
+  "Skip to content": "A link that appears only when it gets keyboard focus, as the first stop on every page: jumps past the navigation to the page content."
 }

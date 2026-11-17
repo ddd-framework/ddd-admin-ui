@@ -3,6 +3,51 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.2.0
+
+- `./shell` (new entry): the application frame and its navigation, mechanism in the package, content from the host.
+  - `AppShell` (type `AppShellProps`): fixed top bar (`ShellTopBar`: banner, menu button, `brand`, `topBarStart`, the
+    breadcrumbs, `topBarEnd`; frosted once the page scrolls, `data-shell-scrolled`), fixed sidebar from `lg`
+    (`ShellSidebar`: `<nav>` landmark, nested groups as disclosure buttons with one open group per level, the current
+    entry `aria-current="page"`, badges, lock marks, external marks; `sidebarHeader`, `sidebarRailHeader`,
+    `sidebarFooter`), the icon rail (`ShellNavRail`: groups as flyout menus, tooltips) toggled by the foot row and `[`
+    (`useShellShortcut`; not while typing, in a dialog or menu, or below `lg`), remembered in localStorage per
+    `collapsedStorageKey` (`useSidebarCollapsed`, applied right after hydration, followed across tabs), the mobile menu
+    below `lg` (`ShellMenuButton`, `ShellMobileMenu`: a sheet from the inline-start edge, closes on a followed link or
+    a route change), the content frame (`<main>` behind a "Skip to content" link), an optional `background` and
+    `documentTitle`.
+  - `ShellBreadcrumbs`: the crumbs of the current path from the same navigation; entity names through the host's
+    `useEntityLabel` hook (types `UseEntityLabel`, `EntityLabelRequest`, `EntityLabelResult`); the middle folds into an
+    ellipsis menu with the full path on narrow trails (container queries).
+  - `ShellDocumentTitle`: keeps `document.title` on the page's name (`Details · Blue widget · Admin`).
+  - `AccountMenu` (name, description, avatar or initials, entries as links or actions, `children`, a `fallback`
+    without a session), `AccountAvatar`, `AccountSummary`; `LanguageMenu` (languages with native names in their own
+    `lang`, the current one checked, `onChange`, `isPending`, `note`), `LanguageMenuItems`, `LanguageMenuSub`.
+  - `ShellNavigationProvider` / `ShellNavigationContext` / `useShellNavigation`: breadcrumbs and title without the
+    frame. Logical sides throughout (RTL with Radix's `Direction.Provider`).
+- `./shell-background` (new entry): `ShaderBackground`, an animated WebGL background (two soft blobs over the base
+  colour, generated displacement, a quarter resolution at 20 fps, held when hidden or idle), loaded lazily; nothing
+  without WebGL or with reduced motion. Colours from `--shell-background-base`, `--shell-background-blob-1`,
+  `--shell-background-blob-2` (falling back to `--background`, `--brand-light`, `--accent`); `tint`,
+  `tintShaderPalette`.
+- `./logic`: the navigation model (types `NavigationItem`, `NavigationLeaf`, `NavigationGroup`, `NavigationIcon`,
+  `NavigationAccess`, `CrumbRoute`, `CrumbLabel`, `CrumbParams`, `ResolvedCrumb`, `ActiveNavigation`) and its pure
+  resolvers: `findActiveNavigation`, `isNavigationLeafActive`, `isNavigationGroupActive`, `filterNavigation` (the rights
+  predicate), `resolveCrumbs`, `resolveDocumentTitle`, `documentTitleParts`, `normalisePathname`.
+- `./primitives`: `PathnameProvider`, `PathnameContext`, `useCurrentPathname`, `useBrowserPathname`, type
+  `UsePathname`. `AdminUiProvider.usePathname` sets the pathname hook of every block; `./next` ships
+  `useNextPathname`. Without it: `location.pathname` after hydration.
+- `tokens.json`: layer `--layer-chrome` (30), optional properties `--sidebar-w` (16rem), `--sidebar-rail-w` (5rem) and
+  the three `--shell-background-*` colours, data attributes `data-shell`, `data-shell-collapsed`,
+  `data-shell-content`, `data-shell-sidebar`, `data-shell-topbar`, `data-shell-scrolled`, `data-shell-background`,
+  `data-nav-key`. `components.css` sets the defaults and reserves the sidebar width on `[data-shell-content]`.
+- Showcase: a `shell` section (an interactive frame with the background, folding breadcrumbs, the menus);
+  `SHOWCASE_COVERAGE` lists `./shell` and `./shell-background`.
+- Checks: resolver unit tests; `shell-render.mjs` (server render: one navigation for sidebar, breadcrumbs and title,
+  the rights predicate, no stored state on the server, `./shell` never reaches `./shell-background`); browser checks of
+  the shell (active entry, rights predicate, collapse by button and `[`, restored after a reload without a hydration
+  warning, rail flyout, mobile menu, folding breadcrumbs, title, RTL).
+
 ## 0.1.0
 
 First stable release: 0.1.0-rc.6 plus the description fix below. Published under the `latest` dist-tag; prereleases

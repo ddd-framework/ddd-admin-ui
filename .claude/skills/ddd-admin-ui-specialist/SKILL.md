@@ -1,6 +1,6 @@
 ---
 name: ddd-admin-ui-specialist
-description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend the package. Covers entries, import matrix, host setup (AdminUiProvider above every page, theme.css, components.css, tokens.json with ddd-admin-ui-check-tokens, one Radix copy with ddd-admin-ui-check-radix), list pages with URL filters, bulk actions, wide tables (tracks, pins, sort), the segmented control, the showcase, detail shells, form drawers and dialogs (FormDialog), the save shortcut, FormActions in a header slot, useConfirm with typed phrases, write access (WriteAccessProvider), server errors, the unsaved-changes guard, locale::style translations, media fields, layers, i18n-keys.json, server vs client files, adding a block. Use when building or reviewing a list, detail, form or dialog screen, a page fails with Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form or none, a confirm answers false, write controls must go off for read-only users, a table squeezes, an overlay misbehaves, or URL filters get lost."
+description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend the package: entries, import matrix, host setup (AdminUiProvider, theme.css, components.css, tokens.json and ddd-admin-ui-check-tokens, one Radix copy via ddd-admin-ui-check-radix), the app shell (sidebar, rail, mobile menu, breadcrumbs, tab title from one navigation, account and language menus), list pages with URL filters, bulk actions, wide tables (tracks, pins, sort), the segmented control, the showcase, detail shells, form drawers and dialogs, the save shortcut, FormActions in a header slot, useConfirm with phrases, write access, server errors, unsaved-changes guard, locale::style translations, media fields, layers, i18n-keys.json, new blocks. Use when building a frame, list, detail, form or dialog screen, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form or none, a confirm answers false, read-only users need write controls off, a table squeezes, an overlay misbehaves, breadcrumbs miss a page, or URL filters get lost."
 metadata:
   author: mgamadeus
   version: 0.1.0
@@ -27,6 +27,10 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | a picker over a server search, with clear / create | `Combobox` `onSearch` + `useLatestSearch`, `clearable`, `onRequestCreate` | list, logic |
 | copy a value next to it | `CopyButton` | list |
 | one router link for every block, sticky search parameters | `AdminUiProvider.linkComponent` + `withStickyParams` | provider, logic |
+| the application frame: sidebar (groups, badges, locks), icon rail with `[`, mobile menu, top bar slots | `AppShell` with one `NavigationItem[]` tree, `canAccess`, `AdminUiProvider usePathname={useNextPathname}` | shell, logic, next |
+| breadcrumbs and the tab title from the same tree | leaf `crumbs` (`'create'`, `':itemId'` + `entity`), `useEntityLabel`, `documentTitle={{ appName }}`; `resolveDocumentTitle` on the server | shell, logic |
+| account and language menus fed by the host | `AccountMenu` (entries, `LanguageMenuSub` inside), `LanguageMenu` | shell |
+| an animated background | `background={<ShaderBackground />}` (separate, lazy) | shell-background |
 | a `type="date"` / `datetime-local` value | `toDateInputValue` / `fromDateTimeInputValue` … with `'local'` or `'utc'` | logic |
 | see every block in the host theme, light and dark | `Showcase` on a development route | showcase |
 | a view that loads its own data (a tree) in the list card | `EntityListBody.renderOwnView` | list |
@@ -74,6 +78,12 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
   terms); the block debounces and never shows the previous term's options. A picked value outside the results needs
   `selectedOption`.
 - **Links**: set `linkComponent` once on `AdminUiProvider`; without it blocks render plain `<a>` (full page loads).
+- **One navigation tree.** Sidebar, mobile menu, breadcrumbs and tab title all read `AppShell.navigation`; a page below
+  an entry is described in that entry's `crumbs`, never in a second list. Without `usePathname` on the provider the
+  shell knows the path only after hydration (no current entry, no crumbs in the server HTML). `canAccess` hides
+  sidebar items only — crumbs of a hidden page stay as text. `useEntityLabel` and `canAccess` must be stable (a
+  module-level hook, a memoised predicate). The collapsed rail applies right after hydration, never on the server.
+  `ShaderBackground` needs the page background on `<html>` (a body background covers it).
 - **⌘S / Ctrl+S** (`FormActions`, `FormDialog`) listens on `document`: in a dialog or drawer it answers anywhere inside
   the innermost one holding the focus; on a page with focus in the form, on its actions (also portalled) or nowhere.
   It prevents the default whenever it is in scope (also with a disabled primary, then nothing submits); an event

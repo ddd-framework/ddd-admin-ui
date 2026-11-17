@@ -12,6 +12,8 @@ const expectations = {
   glass: ['GlassPill', 'QuickFilterPills', 'CollapsibleCard', 'GlassGroup', 'ActionRow'],
   provider: ['AdminUiProvider', 'useAdminUi', 'defaultStorageKey'],
   showcase: ['Showcase', 'SHOWCASE_COVERAGE'],
+  shell: ['AppShell', 'ShellBreadcrumbs', 'ShellDocumentTitle', 'AccountMenu', 'LanguageMenu', 'useSidebarCollapsed', 'useShellShortcut'],
+  'shell-background': ['ShaderBackground', 'tintShaderPalette'],
 };
 
 let failed = false;

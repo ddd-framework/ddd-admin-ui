@@ -14,5 +14,6 @@ export type {
   StorageKind,
   TranslationAdapter,
   UseDrawerUrlAdapter,
+  UsePathname,
   UseUrlStateAdapter,
 } from './types.ts';
