@@ -101,9 +101,11 @@ import { PrimitivesAdditionsShowcase } from './PrimitivesAdditionsShowcase.tsx';
 
 /** A labelled sample inside a section. */
 export const Sample = ({ title, children }: { title: string; children: ReactNode }) => (
-  <div className="min-w-0 space-y-2">
+  <div data-showcase-sample={title} className="min-w-0 space-y-2">
     <h3 className="text-xs font-bold tracking-[0.08em] text-muted-foreground uppercase">{title}</h3>
-    <div className="flex flex-wrap items-start gap-3">{children}</div>
+    {/* a specimen wider than the column (a table, a chart, a screen at phone width) scrolls here, never the page; the
+        padding keeps focus rings inside the scroll box */}
+    <div className="-m-1 flex min-w-0 flex-wrap items-start gap-3 overflow-x-auto p-1">{children}</div>
   </div>
 );
 

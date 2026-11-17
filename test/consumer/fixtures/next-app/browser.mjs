@@ -522,6 +522,50 @@ try {
     await page.waitForTimeout(300);
     const phone = await page.evaluate(() => ({ pageScroll: document.documentElement.scrollWidth, viewport: window.innerWidth }));
     report('showcase: at 390 px the page does not scroll sideways', phone.pageScroll <= phone.viewport, JSON.stringify(phone));
+    if (phone.pageScroll > phone.viewport) {
+      // the widest elements past the viewport that no ancestor clips, with their section and sample
+      const offenders = await page.evaluate(() => {
+        const viewport = window.innerWidth;
+        const describe = element => {
+          const attributes = [...element.attributes]
+            .filter(attribute => attribute.name === 'id' || attribute.name === 'role' || attribute.name.startsWith('data-'))
+            .map(attribute => `[${attribute.name}${attribute.value ? `="${attribute.value}"` : ''}]`)
+            .join('');
+          return `${element.tagName.toLowerCase()}${attributes}`;
+        };
+        const unclipped = element => {
+          for (let ancestor = element.parentElement; ancestor && ancestor !== document.body; ancestor = ancestor.parentElement) {
+            if (getComputedStyle(ancestor).overflowX !== 'visible' && ancestor.getBoundingClientRect().right <= viewport + 1) return false;
+          }
+          return true;
+        };
+        // the innermost ancestor that fits the viewport but lets its content spill (overflow visible): the container to fix
+        const spillsFrom = element => {
+          for (let ancestor = element.parentElement; ancestor && ancestor !== document.body; ancestor = ancestor.parentElement) {
+            if (ancestor.getBoundingClientRect().right <= viewport + 1 && ancestor.scrollWidth > ancestor.clientWidth + 1) {
+              return { element: describe(ancestor), offsetWidth: ancestor.offsetWidth, scrollWidth: ancestor.scrollWidth };
+            }
+          }
+          return null;
+        };
+        return [...document.querySelectorAll('body *')]
+          .map(element => ({ element, right: element.getBoundingClientRect().right }))
+          .filter(({ element, right }) => right > viewport + 1 && element.offsetWidth > 0 && unclipped(element))
+          .sort((a, b) => b.right - a.right || b.element.offsetWidth - a.element.offsetWidth)
+          .slice(0, 12)
+          .map(({ element, right }) => ({
+            element: describe(element),
+            className: (element.getAttribute('class') ?? '').slice(0, 100),
+            right: Math.round(right),
+            offsetWidth: element.offsetWidth,
+            scrollWidth: element.scrollWidth,
+            section: element.closest('section[id^="showcase-"]')?.id ?? null,
+            sample: element.closest('[data-showcase-sample]')?.getAttribute('data-showcase-sample') ?? null,
+            spillsFrom: spillsFrom(element),
+          }));
+      });
+      for (const offender of offenders) console.log(`        ${JSON.stringify(offender)}`);
+    }
     report('showcase: no hydration warning or console error', consoleProblems.length === 0, consoleProblems.join(' | '));
     await page.close();
   }

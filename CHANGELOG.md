@@ -3,6 +3,20 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.2.1
+
+The showcase no longer widens the page at phone width; 0.2.0 was tagged but not published, so 0.2.1 is the first
+release of the 0.2.0 content.
+
+- `SegmentedControl`: a track that turns wider than its container scrolls inside itself from the same frame on
+  (`data-overflowing`, set by the resize observer before the paint). Before, the scrolling waited for React's next
+  render, and until then the options spilled out of the track: after a resize to phone width on a slow device the page
+  scrolled sideways.
+- Showcase: every sample row and every section scrolls a wider specimen inside itself (`min-w-0 overflow-x-auto`), never
+  the page; the samples carry `data-showcase-sample`, the section contents `data-showcase-section-content`.
+- Consumer check: when the showcase widens the page at 390 px, the check prints the widest elements past the viewport
+  with their section, sample, widths and the container they spill from.
+
 ## 0.2.0
 
 All additions below are optional props, new exports or new entries: a caller that uses none of them renders the same

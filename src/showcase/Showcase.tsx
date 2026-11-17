@@ -112,7 +112,10 @@ const ThemePane = ({ theme, sections }: { theme: ShowcaseTheme; sections: readon
                 </h2>
                 {section.description && <p className="mt-1 text-sm text-muted-foreground">{section.description}</p>}
               </header>
-              {section.content}
+              {/* the section's own guard: a host section or a specimen outside a sample scrolls here, never the page */}
+              <div data-showcase-section-content={section.id} className="-m-1 min-w-0 overflow-x-auto p-1">
+                {section.content}
+              </div>
             </section>
           ))}
         </div>

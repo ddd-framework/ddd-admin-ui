@@ -211,7 +211,11 @@ export const SegmentedControl = <TValue extends string = string>({
     const group = groupRef.current;
     if (!group) return;
     const place = () => {
-      setOverflowing(group.scrollWidth > group.clientWidth + 1);
+      const wider = group.scrollWidth > group.clientWidth + 1;
+      // the attribute at once (a resize observer runs before the paint), the state for the drag rules: until React
+      // renders the state, a track that turned wider would widen the page (a phone, a slow device)
+      group.toggleAttribute('data-overflowing', wider);
+      setOverflowing(wider);
       const option = optionRefs.current[targetIndex];
       if (!option || option.offsetWidth === 0) {
         setIndicator(previous => (previous === null ? previous : null));
@@ -372,6 +376,7 @@ export const SegmentedControl = <TValue extends string = string>({
       role="radiogroup"
       aria-label={translate ? t(ariaLabel) : ariaLabel}
       data-held={held || undefined}
+      data-overflowing={overflowing || undefined}
       style={style}
       data-slot="segmented-control"
       onKeyDown={onKeyDown}
@@ -381,7 +386,7 @@ export const SegmentedControl = <TValue extends string = string>({
       onPointerCancel={onPointerCancel}
       className={cn(
         'relative isolate max-w-full shrink-0 items-stretch gap-0.5 rounded-(--segmented-control-radius) p-0.5 select-none',
-        overflowing ? 'touch-auto overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden' : 'touch-pan-y',
+        'touch-pan-y data-overflowing:touch-auto data-overflowing:overflow-x-auto data-overflowing:[scrollbar-width:none] data-overflowing:[&::-webkit-scrollbar]:hidden',
         fullWidth ? 'flex w-full' : 'inline-flex',
         heightOf === 'option' ? OPTION_TEXT_CLASS[height] : HEIGHT_CLASS[height],
         coarsePointer === 'grow' && COARSE_GROW_TRACK_CLASS,
