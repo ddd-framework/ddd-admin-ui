@@ -3,6 +3,61 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.2.3
+
+The app translations screen gains the host slots and list features hosts kept their own list for, and the key drawer
+the value handling. Additive: hosts that pass nothing new get the screen with the new features below (a row number,
+sortable id and key, cards below `md`, a delete per row, compact values, the generation confirmation); the list
+snapshot (0.1.0-rc.2) and the form actions snapshot (0.1.0-rc.5) are unchanged.
+
+`./translations`:
+
+- `AppTranslationsScreen` host slots: `headerActions`, `moreActions` (the overflow menu), `toolbarTrailing`, `columns`
+  (add, reorder or replace the package's), `extraFilters` with `extraActiveFilterCount` and `onClearExtraFilters`,
+  `renderCard`, `displayMode` / `onDisplayModeChange` (a view toggle now sits in the toolbar), `useListQuery` (wrap or
+  replace the list query).
+- List: sorting by id (default newest first) and key (`sort` in the URL), the row number (`showRowIndex`, default
+  true), the package's card below `md` and in the card view, a delete per row (asks first), the first four values with
+  "+N" (`valuesPreviewCount`), a country code next to a value with a country; "Clear filters" keeps the toolbar
+  search; the empty state ("No translation keys found") and the no-results state ("No keys match your search") each
+  have their own sentence and an "Add key" action.
+- Bulk delete continues past a failure and summarises deleted / failed / skipped keys (`runSequentialWithSummary`), or
+  makes one request through the application's endpoint: `createTranslationsApi({ …, bulkDelete: true | { path,
+  method, body } })` adds `useBulkDeleteAppTranslationKeysMutation` (`buildAppTranslationKeysBulkDeleteRequest`;
+  the static api with `bulkDeleteAppTranslationKeys`).
+- Drawer: the key is required (marker and message; Save is no longer disabled while it is empty); an empty template or
+  hint is sent as `null`, the hint trimmed (`toAppTranslationKeyBody`); a "Delete key" button; values show and take a
+  country (the language's active locales; "Every country" = none), offer only the language's writing styles, cannot be
+  saved with an empty text, count for the unsaved-changes question (Cancel, ✕, Esc), and get a search, style and
+  context filter and an order from two values on; the add form offers only languages and combinations the key lacks.
+- `TranslationCompleteness`: the generation per locale and style asks the cost estimate first (`previewOnly`) and runs
+  after a confirmation (`confirmGeneration`, default true), and is offered only for the styles the locale's language
+  supports; the toast names the style ("Formal"), not the enum.
+- URL names: `drawerEditKey`, `drawerCreateKey`, `urlParamNames` (e.g. `{ id: 'keyId' }`; `renameUrlStateKeys`).
+- Shared cache entries: `buildAppTranslationKeysListArgs`, `buildAppTranslationKeysFilter`, `appTranslationKeysOrderBy`,
+  `APP_TRANSLATION_KEYS_PAGE_SIZE`, `APP_TRANSLATION_KEY_FILTER_KEYS`, `APP_TRANSLATION_KEY_SORT_KEYS`,
+  `DEFAULT_APP_TRANSLATION_KEY_SORT`, `CONTENT_LOCALES_ARG`, `ACTIVE_LANGUAGES_ARG`, `ACTIVE_LOCALES_WITH_COUNTRIES_ARG`,
+  `APP_TRANSLATIONS_LANGUAGES_ARG`, `useActiveLocales` (the rows of `useContentLocales`' request). The cache tags stay
+  exported (`APP_TRANSLATIONS_TAG`, `LANGUAGES_TAG`, `LOCALES_TAG`).
+- Value helpers: `supportedWritingStylesOf`, `appTranslationValueCombination`, `toCountryCodeMap`,
+  `appTranslationValueCountryCode`, `filterAppTranslationValues`, `sortAppTranslationValuesBy`, `writingStyleLabel`.
+- The static api answers `generateAppTranslations` when given (the preview).
+
+`./list`: `emptyAction` on `EntityListBody`, `EntityListTable` and `EntityListGrid`: one action under the empty and the
+no-results state.
+
+Texts: new keys `+%count% more`, `Show fewer`, `A value needs a text; delete it instead.`, `Add key`, `Delete key`,
+`Delete the key %key%`, `Delete the key “%key%”?`, `The key and all its values are deleted. This cannot be undone.`,
+`Key deleted`, `Failed to delete key`, `Deleting` (context `bulk-progress`), `Deleted` (context `bulk-done`), `key` /
+`keys` (context `translation-key-noun`), `Enter the key.`, `Country of the new translation`, `Every country`,
+`Every style`, `Singular and plural`, `Writing style`, `Context` (context `translation-value`), `Order` (context
+`translation-values`), `Language A–Z`, `Language Z–A`, `Oldest first`, `Newest first`, `Search values…`,
+`Search the values of this key`, `No value matches.`, `No keys match your search`,
+`The key already has a value for this language, country, style and context.`,
+`Generate the missing %style% values for %locale%?`, `Generate` (context `action`), `# key(s) is/are missing.`,
+`About # AI request(s).`, `The number of missing keys is not known.`, `The generation runs in the background.`.
+Removed: `# key(s) deleted` (the bulk delete's summary is the standard bulk summary now).
+
 ## 0.2.2
 
 The workers screens gain what hosts kept their own screens for (synced charts, readouts, keyboard rows, tooltips,

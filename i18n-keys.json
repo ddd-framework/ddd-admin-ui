@@ -1,6 +1,6 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
@@ -244,6 +244,14 @@
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): marker after a translated value that is the plural form."
     },
     {
+      "key": "+%count% more",
+      "text": "+%count% more",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): button under the first values of a key in the list that shows the other %count% values."
+    },
+    {
       "key": "A new app translation key, stored in the database.",
       "text": "A new app translation key, stored in the database.",
       "files": [
@@ -268,6 +276,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tooltip when more processes run than configured."
     },
     {
+      "key": "A value needs a text; delete it instead.",
+      "text": "A value needs a text; delete it instead.",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: message under a value whose text was emptied (it cannot be saved empty)."
+    },
+    {
       "key": "Account menu of %name%",
       "text": "Account menu of %name%",
       "files": [
@@ -290,6 +306,7 @@
       "files": [
         "list/ActionsHeaderText.tsx",
         "list/columns.tsx",
+        "translations/AppTranslationsScreen.tsx",
         "workers/overview.tsx"
       ],
       "hint": "Screen-reader name (hidden header) of the last table column, which holds a row's buttons (edit, delete, restart), in lists and admin screens."
@@ -326,6 +343,14 @@
         "translations/AppTranslationKeyDrawer.tsx"
       ],
       "hint": "App translations admin, drawer of one translation key: heading of the form that adds a translation of the key in one more language."
+    },
+    {
+      "key": "Add key",
+      "text": "Add key",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): button in the empty list that opens the form for a new translation key."
     },
     {
       "key": "Add__action",
@@ -824,6 +849,15 @@
       "hint": "App translations admin, drawer of one translation key: accessible name of the singular/plural select of a value; %label% names the value, e.g. a locale like de::INFORMAL."
     },
     {
+      "key": "Context__translation-value",
+      "text": "Context",
+      "context": "translation-value",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: accessible name of the filter for singular or plural values."
+    },
+    {
       "key": "Copied",
       "text": "Copied",
       "files": [
@@ -877,9 +911,18 @@
       "key": "Country",
       "text": "Country",
       "files": [
+        "translations/AppTranslationKeyDrawer.tsx",
         "translations/LocalesScreen.tsx"
       ],
       "hint": "Locales admin screen (language + country combinations): column header and filter label: the country code of the locale (e.g. DE)."
+    },
+    {
+      "key": "Country of the new translation",
+      "text": "Country of the new translation",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: accessible name of the country select of a new value."
     },
     {
       "key": "Create translation key",
@@ -990,6 +1033,31 @@
       "hint": "Locales admin screen (language + country combinations): column header and switch: the locale is the default one of its language."
     },
     {
+      "key": "Delete key",
+      "text": "Delete key",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: button that deletes the key with all its values (asks first)."
+    },
+    {
+      "key": "Delete the key %key%",
+      "text": "Delete the key %key%",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): accessible name of the delete button of a row; %key% is the key text."
+    },
+    {
+      "key": "Delete the key “%key%”?",
+      "text": "Delete the key “%key%”?",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx",
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): title of the confirmation before one key is deleted; %key% is the key text."
+    },
+    {
       "key": "Delete this translation value?",
       "text": "Delete this translation value?",
       "files": [
@@ -1006,6 +1074,24 @@
         "translations/AppTranslationsScreen.tsx"
       ],
       "hint": "Button that deletes (an action, verb), in the app translations admin."
+    },
+    {
+      "key": "Deleted__bulk-done",
+      "text": "Deleted",
+      "context": "bulk-done",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): first word of the summary after a bulk delete, e.g. “Deleted 3 keys”."
+    },
+    {
+      "key": "Deleting__bulk-progress",
+      "text": "Deleting",
+      "context": "bulk-progress",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): first word of the progress toast of a bulk delete, e.g. “Deleting keys… 2/5”."
     },
     {
       "key": "Dev only",
@@ -1142,6 +1228,14 @@
       "hint": "Error under a colour field whose text is not a colour; keep #RRGGBB as it is."
     },
     {
+      "key": "Enter the key.",
+      "text": "Enter the key.",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: validation message under the empty key field."
+    },
+    {
       "key": "Error",
       "text": "Error",
       "files": [
@@ -1150,12 +1244,28 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): column header: the error of a job run."
     },
     {
+      "key": "Every country",
+      "text": "Every country",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: option of the country select: the value holds for every country of its language."
+    },
+    {
       "key": "Every live process stops after its current message and is started again with the current code and settings. A process inside a long job finishes that job first; nothing is scaled and no message is lost.",
       "text": "Every live process stops after its current message and is started again with the current code and settings. A process inside a long job finishes that job first; nothing is scaled and no message is lost.",
       "files": [
         "workers/WorkerRestartButton.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): restart confirmation: what a restart request does."
+    },
+    {
+      "key": "Every style",
+      "text": "Every style",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: filter option: values of every writing style (informal and formal)."
     },
     {
       "key": "Every transport over the window; point at a chart to read one step.",
@@ -1212,6 +1322,15 @@
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): accessible description of a small chart."
+    },
+    {
+      "key": "Failed to delete key",
+      "text": "Failed to delete key",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx",
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): error toast when deleting one key failed."
     },
     {
       "key": "Failed to delete keys",
@@ -1444,6 +1563,23 @@
         "translations/TranslationCompleteness.tsx"
       ],
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): button of a completeness card; %locale% is a locale code like de-DE."
+    },
+    {
+      "key": "Generate the missing %style% values for %locale%?",
+      "text": "Generate the missing %style% values for %locale%?",
+      "files": [
+        "translations/TranslationCompleteness.tsx"
+      ],
+      "hint": "App translations admin, completeness per locale: confirmation title before an AI generation; %style% is Informal or Formal, %locale% a locale code like de-DE."
+    },
+    {
+      "key": "Generate__action",
+      "text": "Generate",
+      "context": "action",
+      "files": [
+        "translations/TranslationCompleteness.tsx"
+      ],
+      "hint": "App translations admin, completeness per locale: confirm button that starts the AI generation."
     },
     {
       "key": "Generating…",
@@ -1787,6 +1923,15 @@
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): column header and field label: the translation key (the English text that identifies a UI text)."
     },
     {
+      "key": "Key deleted",
+      "text": "Key deleted",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx",
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): toast after one key was deleted."
+    },
+    {
       "key": "Key saved",
       "text": "Key saved",
       "files": [
@@ -1802,6 +1947,22 @@
         "translations/LocalesScreen.tsx"
       ],
       "hint": "The word \"language\" in two places: column header and filter label of the locales admin screen (the language code of a locale, e.g. de), and the heading above the list of languages in the language menu of the top bar."
+    },
+    {
+      "key": "Language A–Z",
+      "text": "Language A–Z",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: order option of the values: by language, ascending."
+    },
+    {
+      "key": "Language Z–A",
+      "text": "Language Z–A",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: order option of the values: by language, descending."
     },
     {
       "key": "Language of the new translation",
@@ -2364,6 +2525,14 @@
       "hint": "App translations admin, drawer of one translation key: accessible name of the text field for the new translation."
     },
     {
+      "key": "Newest first",
+      "text": "Newest first",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: order option of the values: the newest first."
+    },
+    {
       "key": "No",
       "text": "No",
       "files": [
@@ -2418,6 +2587,14 @@
         "translations/ConfigImportCards.tsx"
       ],
       "hint": "Import of configured rows (maintenance action) of a kind the host names, e.g. countries: error when the screen has no import for this kind; %kind% is a technical name, not translated."
+    },
+    {
+      "key": "No keys match your search",
+      "text": "No keys match your search",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): shown instead of the list when the search or the filters match no key."
     },
     {
       "key": "No language found",
@@ -2624,6 +2801,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): no transport matches the search."
     },
     {
+      "key": "No value matches.",
+      "text": "No value matches.",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: shown instead of the values when the value search or filters match none."
+    },
+    {
       "key": "No wait time in this window",
       "text": "No wait time in this window",
       "files": [
@@ -2757,6 +2942,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): process timeline tooltip: the job class the process is working on right now."
     },
     {
+      "key": "Oldest first",
+      "text": "Oldest first",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: order option of the values: the oldest first."
+    },
+    {
       "key": "One or more of the given values is invalid.",
       "text": "One or more of the given values is invalid.",
       "files": [
@@ -2811,6 +3004,15 @@
         "shell/NavItemMarks.tsx"
       ],
       "hint": "Read by screen readers after a navigation entry that leads to another application or an older screen (a full page load)."
+    },
+    {
+      "key": "Order__translation-values",
+      "text": "Order",
+      "context": "translation-values",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: accessible name of the select ordering the values."
     },
     {
       "key": "Other (%count%)",
@@ -3357,6 +3559,14 @@
       "hint": "Locales admin screen (language + country combinations): placeholder of the name search."
     },
     {
+      "key": "Search the values of this key",
+      "text": "Search the values of this key",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: accessible name of the search field over the values."
+    },
+    {
       "key": "Search translations…",
       "text": "Search translations…",
       "files": [
@@ -3379,6 +3589,14 @@
         "workers/WorkersOverviewScreen.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): placeholder of the transport search."
+    },
+    {
+      "key": "Search values…",
+      "text": "Search values…",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: placeholder of the search field over the values."
     },
     {
       "key": "Search…",
@@ -3482,6 +3700,14 @@
       "hint": "Small floating pill button at the bottom edge of a group panel; clicking it reveals all rows. %count% is the total number of rows, for example 12."
     },
     {
+      "key": "Show fewer",
+      "text": "Show fewer",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): button that folds a key's values back to the first few."
+    },
+    {
       "key": "Show full path",
       "text": "Show full path",
       "files": [
@@ -3537,6 +3763,14 @@
         "translations/adminFormat.ts"
       ],
       "hint": "App translations admin, drawer of one translation key: context option of a value: the singular form."
+    },
+    {
+      "key": "Singular and plural",
+      "text": "Singular and plural",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: filter option: singular and plural values."
     },
     {
       "key": "Skip to content",
@@ -3745,6 +3979,14 @@
       "hint": "Error message shown when a picked file cannot be decoded as an image by the browser while preparing an upload in the media picker."
     },
     {
+      "key": "The generation runs in the background.",
+      "text": "The generation runs in the background.",
+      "files": [
+        "translations/TranslationCompleteness.tsx"
+      ],
+      "hint": "App translations admin, completeness per locale: sentence in the confirmation before an AI generation."
+    },
+    {
       "key": "The handler logged an error and returned__worker-message-outcome",
       "text": "The handler logged an error and returned",
       "context": "worker-message-outcome",
@@ -3785,6 +4027,23 @@
         "translations/ConfigImportCards.tsx"
       ],
       "hint": "Import of the configured languages or locales (maintenance action): error when the import failed (fallback when the server sends no message)."
+    },
+    {
+      "key": "The key already has a value for this language, country, style and context.",
+      "text": "The key already has a value for this language, country, style and context.",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: message under the new-value form when that combination exists already."
+    },
+    {
+      "key": "The key and all its values are deleted. This cannot be undone.",
+      "text": "The key and all its values are deleted. This cannot be undone.",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx",
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): description of the confirmation before one key is deleted."
     },
     {
       "key": "The languages could not be loaded.",
@@ -3833,6 +4092,14 @@
         "workers/transport.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): error when the runs could not be loaded."
+    },
+    {
+      "key": "The number of missing keys is not known.",
+      "text": "The number of missing keys is not known.",
+      "files": [
+        "translations/TranslationCompleteness.tsx"
+      ],
+      "hint": "App translations admin, completeness per locale: sentence in the confirmation when the cost estimate gave no count."
     },
     {
       "key": "The process list has no running process yet.",
@@ -4639,6 +4906,14 @@
       "hint": "Tooltip of a disabled write button when writes are switched off for this screen."
     },
     {
+      "key": "Writing style",
+      "text": "Writing style",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: accessible name of the writing-style filter of the values (informal / formal)."
+    },
+    {
       "key": "Writing style of %label%",
       "text": "Writing style of %label%",
       "files": [
@@ -4931,6 +5206,24 @@
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): hint under the waiting count of a transport."
+    },
+    {
+      "key": "key__translation-key-noun",
+      "text": "key",
+      "context": "translation-key-noun",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): noun in bulk toasts, singular: one translation key."
+    },
+    {
+      "key": "keys__translation-key-noun",
+      "text": "keys",
+      "context": "translation-key-noun",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): noun in bulk toasts, plural: translation keys."
     },
     {
       "key": "last %window%",
@@ -5298,12 +5591,12 @@
       "hint": "Workers admin chart: option of the time window switch: a number of hours."
     },
     {
-      "key": "{count, plural, one {# key deleted} other {# keys deleted}}",
-      "text": "{count, plural, one {# key deleted} other {# keys deleted}}",
+      "key": "{count, plural, one {# key is missing.} other {# keys are missing.}}",
+      "text": "{count, plural, one {# key is missing.} other {# keys are missing.}}",
       "files": [
-        "translations/AppTranslationsScreen.tsx"
+        "translations/TranslationCompleteness.tsx"
       ],
-      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): success toast after the bulk delete; # is the number of keys."
+      "hint": "App translations admin, completeness per locale: sentence in the confirmation before an AI generation: keys without a value in this locale and style."
     },
     {
       "key": "{count, plural, one {# message finished in this window.} other {# messages finished in this window.}}",
@@ -5368,6 +5661,14 @@
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): summary in the live section heading."
+    },
+    {
+      "key": "{count, plural, one {About # AI request.} other {About # AI requests.}}",
+      "text": "{count, plural, one {About # AI request.} other {About # AI requests.}}",
+      "files": [
+        "translations/TranslationCompleteness.tsx"
+      ],
+      "hint": "App translations admin, completeness per locale: sentence in the confirmation before an AI generation: the estimated number of requests to the AI service (the cost)."
     },
     {
       "key": "{count, plural, one {Delete # key?} other {Delete # keys?}}",

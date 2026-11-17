@@ -119,6 +119,44 @@ const countriesCard = render(
   h(ConfigImportCard, { api: translationsApi, kind: 'countries', operation: async () => 3, texts: { title: 'Import countries from the configuration' } }),
 );
 const languages = render(h(LanguagesScreen, { api: translationsApi, asSpecimen: true }));
+// 0.2.3: host slots, sort, row index, cards, single delete, empty state with Add, compact values, parameter names
+const manyValues = Array.from({ length: 6 }, (_, index) => ({ id: 100 + index, appTranslationKeyId: 9, languageId: 2, translation: `Wert ${index}`, context: 'ONE', writingStyle: index % 2 ? 'FORMAL' : 'INFORMAL' }));
+const slotApi = createStaticTranslationsApi({ ...showcaseTranslationsData, appTranslationKeys: () => ({ appTranslationKeys: { elements: [{ id: 9, key: 'Many values', appTranslationValues: { elements: manyValues } }] } }) });
+const keysSlots = render(
+  h(AppTranslationsScreen, {
+    api: slotApi,
+    asSpecimen: true,
+    headerActions: h('button', { type: 'button', 'data-host-header': '' }, 'Untracked keys'),
+    moreActions: [{ id: 'sync', label: 'Key sync', onSelect: () => undefined }],
+    toolbarTrailing: h('span', { 'data-host-trailing': '' }, 'Compact'),
+    columns: columns => [...columns, { id: 'usage', header: 'Usage', cell: () => h('span', { 'data-host-usage': '' }, '3') }],
+    drawerEditKey: 'key-edit',
+  }),
+);
+const styleApi = createStaticTranslationsApi({
+  ...showcaseTranslationsData,
+  completeness: {
+    appTranslationCompletenesses: {
+      elements: showcaseTranslationsData.completeness.appTranslationCompletenesses.elements.map((entry, index) =>
+        index === 0 ? { ...entry, informalTranslatedCount: 1, formalTranslatedCount: 1 } : entry,
+      ),
+    },
+  },
+});
+const keysStyles = render(h(AppTranslationsScreen, { api: styleApi, asSpecimen: true }));
+const emptyApi = createStaticTranslationsApi({ ...showcaseTranslationsData, appTranslationKeys: () => ({ appTranslationKeys: { elements: [] } }) });
+const keysEmpty = render(h(AppTranslationsScreen, { api: emptyApi, asSpecimen: true }));
+let wrappedArgs;
+const keysWrapped = render(
+  h(AppTranslationsScreen, {
+    api: translationsApi,
+    asSpecimen: true,
+    useListQuery: (args, options) => {
+      wrappedArgs = args;
+      return translationsApi.useAppTranslationKeysQuery(args, options);
+    },
+  }),
+);
 
 const switches = (html) => [...html.matchAll(/<button[^>]*role="switch"[^>]*>/g)].map(match => match[0]);
 const checks = [
@@ -161,6 +199,14 @@ const checks = [
   ['app translations: the key is a link to its drawer, rows are tab stops',
     keys.includes('data-slot="app-translation-key-link"') && /href="\?edit=\d+"/.test(keys) && count(keys, /<tr[^>]*tabindex="0"/g) > 0
       && keysWithHref.includes('href="/app-translations/')],
+  ['app translations: row index, sortable id and key, a delete per row, cards for narrow screens',
+    keys.includes('aria-sort="descending"') && count(keys, /aria-label="Delete the key /g) >= 6 && keys.includes('data-slot="app-translation-key-card"') && />1<\/td>/.test(keys)],
+  ['app translations: host header actions, overflow menu, toolbar content and columns', keysSlots.includes('data-host-header') && keysSlots.includes('data-host-trailing') && keysSlots.includes('data-host-usage') && keysSlots.includes('aria-haspopup')],
+  ['app translations: the first values with "+N", the drawer parameter renamed', keysSlots.includes('+2 more') && !keysSlots.includes('Wert 5') && keysSlots.includes('href="?key-edit=9"')],
+  ['app translations: the empty state has its own sentence and an Add action', keysEmpty.includes('No translation keys found') && keysEmpty.includes('>Add key<')],
+  ['app translations: a wrapped list query gets the package arguments', keysWrapped.includes('Save changes') && wrappedArgs?.orderBy === 'id DESC' && wrappedArgs?.expand === 'appTranslationValues'],
+  ['completeness: generation offered only for the styles of the language',
+    keysStyles.includes('Generate missing informal translations for en-GB') && !keysStyles.includes('Generate missing formal translations for en-GB') && keysStyles.includes('Generate missing formal translations for de-DE')],
   ['config import card: a host kind with its own operation and texts', countriesCard.includes('Import countries from the configuration') && noneDisabled(buttonsNamed(countriesCard, 'Import'))],
   ['languages: the import button says what it does; the writing-styles select carries the write-access reason',
     languages.includes('title="Creates or updates every language of the configuration, matched by language code."')

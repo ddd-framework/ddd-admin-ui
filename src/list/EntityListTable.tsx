@@ -332,6 +332,7 @@ export const EntityListTable = <TItem,>({
   onClearSearch,
   loadingMessage,
   error,
+  emptyAction,
   rowAction,
   skeletonRows = 8,
   selection,
@@ -584,6 +585,7 @@ export const EntityListTable = <TItem,>({
         onClearSearch={onClearSearch}
         loadingMessage={loadingMessage}
         error={error}
+        emptyAction={emptyAction}
       />
       <EntityListLoadMore hasMore={showRows && hasMore} isFetchingMore={isFetchingMore} onLoadMore={onLoadMore} />
     </div>

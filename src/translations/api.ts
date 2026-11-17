@@ -72,6 +72,33 @@ export interface TranslationsApi {
   useImportLocalesFromConfigMutation: ApiMutationHook<void, LocalesResponse>;
   /** `POST {translations}/translateEntities`: AI-translates entities into locales (changes nothing stored). */
   useTranslateEntitiesMutation: ApiMutationHook<TranslateEntitiesArg, TranslateEntitiesResponse>;
+  /**
+   * The application's bulk delete of keys (`createTranslationsApi({ bulkDelete })`, default `POST
+   * {appTranslations}/keys/bulk/delete`): one request for the selected keys. Absent without the option; the keys
+   * list then deletes one key per request.
+   */
+  useBulkDeleteAppTranslationKeysMutation?: ApiMutationHook<AppTranslationKeysBulkDeleteArg, AppTranslationKeysBulkDeleteResponse>;
+}
+
+/** The ids of a bulk delete. */
+export interface AppTranslationKeysBulkDeleteArg {
+  appTranslationKeyIds: readonly (string | number)[];
+}
+
+/** The answer of a bulk delete: the counts when the endpoint reports them (else every key counts as deleted). */
+export type AppTranslationKeysBulkDeleteResponse = Readonly<Record<string, unknown>> & {
+  deletedCount?: number | null;
+  skippedCount?: number | null;
+};
+
+/** The application's bulk delete endpoint of keys (the modules ship no controller: the route is the application's). */
+export interface AppTranslationKeysBulkDelete {
+  /** Below the app translations segment (default `keys/bulk/delete`). */
+  path?: string;
+  /** Default `POST`. */
+  method?: 'POST' | 'DELETE';
+  /** The request body for the ids (default `{ appTranslationKeyIds: [...] }`). */
+  body?: (appTranslationKeyIds: readonly (string | number)[]) => unknown;
 }
 
 /** Path segments below `apiPrefix`, as the application's controllers mount them. */
@@ -100,6 +127,8 @@ export interface CreateTranslationsApiOptions {
   apiPrefix: string;
   /** Path segments that differ from `DEFAULT_TRANSLATIONS_API_PATHS`. */
   paths?: Partial<TranslationsApiPaths>;
+  /** The application's bulk delete of keys (`true`: the defaults); adds `useBulkDeleteAppTranslationKeysMutation`. */
+  bulkDelete?: AppTranslationKeysBulkDelete | true;
 }
 
 const listQuery = ({ filters, orderBy, top, skip, select, expand }: TranslationsListArg): string =>
@@ -150,6 +179,15 @@ export const buildTranslationsRequests = (apiPrefix: string, paths: Partial<Tran
   };
 };
 
+/** The request of the application's bulk delete of keys, below the app translations segment. Pure. */
+export const buildAppTranslationKeysBulkDeleteRequest =
+  (apiPrefix: string, paths: Partial<TranslationsApiPaths> = {}, options: AppTranslationKeysBulkDelete = {}) =>
+  ({ appTranslationKeyIds }: AppTranslationKeysBulkDeleteArg): InjectedRequest => ({
+    url: `${trimApiPrefix(apiPrefix)}/${trimSegment({ ...DEFAULT_TRANSLATIONS_API_PATHS, ...paths }.appTranslations)}/${trimSegment(options.path ?? 'keys/bulk/delete')}`,
+    method: options.method ?? 'POST',
+    body: options.body ? options.body(appTranslationKeyIds) : { appTranslationKeyIds: [...appTranslationKeyIds] },
+  });
+
 /**
  * The operations as injected (endpoint name → definition). Cache: each query provides its tag type; a key or value
  * write invalidates every app translation query (list, key, completeness); a language write or import invalidates the
@@ -187,13 +225,28 @@ export const translationsEndpointDefinitions = (apiPrefix: string, paths?: Parti
  * export const translationsApi = createTranslationsApi({ baseApi: adminApi, apiPrefix: '/api/admin/common' });
  * ```
  */
-export const createTranslationsApi = ({ baseApi, apiPrefix, paths }: CreateTranslationsApiOptions): TranslationsApi => {
-  const memoKey = `translations:${trimApiPrefix(apiPrefix)}:${JSON.stringify({ ...DEFAULT_TRANSLATIONS_API_PATHS, ...paths })}`;
+export const createTranslationsApi = ({ baseApi, apiPrefix, paths, bulkDelete }: CreateTranslationsApiOptions): TranslationsApi => {
+  const bulkDeleteOptions = bulkDelete === true ? {} : bulkDelete;
+  const memoKey = `translations:${trimApiPrefix(apiPrefix)}:${JSON.stringify({ ...DEFAULT_TRANSLATIONS_API_PATHS, ...paths })}${
+    bulkDeleteOptions ? `:bulkDelete:${JSON.stringify({ path: bulkDeleteOptions.path, method: bulkDeleteOptions.method })}` : ''
+  }`;
+  const definitions = {
+    ...translationsEndpointDefinitions(apiPrefix, paths),
+    ...(bulkDeleteOptions
+      ? {
+          adminUiBulkDeleteAppTranslationKeys: {
+            kind: 'mutation',
+            request: buildAppTranslationKeysBulkDeleteRequest(apiPrefix, paths, bulkDeleteOptions),
+            invalidatesTags: [APP_TRANSLATIONS_TAG],
+          } satisfies InjectedEndpointDefinition<never>,
+        }
+      : {}),
+  };
   return injectEndpointsOnce(
     baseApi,
     memoKey,
     [APP_TRANSLATIONS_TAG, LANGUAGES_TAG, LOCALES_TAG],
-    translationsEndpointDefinitions(apiPrefix, paths),
+    definitions,
     hookOf => ({
       useAppTranslationKeysQuery: hookOf('adminUiAppTranslationKeys') as TranslationsApi['useAppTranslationKeysQuery'],
       useAppTranslationKeyQuery: hookOf('adminUiAppTranslationKey') as TranslationsApi['useAppTranslationKeyQuery'],
@@ -211,6 +264,9 @@ export const createTranslationsApi = ({ baseApi, apiPrefix, paths }: CreateTrans
       useUpdateLocaleMutation: hookOf('adminUiUpdateLocale') as TranslationsApi['useUpdateLocaleMutation'],
       useImportLocalesFromConfigMutation: hookOf('adminUiImportLocalesFromConfig') as TranslationsApi['useImportLocalesFromConfigMutation'],
       useTranslateEntitiesMutation: hookOf('adminUiTranslateEntities') as TranslationsApi['useTranslateEntitiesMutation'],
+      ...(bulkDeleteOptions
+        ? { useBulkDeleteAppTranslationKeysMutation: hookOf('adminUiBulkDeleteAppTranslationKeys') as TranslationsApi['useBulkDeleteAppTranslationKeysMutation'] }
+        : {}),
     })
   );
 };
@@ -223,6 +279,10 @@ export interface StaticTranslationsData {
   languages?: (arg: TranslationsListArg) => LanguagesResponse | undefined;
   locales?: (arg: TranslationsListArg) => LocalesResponse | undefined;
   translateEntities?: (arg: TranslateEntitiesArg) => TranslateEntitiesResponse | Promise<TranslateEntitiesResponse>;
+  /** Present: the static api has `useBulkDeleteAppTranslationKeysMutation` answering it. */
+  bulkDeleteAppTranslationKeys?: (arg: AppTranslationKeysBulkDeleteArg) => AppTranslationKeysBulkDeleteResponse | Promise<AppTranslationKeysBulkDeleteResponse>;
+  /** The answer of a generation; `previewOnly` asks for the cost estimate. Default: 0 keys. */
+  generateAppTranslations?: (arg: AppTranslationsGenerateArg) => AppTranslationsGenerateResponse | Promise<AppTranslationsGenerateResponse>;
 }
 
 /** A `TranslationsApi` answering fixed payloads, without a store or a request: for showcases, tests and design reviews. */
@@ -234,7 +294,9 @@ export const createStaticTranslationsApi = (data: StaticTranslationsData): Trans
   useUpdateAppTranslationValueMutation: staticMutationHook(({ appTranslationValue }) => ({ appTranslationValue })),
   useDeleteAppTranslationValueMutation: staticMutationHook(() => ({})),
   useAppTranslationCompletenessQuery: staticQueryHook(() => data.completeness),
-  useGenerateAppTranslationsMutation: staticMutationHook(({ writingStyle }) => ({ appTranslationsResult: { writingStyle, translatedKeysCount: 0 } })),
+  useGenerateAppTranslationsMutation: staticMutationHook(arg =>
+    data.generateAppTranslations ? data.generateAppTranslations(arg) : { appTranslationsResult: { writingStyle: arg.writingStyle, translatedKeysCount: 0 } }
+  ),
   useGenerateAllAppTranslationsMutation: staticMutationHook(() => ({ appTranslationsResults: { elements: [] } })),
   useLanguagesQuery: staticQueryHook(arg => data.languages?.(arg)),
   useUpdateLanguageMutation: staticMutationHook(({ language }) => ({ language })),
@@ -243,4 +305,5 @@ export const createStaticTranslationsApi = (data: StaticTranslationsData): Trans
   useUpdateLocaleMutation: staticMutationHook(({ locale }) => ({ locale })),
   useImportLocalesFromConfigMutation: staticMutationHook(() => data.locales?.({}) ?? { locales: { elements: [] } }),
   useTranslateEntitiesMutation: staticMutationHook(arg => (data.translateEntities ? data.translateEntities(arg) : { translatedEntities: { elements: [] } })),
+  ...(data.bulkDeleteAppTranslationKeys ? { useBulkDeleteAppTranslationKeysMutation: staticMutationHook(data.bulkDeleteAppTranslationKeys) } : {}),
 });

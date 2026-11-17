@@ -379,6 +379,7 @@ on the application's admin controllers: the modules ship the entities and servic
 | `useLanguagesQuery`, `useUpdateLanguageMutation`, `useImportLanguagesFromConfigMutation` | `GET languages/list`, `PATCH languages` (`{ language }`), `GET languages/importFromConfig` |
 | `useLocalesQuery`, `useUpdateLocaleMutation`, `useImportLocalesFromConfigMutation` | `GET locales/list`, `PATCH locales` (`{ locale }`), `GET locales/importFromConfig` |
 | `useTranslateEntitiesMutation` | `POST translations/translateEntities` (`{ entitiesToTranslate, localesToTranslate }`) |
+| `useBulkDeleteAppTranslationKeysMutation` (with `bulkDelete`) | the application's bulk delete, default `POST app-translations/keys/bulk/delete` (`{ appTranslationKeyIds }`; `path`, `method`, `body` configurable) |
 
 ```tsx
 'use client';
@@ -415,6 +416,40 @@ kind of the host (countries) brings its `operation` (answers the imported rows' 
 In `AppTranslationsScreen` the key is a link to its drawer (`?edit=<id>`, or the host's `keyHref(key)`): a plain click
 opens the drawer in place, a modified click a new tab; a row opens by pointer or keyboard (Enter / Space on the
 focused row).
+
+The keys list sorts by id (default, newest first) or key (`sort` in the URL), numbers its rows, shows cards below `md`
+and in the card view, the first four values of a key with "+N" (`valuesPreviewCount`), a delete per row and in the
+drawer; "Clear filters" keeps the search; the empty state offers Add. A bulk delete uses the application's endpoint when
+the api has it (`createTranslationsApi({ …, bulkDelete: true })`), else one request per key, and summarises deleted and
+skipped keys. The generation per locale and style asks the cost estimate first (`previewOnly`) and runs after a
+confirmation (`TranslationCompleteness confirmGeneration`), only for the styles the language supports. In the drawer
+the key is required, an empty template or hint is sent as `null`; values carry a country, keep the language's styles,
+cannot be saved empty, count for the discard question, and are searched, filtered and ordered from two values on; the
+new-value form offers only combinations the key lacks.
+
+Host slots of `AppTranslationsScreen`:
+
+```tsx
+<AppTranslationsScreen
+  api={translationsApi}
+  headerActions={<Button variant="outline" onClick={openUntracked}>Untracked keys</Button>}
+  moreActions={[{ id: 'sync', label: 'Key sync', onSelect: syncKeys }]}
+  toolbarTrailing={<CompactToggle />}
+  columns={columns => [...columns.slice(0, 3), usageColumn, ...columns.slice(3)]}
+  extraFilters={<FilterText label="Folder" value={folder} onChange={setFolder} />}
+  extraActiveFilterCount={folder ? 1 : 0}
+  onClearExtraFilters={() => setFolder('')}
+  renderCard={({ item, onActivate }) => <HostKeyCard item={item} onActivate={onActivate} />}
+  displayMode={view} onDisplayModeChange={setView}                // e.g. useListViewParam('appTranslations')
+  useListQuery={useKeysWithUsage}                                  // wraps api.useAppTranslationKeysQuery
+  drawerEditKey="key" drawerCreateKey="newKey" urlParamNames={{ id: 'keyId' }}
+/>
+```
+
+A host hook that asks what a package screen asks shares its cache entry: `buildAppTranslationKeysListArgs(filters,
+sort)` (plus `top` / `skip`), `CONTENT_LOCALES_ARG` (or `useActiveLocales(api)` for the rows of `useContentLocales`),
+`ACTIVE_LANGUAGES_ARG`, `ACTIVE_LOCALES_WITH_COUNTRIES_ARG`, `APP_TRANSLATIONS_LANGUAGES_ARG`; the host's own writes
+invalidate the exported tags (`APP_TRANSLATIONS_TAG`, `LANGUAGES_TAG`, `LOCALES_TAG`) to refresh the package screens.
 
 ## Design studio
 
@@ -553,7 +588,7 @@ project's `.claude/skills/`. Idempotent; repoints an existing symlink, never tou
 
 ## Versioning
 
-0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.2.2"`,
+0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.2.3"`,
 `pnpm add -E` / `npm install -E`); modules peer on the version they were tested with. Stable releases are published
 under the `latest` dist-tag, pre-releases (`x.y.z-…`) under `next`. Changes per release: [CHANGELOG.md](CHANGELOG.md).
 

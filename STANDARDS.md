@@ -224,6 +224,8 @@ const columns: EntityListColumn<Project>[] = [
   keep it in the URL list state as one value (`formatListSort` / `parseListSort`, `key:asc`; `nextListSort` takes the
   same cycle).
 - **Row index.** `showRowIndex`: a leading `#` column, 1-based among the loaded rows.
+- **Empty state action.** `emptyAction` on the body: one outlined button (size `sm`) under the empty and the no-results
+  state, e.g. Add next to "Clear search".
 - **Keyboard rows.** `rowKeyboardActivation` (opt-in): a row with a `rowAction` is a tab stop and Enter or Space on the
   focused row runs it. For lists whose rows have no labelled control of their own that opens them; a row with a link
   or an open button needs none.

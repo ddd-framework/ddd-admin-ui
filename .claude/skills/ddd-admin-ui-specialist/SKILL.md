@@ -3,7 +3,7 @@ name: ddd-admin-ui-specialist
 description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries and import matrix, host setup (AdminUiProvider, theme.css, components.css, tokens.json, ddd-admin-ui-check-tokens, -check-radix, -check-contrast), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title from one navigation; ./shell-background), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route error and loading, form drawers and dialogs, the save shortcut, useConfirm, write access, locale::style translations with limits, media fields with image crop, colour fields, key figures (./data), markdown (./markdown), the workers and translation admin screens (./workers, ./translations), ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form or admin screen, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast fails, or URL filters get lost."
 metadata:
   author: mgamadeus
-  version: 0.2.2
+  version: 0.2.3
 ---
 
 # ddd-admin-ui specialist
@@ -62,7 +62,9 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | one section of a package screen as host code | `renderSection(id, section)` (keep / `null` / own node); the exported parts (`WorkerTransportFacts`, `WORKER_TRANSPORT_TABS`) | workers |
 | charts of one window with a shared hover, round axis ticks | `WorkerChartSyncGroup` + `WorkerTimeChart ticks={countTicks \| durationTicks}` | workers |
 | a list row that opens by keyboard (no own button) | `EntityListBody` / `EntityListTable` `rowKeyboardActivation` with `rowAction` | list |
-| app translations, languages, locales, import from configuration | `createTranslationsApi({ baseApi, apiPrefix })` + `AppTranslationsScreen` / `LanguagesScreen` / `LocalesScreen` / `ConfigImportCard` | translations |
+| app translations, languages, locales, import from configuration | `createTranslationsApi({ baseApi, apiPrefix, bulkDelete? })` + `AppTranslationsScreen` (slots: `headerActions`, `moreActions`, `toolbarTrailing`, `columns`, `extraFilters`, `renderCard`, `useListQuery`) / `LanguagesScreen` / `LocalesScreen` / `ConfigImportCard` | translations |
+| a host hook on the same cache entry as a package screen | `buildAppTranslationKeysListArgs`, `CONTENT_LOCALES_ARG` / `useActiveLocales`, the exported tags | translations |
+| an Add button in a list's empty state | `EntityListBody emptyAction` | list |
 | AI translation of an entity form, content locales from the active locales | `useEntityTranslator(api)` (several drafts per request: `useEntitiesTranslator`) + `useTranslationRunner`, `useContentLocales(api)` | translations, logic |
 | an import from configuration of a host kind (countries) | `ConfigImportCard kind="countries" operation={…} texts={…}` | translations |
 | a maintenance action (run, pending, last outcome) | `MaintenanceActionCard` | page |

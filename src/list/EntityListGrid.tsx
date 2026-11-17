@@ -65,6 +65,7 @@ export const EntityListGrid = <TItem,>({
   onClearSearch,
   loadingMessage,
   error,
+  emptyAction,
   rowAction,
   skeletonCards = 6,
   isGridView = true,
@@ -102,6 +103,7 @@ export const EntityListGrid = <TItem,>({
         onClearSearch={onClearSearch}
         loadingMessage={loadingMessage}
         error={error}
+        emptyAction={emptyAction}
       />
       <EntityListLoadMore hasMore={showCards && hasMore} isFetchingMore={isFetchingMore} onLoadMore={onLoadMore} />
     </div>
