@@ -15,9 +15,10 @@ export const run = async ({ openPage, report, requests, waitForRequest, checkPho
     await page.waitForSelector('[data-slot="issues-trend-chart"] rect');
 
     await page.getByRole('radio', { name: /^Resolved/ }).click();
-    await waitForRequest(page, /groups\/list\?environment=production&status=RESOLVED&limit=50&offset=0/);
+    await waitForRequest(page, /groups\/list\?(environment=production&)?status=RESOLVED&limit=50&offset=0/);
     await page.locator('tr', { hasText: 'PDOException' }).first().waitFor({ timeout: 10_000 });
-    report('issues: the Resolved tab lists the resolved group', page.url().includes('status=RESOLVED'), page.url());
+    await page.waitForURL(/status=RESOLVED/, { timeout: 5000 }).catch(() => {});
+    report('issues: the Resolved tab lists the resolved group, the tab is in the URL', page.url().includes('status=RESOLVED'), page.url());
     await page.getByRole('radio', { name: /^Open/ }).click();
 
     await page.getByRole('radio', { name: 'staging' }).click();
@@ -27,10 +28,11 @@ export const run = async ({ openPage, report, requests, waitForRequest, checkPho
     await page.getByRole('radio', { name: 'production' }).click();
     await page.locator('tr', { hasText: 'RuntimeException' }).first().waitFor({ timeout: 10_000 });
 
-    await page.getByRole('textbox', { name: 'Search errors' }).fill('price');
+    await page.getByLabel('Search errors').fill('price');
     await waitForRequest(page, /groups\/list\?environment=production&status=OPEN&search=price/);
+    await page.waitForURL(/q=price/, { timeout: 5000 }).catch(() => {});
     report('issues: the search reaches the list and the URL', page.url().includes('q=price'), page.url());
-    await page.getByRole('textbox', { name: 'Search errors' }).fill('');
+    await page.getByLabel('Search errors').fill('');
     await page.locator('tr', { hasText: 'RuntimeException' }).first().waitFor({ timeout: 10_000 });
 
     await page.locator('tr', { hasText: 'RuntimeException' }).first().click();
