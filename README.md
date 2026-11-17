@@ -39,6 +39,7 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE`; the sample payloads of the screens (`showcaseWorkersData`, `showcaseTranslationsData`) | logic, i18n, primitives, list, page, form, translations, media, glass, data, workers, shell, shell-background; never `./next`, `./notify-sonner` or `./markdown` (its section loads through `loadMarkdown`) |
 | `./data` | key figures: `MetricTile` (label, value, delta, hint, sparkline slot, skeleton), `MetricTileSkeleton`, `MetricGrid`, `DeltaText`, `NoteList`, the delta helpers `resolveDelta`, `relativeChange`, `deltaDirectionOf`, `deltaToneOf` | logic, i18n, primitives |
 | `./markdown` | `MarkdownEditor`, `MarkdownPreview` (sanitised), `renderMarkdownEditor` (the `renderEditor` slot of `./translations` and `AdminUiProvider.renderMarkdownEditor`); loads `@uiw/react-md-editor` and `rehype-sanitize` after hydration | logic, i18n, primitives; translations type-only; the only entry reaching its optional peers |
+| `./design-studio` | `designStudioComponents`: the `components` of `@mgamadeus/ddd-design-studio`'s provider, every slot mapped to the block of the same name; the slot types (`DesignStudioComponentsContract`, structural copy) | primitives, list, page, glass; never imports the studio |
 | `./theme.css`, `./components.css` | the Tailwind theme binding and the structural CSS of the blocks | — |
 | `./tokens.json`, `./i18n-keys.json` | the host contract (colour roles, properties, layers, data attributes) and the text manifest | — |
 
@@ -363,6 +364,26 @@ export const ImportsPage = () => <ConfigImportCard api={translationsApi} kind="l
 `useTranslationRunner` (`./logic`); `useContentLocales(translationsApi, { fallback })` gives the content locale keys of
 the active locales. `ConfigImportCard` is a `MaintenanceActionCard` (`./page`): title, description, run, the outcome of
 the last run.
+
+## Design studio
+
+`./design-studio` exports `designStudioComponents`, the `components` value the provider of
+`@mgamadeus/ddd-design-studio` takes (targets studio **0.7.x**, checked against 0.7.3). Every slot maps to the block of
+the same name: the shadcn-style primitives (`Button` … `DropdownMenuSeparator`), `Combobox`, `SearchField` and
+`StatusBadge` from `./list`, `QuickFilterPills` from `./glass`, `PageHeader`, `StatusCallout`, `CardGrid` and
+`PageSections` from `./page`.
+
+```tsx
+import { designStudioComponents } from '@mgamadeus/ddd-admin-ui/design-studio';
+
+<DesignStudioProvider components={designStudioComponents} /* api, router, paths, … */ />;
+// one slot of your own: components={{ ...designStudioComponents, Button: MyButton }}
+```
+
+The entry never imports the studio and adds no dependency: `DesignStudioComponentsContract` is a structural copy of
+the studio's `DesignStudioComponents`, and the map is typed against it; the studio passes a subset of each block's
+props, so the map is assignable to the studio's own type. A later studio minor that adds or changes a slot needs a new
+release of this entry. The host's `TooltipProvider` (part of `AdminUiProvider`) and theme apply as for every block.
 
 ## Showcase
 

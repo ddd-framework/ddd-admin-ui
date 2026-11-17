@@ -274,6 +274,8 @@ export function checkPackage(packageDirectory, options = {}) {
       workers: ['logic', 'i18n', 'primitives', 'list', 'page'],
       data: ['logic', 'i18n', 'primitives'],
       markdown: ['logic', 'i18n', 'primitives'],
+      // the design studio's components map: blocks only
+      'design-studio': ['primitives', 'list', 'page', 'glass'],
     };
     const TYPE_ONLY = { provider: ['media', 'translations'], markdown: ['translations'] };
     const FILE_LIMITS = {

@@ -8,6 +8,68 @@ is in 0.x.
 All additions below are optional props, new exports or new entries: a caller that uses none of them renders the same
 DOM (the list snapshot of 0.1.0-rc.2 and the form actions snapshot of 0.1.0-rc.5 are unchanged).
 
+New entries:
+
+- `./data`: `MetricTile` (label, value, icon, delta, hint, sparkline slot, `isLoading` skeleton, `compact`),
+  `MetricTileSkeleton`, `MetricGrid`, `DeltaText` (signed change in the UI language; `preference` higher / lower /
+  none; `format` number / percent / explicit `Intl.NumberFormatOptions`; arrow, sign and a hidden word), `NoteList`, and
+  `resolveDelta`, `relativeChange`, `deltaDirectionOf`, `deltaToneOf`.
+- `./markdown` (optional peers `@uiw/react-md-editor` ^4.1.0 and `rehype-sanitize` ^6.0.0, imported after hydration,
+  never from another entry): `MarkdownEditor`, `MarkdownPreview`, `renderMarkdownEditor(options)` for the
+  `renderEditor` slot and `AdminUiProvider.renderMarkdownEditor`, `MARKDOWN_ROW_HEIGHT`, `loadMarkdownLibrary`,
+  `useMarkdownLibrary`, `extendMarkdownSanitizeSchema`, `MARKDOWN_IMAGE_ATTRIBUTES`, `remarkLineBreaks`. The preview is
+  sanitised (raw HTML parsed, then GitHub's rules plus images; a single newline is a line break); the editor follows the
+  nearest `.dark` ancestor; the server draws a skeleton; a failed load falls back to a plain text area.
+- `./workers`: the screens of Core's worker monitoring (`WorkersControllerTrait`, mgamadeus/ddd 3.23.1 or
+  later). `createWorkersApi({ baseApi, apiPrefix })` injects the six operations into the host's RTK Query api (tag
+  `AdminUiWorkers`; the restart request invalidates the live reads) and returns the hooks. `WorkersOverviewScreen`:
+  totals as tiles with sparklines, the monitoring-off and sampler banners, the live row per transport with its
+  processes, the throughput table per window, the history of every transport over a window switch (1 h – 14 d), the
+  transports table by state severity, the loops, the restart of all workers (confirmed). `WorkerTransportScreen`:
+  facts, five charts (queue, workers with the configured range, throughput, duration and wait with a logarithmic axis
+  when the maximum dwarfs the average), message classes, live processes, and the tabs Message runs and Processes (with
+  a lifetime timeline). Their parts are exported, with the status maps `WORKER_TRANSPORT_STATE`,
+  `WORKER_PROCESS_STATE`, `WORKER_MESSAGE_OUTCOME` and the payload types. Charts are SVG drawn by the entry (no chart
+  library, no optional peer); a step without a reading is a gap, never a 0.
+- `./shell`: the application frame and its navigation, mechanism in the package, content from the host.
+  - `AppShell` (type `AppShellProps`): fixed top bar (`ShellTopBar`: banner, menu button, `brand`, `topBarStart`, the
+    breadcrumbs, `topBarEnd`; frosted once the page scrolls, `data-shell-scrolled`), fixed sidebar from `lg`
+    (`ShellSidebar`: `<nav>` landmark, nested groups as disclosure buttons with one open group per level, the current
+    entry `aria-current="page"`, badges, lock marks, external marks; `sidebarHeader`, `sidebarRailHeader`,
+    `sidebarFooter`), the icon rail (`ShellNavRail`: groups as flyout menus, tooltips) toggled by the foot row and `[`
+    (`useShellShortcut`; not while typing, in a dialog or menu, or below `lg`), remembered in localStorage per
+    `collapsedStorageKey` (`useSidebarCollapsed`, applied right after hydration, followed across tabs), the mobile menu
+    below `lg` (`ShellMenuButton`, `ShellMobileMenu`: a sheet from the inline-start edge, closes on a followed link or
+    a route change), the content frame (`<main>` behind a "Skip to content" link), an optional `background` and
+    `documentTitle`.
+  - `ShellBreadcrumbs`: the crumbs of the current path from the same navigation; entity names through the host's
+    `useEntityLabel` hook (types `UseEntityLabel`, `EntityLabelRequest`, `EntityLabelResult`); the middle folds into an
+    ellipsis menu with the full path on narrow trails (container queries).
+  - `ShellDocumentTitle`: keeps `document.title` on the page's name (`Details · Blue widget · Admin`).
+  - `AccountMenu` (name, description, avatar or initials, entries as links or actions, `children`, a `fallback`
+    without a session), `AccountAvatar`, `AccountSummary`; `LanguageMenu` (languages with native names in their own
+    `lang`, the current one checked, `onChange`, `isPending`, `note`), `LanguageMenuItems`, `LanguageMenuSub`.
+  - `ShellNavigationProvider` / `ShellNavigationContext` / `useShellNavigation`: breadcrumbs and title without the
+    frame. Logical sides throughout (RTL with Radix's `Direction.Provider`).
+- `./shell-background`: `ShaderBackground`, an animated WebGL background (two soft blobs over the base
+  colour, generated displacement, a quarter resolution at 20 fps, held when hidden or idle), loaded lazily; nothing
+  without WebGL or with reduced motion. Colours from `--shell-background-base`, `--shell-background-blob-1`,
+  `--shell-background-blob-2` (falling back to `--background`, `--brand-light`, `--accent`); `tint`,
+  `tintShaderPalette`.
+- `./design-studio`: `designStudioComponents`, the `components` of `@mgamadeus/ddd-design-studio`'s provider
+  (studio 0.7.x), every slot mapped to the block of the same name; typed against `DesignStudioComponentsContract`, a
+  structural copy of the studio's slot types, so the entry neither imports the studio nor depends on it. Checks: a type
+  test (exactly the contract's slots), a server render of every slot (`test:render`), and the map assigned to the
+  published studio 0.7.3 type in a consumer.
+- `ddd-admin-ui-check-contrast <css> [tokens.json]` (bin): WCAG 2.x contrast of the pairs `tokens.json` declares
+  (`contrast.pairs`, 4.5 for text, 3 for large text and UI parts; `role/NN` backgrounds), light and dark; fails on a pair
+  below its minimum that no exception list names, and on a value it cannot compute (unless `--allow-unevaluated`).
+  `--exceptions <file.json>` adds a host's written exceptions (same entry format) to the package's. The package lists
+  the five light status pairs (`success` on `card`; `success`, `warning`, `destructive`, `info` on their 15 % tints) as
+  exceptions: status colours used as text or on their tint, themed by the host, until an emphasis role exists. Gated in
+  the consumer runs (CI and release) on the fixture app's built CSS, whose dark `--primary` moved from `#3b82f6` to
+  `#3472d8` (white on it: 3.68:1 → 4.62:1).
+
 Lists:
 
 - `FilterDateRange presets` (`true` or the host's list; `preset` / `onPresetChange`, `onRangeChange`, `today`): all
@@ -52,11 +114,16 @@ Primitives:
   `--segmented-control-option-duration`, `--segmented-control-option-easing`, `--segmented-control-track-duration`,
   `--segmented-control-track-easing`. Measured in headless Chromium against an earlier host control in seven call-site
   shapes (fine and coarse pointer): track, indicator and option geometry, timings and widths equal.
+- `./primitives`: `PathnameProvider`, `PathnameContext`, `useCurrentPathname`, `useBrowserPathname`, type
+  `UsePathname`. `AdminUiProvider.usePathname` sets the pathname hook of every block; `./next` ships
+  `useNextPathname`. Without it: `location.pathname` after hydration.
 
 Pages, forms, media, translations:
 
 - `RouteError` (`onRetry`, optional `onReport` with its own pending / sent / failed state, `title`, `description`,
   `detail`, `variant`) and `RouteLoading` (`list`, `detail`, `form`; `rows`, `inset`) in `./page`.
+- `./page`: `MaintenanceActionCard` — a maintenance action with its run button (write access applies), pending state
+  and the outcome of the last run.
 - `ColorValueField` in `./form`: an explicit `format` (`hex`, `hex-alpha`), `letterCase`, presets, `clearable`; typed
   text is normalised on blur and refused when it is not a colour of that format. `parseHexColor`, `formatHexColor`,
   `normalizeColorValue` in `./logic` (types `ColorValueFormat`, `RgbaValue`).
@@ -78,50 +145,6 @@ Pages, forms, media, translations:
   code points, the over-limit tab marked, `aria-invalid`, nothing cut; `AdminUiProvider textLimits` sets the defaults by
   kind; `focusFirstOverLimitTranslation(container)` in `./translations`; `countCodePoints`, `overLimitKeys`,
   `TextLimitsContext`, `useTextLimits` in `./logic`. `MarkdownEditorRenderArgs.invalid`.
-- A ReactNode description of `PageHeader`, `SectionHeader`, `DetailHeader`, `MediaItemField` and `TranslatableField`
-  renders in a `<div>` (a string or number stays in the `<p>`).
-
-New entries:
-
-- `./markdown` (optional peers `@uiw/react-md-editor` ^4.1.0 and `rehype-sanitize` ^6.0.0, imported after hydration,
-  never from another entry): `MarkdownEditor`, `MarkdownPreview`, `renderMarkdownEditor(options)` for the
-  `renderEditor` slot and `AdminUiProvider.renderMarkdownEditor`, `MARKDOWN_ROW_HEIGHT`, `loadMarkdownLibrary`,
-  `useMarkdownLibrary`, `extendMarkdownSanitizeSchema`, `MARKDOWN_IMAGE_ATTRIBUTES`, `remarkLineBreaks`. The preview is
-  sanitised (raw HTML parsed, then GitHub's rules plus images; a single newline is a line break); the editor follows the
-  nearest `.dark` ancestor; the server draws a skeleton; a failed load falls back to a plain text area.
-- `./data`: `MetricTile` (label, value, icon, delta, hint, sparkline slot, `isLoading` skeleton, `compact`),
-  `MetricTileSkeleton`, `MetricGrid`, `DeltaText` (signed change in the UI language; `preference` higher / lower /
-  none; `format` number / percent / explicit `Intl.NumberFormatOptions`; arrow, sign and a hidden word), `NoteList`, and
-  `resolveDelta`, `relativeChange`, `deltaDirectionOf`, `deltaToneOf`.
-- `ddd-admin-ui-check-contrast <css> [tokens.json]` (bin): WCAG 2.x contrast of the pairs `tokens.json` declares
-  (`contrast.pairs`, 4.5 for text, 3 for large text and UI parts; `role/NN` backgrounds), light and dark; fails on a pair
-  below its minimum that no exception list names, and on a value it cannot compute (unless `--allow-unevaluated`).
-  `--exceptions <file.json>` adds a host's written exceptions (same entry format) to the package's. The package lists
-  the five light status pairs (`success` on `card`; `success`, `warning`, `destructive`, `info` on their 15 % tints) as
-  exceptions: status colours used as text or on their tint, themed by the host, until an emphasis role exists. Gated in
-  the consumer runs (CI and release) on the fixture app's built CSS, whose dark `--primary` moved from `#3b82f6` to
-  `#3472d8` (white on it: 3.68:1 → 4.62:1).
-
-Provider and contract:
-
-- `AdminUiProvider formatLocale` and `textLimits`; `FormatLocaleContext`, `useFormatLocale` in `./i18n`.
-- `tokens.json`: the optional `--segmented-control-*` variables above and the `contrast` key.
-- README: the layers checklist (dialogs open at `--layer-overlay` 50; a host with a higher overlay scale raises it).
-- Showcase: sections `./markdown` (through `loadMarkdown`) and `./data`, samples of the new blocks;
-  `SHOWCASE_COVERAGE` lists them.
-### Framework screens: `./workers` and `./translations`
-
-- New entry `./workers`: the screens of Core's worker monitoring (`WorkersControllerTrait`, mgamadeus/ddd 3.23.1 or
-  later). `createWorkersApi({ baseApi, apiPrefix })` injects the six operations into the host's RTK Query api (tag
-  `AdminUiWorkers`; the restart request invalidates the live reads) and returns the hooks. `WorkersOverviewScreen`:
-  totals as tiles with sparklines, the monitoring-off and sampler banners, the live row per transport with its
-  processes, the throughput table per window, the history of every transport over a window switch (1 h – 14 d), the
-  transports table by state severity, the loops, the restart of all workers (confirmed). `WorkerTransportScreen`:
-  facts, five charts (queue, workers with the configured range, throughput, duration and wait with a logarithmic axis
-  when the maximum dwarfs the average), message classes, live processes, and the tabs Message runs and Processes (with
-  a lifetime timeline). Their parts are exported, with the status maps `WORKER_TRANSPORT_STATE`,
-  `WORKER_PROCESS_STATE`, `WORKER_MESSAGE_OUTCOME` and the payload types. Charts are SVG drawn by the entry (no chart
-  library, no optional peer); a step without a reading is a gap, never a 0.
 - `./translations` gains the admin screens on the application's translation controllers (the entities of
   mgamadeus/ddd-common-translations and -political): `createTranslationsApi({ baseApi, apiPrefix, paths? })` (tags
   `AdminUiAppTranslations`, `AdminUiLanguages`, `AdminUiLocales`; a locale write refetches the locales and the
@@ -131,63 +154,57 @@ Provider and contract:
   (active and writing styles in place), `LocalesScreen` (`isActive` and the default flags in place), `ConfigImportCard`
   / `useConfigImport` (import of the configured languages or locales), `useEntityTranslator` (one
   `translateEntities` request per target locale, for `useTranslationRunner`) and `useContentLocales`.
-- `./page`: `MaintenanceActionCard` — a maintenance action with its run button (write access applies), pending state
-  and the outcome of the last run.
+
+Logic:
+
+- `./logic`: the navigation model (types `NavigationItem`, `NavigationLeaf`, `NavigationGroup`, `NavigationIcon`,
+  `NavigationAccess`, `CrumbRoute`, `CrumbLabel`, `CrumbParams`, `ResolvedCrumb`, `ActiveNavigation`) and its pure
+  resolvers: `findActiveNavigation`, `isNavigationLeafActive`, `isNavigationGroupActive`, `filterNavigation` (the rights
+  predicate), `resolveCrumbs`, `resolveDocumentTitle`, `documentTitleParts`, `normalisePathname`.
 - `./logic`: the api injection of the screen entries (`InjectableBaseApi`, `ApiQueryHook`, `ApiMutationHook`,
   `injectEndpointsOnce`, `toQueryString`, `staticQueryHook`, `staticMutationHook`), `useMemoryUrlState` (search
   parameters in component state for a screen without a router adapter) and `useOptimisticRowPatches` (in-place edits
   of list rows with rollback).
-- `./showcase`: sections for both screen entries and `MaintenanceActionCard`; the sample payloads
-  `showcaseWorkersData`, `showcaseTranslationsData` (with `createStaticWorkersApi` / `createStaticTranslationsApi`).
-- Import matrix: `./workers` may import logic, i18n, primitives, list and page; `./translations` additionally list and
-  page and, from form, `Form`, `FormActions`, `FormDrawer`, `FormField`, `FormSubmitButton`; `./showcase` also workers.
+
+Provider and contract:
+
+- `AdminUiProvider formatLocale` and `textLimits`; `FormatLocaleContext`, `useFormatLocale` in `./i18n`.
+- `tokens.json`: the optional `--segmented-control-*` variables above and the `contrast` key.
+- `tokens.json`: layer `--layer-chrome` (30), optional properties `--sidebar-w` (16rem), `--sidebar-rail-w` (5rem) and
+  the three `--shell-background-*` colours, data attributes `data-shell`, `data-shell-collapsed`,
+  `data-shell-content`, `data-shell-sidebar`, `data-shell-topbar`, `data-shell-scrolled`, `data-shell-background`,
+  `data-nav-key`. `components.css` sets the defaults and reserves the sidebar width on `[data-shell-content]`.
+- README: the layers checklist (dialogs open at `--layer-overlay` 50; a host with a higher overlay scale raises it).
+
+Showcase, import matrix, checks:
+
+- Showcase: sections `./markdown` (through `loadMarkdown`), `./data`, `./workers`, `./shell` (an interactive frame
+  with the background, folding breadcrumbs, the menus), the translation admin screens and `MaintenanceActionCard`,
+  samples of the new blocks; the sample payloads `showcaseWorkersData`, `showcaseTranslationsData` (with
+  `createStaticWorkersApi` / `createStaticTranslationsApi`); `SHOWCASE_COVERAGE` lists every new entry and block.
+- Import matrix: `./data` and `./markdown` import logic, i18n and primitives (`./markdown` types only from
+  translations); `./workers` logic, i18n, primitives, list and page; `./translations` additionally list and page and,
+  from form, `Form`, `FormActions`, `FormDrawer`, `FormField`, `FormSubmitButton`; `./shell` logic, i18n and
+  primitives; `./shell-background` no other entry; `./design-studio` primitives, list, page and glass; `./showcase`
+  also data, workers, shell and shell-background.
+- Checks: `browser-blocks.mjs` in the Next consumer (date presets, bulk menus with a counted confirmation, a
+  content-sized pinned actions column, the segmented control's option height, translatable limits, the colour field,
+  the route error, the side-by-side drawer, `./markdown` after hydration) and unit tests of the new pure helpers and of
+  `check-contrast`.
 - Checks: unit tests of both injections (operations, paths, tags, invalidation; the workers one also on the real RTK
   Query store where the install has it), `screens-render.mjs` in `test:render` (both entries on the sample payloads,
   write access disables restart, generation, toggles and imports), and `browser-screens.mjs` in the Next consumer
   (real RTK Query with an in-memory base query: window switch, restart and refetch, chart tooltip, tabs and filters,
   the `isActive` toggle with its refetches, the key drawer, the import, 390 px).
-- `./shell` (new entry): the application frame and its navigation, mechanism in the package, content from the host.
-  - `AppShell` (type `AppShellProps`): fixed top bar (`ShellTopBar`: banner, menu button, `brand`, `topBarStart`, the
-    breadcrumbs, `topBarEnd`; frosted once the page scrolls, `data-shell-scrolled`), fixed sidebar from `lg`
-    (`ShellSidebar`: `<nav>` landmark, nested groups as disclosure buttons with one open group per level, the current
-    entry `aria-current="page"`, badges, lock marks, external marks; `sidebarHeader`, `sidebarRailHeader`,
-    `sidebarFooter`), the icon rail (`ShellNavRail`: groups as flyout menus, tooltips) toggled by the foot row and `[`
-    (`useShellShortcut`; not while typing, in a dialog or menu, or below `lg`), remembered in localStorage per
-    `collapsedStorageKey` (`useSidebarCollapsed`, applied right after hydration, followed across tabs), the mobile menu
-    below `lg` (`ShellMenuButton`, `ShellMobileMenu`: a sheet from the inline-start edge, closes on a followed link or
-    a route change), the content frame (`<main>` behind a "Skip to content" link), an optional `background` and
-    `documentTitle`.
-  - `ShellBreadcrumbs`: the crumbs of the current path from the same navigation; entity names through the host's
-    `useEntityLabel` hook (types `UseEntityLabel`, `EntityLabelRequest`, `EntityLabelResult`); the middle folds into an
-    ellipsis menu with the full path on narrow trails (container queries).
-  - `ShellDocumentTitle`: keeps `document.title` on the page's name (`Details · Blue widget · Admin`).
-  - `AccountMenu` (name, description, avatar or initials, entries as links or actions, `children`, a `fallback`
-    without a session), `AccountAvatar`, `AccountSummary`; `LanguageMenu` (languages with native names in their own
-    `lang`, the current one checked, `onChange`, `isPending`, `note`), `LanguageMenuItems`, `LanguageMenuSub`.
-  - `ShellNavigationProvider` / `ShellNavigationContext` / `useShellNavigation`: breadcrumbs and title without the
-    frame. Logical sides throughout (RTL with Radix's `Direction.Provider`).
-- `./shell-background` (new entry): `ShaderBackground`, an animated WebGL background (two soft blobs over the base
-  colour, generated displacement, a quarter resolution at 20 fps, held when hidden or idle), loaded lazily; nothing
-  without WebGL or with reduced motion. Colours from `--shell-background-base`, `--shell-background-blob-1`,
-  `--shell-background-blob-2` (falling back to `--background`, `--brand-light`, `--accent`); `tint`,
-  `tintShaderPalette`.
-- `./logic`: the navigation model (types `NavigationItem`, `NavigationLeaf`, `NavigationGroup`, `NavigationIcon`,
-  `NavigationAccess`, `CrumbRoute`, `CrumbLabel`, `CrumbParams`, `ResolvedCrumb`, `ActiveNavigation`) and its pure
-  resolvers: `findActiveNavigation`, `isNavigationLeafActive`, `isNavigationGroupActive`, `filterNavigation` (the rights
-  predicate), `resolveCrumbs`, `resolveDocumentTitle`, `documentTitleParts`, `normalisePathname`.
-- `./primitives`: `PathnameProvider`, `PathnameContext`, `useCurrentPathname`, `useBrowserPathname`, type
-  `UsePathname`. `AdminUiProvider.usePathname` sets the pathname hook of every block; `./next` ships
-  `useNextPathname`. Without it: `location.pathname` after hydration.
-- `tokens.json`: layer `--layer-chrome` (30), optional properties `--sidebar-w` (16rem), `--sidebar-rail-w` (5rem) and
-  the three `--shell-background-*` colours, data attributes `data-shell`, `data-shell-collapsed`,
-  `data-shell-content`, `data-shell-sidebar`, `data-shell-topbar`, `data-shell-scrolled`, `data-shell-background`,
-  `data-nav-key`. `components.css` sets the defaults and reserves the sidebar width on `[data-shell-content]`.
-- Showcase: a `shell` section (an interactive frame with the background, folding breadcrumbs, the menus);
-  `SHOWCASE_COVERAGE` lists `./shell` and `./shell-background`.
 - Checks: resolver unit tests; `shell-render.mjs` (server render: one navigation for sidebar, breadcrumbs and title,
   the rights predicate, no stored state on the server, `./shell` never reaches `./shell-background`); browser checks of
   the shell (active entry, rights predicate, collapse by button and `[`, restored after a reload without a hydration
   warning, rail flyout, mobile menu, folding breadcrumbs, title, RTL).
+
+Fixes:
+
+- A ReactNode description of `PageHeader`, `SectionHeader`, `DetailHeader`, `MediaItemField` and `TranslatableField`
+  renders in a `<div>` (a string or number stays in the `<p>`).
 
 ## 0.1.0
 

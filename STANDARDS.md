@@ -19,6 +19,8 @@ Where the names below come from (setup and the entry list: [`README.md`](./READM
 | `@mgamadeus/ddd-admin-ui/next` | `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useListViewParam`, `useNextPathname` |
 | `@mgamadeus/ddd-admin-ui/shell` | `AppShell`, `ShellBreadcrumbs`, `ShellDocumentTitle`, `AccountMenu`, `LanguageMenu`, `LanguageMenuSub`, `UseEntityLabel` |
 | `@mgamadeus/ddd-admin-ui/shell-background` | `ShaderBackground` |
+| `@mgamadeus/ddd-admin-ui/data` | `MetricTile`, `MetricGrid`, `DeltaText`, `NoteList`, `relativeChange` |
+| `@mgamadeus/ddd-admin-ui/markdown` | `renderMarkdownEditor`, `MarkdownEditor`, `MarkdownPreview` |
 
 Every screen renders below `AdminUiProvider`. A screen that may not write sets that once with `WriteAccessProvider`
 (§ 15).

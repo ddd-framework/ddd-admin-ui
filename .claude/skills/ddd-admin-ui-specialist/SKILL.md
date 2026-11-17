@@ -1,6 +1,6 @@
 ---
 name: ddd-admin-ui-specialist
-description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it. Covers entries, import matrix, host setup (AdminUiProvider above every page, theme.css, components.css, tokens.json, ddd-admin-ui-check-tokens, ddd-admin-ui-check-radix), list pages with URL filters, bulk actions, wide tables (tracks, pins, sort), the segmented control, the showcase, detail shells, form drawers and dialogs, the save shortcut, FormActions in a header slot, useConfirm, WriteAccessProvider, server errors, the unsaved-changes guard, locale::style translations, media fields, workers and translation admin screens, layers, i18n-keys.json, client files, adding a block. Use when building or reviewing a list, detail, form or dialog screen, a page fails with Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form or none, a confirm answers false, write controls must go off for read-only users, a table squeezes, an overlay misbehaves, URL filters get lost, or a workers or translations admin screen is needed."
+description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries and import matrix, host setup (AdminUiProvider, theme.css, components.css, tokens.json, ddd-admin-ui-check-tokens, -check-radix, -check-contrast), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title from one navigation; ./shell-background), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route error and loading, form drawers and dialogs, the save shortcut, useConfirm, write access, locale::style translations with limits, media fields with image crop, colour fields, key figures (./data), markdown (./markdown), the workers and translation admin screens (./workers, ./translations), ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form or admin screen, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast fails, or URL filters get lost."
 metadata:
   author: mgamadeus
   version: 0.1.0
@@ -79,6 +79,9 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
   on `:root`; `PortalContainerProvider` / the provider's `portalContainer` moves every portal.
 - **Import boundary.** Blocks import only the entries the matrix in `README.md` allows, never app code. Only `./next`
   imports `next/*`, only `./notify-sonner` imports `sonner`; `./logic` pure files run without React.
+- **Design studio.** Pass `designStudioComponents` from `./design-studio` as the studio provider's `components`; replace
+  single slots by spreading it. The entry never imports the studio (`DesignStudioComponentsContract` is a structural
+  copy); a new studio slot means updating `contract.ts`, the map and the render test together.
 - **Translation keys.** Keys are full `locale::style` (`de::FORMAL`, `de::INFORMAL`). Never collapse them to the
   language: the payload of `useEntityTranslations` sends every loaded key back; a cleared text removes its key.
 - **URL state.** Build requests from `list.debounced`, never `list.values`. All writes (filters, view, drawer) go

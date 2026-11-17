@@ -18,6 +18,7 @@ const expectations = {
   workers: ['createWorkersApi', 'createStaticWorkersApi', 'WorkersOverviewScreen', 'WorkerTransportScreen', 'WORKER_TRANSPORT_STATE'],
   shell: ['AppShell', 'ShellBreadcrumbs', 'ShellDocumentTitle', 'AccountMenu', 'LanguageMenu', 'useSidebarCollapsed', 'useShellShortcut'],
   'shell-background': ['ShaderBackground', 'tintShaderPalette'],
+  'design-studio': ['designStudioComponents'],
 };
 
 let failed = false;
