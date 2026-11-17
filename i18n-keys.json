@@ -4,6 +4,14 @@
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
+      "key": "%additive% additive, %mixed% mixed and %destructive% destructive diffs run against the live database in one request.",
+      "text": "%additive% additive, %mixed% mixed and %destructive% destructive diffs run against the live database in one request.",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): confirmation text before applying several table changes at once; the placeholders are counts per severity."
+    },
+    {
       "key": "%count% / %max%",
       "text": "%count% / %max%",
       "files": [
@@ -132,6 +140,15 @@
       "hint": "Accessible label of the end-date input in a date-range filter. %label% is the filter caption, e.g. \"Ends at\", so the result reads \"Ends at to\"."
     },
     {
+      "key": "%label%: %count%__schema-diff-severity-count",
+      "text": "%label%: %count%",
+      "context": "schema-diff-severity-count",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): badge with a severity name and how many tables have it (e.g. 'Mixed: 2'). Keep the order label then number."
+    },
+    {
       "key": "%name% is not an image",
       "text": "%name% is not an image",
       "files": [
@@ -154,6 +171,14 @@
         "logic/pure/runSequential.ts"
       ],
       "hint": "Progress toast of a bulk action running on many selected rows. %progress% is a verb like Deleting, %nouns% the plural item name like tracks, %done%/%total% e.g. 2/5."
+    },
+    {
+      "key": "%size% MB",
+      "text": "%size% MB",
+      "files": [
+        "database/diff.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): size of a database table in megabytes; %size% is a number."
     },
     {
       "key": "%thrown% thrown · %caught% caught",
@@ -305,6 +330,24 @@
       "hint": "App translations admin, drawer of one translation key: button that adds the new translation value (an action, verb)."
     },
     {
+      "key": "Additive__schema-diff-severity",
+      "text": "Additive",
+      "context": "schema-diff-severity",
+      "files": [
+        "database/status.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): severity badge: the change only adds (columns, indexes); no data is lost."
+    },
+    {
+      "key": "Adds and changes: some data may be rewritten__schema-diff-severity",
+      "text": "Adds and changes: some data may be rewritten",
+      "context": "schema-diff-severity",
+      "files": [
+        "database/status.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): tooltip of the 'Mixed' severity badge."
+    },
+    {
       "key": "Alive, waiting for messages__worker-process-state",
       "text": "Alive, waiting for messages",
       "context": "worker-process-state",
@@ -347,6 +390,15 @@
       "hint": "Tooltip of a language tab: other stored variants of this language (e.g. the informal text) that this tab does not edit and that are saved unchanged."
     },
     {
+      "key": "Alter table__schema-diff-change",
+      "text": "Alter table",
+      "context": "schema-diff-change",
+      "files": [
+        "database/status.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): badge: the table exists and its structure changes (SQL ALTER TABLE)."
+    },
+    {
       "key": "An exception left the handler__worker-message-outcome",
       "text": "An exception left the handler",
       "context": "worker-message-outcome",
@@ -354,6 +406,14 @@
         "workers/status.ts"
       ],
       "hint": "Outcome badge of one processed job (message run): description of Thrown."
+    },
+    {
+      "key": "Another apply is running — retry in a few seconds",
+      "text": "Another apply is running — retry in a few seconds",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): notice when another admin's schema change holds the lock."
     },
     {
       "key": "App translations",
@@ -364,6 +424,14 @@
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): page title."
     },
     {
+      "key": "Applied the diff of %table%",
+      "text": "Applied the diff of %table%",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): success toast after one table's change was applied; %table% is the table name."
+    },
+    {
       "key": "Apply",
       "text": "Apply",
       "files": [
@@ -372,9 +440,77 @@
       "hint": "Button of the image crop dialog: crop the image as framed."
     },
     {
+      "key": "Apply all",
+      "text": "Apply all",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): button that applies every pending table change (and its confirmation button)."
+    },
+    {
+      "key": "Apply blocked",
+      "text": "Apply blocked",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): badge on a large table whose change may not be applied from this screen."
+    },
+    {
+      "key": "Apply it with an online schema change (pt-online-schema-change) from the console, outside this screen.",
+      "text": "Apply it with an online schema change (pt-online-schema-change) from the console, outside this screen.",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): how to apply a blocked change on a large table; pt-online-schema-change is a tool name, do not translate it."
+    },
+    {
+      "key": "Apply selected",
+      "text": "Apply selected",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): confirmation button that applies the ticked table changes."
+    },
+    {
+      "key": "Apply selected (%count%)",
+      "text": "Apply selected (%count%)",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): button that applies the ticked table changes; %count% is how many are ticked."
+    },
+    {
+      "key": "Apply the diff of %table%",
+      "text": "Apply the diff of %table%",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): accessible name of the Apply button of one table; %table% is the table name."
+    },
+    {
+      "key": "Apply the diff of %table%?",
+      "text": "Apply the diff of %table%?",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): title of the confirmation before applying one table's change."
+    },
+    {
+      "key": "Apply__schema-diff",
+      "text": "Apply",
+      "context": "schema-diff",
+      "files": [
+        "database/SchemaDiffCard.tsx",
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): button that runs the SQL of one table's change against the live database."
+    },
+    {
       "key": "Applying…",
       "text": "Applying…",
       "files": [
+        "database/SchemaDiffCard.tsx",
+        "database/SchemaDiffScreen.tsx",
         "media/ImageCropDialog.tsx"
       ],
       "hint": "Button text of the image crop dialog while the cropped image is being produced."
@@ -735,6 +871,14 @@
       "hint": "Button at the foot of the left navigation column: shrinks the column to a narrow strip of icons."
     },
     {
+      "key": "Collation %from% → %to%",
+      "text": "Collation %from% → %to%",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): the table's text collation changes from one to another (technical names)."
+    },
+    {
       "key": "Colour",
       "text": "Colour",
       "files": [
@@ -743,12 +887,28 @@
       "hint": "Label of the colour input inside a colour picker popover."
     },
     {
+      "key": "Column",
+      "text": "Column",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): kind of a changed item in a table: a database column."
+    },
+    {
       "key": "Command Palette",
       "text": "Command Palette",
       "files": [
         "primitives/command.tsx"
       ],
       "hint": "Hidden (screen-reader only) title of the command palette dialog, a search popup for jumping to pages and actions in the admin app."
+    },
+    {
+      "key": "Computing the schema diff",
+      "text": "Computing the schema diff",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): accessible name of the loading placeholder while the differences are computed."
     },
     {
       "key": "Confirm__confirm-dialog",
@@ -779,9 +939,18 @@
       "key": "Copied",
       "text": "Copied",
       "files": [
+        "database/GeneratedCode.tsx",
         "list/CopyButton.tsx"
       ],
       "hint": "Toast after a copy button put a value (an id, a link, a code) on the clipboard."
+    },
+    {
+      "key": "Copy %label%",
+      "text": "Copy %label%",
+      "files": [
+        "database/GeneratedCode.tsx"
+      ],
+      "hint": "Accessible name of a copy button next to generated code; %label% names the code (e.g. 'SQL of Orders')."
     },
     {
       "key": "Copy ID",
@@ -832,6 +1001,15 @@
         "translations/LocalesScreen.tsx"
       ],
       "hint": "Locales admin screen (language + country combinations): column header and filter label: the country code of the locale (e.g. DE)."
+    },
+    {
+      "key": "Create table__schema-diff-change",
+      "text": "Create table",
+      "context": "schema-diff-change",
+      "files": [
+        "database/status.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): badge: the table is new and will be created."
     },
     {
       "key": "Create translation key",
@@ -950,12 +1128,37 @@
       "hint": "Button that deletes (an action, verb), in the app translations admin."
     },
     {
+      "key": "Destructive__schema-diff-severity",
+      "text": "Destructive",
+      "context": "schema-diff-severity",
+      "files": [
+        "database/status.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): severity badge: the change drops or narrows something; data is lost or rewritten."
+    },
+    {
       "key": "Dev only",
       "text": "Dev only",
       "files": [
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tag: the transport runs only on development stages."
+    },
+    {
+      "key": "Diff of %table%",
+      "text": "Diff of %table%",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): accessible name of the card of one table; %table% is the table name."
+    },
+    {
+      "key": "Direct apply blocked by the large-table guard",
+      "text": "Direct apply blocked by the large-table guard",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): title of the notice on a large table whose change would copy the whole table."
     },
     {
       "key": "Discard changes?",
@@ -1018,12 +1221,38 @@
       "hint": "Status badge of one language in the translation progress list: the translation finished successfully."
     },
     {
+      "key": "Download",
+      "text": "Download",
+      "files": [
+        "database/GeneratedCode.tsx"
+      ],
+      "hint": "Button that saves generated code (SQL, PHP) as a file."
+    },
+    {
       "key": "Drag the frame to move it and its handles to resize it; scroll or pinch to zoom.",
       "text": "Drag the frame to move it and its handles to resize it; scroll or pinch to zoom.",
       "files": [
         "media/ImageCropDialog.tsx"
       ],
       "hint": "Help line under the title of the image crop dialog."
+    },
+    {
+      "key": "Drop table__schema-diff-change",
+      "text": "Drop table",
+      "context": "schema-diff-change",
+      "files": [
+        "database/status.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): badge: the table exists only in the database and will be deleted."
+    },
+    {
+      "key": "Drops or narrows: data is lost or rewritten__schema-diff-severity",
+      "text": "Drops or narrows: data is lost or rewritten",
+      "context": "schema-diff-severity",
+      "files": [
+        "database/status.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): tooltip of the 'Destructive' severity badge."
     },
     {
       "key": "Duration",
@@ -1084,12 +1313,36 @@
       "hint": "Error under a colour field whose text is not a colour; keep #RRGGBB as it is."
     },
     {
+      "key": "Entity class name",
+      "text": "Entity class name",
+      "files": [
+        "database/GeneratedCode.tsx"
+      ],
+      "hint": "Accessible name of the field where a developer types an entity (code class) name to see its generated database model."
+    },
+    {
+      "key": "Entity class, e.g. Account",
+      "text": "Entity class, e.g. Account",
+      "files": [
+        "database/GeneratedCode.tsx"
+      ],
+      "hint": "Placeholder of the entity class name field; 'Account' is an example class name, keep it as is."
+    },
+    {
       "key": "Error",
       "text": "Error",
       "files": [
         "workers/transport.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): column header: the error of a job run."
+    },
+    {
+      "key": "Every diff applied",
+      "text": "Every diff applied",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): success toast when no table change is left."
     },
     {
       "key": "Every live process stops after its current message and is started again with the current code and settings. A process inside a long job finishes that job first; nothing is scaled and no message is lost.",
@@ -1323,6 +1576,22 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): configured worker count without autoscaling; %max% is the number of processes."
     },
     {
+      "key": "Foreign key",
+      "text": "Foreign key",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): kind of a changed item in a table: a foreign key constraint."
+    },
+    {
+      "key": "Foreign key checks off while applying",
+      "text": "Foreign key checks off while applying",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): switch: the database's foreign key checks are switched off while the changes run."
+    },
+    {
       "key": "Form sections",
       "text": "Form sections",
       "files": [
@@ -1354,6 +1623,14 @@
         "media/ImageCropDialog.tsx"
       ],
       "hint": "Crop shape without a fixed aspect ratio."
+    },
+    {
+      "key": "Generate again",
+      "text": "Generate again",
+      "files": [
+        "database/GeneratedCode.tsx"
+      ],
+      "hint": "Button that requests generated code (SQL or model code) again."
     },
     {
       "key": "Generate all missing",
@@ -1388,9 +1665,18 @@
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): button of a completeness card; %locale% is a locale code like de-DE."
     },
     {
+      "key": "Generated code",
+      "text": "Generated code",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): section heading for the generated SQL and model code."
+    },
+    {
       "key": "Generating…",
       "text": "Generating…",
       "files": [
+        "database/GeneratedCode.tsx",
         "translations/AppTranslationsScreen.tsx"
       ],
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): 'Generate all missing' button while the request runs."
@@ -1493,6 +1779,14 @@
         "workers/transport.tsx"
       ],
       "hint": "Workers admin chart: description of the duration chart with a logarithmic scale."
+    },
+    {
+      "key": "Hide details",
+      "text": "Hide details",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): button that folds the list of changes and the SQL of a table."
     },
     {
       "key": "Hint: %hint%",
@@ -1650,6 +1944,14 @@
         "data/DeltaText.tsx"
       ],
       "hint": "Screen-reader word before a signed change under a key figure (e.g. \"Increase +12 %\"): the value went up."
+    },
+    {
+      "key": "Index",
+      "text": "Index",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): kind of a changed item in a table: a database index."
     },
     {
       "key": "Inferred: Messenger stops without a reason; a lost process reported no stop (stopped = when it was noticed)",
@@ -2216,6 +2518,39 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): page description; Messenger is the name of the job queue library (keep)."
     },
     {
+      "key": "Mixed and destructive diffs drop or rewrite data and cannot be undone.",
+      "text": "Mixed and destructive diffs drop or rewrite data and cannot be undone.",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): warning in the confirmation before applying several table changes."
+    },
+    {
+      "key": "Mixed__schema-diff-severity",
+      "text": "Mixed",
+      "context": "schema-diff-severity",
+      "files": [
+        "database/status.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): severity badge: the change adds and changes; some data may be rewritten."
+    },
+    {
+      "key": "Model code of every entity",
+      "text": "Model code of every entity",
+      "files": [
+        "database/GeneratedCode.tsx"
+      ],
+      "hint": "Heading of the panel that shows the generated database model code of every entity (developer tool)."
+    },
+    {
+      "key": "Model code of one entity",
+      "text": "Model code of one entity",
+      "files": [
+        "database/GeneratedCode.tsx"
+      ],
+      "hint": "Heading of the panel that shows the generated database model code of one entity (developer tool)."
+    },
+    {
       "key": "More actions",
       "text": "More actions",
       "files": [
@@ -2274,6 +2609,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile label: transports in a state someone should look at."
     },
     {
+      "key": "New table",
+      "text": "New table",
+      "files": [
+        "database/diff.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): summary of a table that will be created."
+    },
+    {
       "key": "New translation",
       "text": "New translation",
       "files": [
@@ -2296,6 +2639,15 @@
         "data/DeltaText.tsx"
       ],
       "hint": "Screen-reader word before a change of zero under a key figure."
+    },
+    {
+      "key": "No change__schema-diff-change",
+      "text": "No change",
+      "context": "schema-diff-change",
+      "files": [
+        "database/status.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): badge: the table has no change."
     },
     {
       "key": "No changes",
@@ -2469,6 +2821,14 @@
       "hint": "Empty-state message inside an opened dropdown picker when the typed search matches none of the options."
     },
     {
+      "key": "No statements (a collation-only or empty diff).",
+      "text": "No statements (a collation-only or empty diff).",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): shown instead of SQL when the change runs no statement."
+    },
+    {
       "key": "No stop reported and no heartbeat: killed, out of memory or host gone__worker-process-state",
       "text": "No stop reported and no heartbeat: killed, out of memory or host gone",
       "context": "worker-process-state",
@@ -2476,6 +2836,14 @@
         "workers/status.ts"
       ],
       "hint": "Status badge of a worker process: description of Lost."
+    },
+    {
+      "key": "No structural change",
+      "text": "No structural change",
+      "files": [
+        "database/diff.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): summary of a table change without column, index, key or trigger changes."
     },
     {
       "key": "No translation keys found",
@@ -2585,6 +2953,14 @@
       "hint": "Colour field without a colour: shown on the swatch and as the choice that removes the colour."
     },
     {
+      "key": "Not available on this process",
+      "text": "Not available on this process",
+      "files": [
+        "database/GeneratedCode.tsx"
+      ],
+      "hint": "Title when the server refuses the generated SQL because this server must not change the database schema."
+    },
+    {
       "key": "Not consumed__worker-transport-state",
       "text": "Not consumed",
       "context": "worker-transport-state",
@@ -2643,12 +3019,37 @@
       "hint": "Status badge of a worker transport (queue): description of Idle."
     },
     {
+      "key": "Nothing was generated.",
+      "text": "Nothing was generated.",
+      "files": [
+        "database/GeneratedCode.tsx"
+      ],
+      "hint": "Shown when the generated code is empty."
+    },
+    {
+      "key": "One database entity by its short or fully qualified class name. Nothing is written.",
+      "text": "One database entity by its short or fully qualified class name. Nothing is written.",
+      "files": [
+        "database/GeneratedCode.tsx"
+      ],
+      "hint": "Description of the panel that shows one entity's generated database model code."
+    },
+    {
       "key": "One or more of the given values is invalid.",
       "text": "One or more of the given values is invalid.",
       "files": [
         "i18n/serverMessages.ts"
       ],
       "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. A multi-select field contains a value that is not one of the allowed options."
+    },
+    {
+      "key": "Only adds: no data is dropped or rewritten__schema-diff-severity",
+      "text": "Only adds: no data is dropped or rewritten",
+      "context": "schema-diff-severity",
+      "files": [
+        "database/status.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): tooltip of the 'Additive' severity badge."
     },
     {
       "key": "Only the loaded rows are selected; more match on the server.",
@@ -2938,6 +3339,14 @@
       "hint": "Accessible name (screen-reader label) of the thin loading bar shown over a list's toolbar while the list reloads in the background."
     },
     {
+      "key": "Reload",
+      "text": "Reload",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): button that computes the differences again."
+    },
+    {
       "key": "Remove %label%",
       "text": "Remove %label%",
       "files": [
@@ -3080,6 +3489,8 @@
       "key": "Retry",
       "text": "Retry",
       "files": [
+        "database/GeneratedCode.tsx",
+        "database/SchemaDiffScreen.tsx",
         "workers/WorkersOverviewScreen.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): button that loads the overview again after an error."
@@ -3153,6 +3564,22 @@
       "hint": "The run button of a maintenance action card while the action runs."
     },
     {
+      "key": "SQL of %table%",
+      "text": "SQL of %table%",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): accessible name of the SQL block of one table; %table% is the table name."
+    },
+    {
+      "key": "SQL of every table",
+      "text": "SQL of every table",
+      "files": [
+        "database/GeneratedCode.tsx"
+      ],
+      "hint": "Heading of the panel that shows the SQL creating every database table (developer tool)."
+    },
+    {
       "key": "Save changes",
       "text": "Save changes",
       "files": [
@@ -3176,6 +3603,30 @@
         "translations/AppTranslationKeyDrawer.tsx"
       ],
       "hint": "App translations admin, drawer of one translation key: submit button while the key is being saved."
+    },
+    {
+      "key": "Schema diff",
+      "text": "Schema diff",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): page title."
+    },
+    {
+      "key": "Schema matches",
+      "text": "Schema matches",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): title when the live database matches the code: nothing to apply."
+    },
+    {
+      "key": "Schema writes are disabled on this process",
+      "text": "Schema writes are disabled on this process",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): notice when this server may not change the database schema (it shares another stage's database)."
     },
     {
       "key": "Search",
@@ -3278,6 +3729,14 @@
       "hint": "Default accessible name (screen reader label, not visible) of the tab bar under the header of a detail screen, whose tabs switch between sections of the record such as General, Teams or Rides. Plural noun."
     },
     {
+      "key": "Select %table%",
+      "text": "Select %table%",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): accessible name of the checkbox that ticks one table for 'Apply selected'; %table% is the table name."
+    },
+    {
       "key": "Select %title%",
       "text": "Select %title%",
       "files": [
@@ -3344,6 +3803,14 @@
       "hint": "Small floating pill button at the bottom edge of a group panel; clicking it reveals all rows. %count% is the total number of rows, for example 12."
     },
     {
+      "key": "Show details",
+      "text": "Show details",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): button that unfolds the list of changes and the SQL of a table."
+    },
+    {
       "key": "Show full path",
       "text": "Show full path",
       "files": [
@@ -3358,6 +3825,15 @@
         "glass/GlassGroup.tsx"
       ],
       "hint": "Small floating pill button at the bottom edge of an expanded group panel; clicking it shows only the first few rows again."
+    },
+    {
+      "key": "Show__generated-code",
+      "text": "Show",
+      "context": "generated-code",
+      "files": [
+        "database/GeneratedCode.tsx"
+      ],
+      "hint": "Button that requests and shows generated code (SQL or model code)."
     },
     {
       "key": "Silent__worker-process-state",
@@ -3533,6 +4009,14 @@
       "hint": "Workers admin chart: series name: jobs finished without error."
     },
     {
+      "key": "Table dropped",
+      "text": "Table dropped",
+      "files": [
+        "database/diff.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): summary of a table that will be deleted."
+    },
+    {
       "key": "Table view",
       "text": "Table view",
       "files": [
@@ -3563,6 +4047,46 @@
         "translations/AppTranslationKeyDrawer.tsx"
       ],
       "hint": "App translations admin, drawer of one translation key: description of the delete confirmation; %locale% is a content locale key like de::INFORMAL."
+    },
+    {
+      "key": "The Doctrine models as the model generator would write them. Nothing is written.",
+      "text": "The Doctrine models as the model generator would write them. Nothing is written.",
+      "files": [
+        "database/GeneratedCode.tsx"
+      ],
+      "hint": "Description of the panel with the generated model code; Doctrine is a product name, keep it."
+    },
+    {
+      "key": "The apply was refused",
+      "text": "The apply was refused",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): notice title when the server refused to apply a change (its message follows)."
+    },
+    {
+      "key": "The code could not be generated.",
+      "text": "The code could not be generated.",
+      "files": [
+        "database/GeneratedCode.tsx"
+      ],
+      "hint": "Error when the generated code could not be loaded."
+    },
+    {
+      "key": "The diff could not be applied.",
+      "text": "The diff could not be applied.",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): fallback error when one table's change failed without a message."
+    },
+    {
+      "key": "The diffs could not be applied.",
+      "text": "The diffs could not be applied.",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): fallback error when several table changes failed without a message."
     },
     {
       "key": "The editor could not be loaded; edit the Markdown text directly.",
@@ -3639,6 +4163,14 @@
         "translations/LanguagesScreen.tsx"
       ],
       "hint": "Languages admin screen: page description."
+    },
+    {
+      "key": "The live database matches the entities: nothing to apply.",
+      "text": "The live database matches the entities: nothing to apply.",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): description under 'Schema matches'."
     },
     {
       "key": "The locales could not be loaded.",
@@ -3737,12 +4269,79 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): warning banner title: the job that samples the queues every minute does not run."
     },
     {
+      "key": "The schema changed since you loaded it",
+      "text": "The schema changed since you loaded it",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): notice when a change differs from what the admin saw (applied elsewhere meanwhile); asks to reload."
+    },
+    {
+      "key": "The schema diff could not be loaded.",
+      "text": "The schema diff could not be loaded.",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): error when the differences could not be computed."
+    },
+    {
       "key": "The selected translation keys and all their values are deleted. This cannot be undone.",
       "text": "The selected translation keys and all their values are deleted. This cannot be undone.",
       "files": [
         "translations/AppTranslationsScreen.tsx"
       ],
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): description of the bulk delete confirmation."
+    },
+    {
+      "key": "The statements that create the whole schema from the entities, without the excluded tables. Shown only, never run.",
+      "text": "The statements that create the whole schema from the entities, without the excluded tables. Shown only, never run.",
+      "files": [
+        "database/GeneratedCode.tsx"
+      ],
+      "hint": "Description of the panel with the SQL creating every table (developer tool)."
+    },
+    {
+      "key": "The table exists for the entity but not in the database__schema-diff-change",
+      "text": "The table exists for the entity but not in the database",
+      "context": "schema-diff-change",
+      "files": [
+        "database/status.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): tooltip of the 'Create table' badge."
+    },
+    {
+      "key": "The table exists in the database but no entity defines it__schema-diff-change",
+      "text": "The table exists in the database but no entity defines it",
+      "context": "schema-diff-change",
+      "files": [
+        "database/status.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): tooltip of the 'Drop table' badge."
+    },
+    {
+      "key": "The table exists on both sides and differs__schema-diff-change",
+      "text": "The table exists on both sides and differs",
+      "context": "schema-diff-change",
+      "files": [
+        "database/status.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): tooltip of the 'Alter table' badge."
+    },
+    {
+      "key": "The table holds %size% (thresholds: %sizeThreshold% MB or %rowThreshold% rows), and the diff forces a copy of the whole table:",
+      "text": "The table holds %size% (thresholds: %sizeThreshold% MB or %rowThreshold% rows), and the diff forces a copy of the whole table:",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): why a large table's change is blocked; %size% is like '374 MB · 290,067 rows'; a list of the copying operations follows."
+    },
+    {
+      "key": "The tables whose live schema differs from the entities, with the statements that align them, applied per table or in bulk.",
+      "text": "The tables whose live schema differs from the entities, with the statements that align them, applied per table or in bulk.",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): page description."
     },
     {
       "key": "The translation key could not be loaded.",
@@ -3840,6 +4439,30 @@
         "logic/browser/normalizeImage.ts"
       ],
       "hint": "Error in the image crop dialog when the browser lacks the image functions."
+    },
+    {
+      "key": "This diff drops or rewrites data. Before applying, decide which side is wrong: the entity or the live database.",
+      "text": "This diff drops or rewrites data. Before applying, decide which side is wrong: the entity or the live database.",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): warning on a destructive or mixed table change."
+    },
+    {
+      "key": "This diff has no signature: reload it first.",
+      "text": "This diff has no signature: reload it first.",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): why Apply is off: the change lacks the check value the server needs."
+    },
+    {
+      "key": "This diff is no longer pending",
+      "text": "This diff is no longer pending",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): notice when a table's change was applied meanwhile."
     },
     {
       "key": "This page could not be shown. Try again, or reload the page.",
@@ -4184,6 +4807,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): section title and table name: the queues of background jobs."
     },
     {
+      "key": "Trigger",
+      "text": "Trigger",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): kind of a changed item in a table: a database trigger."
+    },
+    {
       "key": "Try again",
       "text": "Try again",
       "files": [
@@ -4325,6 +4956,14 @@
       "hint": "Label and accessible name of the toggle on the Home screen that switches between the Timeline and Kanban views."
     },
     {
+      "key": "Virtual column",
+      "text": "Virtual column",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): kind of a changed item in a table: a generated (virtual) column."
+    },
+    {
       "key": "Wait",
       "text": "Wait",
       "files": [
@@ -4376,6 +5015,14 @@
         "translations/TranslationControls.tsx"
       ],
       "hint": "Short form of the status 'Waiting for Customer', on a compact status button in the support ticket sidebar. Keep it to one short word."
+    },
+    {
+      "key": "What the entities generate, to read, copy or download. Nothing here runs against the database.",
+      "text": "What the entities generate, to read, copy or download. Nothing here runs against the database.",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): description of the generated code section."
     },
     {
       "key": "What the workers did per message class in the window.",
@@ -4464,6 +5111,8 @@
       "key": "Writes are switched off",
       "text": "Writes are switched off",
       "files": [
+        "database/SchemaDiffCard.tsx",
+        "database/SchemaDiffScreen.tsx",
         "workers/WorkerRestartButton.tsx"
       ],
       "hint": "Tooltip of a disabled write button when writes are switched off for this screen."
@@ -4558,6 +5207,22 @@
         "primitives/breadcrumb.tsx"
       ],
       "hint": "Accessible name (screen reader label) of the breadcrumb navigation trail at the top of admin pages; use a short lowercase noun like the English."
+    },
+    {
+      "key": "changes %attributes%",
+      "text": "changes %attributes%",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): after a changed column or index: which attributes change (technical names, comma-separated)."
+    },
+    {
+      "key": "collation %from% → %to%",
+      "text": "collation %from% → %to%",
+      "files": [
+        "database/diff.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): part of a one-line summary: the table's collation changes (technical names)."
     },
     {
       "key": "command line",
@@ -4883,6 +5548,14 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): timeline tooltip: the process still runs."
     },
     {
+      "key": "reset in full",
+      "text": "reset in full",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): note after a column that is dropped and recreated instead of converted."
+    },
+    {
       "key": "restart requested",
       "text": "restart requested",
       "files": [
@@ -5021,6 +5694,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): what a process handles and since when; %messageClass% is a class name, %since% a clock time and duration."
     },
     {
+      "key": "{count, plural, one {# blocked diff is left out.} other {# blocked diffs are left out.}}",
+      "text": "{count, plural, one {# blocked diff is left out.} other {# blocked diffs are left out.}}",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): confirmation text: blocked large tables are not applied."
+    },
+    {
       "key": "{count, plural, one {# character over the limit} other {# characters over the limit}}",
       "text": "{count, plural, one {# character over the limit} other {# characters over the limit}}",
       "files": [
@@ -5093,6 +5774,38 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile hint: queues whose length is unknown."
     },
     {
+      "key": "{count, plural, one {# row} other {%rows% rows}}",
+      "text": "{count, plural, one {# row} other {%rows% rows}}",
+      "files": [
+        "database/diff.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): number of rows of a table; in the plural %rows% is the formatted number (with separators)."
+    },
+    {
+      "key": "{count, plural, one {# statement runs} other {# statements run}} against the live database.",
+      "text": "{count, plural, one {# statement runs} other {# statements run}} against the live database.",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): confirmation text before applying one table's change."
+    },
+    {
+      "key": "{count, plural, one {# statement runs} other {# statements run}} against the live database. This diff drops or rewrites data and cannot be undone: decide first whether the entity or the database is wrong.",
+      "text": "{count, plural, one {# statement runs} other {# statements run}} against the live database. This diff drops or rewrites data and cannot be undone: decide first whether the entity or the database is wrong.",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): confirmation text before applying a destructive table change."
+    },
+    {
+      "key": "{count, plural, one {# table} other {# tables}}",
+      "text": "{count, plural, one {# table} other {# tables}}",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): badge with the number of tables with a pending change."
+    },
+    {
       "key": "{count, plural, one {# validation error} other {# validation errors}}",
       "text": "{count, plural, one {# validation error} other {# validation errors}}",
       "files": [
@@ -5107,6 +5820,22 @@
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): summary in the live section heading."
+    },
+    {
+      "key": "{count, plural, one {Applied; # diff still pending} other {Applied; # diffs still pending}}",
+      "text": "{count, plural, one {Applied; # diff still pending} other {Applied; # diffs still pending}}",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): success toast after a bulk apply when some changes are left."
+    },
+    {
+      "key": "{count, plural, one {Apply # diff?} other {Apply # diffs?}}",
+      "text": "{count, plural, one {Apply # diff?} other {Apply # diffs?}}",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): title of the confirmation before applying several table changes."
     },
     {
       "key": "{count, plural, one {Delete # key?} other {Delete # keys?}}",
@@ -5197,12 +5926,52 @@
       "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. The text must have exactly this many characters (e.g. a code)."
     },
     {
+      "key": "{count, plural, one {column} other {columns}}",
+      "text": "{count, plural, one {column} other {columns}}",
+      "files": [
+        "database/diff.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): noun after signed counts in a summary like '+2 ±1 -3 columns'."
+    },
+    {
+      "key": "{count, plural, one {foreign key} other {foreign keys}}",
+      "text": "{count, plural, one {foreign key} other {foreign keys}}",
+      "files": [
+        "database/diff.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): noun after signed counts in a summary like '+1 foreign key'."
+    },
+    {
+      "key": "{count, plural, one {index} other {indexes}}",
+      "text": "{count, plural, one {index} other {indexes}}",
+      "files": [
+        "database/diff.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): noun after signed counts in a summary like '-1 index'."
+    },
+    {
       "key": "{count, plural, one {message} other {messages}}",
       "text": "{count, plural, one {message} other {messages}}",
       "files": [
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): unit after a number of jobs ('3 messages')."
+    },
+    {
+      "key": "{count, plural, one {trigger} other {triggers}}",
+      "text": "{count, plural, one {trigger} other {triggers}}",
+      "files": [
+        "database/diff.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): noun after signed counts in a summary like '+1 trigger'."
+    },
+    {
+      "key": "{count, plural, one {virtual column} other {virtual columns}}",
+      "text": "{count, plural, one {virtual column} other {virtual columns}}",
+      "files": [
+        "database/diff.ts"
+      ],
+      "hint": "Schema diff admin screen (database changes between the code's entities and the live database): noun after signed counts in a summary like '+1 virtual column'."
     },
     {
       "key": "{count, plural, other {# selected}}",

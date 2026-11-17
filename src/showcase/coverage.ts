@@ -92,7 +92,7 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
     notShown: {},
   },
   database: {
-    shown: [],
+    shown: ['CodeBlock', 'GeneratedCodePanel', 'SchemaDiffCard', 'SchemaDiffScreen'],
     notShown: {},
   },
   crons: {
