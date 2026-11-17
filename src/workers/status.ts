@@ -138,3 +138,10 @@ export const toWorkerProcessState = (value: string | null | undefined): WorkerPr
 
 export const toWorkerMessageOutcome = (value: string | null | undefined): WorkerMessageOutcome | null =>
   pick(Object.keys(WORKER_MESSAGE_OUTCOME) as WorkerMessageOutcome[], value);
+
+/**
+ * A payload value for `StatusBadge` with one of these maps: a known value gets its definition, an unknown one (a
+ * state a newer backend sends) shows as itself in a neutral badge instead of an empty dash.
+ */
+export const rawStatusValue = <TValue extends string>(value: string | null | undefined): TValue | null =>
+  value === null || value === undefined || value === '' ? null : (value as TValue);

@@ -1,6 +1,7 @@
 'use client';
 
 import { getErrorStatus, normalizeDddError } from '@mgamadeus/ddd-web/contract';
+import type { ReactNode } from 'react';
 
 import { m } from '../i18n/store.ts';
 import { type TranslateFn, useTranslate } from '../i18n/useTranslate.ts';
@@ -15,12 +16,13 @@ import { EntityTabs } from '../page/EntityTabs.tsx';
 import { SectionHeader } from '../page/SectionHeader.tsx';
 import { StatusCallout } from '../page/StatusCallout.tsx';
 import { Card, CardContent } from '../primitives/card.tsx';
+import { LinkComponentProvider, type PageLinkComponent } from '../primitives/link.tsx';
 import { Skeleton } from '../primitives/skeleton.tsx';
 import type { WorkersApi } from './api.ts';
 import { formatClockTime, formatCount, formatDurationMs, shortClassName, waitingStateContext, waitingStateLabel } from './format.ts';
 import { WorkersWindowSwitch } from './history.tsx';
 import { type WorkerTransportTab, WorkerProcessRange } from './overview.tsx';
-import { toWorkerTransportState, WORKER_TRANSPORT_STATE } from './status.ts';
+import { rawStatusValue, WORKER_TRANSPORT_STATE } from './status.ts';
 import {
   toWorkerProcessFilter,
   toWorkerRunOutcomeFilter,
@@ -30,23 +32,28 @@ import {
   WorkerProcessesTable,
   WorkerTransportCharts,
 } from './transport.tsx';
-import type { WorkerTransportOverview } from './types.ts';
+import type { WorkerTransportOverview, WorkerTransportState } from './types.ts';
 import { usePageVisible, useWorkersWindow } from './useWorkersWindow.ts';
 import { WorkerRestartButton } from './WorkerRestartButton.tsx';
+import type { WorkersSectionRenderer } from './WorkersOverviewScreen.tsx';
 import { DEFAULT_WORKERS_WINDOW, toWorkersWindowPreset, WORKERS_LIST_POLL_MS } from './window.ts';
 
-const TABS = [
+/** The tabs of `WorkerTransportScreen` in their order, with their labels (marked texts; translate with `t`): e.g. a host breadcrumb. */
+export const WORKER_TRANSPORT_TABS: readonly { readonly id: WorkerTransportTab; readonly label: string }[] = [
   { id: 'overview', label: m('Overview') },
   { id: 'runs', label: m('Message runs') },
   { id: 'processes', label: m('Processes') },
-] as const;
+];
+
+/** The sections of `WorkerTransportScreen` (`renderSection`): the Overview tab's four, and the two other tabs. */
+export type WorkerTransportSectionId = 'facts' | 'history' | 'messageClasses' | 'liveProcesses' | 'runs' | 'processes';
 
 const toTransportTab = (value: string): WorkerTransportTab => (value === 'runs' || value === 'processes' ? value : 'overview');
 
 const LIST_KEYS = ['window', 'tab', 'outcome', 'process'] as const;
 
-/** One line of the worker list entry: scaling, limits, message log. */
-const definitionText = (overview: WorkerTransportOverview | undefined, t: TranslateFn): string | null => {
+/** One line of the worker list entry: scaling, limits, scale-down, message log (the transport page's description). */
+export const workerTransportDefinitionText = (overview: WorkerTransportOverview | undefined, t: TranslateFn): string | null => {
   if (!overview) return null;
   const definition = overview.definition;
   if (!overview.isDefined || !definition) return t('No entry in the worker list');
@@ -63,7 +70,16 @@ const definitionText = (overview: WorkerTransportOverview | undefined, t: Transl
     .join(' · ');
 };
 
-const TransportFacts = ({ overview, recentWindowSeconds }: { overview: WorkerTransportOverview; recentWindowSeconds: number }) => {
+export interface WorkerTransportFactsProps {
+  overview: WorkerTransportOverview;
+  /** Seconds the counts and averages cover (`recentWindowSeconds`; default 900). */
+  recentWindowSeconds?: number;
+  /** False while the monitoring is off: the process count is unknown, only the configured range shows. */
+  monitoringEnabled?: boolean;
+}
+
+/** The facts of one transport: state, queue, in work, processes against the range, the recent counts and averages, the last error. */
+export const WorkerTransportFacts = ({ overview, recentWindowSeconds = 900, monitoringEnabled = true }: WorkerTransportFactsProps) => {
   const { t } = useTranslate();
   const failed = (overview.thrownCount ?? 0) + (overview.caughtCount ?? 0);
   const minutes = Math.round(recentWindowSeconds / 60);
@@ -75,7 +91,7 @@ const TransportFacts = ({ overview, recentWindowSeconds }: { overview: WorkerTra
           items={[
             {
               label: m('State'),
-              value: <StatusBadge value={toWorkerTransportState(overview.state)} map={WORKER_TRANSPORT_STATE} />,
+              value: <StatusBadge value={rawStatusValue<WorkerTransportState>(overview.state)} map={WORKER_TRANSPORT_STATE} />,
               hint: overview.stuckSince ? t('Stuck since %time%', { replacements: { time: formatClockTime(overview.stuckSince) ?? '' } }) : undefined,
             },
             {
@@ -95,6 +111,7 @@ const TransportFacts = ({ overview, recentWindowSeconds }: { overview: WorkerTra
                   min={overview.effectiveMin}
                   max={overview.effectiveMax}
                   isAutoscaled={overview.isAutoscaled ?? false}
+                  monitoringEnabled={monitoringEnabled}
                 />
               ),
             },
@@ -149,6 +166,18 @@ export interface WorkerTransportScreenProps {
   pollingIntervalMs?: number;
   /** Pins the end of the chart window (a showcase, a test). */
   historyAnchorMs?: number;
+  /**
+   * Whether the worker monitoring is on (`workersOverview.monitoringEnabled`): off disables the restart and shows the
+   * configured range instead of a process count. Default: read from the overview query (one request, shared with the
+   * overview screen's cache entry).
+   */
+  monitoringEnabled?: boolean;
+  /** The host's actions in the header, before the restart button. */
+  headerActions?: ReactNode;
+  /** The router link of the screen's links (back link). Default: the provider's (`AdminUiProvider.linkComponent`). */
+  linkComponent?: PageLinkComponent;
+  /** Keeps, replaces or leaves out a section (`facts`, `history`, `messageClasses`, `liveProcesses`, `runs`, `processes`). */
+  renderSection?: WorkersSectionRenderer<WorkerTransportSectionId>;
 }
 
 /**
@@ -163,6 +192,10 @@ export const WorkerTransportScreen = ({
   initialTab,
   pollingIntervalMs = WORKERS_LIST_POLL_MS,
   historyAnchorMs,
+  monitoringEnabled: monitoringEnabledProp,
+  headerActions,
+  linkComponent,
+  renderSection,
 }: WorkerTransportScreenProps) => {
   const { t } = useTranslate();
   const visible = usePageVisible();
@@ -178,6 +211,11 @@ export const WorkerTransportScreen = ({
   );
   const detail = detailQuery.currentData?.workerTransportDetail ?? detailQuery.data?.workerTransportDetail;
   const overview = detail?.transport;
+  // the detail does not say whether the monitoring is on: the overview does (skipped when the host passes it)
+  const monitoringQuery = api.useOverviewQuery(undefined, { skip: monitoringEnabledProp !== undefined });
+  const monitoringEnabled = monitoringEnabledProp ?? monitoringQuery.data?.workersOverview?.monitoringEnabled ?? true;
+  const liveProcesses = detail?.processes?.elements;
+  const section = (id: WorkerTransportSectionId, node: ReactNode) => (renderSection ? renderSection(id, node) : node);
   const shellError =
     detailQuery.isError && !detail
       ? getErrorStatus(detailQuery.error) === 404
@@ -185,20 +223,77 @@ export const WorkerTransportScreen = ({
         : normalizeDddError(detailQuery.error, t('The transport could not be loaded.')).message
       : undefined;
 
-  return (
+  const factsSection = overview ? (
+    <WorkerTransportFacts overview={overview} recentWindowSeconds={detail?.recentWindowSeconds ?? 900} monitoringEnabled={monitoringEnabled} />
+  ) : (
+    <Skeleton className="h-40 rounded-2xl" />
+  );
+
+  const historySection = (
+    <section>
+      <SectionHeader
+        title={t('History', { context: 'workers-section' })}
+        description={t('The transport over the window; point at a chart to read one step.')}
+        actions={<WorkersWindowSwitch value={windowPreset} onChange={preset => setValue('window', preset === DEFAULT_WORKERS_WINDOW ? '' : preset)} />}
+      />
+      {detail ? (
+        <WorkerTransportCharts detail={detail} windowMs={workersWindow.windowMs} isRefreshing={detailQuery.isFetching && !detailQuery.isLoading} />
+      ) : detailQuery.isError ? (
+        <StatusCallout tone="destructive" title={t('The history could not be loaded.')} />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {Array.from({ length: 4 }, (_, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: static placeholders
+            <Skeleton key={index} className="h-[290px] rounded-2xl" />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+
+  const messageClassesSection = (
+    <section>
+      <SectionHeader title={t('Message classes')} description={t('What the workers did per message class in the window.')} />
+      <EntityListCard label={m('Message classes')}>
+        {detail ? <WorkerMessageClassesTable messageClasses={detail.messageClasses?.elements ?? []} /> : <Skeleton className="m-4 h-24 rounded-xl" />}
+      </EntityListCard>
+    </section>
+  );
+
+  const liveProcessesSection = (
+    <section>
+      <SectionHeader title={t('Live processes')} description={t('Running or busy now. A busy process is inside a handler and cannot report until it returns.')} />
+      <EntityListCard label={m('Live processes')}>
+        <WorkerProcessesTable processes={detail?.processes?.elements ?? []} isLoading={!detail} emptyMessage={t('No live process right now.')} live />
+      </EntityListCard>
+    </section>
+  );
+
+  const screen = (
     <div data-slot="worker-transport-screen">
       <EntityDetailShell
         title={transport}
         fallbackTitle={t('Transport')}
-        description={definitionText(overview, t)}
+        description={workerTransportDefinitionText(overview, t)}
         back={{ href: backHref, label: t('Back to workers') }}
         isLoading={!detail && !shellError}
         error={shellError}
-        actions={<WorkerRestartButton api={api} transport={transport} liveProcessCount={overview?.liveProcessCount} />}
+        actions={
+          <>
+            {headerActions}
+            <WorkerRestartButton
+              api={api}
+              transport={transport}
+              liveProcessCount={overview?.liveProcessCount}
+              monitoringEnabled={monitoringEnabled}
+              liveProcesses={liveProcesses}
+            />
+          </>
+        }
       >
         <EntityTabs
           aria-label={t('Transport sections')}
-          tabs={TABS}
+          tabs={WORKER_TRANSPORT_TABS}
           activeId={tab}
           onSelect={id => setValue('tab', id === 'overview' ? '' : id)}
           align="center"
@@ -207,58 +302,33 @@ export const WorkerTransportScreen = ({
 
         {tab === 'overview' && (
           <div className="space-y-10">
-            {overview ? <TransportFacts overview={overview} recentWindowSeconds={detail?.recentWindowSeconds ?? 900} /> : <Skeleton className="h-40 rounded-2xl" />}
-
-            <section>
-              <SectionHeader
-                title={t('History', { context: 'workers-section' })}
-                description={t('The transport over the window; point at a chart to read one step.')}
-                actions={<WorkersWindowSwitch value={windowPreset} onChange={preset => setValue('window', preset === DEFAULT_WORKERS_WINDOW ? '' : preset)} />}
-              />
-              {detail ? (
-                <WorkerTransportCharts detail={detail} windowMs={workersWindow.windowMs} isRefreshing={detailQuery.isFetching && !detailQuery.isLoading} />
-              ) : detailQuery.isError ? (
-                <StatusCallout tone="destructive" title={t('The history could not be loaded.')} />
-              ) : (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {Array.from({ length: 4 }, (_, index) => (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: static placeholders
-                    <Skeleton key={index} className="h-[290px] rounded-2xl" />
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <section>
-              <SectionHeader title={t('Message classes')} description={t('What the workers did per message class in the window.')} />
-              <EntityListCard label={m('Message classes')}>
-                {detail ? <WorkerMessageClassesTable messageClasses={detail.messageClasses?.elements ?? []} /> : <Skeleton className="m-4 h-24 rounded-xl" />}
-              </EntityListCard>
-            </section>
-
-            <section>
-              <SectionHeader title={t('Live processes')} description={t('Running or busy now. A busy process is inside a handler and cannot report until it returns.')} />
-              <EntityListCard label={m('Live processes')}>
-                <WorkerProcessesTable processes={detail?.processes?.elements ?? []} isLoading={!detail} emptyMessage={t('No live process right now.')} live />
-              </EntityListCard>
-            </section>
+            {section('facts', factsSection)}
+            {section('history', historySection)}
+            {section('messageClasses', messageClassesSection)}
+            {section('liveProcesses', liveProcessesSection)}
           </div>
         )}
 
-        {tab === 'runs' && (
-          <WorkerMessageRunsTab
-            api={api}
-            transport={transport}
-            outcome={toWorkerRunOutcomeFilter(values.outcome)}
-            onOutcomeChange={outcome => setValue('outcome', outcome)}
-            messageLog={overview?.definition?.messageLog}
-          />
-        )}
+        {tab === 'runs' &&
+          section(
+            'runs',
+            <WorkerMessageRunsTab
+              api={api}
+              transport={transport}
+              outcome={toWorkerRunOutcomeFilter(values.outcome)}
+              onOutcomeChange={outcome => setValue('outcome', outcome)}
+              messageLog={overview?.definition?.messageLog}
+            />
+          )}
 
-        {tab === 'processes' && (
-          <WorkerProcessesTab api={api} transport={transport} filter={toWorkerProcessFilter(values.process)} onFilterChange={filter => setValue('process', filter)} />
-        )}
+        {tab === 'processes' &&
+          section(
+            'processes',
+            <WorkerProcessesTab api={api} transport={transport} filter={toWorkerProcessFilter(values.process)} onFilterChange={filter => setValue('process', filter)} />
+          )}
       </EntityDetailShell>
     </div>
   );
+
+  return linkComponent ? <LinkComponentProvider linkComponent={linkComponent}>{screen}</LinkComponentProvider> : screen;
 };

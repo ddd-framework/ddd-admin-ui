@@ -18,8 +18,9 @@ import { useGrowingWindowList } from '../logic/react/useGrowingWindowList.ts';
 import { CardGrid } from '../page/PageLayout.tsx';
 import { cn } from '../primitives/cn.ts';
 import type { WorkersApi } from './api.ts';
-import { ChartBody, ChartLegend, WorkerChartCard, WorkerTimeChart } from './charts.tsx';
+import { ChartBody, ChartLegend, WorkerChartCard, WorkerChartSyncGroup, WorkerTimeChart } from './charts.tsx';
 import {
+  axisNeedsDate,
   dispatchOrigin,
   formatBytes,
   formatClockTime,
@@ -31,18 +32,25 @@ import {
   sequencePoints,
   shortClassName,
   shortHost,
+  sortMessageClasses,
   stopReasonLabel,
   succeededPoints,
   sumOf,
+  formatTimelineTick,
+  workerLastErrorText,
   wantsLogScale,
   zipSeries,
 } from './format.ts';
-import { toWorkerMessageOutcome, toWorkerProcessState, WORKER_MESSAGE_OUTCOME, WORKER_PROCESS_STATE } from './status.ts';
+import { WorkerHint } from './hint.tsx';
+import { rawStatusValue, WORKER_MESSAGE_OUTCOME, WORKER_PROCESS_STATE } from './status.ts';
+import { durationTicks } from './ticks.ts';
 import type {
   WorkerMessageClassStat,
   WorkerMessageRun,
+  WorkerMessageOutcome,
   WorkerMessageRunsResponse,
   WorkerProcess,
+  WorkerProcessDisplayState,
   WorkerProcessesResponse,
   WorkerTransportDetail,
   WorkerTransportListArg,
@@ -60,8 +68,9 @@ export interface WorkerTransportChartsProps {
 
 /**
  * The charts of one transport over the window: queue and workers (the definition's range as dashed lines), throughput
- * (succeeded, failed, redelivered), duration and queue wait (average and maximum; a logarithmic axis when the maximum
- * dwarfs the average). A step without a reading is a gap.
+ * (succeeded, failed, redelivered), duration and queue wait (average and maximum on round time units; a logarithmic
+ * axis when the maximum dwarfs the average). A step without a reading is a gap. Pointing at one chart reads the same
+ * step in all five (`WorkerChartSyncGroup`).
  */
 export const WorkerTransportCharts = ({ detail, windowMs, isRefreshing = false }: WorkerTransportChartsProps) => {
   const { t } = useTranslate();
@@ -109,10 +118,11 @@ export const WorkerTransportCharts = ({ detail, windowMs, isRefreshing = false }
     average: t('Average', { context: 'chart-series' }),
     maximum: t('Maximum', { context: 'chart-series' }),
   };
-  const durationTicksFormat = { formatTick: formatDurationTick, formatValue: (value: number) => formatDurationMs(value) };
+  const durationTicksFormat = { formatTick: formatDurationTick, formatValue: (value: number) => formatDurationMs(value), ticks: durationTicks };
   const noFinished = t('No message finished in this window');
 
   return (
+    <WorkerChartSyncGroup>
     <CardGrid>
       <WorkerChartCard
         title={t('Queue')}
@@ -168,7 +178,7 @@ export const WorkerTransportCharts = ({ detail, windowMs, isRefreshing = false }
           { key: 'redelivered', label: labels.redelivered, color: 'var(--warning)', shape: 'line', dashed: true },
         ]}
       >
-        <ChartBody height={CHART_HEIGHT} isEmpty={!hasAnyValue(rows, ['handled'])} emptyMessage={noFinished} isRefreshing={isRefreshing}>
+        <ChartBody height={CHART_HEIGHT} isEmpty={!hasAnyValue(rows, ['handled', 'redelivered'])} emptyMessage={noFinished} isRefreshing={isRefreshing}>
           <WorkerTimeChart
             rows={rows}
             series={[
@@ -228,6 +238,7 @@ export const WorkerTransportCharts = ({ detail, windowMs, isRefreshing = false }
         </ChartBody>
       </WorkerChartCard>
     </CardGrid>
+    </WorkerChartSyncGroup>
   );
 };
 
@@ -242,9 +253,10 @@ const DurationPair = ({ average, maximum }: { average: number | null | undefined
   );
 };
 
-/** What the workers of the transport did per message class in the window. */
+/** What the workers of the transport did per message class in the window, the most finished first. */
 export const WorkerMessageClassesTable = ({ messageClasses }: { messageClasses: readonly WorkerMessageClassStat[] }) => {
   const { t } = useTranslate();
+  const sorted = useMemo(() => sortMessageClasses(messageClasses), [messageClasses]);
   const columns: EntityListColumn<WorkerMessageClassStat>[] = [
     {
       id: 'messageClass',
@@ -284,10 +296,10 @@ export const WorkerMessageClassesTable = ({ messageClasses }: { messageClasses: 
       header: m('Last error'),
       cell: stat =>
         stat.lastErrorClass ? (
-          <span className="block max-w-72 truncate text-xs" title={stat.lastErrorMessage ?? stat.lastErrorClass}>
+          <WorkerHint content={workerLastErrorText(stat, t)} className="block max-w-72 truncate text-xs">
             <span className="font-medium text-destructive">{shortClassName(stat.lastErrorClass)}</span>
             <span className="text-muted-foreground"> · {formatClockTime(stat.lastErrorAt)}</span>
-          </span>
+          </WorkerHint>
         ) : (
           <EmptyValue />
         ),
@@ -297,7 +309,7 @@ export const WorkerMessageClassesTable = ({ messageClasses }: { messageClasses: 
   return (
     <EntityListTable
       columns={columns}
-      items={[...messageClasses]}
+      items={sorted}
       getRowKey={stat => stat.messageClass ?? ''}
       emptyMessage={t('No message finished in this window.')}
       className="md:flex-none"
@@ -346,7 +358,7 @@ export const WorkerProcessesTable = ({
       header: m('State'),
       cell: process => (
         <div className="flex flex-col gap-1">
-          <StatusBadge value={toWorkerProcessState(process.displayState ?? process.state)} map={WORKER_PROCESS_STATE} />
+          <StatusBadge value={rawStatusValue<WorkerProcessDisplayState>(process.displayState ?? process.state)} map={WORKER_PROCESS_STATE} />
           {process.restartRequestedAt && !process.stoppedAt && (
             <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
               <RotateCcw className="size-3" aria-hidden />
@@ -393,12 +405,12 @@ export const WorkerProcessesTable = ({
           <div className="flex flex-col gap-0.5">
             <DateCell value={process.stoppedAt} />
             {label && (
-              <span
+              <WorkerHint
+                content={t('Inferred: Messenger stops without a reason; a lost process reported no stop (stopped = when it was noticed)')}
                 className={cn('text-[11px] whitespace-nowrap', process.stopReason === 'LOST' ? 'text-destructive' : 'text-muted-foreground')}
-                title={t('Inferred: Messenger stops without a reason; a lost process reported no stop (stopped = when it was noticed)')}
               >
                 {label}
-              </span>
+              </WorkerHint>
             )}
           </div>
         );
@@ -475,10 +487,18 @@ interface Lane {
   isOpen: boolean;
 }
 
+/** The state word of a lane (the status map's label, a raw unknown value as is). */
+const laneStateLabel = (state: string, t: (text: string, options?: { context?: string }) => string): string => {
+  const definition = (WORKER_PROCESS_STATE as Partial<Record<string, { label: string }>>)[state];
+  return definition ? t(definition.label, { context: 'worker-process-state' }) : state || '—';
+};
+
 /**
  * The lifetimes of the listed processes on one time axis (plain elements): one lane per process from its start to its
  * stop (or now), coloured by its display state, a tick at its first message. A lost process ends at its last
- * heartbeat. The time before a worker registers (container start, image pull) is not part of a lifetime.
+ * heartbeat. The time before a worker registers (container start, image pull) is not part of a lifetime. Every lane is
+ * a tab stop with its details in a tooltip (state, host and pid, start and end, counts, current message, stop reason);
+ * the axis names start, middle (from `sm`) and end, with the date when the span crosses a day.
  */
 export const WorkerProcessTimeline = ({ processes, nowMs }: { processes: readonly WorkerProcess[]; nowMs: number }) => {
   const { t } = useTranslate();
@@ -501,6 +521,7 @@ export const WorkerProcessTimeline = ({ processes, nowMs }: { processes: readonl
   if (lanes.length === 0) return null;
   const span = domainEnd - domainStart;
   const percent = (ms: number) => `${((ms - domainStart) / span) * 100}%`;
+  const withDate = axisNeedsDate(domainStart, domainEnd);
   const legend = [
     { key: 'RUNNING', label: t('Running', { context: 'worker-process-state' }), color: 'var(--success)' },
     { key: 'BUSY', label: t('Busy', { context: 'worker-process-state' }), color: 'var(--info)' },
@@ -514,40 +535,45 @@ export const WorkerProcessTimeline = ({ processes, nowMs }: { processes: readonl
       <ChartLegend items={legend} />
       <ul className="max-h-80 space-y-1 overflow-y-auto pr-1">
         {lanes.map(lane => {
-          const state = lane.process.displayState ?? lane.process.state ?? '';
+          const process = lane.process;
+          const state = process.displayState ?? process.state ?? '';
           const width = Math.max(((lane.endMs - lane.startMs) / span) * 100, 0.4);
-          const stopReason = stopReasonLabel(lane.process.stopReason);
-          const summary = [
-            `${shortHost(lane.process.hostName)} · ${lane.process.processId ?? ''}`,
-            `${formatClockTime(lane.process.startedAt) ?? ''} → ${lane.isOpen ? t('now') : (formatClockTime(lane.process.stopReason === 'LOST' ? lane.process.lastSeenAt : lane.process.stoppedAt) ?? '')} (${formatDurationMs(lane.endMs - lane.startMs)})`,
-            t('%handled% handled · %failed% failed', { replacements: { handled: formatCount(lane.process.handledCount ?? 0), failed: formatCount(lane.process.failedCount ?? 0) } }),
+          const stopReason = stopReasonLabel(process.stopReason);
+          const isLost = process.stopReason === 'LOST';
+          const endText = lane.isOpen ? t('now') : (formatClockTime(isLost ? process.lastSeenAt : process.stoppedAt) ?? '');
+          const details = [
+            laneStateLabel(state, t),
+            `${process.hostName ?? shortHost(process.hostName)} · ${t('pid %pid%', { replacements: { pid: process.processId ?? '—' } })}`,
+            `${formatClockTime(process.startedAt) ?? ''} → ${endText}${isLost ? ` ${t('(last heartbeat)')}` : ''} (${formatDurationMs(lane.endMs - lane.startMs)})`,
+            t('%handled% handled · %failed% failed', { replacements: { handled: formatCount(process.handledCount ?? 0), failed: formatCount(process.failedCount ?? 0) } }),
+            process.currentMessageClass ? t('Now: %messageClass%', { replacements: { messageClass: shortClassName(process.currentMessageClass) } }) : null,
             stopReason,
-          ]
-            .filter(Boolean)
-            .join(' · ');
+          ].filter((line): line is string => Boolean(line));
           return (
-            <li key={lane.process.processKey ?? String(lane.process.id)} className="flex items-center gap-3">
+            <li key={process.processKey ?? String(process.id)} className="flex items-center gap-3">
               <span className="w-32 shrink-0 truncate text-right font-mono text-[11px] text-muted-foreground sm:w-44">
-                {shortHost(lane.process.hostName)} · {lane.process.processId}
+                {shortHost(process.hostName)} · {process.processId}
               </span>
-              <div className="relative h-4 min-w-0 flex-1 rounded-full bg-tint" title={summary}>
+              <WorkerHint content={details.join('\n')} className="relative block h-4 min-w-0 flex-1 rounded-full bg-tint">
                 <span
                   role="img"
-                  aria-label={summary}
+                  aria-label={details.join(' · ')}
+                  data-state={state || undefined}
                   className={cn('absolute inset-y-0.5 min-w-1 rounded-full', STATE_FILL[state] ?? 'bg-muted-foreground/45', lane.isOpen && 'rounded-r-none')}
                   style={{ left: percent(lane.startMs), width: `${width}%` }}
                 />
                 {lane.firstMessageMs !== null && (
                   <span aria-hidden className="pointer-events-none absolute inset-y-0 w-0.5 rounded-full bg-foreground/70" style={{ left: percent(lane.firstMessageMs) }} />
                 )}
-              </div>
+              </WorkerHint>
             </li>
           );
         })}
       </ul>
-      <div className="flex justify-between gap-3 pl-[8.75rem] text-[11px] text-muted-foreground tabular-nums sm:pl-[11.75rem]">
-        <span>{formatClockTime(new Date(domainStart).toISOString())}</span>
-        <span>{formatClockTime(new Date(domainEnd).toISOString())}</span>
+      <div className="grid grid-cols-2 gap-3 pl-[8.75rem] text-[11px] text-muted-foreground tabular-nums sm:grid-cols-3 sm:pl-[11.75rem]">
+        <span>{formatTimelineTick(domainStart, withDate)}</span>
+        <span className="hidden text-center sm:block">{formatTimelineTick(domainStart + span / 2, withDate)}</span>
+        <span className="text-right">{formatTimelineTick(domainEnd, withDate)}</span>
       </div>
       <p className="text-xs text-muted-foreground">{t('Tick: first message of the process.')}</p>
     </div>
@@ -586,6 +612,16 @@ export const workerRunOutcomeFilterString = (filter: WorkerRunOutcomeFilter): st
 
 const PAGE_SIZE = 50;
 const MAX_TOP = 500;
+
+/** Under a list that reached the request cap: the newest rows only, a narrower filter reaches older ones. */
+const ListCapNotice = ({ count }: { count: number }) => {
+  const { t } = useTranslate();
+  return (
+    <p className="border-t px-4 py-3 text-center text-xs text-muted-foreground sm:px-6" data-slot="worker-list-cap" role="note">
+      {t('Showing the newest %count%. Narrow the filter to reach older ones.', { replacements: { count: formatCount(count) } })}
+    </p>
+  );
+};
 const extractProcesses = (data: WorkerProcessesResponse): WorkerProcess[] => data.workerProcesses.elements ?? [];
 const extractRuns = (data: WorkerMessageRunsResponse): WorkerMessageRun[] => data.workerMessageRuns.elements ?? [];
 
@@ -656,6 +692,7 @@ export const WorkerProcessesTab = ({ api, transport, filter, onFilterChange }: W
                 mode="single"
                 aria-label={t('Process state')}
                 options={[
+                  { value: '', label: m('All') },
                   { value: 'running', label: m('Not stopped') },
                   { value: 'stopped', label: m('Stopped') },
                   { value: 'lost', label: m('Lost') },
@@ -679,6 +716,7 @@ export const WorkerProcessesTab = ({ api, transport, filter, onFilterChange }: W
           isSearchActive={filter !== ''}
           onClearSearch={() => onFilterChange('')}
         />
+        {!list.hasMore && list.items.length >= MAX_TOP && <ListCapNotice count={MAX_TOP} />}
       </EntityListCard>
     </div>
   );
@@ -730,7 +768,7 @@ export const WorkerMessageRunsTab = ({ api, transport, outcome, onOutcomeChange,
     {
       id: 'outcome',
       header: m('Outcome'),
-      cell: run => <StatusBadge value={toWorkerMessageOutcome(run.outcome)} map={WORKER_MESSAGE_OUTCOME} />,
+      cell: run => <StatusBadge value={rawStatusValue<WorkerMessageOutcome>(run.outcome)} map={WORKER_MESSAGE_OUTCOME} />,
       className: 'w-28',
     },
     {
@@ -782,10 +820,10 @@ export const WorkerMessageRunsTab = ({ api, transport, outcome, onOutcomeChange,
       header: m('Error'),
       cell: run =>
         run.errorClass || run.errorMessage ? (
-          <span className="block max-w-64 truncate text-xs" title={[run.errorClass, run.errorMessage].filter(Boolean).join('\n')}>
+          <WorkerHint content={[run.errorClass, run.errorMessage].filter(Boolean).join('\n')} className="block max-w-64 truncate text-xs">
             <span className="font-medium text-destructive">{shortClassName(run.errorClass)}</span>
             {run.errorMessage && <span className="text-muted-foreground"> · {run.errorMessage}</span>}
-          </span>
+          </WorkerHint>
         ) : (
           <EmptyValue />
         ),
@@ -827,6 +865,7 @@ export const WorkerMessageRunsTab = ({ api, transport, outcome, onOutcomeChange,
                 mode="single"
                 aria-label={t('Outcome', { context: 'filter' })}
                 options={[
+                  { value: '', label: m('All') },
                   { value: 'failed', label: m('Failed') },
                   { value: 'THROWN', label: m('Thrown') },
                   { value: 'CAUGHT', label: m('Caught') },
@@ -856,6 +895,7 @@ export const WorkerMessageRunsTab = ({ api, transport, outcome, onOutcomeChange,
         loadingMessage={t('Loading message runs')}
         className="md:flex-none"
       />
+      {!list.hasMore && list.items.length >= MAX_TOP && <ListCapNotice count={MAX_TOP} />}
     </EntityListCard>
   );
 };

@@ -43,7 +43,7 @@ describe('createWorkersApi', () => {
     assert.deepEqual(requests.restart({ transport: 'mail' }).body, { transport: 'mail' });
   });
 
-  it('lets the restart invalidate the live reads, not the history or the runs', () => {
+  it('lets the restart invalidate the live reads, the history and the runs', () => {
     const { api, endpoints } = recordingBaseApi();
     createWorkersApi({ baseApi: api, apiPrefix: '/w' });
     const invalidated = endpoints.adminUiWorkersRestart?.invalidatesTags ?? [];
@@ -51,8 +51,8 @@ describe('createWorkersApi', () => {
     assert.equal(refetched('adminUiWorkersOverview'), true);
     assert.equal(refetched('adminUiWorkerTransportDetail'), true);
     assert.equal(refetched('adminUiWorkerProcesses'), true);
-    assert.equal(refetched('adminUiWorkersHistory'), false);
-    assert.equal(refetched('adminUiWorkerMessageRuns'), false);
+    assert.equal(refetched('adminUiWorkersHistory'), true);
+    assert.equal(refetched('adminUiWorkerMessageRuns'), true);
   });
 
   it('injects once per base api and prefix', () => {
@@ -117,6 +117,7 @@ describe('createWorkersApi', () => {
       'GET /api/admin/workers/history?stepSeconds=60',
       'POST /api/admin/workers/restart {"transport":"mail"}',
       'GET /api/admin/workers/overview',
+      'GET /api/admin/workers/history?stepSeconds=60',
     ]);
   });
 });

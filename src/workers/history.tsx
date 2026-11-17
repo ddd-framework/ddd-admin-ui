@@ -8,8 +8,8 @@ import { CardGrid } from '../page/PageLayout.tsx';
 import { StatusCallout } from '../page/StatusCallout.tsx';
 import { SegmentedControl } from '../primitives/segmented-control.tsx';
 import type { WorkersApi } from './api.ts';
-import { ChartBody, type ChartLegendItem, type WorkerChartSeries, WorkerChartCard, WorkerTimeChart } from './charts.tsx';
-import { hasAnyValue, rankTransports, sequencePoints, succeededPoints, sumOf, zipSeries } from './format.ts';
+import { ChartBody, type ChartLegendItem, type WorkerChartSeries, WorkerChartCard, WorkerChartSyncGroup, WorkerTimeChart } from './charts.tsx';
+import { formatCount, hasAnyValue, maxOf, rankTransports, sequencePoints, succeededPoints, sumOf, zipSeries } from './format.ts';
 import { type WorkersWindow, type WorkersWindowPreset, workersWindowOptions } from './window.ts';
 
 export interface WorkersWindowSwitchProps {
@@ -41,7 +41,8 @@ export interface WorkersHistoryChartsProps {
 /**
  * The history of every transport over the window (`GET /history`): how many workers of which kind ran when (stacked
  * processes per transport, process starts below on the same time axis), messages waiting and finished per transport,
- * and the queue and throughput of every transport together (the backend's totals, never a client sum).
+ * and the queue and throughput of every transport together (the backend's totals, never a client sum). Pointing at
+ * one chart reads the same step in all of them (`WorkerChartSyncGroup`).
  */
 export const WorkersHistoryCharts = ({ api, window: workersWindow }: WorkersHistoryChartsProps) => {
   const { t } = useTranslate();
@@ -76,7 +77,9 @@ export const WorkersHistoryCharts = ({ api, window: workersWindow }: WorkersHist
       queueRows: zipSeries({ waiting: sequencePoints(totals, 'waiting'), inFlight: sequencePoints(totals, 'inFlight') }),
       throughputRows: zipSeries({ succeeded: succeededPoints(handled, failed), failed }),
       totalStarts: sumOf(sequencePoints(totals, 'processStarts')),
+      totalFinished: sumOf(handled),
       peakTotal: Math.max(0, ...sequencePoints(totals, 'processes').map(point => point.y ?? 0)),
+      transportsWithWorker: (history?.transports?.elements ?? []).filter(entry => maxOf(sequencePoints(entry.sequences, 'processes')) > 0).length,
     };
   }, [history, t]);
 
@@ -91,14 +94,17 @@ export const WorkersHistoryCharts = ({ api, window: workersWindow }: WorkersHist
   const failedLabel = t('Failed', { context: 'chart-series' });
 
   return (
+    <WorkerChartSyncGroup>
     <div className="space-y-4">
       <WorkerChartCard
         title={t('Workers over time')}
         description={
           history
-            ? t('Live processes per transport; at most %peak% at once. A process counts from the moment its worker registers: container start and image pull are not visible.', {
-                replacements: { peak: charts.peakTotal },
-              })
+            ? `${t('Live processes per transport; at most %peak% at once. A process counts from the moment its worker registers: container start and image pull are not visible.', {
+                replacements: { peak: formatCount(charts.peakTotal) },
+              })} ${t('{count, plural, =0 {No transport had a worker in this window.} one {# transport had a worker in this window.} other {# transports had a worker in this window.}}', {
+                count: charts.transportsWithWorker,
+              })}`
             : t('Live processes per transport.')
         }
         legend={charts.legend}
@@ -150,7 +156,13 @@ export const WorkersHistoryCharts = ({ api, window: workersWindow }: WorkersHist
         </WorkerChartCard>
         <WorkerChartCard
           title={t('Throughput, all transports')}
-          description={t('Finished messages per step, every transport together.')}
+          description={
+            history
+              ? `${t('Finished messages per step, every transport together.')} ${t('{count, plural, one {# message finished in this window.} other {# messages finished in this window.}}', {
+                  count: charts.totalFinished,
+                })}`
+              : t('Finished messages per step, every transport together.')
+          }
           legend={[
             { key: 'succeeded', label: succeededLabel, color: 'var(--success)' },
             { key: 'failed', label: failedLabel, color: 'var(--destructive)' },
@@ -172,5 +184,6 @@ export const WorkersHistoryCharts = ({ api, window: workersWindow }: WorkersHist
         </WorkerChartCard>
       </CardGrid>
     </div>
+    </WorkerChartSyncGroup>
   );
 };

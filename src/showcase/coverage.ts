@@ -85,7 +85,12 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
       'WorkerTransportsTable', 'WorkersHistoryCharts', 'WorkersLivePanel', 'WorkersOverviewScreen', 'WorkersThroughputTable',
       'WorkersWindowSwitch',
     ],
-    notShown: { WorkerKpiTilesSkeleton: 'drawn by WorkersOverviewScreen while the overview loads' },
+    notShown: {
+      WorkerKpiTilesSkeleton: 'drawn by WorkersOverviewScreen while the overview loads',
+      WorkerChartSyncGroup: DRAWN_BY('WorkersHistoryCharts and WorkerTransportCharts'),
+      WorkerHint: DRAWN_BY('WorkerTransportsTable, WorkerMessageClassesTable and WorkerProcessTimeline'),
+      WorkerTransportFacts: DRAWN_BY('WorkerTransportScreen'),
+    },
   },
   media: {
     shown: ['FormMediaItemField', 'MediaItemField', 'MediaItemPickerDialog', 'MediaPreview', 'ImageCropDialog'],

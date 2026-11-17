@@ -22,6 +22,13 @@ describe('narrowWriteAccess', () => {
     assert.equal(narrowWriteAccess(denied, { allowed: false, reason: 'Other' }), denied);
   });
 
+  it('an inner denial adds its reason to an outer denial without one, never widens', () => {
+    const deniedWithoutReason = { allowed: false };
+    assert.deepEqual(narrowWriteAccess(deniedWithoutReason, { allowed: false, reason: 'Locked' }), { allowed: false, reason: 'Locked' });
+    assert.equal(narrowWriteAccess(deniedWithoutReason, { allowed: true, reason: 'Locked' }), deniedWithoutReason);
+    assert.equal(narrowWriteAccess(deniedWithoutReason, { allowed: false }), deniedWithoutReason);
+  });
+
   it('allowed below allowed stays allowed', () => {
     assert.equal(narrowWriteAccess(WRITE_ACCESS_ALLOWED, { allowed: true }), WRITE_ACCESS_ALLOWED);
     assert.deepEqual(narrowWriteAccess({ allowed: true }, { allowed: true, reason: 'x' }), { allowed: true });

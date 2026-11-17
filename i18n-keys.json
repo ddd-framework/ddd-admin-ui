@@ -1,6 +1,6 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
@@ -132,12 +132,28 @@
       "hint": "Accessible label of the end-date input in a date-range filter. %label% is the filter caption, e.g. \"Ends at\", so the result reads \"Ends at to\"."
     },
     {
+      "key": "%minutes% min",
+      "text": "%minutes% min",
+      "files": [
+        "workers/format.ts"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): the length of a time window in minutes, e.g. “15 min”; used inside other texts such as “Last %window%”."
+    },
+    {
       "key": "%name% is not an image",
       "text": "%name% is not an image",
       "files": [
         "logic/browser/prepareImageFile.ts"
       ],
       "hint": "Error message shown when a picked file is not an image during upload. %name% is the file name, for example holiday-photo.pdf."
+    },
+    {
+      "key": "%percent% % of the last %window%",
+      "text": "%percent% % of the last %window%",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): hint under the number of failed jobs: the failed share; %percent% is a number, %window% a window length like “6 hours”."
     },
     {
       "key": "%percent% % of the last hour",
@@ -154,6 +170,14 @@
         "logic/pure/runSequential.ts"
       ],
       "hint": "Progress toast of a bulk action running on many selected rows. %progress% is a verb like Deleting, %nouns% the plural item name like tracks, %done%/%total% e.g. 2/5."
+    },
+    {
+      "key": "%stopped% of %asked% stopped",
+      "text": "%stopped% of %asked% stopped",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): restart result dialog: how many of the processes asked to restart have stopped so far; both are numbers."
     },
     {
       "key": "%thrown% thrown · %caught% caught",
@@ -175,7 +199,7 @@
       "key": "%value% /h",
       "text": "%value% /h",
       "files": [
-        "workers/overview.tsx"
+        "workers/format.ts"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a rate per hour; %value% is a number."
     },
@@ -183,7 +207,7 @@
       "key": "%value% /min",
       "text": "%value% /min",
       "files": [
-        "workers/overview.tsx"
+        "workers/format.ts"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a rate per minute; %value% is a number."
     },
@@ -202,6 +226,14 @@
         "workers/transport.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): after a failure count: how it splits; both are numbers."
+    },
+    {
+      "key": "(last heartbeat)",
+      "text": "(last heartbeat)",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): process timeline tooltip, after the end time of a lost process: the end is the last time it reported, not a reported stop."
     },
     {
       "key": "(plural)",
@@ -314,6 +346,14 @@
       "hint": "Status badge of a worker process: description of Running."
     },
     {
+      "key": "All",
+      "text": "All",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Filter chip that shows every row (no filter), next to chips such as “Failed” or “Stopped”."
+    },
+    {
       "key": "All time",
       "text": "All time",
       "files": [
@@ -402,6 +442,14 @@
         "media/ImageCropDialog.tsx"
       ],
       "hint": "Accessible name of the choice of crop shapes (free, square, 16:9, round)."
+    },
+    {
+      "key": "At the rate of the last %window%",
+      "text": "At the rate of the last %window%",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tooltip of the estimated time until a queue is empty: which window's rate the estimate uses; %window% is a window length like “5 min”."
     },
     {
       "key": "Attempt",
@@ -859,10 +907,19 @@
       "hint": "Label in the metadata block of a detail screen, placed before the date and time the record was created, for example 'Created 12 Nov 2026, 10:15'. Keep it short."
     },
     {
+      "key": "Creates or updates every configured row, matched by its key.",
+      "text": "Creates or updates every configured row, matched by its key.",
+      "files": [
+        "translations/ConfigImportCards.tsx"
+      ],
+      "hint": "Import of configured rows (maintenance action) of a kind the host names, e.g. countries: default description of the import card when the host gives none."
+    },
+    {
       "key": "Creates or updates every language of the configuration, matched by language code.",
       "text": "Creates or updates every language of the configuration, matched by language code.",
       "files": [
-        "translations/ConfigImportCards.tsx"
+        "translations/ConfigImportCards.tsx",
+        "translations/LanguagesScreen.tsx"
       ],
       "hint": "Import of the configured languages or locales (maintenance action): description of the languages import."
     },
@@ -870,7 +927,8 @@
       "key": "Creates or updates every locale of the configuration, matched by language and country code.",
       "text": "Creates or updates every locale of the configuration, matched by language and country code.",
       "files": [
-        "translations/ConfigImportCards.tsx"
+        "translations/ConfigImportCards.tsx",
+        "translations/LocalesScreen.tsx"
       ],
       "hint": "Import of the configured languages or locales (maintenance action): description of the locales import."
     },
@@ -1566,6 +1624,22 @@
       "hint": "Languages and locales admin: header button that imports the configured rows."
     },
     {
+      "key": "Import from the configuration",
+      "text": "Import from the configuration",
+      "files": [
+        "translations/ConfigImportCards.tsx"
+      ],
+      "hint": "Import of configured rows (maintenance action) of a kind the host names, e.g. countries: default title of the import card when the host gives none."
+    },
+    {
+      "key": "Import from the configuration?",
+      "text": "Import from the configuration?",
+      "files": [
+        "translations/ConfigImportCards.tsx"
+      ],
+      "hint": "Import of configured rows (maintenance action) of a kind the host names, e.g. countries: default confirmation title before the import when the host gives none."
+    },
+    {
       "key": "Import languages from the configuration",
       "text": "Import languages from the configuration",
       "files": [
@@ -1779,10 +1853,18 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header: counts of the last %minutes% minutes."
     },
     {
+      "key": "Last %window%",
+      "text": "Last %window%",
+      "files": [
+        "workers/format.ts"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header: counts of the last time window; %window% is a window length like “30 min” or “2 hours”."
+    },
+    {
       "key": "Last 15 min",
       "text": "Last 15 min",
       "files": [
-        "workers/overview.tsx"
+        "workers/format.ts"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header: the last 15 minutes."
     },
@@ -1790,7 +1872,7 @@
       "key": "Last 24 h",
       "text": "Last 24 h",
       "files": [
-        "workers/overview.tsx"
+        "workers/format.ts"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header: the last 24 hours."
     },
@@ -1806,7 +1888,7 @@
       "key": "Last 5 min",
       "text": "Last 5 min",
       "files": [
-        "workers/overview.tsx"
+        "workers/format.ts"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header: the last 5 minutes."
     },
@@ -1828,18 +1910,18 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header and label: the most recent error of a transport or job class."
     },
     {
-      "key": "Last error %time%: %message%",
-      "text": "Last error %time%: %message%",
+      "key": "Last error %time%",
+      "text": "Last error %time%",
       "files": [
-        "workers/overview.tsx"
+        "workers/format.ts"
       ],
-      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tooltip; %time% is a clock time, %message% the error text."
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): first line of the last-error tooltip; %time% is a clock time (the class and the message follow on their own lines)."
     },
     {
       "key": "Last hour",
       "text": "Last hour",
       "files": [
-        "workers/overview.tsx"
+        "workers/format.ts"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header: the last hour."
     },
@@ -2330,6 +2412,14 @@
       "hint": "Empty-state text inside a dashed placeholder box where an image preview would be, shown when a media item has no image or the file fails to load."
     },
     {
+      "key": "No import operation for “%kind%”.",
+      "text": "No import operation for “%kind%”.",
+      "files": [
+        "translations/ConfigImportCards.tsx"
+      ],
+      "hint": "Import of configured rows (maintenance action) of a kind the host names, e.g. countries: error when the screen has no import for this kind; %kind% is a technical name, not translated."
+    },
+    {
       "key": "No language found",
       "text": "No language found",
       "files": [
@@ -2376,6 +2466,14 @@
         "media/MediaItemPickerDialog.tsx"
       ],
       "hint": "Empty-state message in the media picker dialog when the search or filter returns no media items (images) to choose from."
+    },
+    {
+      "key": "No message finished in the last %window% and every queue is empty.",
+      "text": "No message finished in the last %window% and every queue is empty.",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): empty state of the throughput table; %window% is a window length like “7 days”."
     },
     {
       "key": "No message finished in the last 24 hours and every queue is empty.",
@@ -2550,6 +2648,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): restart result description when no worker process was running."
     },
     {
+      "key": "No worker process of %transport% is running right now: nothing to restart.",
+      "text": "No worker process of %transport% is running right now: nothing to restart.",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): restart result dialog when no process of one transport (queue) was running; %transport% is its name."
+    },
+    {
       "key": "No worker process of this transport is recorded.",
       "text": "No worker process of this transport is recorded.",
       "files": [
@@ -2641,6 +2747,14 @@
         "workers/status.ts"
       ],
       "hint": "Status badge of a worker transport (queue): description of Idle."
+    },
+    {
+      "key": "Now: %messageClass%",
+      "text": "Now: %messageClass%",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): process timeline tooltip: the job class the process is working on right now."
     },
     {
       "key": "One or more of the given values is invalid.",
@@ -2922,12 +3036,28 @@
       "hint": "Workers admin chart: series name: retried jobs."
     },
     {
+      "key": "Refresh now",
+      "text": "Refresh now",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): accessible name of the icon button that reloads the overview at once."
+    },
+    {
       "key": "Refresh token invalid",
       "text": "Refresh token invalid",
       "files": [
         "i18n/serverMessages.ts"
       ],
       "hint": "Error message from the server when the stored login session can no longer be renewed; the user has to sign in again."
+    },
+    {
+      "key": "Refreshed every %seconds% s.",
+      "text": "Refreshed every %seconds% s.",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): sentence after the live section's description: how often the numbers reload; %seconds% is a number of seconds."
     },
     {
       "key": "Refreshing list",
@@ -3336,6 +3466,14 @@
       "hint": "Placeholder of a multi-select dropdown while nothing is picked. Prompts the user to open the list and choose values. Ends with an ellipsis."
     },
     {
+      "key": "Setting: %setting%.",
+      "text": "Setting: %setting%.",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): sentence in the “monitoring is off” banner naming the configuration switch; %setting% is a technical setting name, not translated."
+    },
+    {
       "key": "Show all (%count%)",
       "text": "Show all (%count%)",
       "files": [
@@ -3358,6 +3496,30 @@
         "glass/GlassGroup.tsx"
       ],
       "hint": "Small floating pill button at the bottom edge of an expanded group panel; clicking it shows only the first few rows again."
+    },
+    {
+      "key": "Showing the data of %time%.",
+      "text": "Showing the data of %time%.",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): warning shown when a reload failed: the numbers on screen are from %time% (a clock time)."
+    },
+    {
+      "key": "Showing the last data that loaded.",
+      "text": "Showing the last data that loaded.",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): warning shown when a reload failed and the time of the shown data is unknown."
+    },
+    {
+      "key": "Showing the newest %count%. Narrow the filter to reach older ones.",
+      "text": "Showing the newest %count%. Narrow the filter to reach older ones.",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): note under a list that reached its maximum number of rows; %count% is that maximum."
     },
     {
       "key": "Silent__worker-process-state",
@@ -3824,6 +3986,14 @@
         "workers/WorkersOverviewScreen.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): error when the overview could not be loaded."
+    },
+    {
+      "key": "The worker overview could not be refreshed.",
+      "text": "The worker overview could not be refreshed.",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): title of the warning shown when a reload failed while older numbers stay on screen."
     },
     {
       "key": "There is no transport “%transport%”.",
@@ -4633,6 +4803,14 @@
       "hint": "Languages admin screen: placeholder: an example ISO 639-3 code."
     },
     {
+      "key": "every %duration%",
+      "text": "every %duration%",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): how often a looped console command runs; %duration% is a duration like “1 min 30 s”."
+    },
+    {
       "key": "every %minutes% min",
       "text": "every %minutes% min",
       "files": [
@@ -4731,10 +4909,18 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile hint under the waiting count."
     },
     {
+      "key": "in the last %window%",
+      "text": "in the last %window%",
+      "files": [
+        "workers/format.ts"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): hint under a count: the time window it covers; %window% is a window length like “6 hours”."
+    },
+    {
       "key": "in the last hour",
       "text": "in the last hour",
       "files": [
-        "workers/overview.tsx"
+        "workers/format.ts"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile hint under a count."
     },
@@ -4745,6 +4931,14 @@
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): hint under the waiting count of a transport."
+    },
+    {
+      "key": "last %window%",
+      "text": "last %window%",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): small line under a per-worker rate: the window it was measured in; %window% is a window length like “30 min”."
     },
     {
       "key": "last 15 min",
@@ -4827,6 +5021,14 @@
       "hint": "Workers admin chart: label of the reference line of the configured minimum processes."
     },
     {
+      "key": "monitoring is off",
+      "text": "monitoring is off",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): shown instead of a number that is not measured while the worker monitoring is switched off."
+    },
+    {
       "key": "no automatic translation",
       "text": "no automatic translation",
       "files": [
@@ -4867,6 +5069,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): shown instead of a number while the monitoring is off."
     },
     {
+      "key": "nothing finished in %window%",
+      "text": "nothing finished in %window%",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): shown instead of the time until a queue is empty when no job finished in the window; %window% is a window length like “15 min”."
+    },
+    {
       "key": "nothing finished in 5 min",
       "text": "nothing finished in 5 min",
       "files": [
@@ -4881,6 +5091,14 @@
         "workers/transport.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): timeline tooltip: the process still runs."
+    },
+    {
+      "key": "pid %pid%",
+      "text": "pid %pid%",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): process id of a worker process; %pid% is a number."
     },
     {
       "key": "restart requested",
@@ -4940,6 +5158,15 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): hint under a stuck state; %time% is a clock time."
     },
     {
+      "key": "stopped__worker-restart",
+      "text": "stopped",
+      "context": "worker-restart",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): restart result dialog: this asked process has stopped (a status word next to it)."
+    },
+    {
       "key": "the new value",
       "text": "the new value",
       "files": [
@@ -4989,6 +5216,22 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): the queue wait is unknown (no job carried its dispatch time)."
     },
     {
+      "key": "waiting messages unknown",
+      "text": "waiting messages unknown",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): header of the live section when not every queue could be counted: the total of waiting jobs is unknown."
+    },
+    {
+      "key": "waiting to stop",
+      "text": "waiting to stop",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): restart result dialog: this asked process is still running and stops after its current job."
+    },
+    {
       "key": "will retry",
       "text": "will retry",
       "files": [
@@ -5021,6 +5264,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): what a process handles and since when; %messageClass% is a class name, %since% a clock time and duration."
     },
     {
+      "key": "{count, plural, =0 {No transport had a worker in this window.} one {# transport had a worker in this window.} other {# transports had a worker in this window.}}",
+      "text": "{count, plural, =0 {No transport had a worker in this window.} one {# transport had a worker in this window.} other {# transports had a worker in this window.}}",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): sentence under the “Workers over time” chart: how many transports (queues) had at least one worker process in the chosen time window."
+    },
+    {
       "key": "{count, plural, one {# character over the limit} other {# characters over the limit}}",
       "text": "{count, plural, one {# character over the limit} other {# characters over the limit}}",
       "files": [
@@ -5032,6 +5283,7 @@
       "key": "{count, plural, one {# day} other {# days}}",
       "text": "{count, plural, one {# day} other {# days}}",
       "files": [
+        "workers/format.ts",
         "workers/window.ts"
       ],
       "hint": "Workers admin chart: option of the time window switch: a number of days."
@@ -5040,6 +5292,7 @@
       "key": "{count, plural, one {# hour} other {# hours}}",
       "text": "{count, plural, one {# hour} other {# hours}}",
       "files": [
+        "workers/format.ts",
         "workers/window.ts"
       ],
       "hint": "Workers admin chart: option of the time window switch: a number of hours."
@@ -5051,6 +5304,14 @@
         "translations/AppTranslationsScreen.tsx"
       ],
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): success toast after the bulk delete; # is the number of keys."
+    },
+    {
+      "key": "{count, plural, one {# message finished in this window.} other {# messages finished in this window.}}",
+      "text": "{count, plural, one {# message finished in this window.} other {# messages finished in this window.}}",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): sentence under the throughput chart of all transports: jobs finished in the chosen time window."
     },
     {
       "key": "{count, plural, one {# message in work} other {# messages in work}}",
@@ -5139,6 +5400,14 @@
         "translations/ConfigImportCards.tsx"
       ],
       "hint": "Import of the configured languages or locales (maintenance action): result after the locales import; # is the number of imported locales."
+    },
+    {
+      "key": "{count, plural, one {Imported # row from the configuration} other {Imported # rows from the configuration}}",
+      "text": "{count, plural, one {Imported # row from the configuration} other {Imported # rows from the configuration}}",
+      "files": [
+        "translations/ConfigImportCards.tsx"
+      ],
+      "hint": "Import of configured rows (maintenance action) of a kind the host names, e.g. countries: default result after the import: how many rows were created or updated."
     },
     {
       "key": "{count, plural, one {Live processes and # process start in this window; dashed: the configured range.} other {Live processes and # process starts in this window; dashed: the configured range.}}",

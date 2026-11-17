@@ -100,8 +100,11 @@ export interface AppTranslationsGenerateArg {
   previewOnly?: boolean;
 }
 
-/** One entity of `translateEntities`: `objectType`, `id`, its values and `translationInfos`. */
-export type TranslatableEntityPayload = Readonly<Record<string, unknown>> & { objectType?: string };
+/**
+ * One entity of `translateEntities`: `objectType`, `id`, its values and `translationInfos`. `objectType` accepts
+ * `null` as generated entity types declare it (`objectType?: string | null`); send the entity's class name.
+ */
+export type TranslatableEntityPayload = Readonly<Record<string, unknown>> & { objectType?: string | null };
 
 export interface TranslateEntitiesArg {
   entitiesToTranslate: TranslationsSet<TranslatableEntityPayload>;

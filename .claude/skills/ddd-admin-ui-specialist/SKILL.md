@@ -3,7 +3,7 @@ name: ddd-admin-ui-specialist
 description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries and import matrix, host setup (AdminUiProvider, theme.css, components.css, tokens.json, ddd-admin-ui-check-tokens, -check-radix, -check-contrast), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title from one navigation; ./shell-background), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route error and loading, form drawers and dialogs, the save shortcut, useConfirm, write access, locale::style translations with limits, media fields with image crop, colour fields, key figures (./data), markdown (./markdown), the workers and translation admin screens (./workers, ./translations), ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form or admin screen, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast fails, or URL filters get lost."
 metadata:
   author: mgamadeus
-  version: 0.2.1
+  version: 0.2.2
 ---
 
 # ddd-admin-ui specialist
@@ -58,9 +58,13 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | a crashed or loading route (`error.tsx`, `loading.tsx`) | `RouteError` (`onRetry`, `onReport`), `RouteLoading` | page |
 | crop or normalise a picked image | `ImageCropDialog` (`aspectOptions`, `allowSkip`, `output`) + `normalizeImage` | media, logic |
 | a colour value | `ColorValueField` with an explicit `format` (`hex` / `hex-alpha`) | form |
-| the workers monitoring (overview, transport, runs, processes, restart) | `createWorkersApi({ baseApi, apiPrefix })` + `WorkersOverviewScreen` / `WorkerTransportScreen` | workers |
+| the workers monitoring (overview, transport, runs, processes, restart) | `createWorkersApi({ baseApi, apiPrefix })` + `WorkersOverviewScreen` / `WorkerTransportScreen` (`headerActions`, `renderSection`, `linkComponent`) | workers |
+| one section of a package screen as host code | `renderSection(id, section)` (keep / `null` / own node); the exported parts (`WorkerTransportFacts`, `WORKER_TRANSPORT_TABS`) | workers |
+| charts of one window with a shared hover, round axis ticks | `WorkerChartSyncGroup` + `WorkerTimeChart ticks={countTicks \| durationTicks}` | workers |
+| a list row that opens by keyboard (no own button) | `EntityListBody` / `EntityListTable` `rowKeyboardActivation` with `rowAction` | list |
 | app translations, languages, locales, import from configuration | `createTranslationsApi({ baseApi, apiPrefix })` + `AppTranslationsScreen` / `LanguagesScreen` / `LocalesScreen` / `ConfigImportCard` | translations |
-| AI translation of an entity form, content locales from the active locales | `useEntityTranslator(api)` + `useTranslationRunner`, `useContentLocales(api)` | translations, logic |
+| AI translation of an entity form, content locales from the active locales | `useEntityTranslator(api)` (several drafts per request: `useEntitiesTranslator`) + `useTranslationRunner`, `useContentLocales(api)` | translations, logic |
+| an import from configuration of a host kind (countries) | `ConfigImportCard kind="countries" operation={…} texts={…}` | translations |
 | a maintenance action (run, pending, last outcome) | `MaintenanceActionCard` | page |
 
 ## Rules that fail silently
@@ -114,8 +118,8 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 - **Confirmations** ask through `useConfirm()`: no dialog to render; without `AdminUiProvider` every call answers
   `false` (one warning outside production). A host service goes into the provider's `confirm`.
 - **Write access is a presentation aid.** `WriteAccessProvider` disables `FormSubmitButton`, `FormDialog`'s submit, the
-  bulk bar's actions and `AddEntityButton` as a button (never a link); a nested provider only narrows. Handlers keep
-  their guard and the server its check.
+  bulk bar's actions and `AddEntityButton` as a button (never a link); a nested provider only narrows (it may add the
+  reason an outer denial lacks). Handlers keep their guard and the server its check.
 - **Showcase** needs no optional peer: pass `loadNotifySonner={() => import('@mgamadeus/ddd-admin-ui/notify-sonner')}`
   only when sonner is installed. A new block gets a showcase sample and a `SHOWCASE_COVERAGE` entry, or the checks fail.
 - **Text contexts are literals.** `m('Failed', { context: 'import-status' })`: extractors (the package manifest and

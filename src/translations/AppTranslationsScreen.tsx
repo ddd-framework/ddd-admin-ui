@@ -54,6 +54,12 @@ export interface AppTranslationsScreenProps {
   description?: ReactNode;
   /** Drawn inside another page (a showcase): no full-height page frame (`EntityListPage.asSpecimen`). */
   asSpecimen?: boolean;
+  /**
+   * The link of a key (its own route, e.g. one that redirects to `?edit=<id>`), as the browser's URL. The key is a
+   * link either way: a plain click opens the drawer in place, a modified or middle click follows the link (a new tab).
+   * Default: `?edit=<id>`.
+   */
+  keyHref?: (key: AppTranslationKey) => string;
 }
 
 /**
@@ -61,9 +67,10 @@ export interface AppTranslationsScreenProps {
  * generation per locale and style on top, "Generate all missing", the keys table (id, key with hint and flags, every
  * value as `locale::style`), newest first, 50 per page. Key search in the toolbar, id and translation in the filters.
  * Rows can be selected for a bulk delete (one DELETE per key, in order; the first failure stops). A row opens the key
- * in the drawer; Add creates there. Writes follow `WriteAccessProvider`.
+ * in the drawer (by pointer, or Enter / Space on the focused row); the key itself is a link to it (`keyHref`). Add
+ * creates there. Writes follow `WriteAccessProvider`.
  */
-export const AppTranslationsScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, description, asSpecimen }: AppTranslationsScreenProps) => {
+export const AppTranslationsScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, description, asSpecimen, keyHref }: AppTranslationsScreenProps) => {
   const { t } = useTranslate();
   const writeAccess = useWriteAccess();
   const memory = useMemoryUrlState();
@@ -137,7 +144,7 @@ export const AppTranslationsScreen = ({ api, urlStateAdapter, drawerUrlAdapter, 
     }
   };
 
-  const { openEdit } = drawer;
+  const { openEdit, editLinkClick } = drawer;
   const rowAction = useCallback((key: AppTranslationKey) => {
     const id = keyIdOf(key);
     return id === null ? null : () => openEdit(id);
@@ -150,7 +157,18 @@ export const AppTranslationsScreen = ({ api, urlStateAdapter, drawerUrlAdapter, 
       header: m('Key'),
       cell: key => (
         <div className="min-w-0">
-          <span className="font-mono text-sm font-medium break-all">{key.key}</span>
+          {keyIdOf(key) === null ? (
+            <span className="font-mono text-sm font-medium break-all">{key.key}</span>
+          ) : (
+            <a
+              href={keyHref ? keyHref(key) : `?edit=${encodeURIComponent(keyIdOf(key) ?? '')}`}
+              onClick={editLinkClick(keyIdOf(key) ?? '')}
+              className="rounded-sm font-mono text-sm font-medium break-all hover:text-brand-emphasis hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              data-slot="app-translation-key-link"
+            >
+              {key.key}
+            </a>
+          )}
           {key.translationHint && <div className="mt-0.5 text-xs text-muted-foreground">{t('Hint: %hint%', { replacements: { hint: key.translationHint } })}</div>}
           {(key.reTranslate || key.doNotTranslateAutomatically || key.requiresContext) && (
             <div className="mt-1 flex flex-wrap gap-1.5">
@@ -230,6 +248,7 @@ export const AppTranslationsScreen = ({ api, urlStateAdapter, drawerUrlAdapter, 
         items={list.items}
         getRowKey={key => String(key.id)}
         rowAction={rowAction}
+        rowKeyboardActivation
         selection={selection}
         isLoading={list.isLoading}
         isFetchingMore={list.isFetchingMore}

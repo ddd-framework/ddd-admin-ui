@@ -14,10 +14,11 @@ export const WRITE_ACCESS_ALLOWED: WriteAccess = Object.freeze({ allowed: true }
 
 /**
  * The access of a nested provider: a subtree can only narrow. An outer `allowed: false` stays, with its reason; an
- * inner `allowed: false` below an allowed parent applies with the inner reason.
+ * inner `allowed: false` below an allowed parent applies with the inner reason. An outer denial without a reason takes
+ * the reason of an inner denial (the inner provider explains what the outer one did not; it never widens).
  */
 export const narrowWriteAccess = (parent: WriteAccess, own: WriteAccess): WriteAccess => {
-  if (!parent.allowed) return parent;
+  if (!parent.allowed) return parent.reason === undefined && !own.allowed && own.reason !== undefined ? { allowed: false, reason: own.reason } : parent;
   if (own.allowed) return parent === WRITE_ACCESS_ALLOWED && own.reason === undefined ? WRITE_ACCESS_ALLOWED : { allowed: true };
   return own.reason === undefined ? { allowed: false } : { allowed: false, reason: own.reason };
 };

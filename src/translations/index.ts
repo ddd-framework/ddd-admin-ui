@@ -77,8 +77,14 @@ export type { LanguagesScreenProps } from './LanguagesScreen.tsx';
 export { LocalesScreen } from './LocalesScreen.tsx';
 export type { LocaleFlag, LocalesScreenProps } from './LocalesScreen.tsx';
 export { ConfigImportCard, useConfigImport } from './ConfigImportCards.tsx';
-export type { ConfigImport, ConfigImportCardProps, ConfigImportKind } from './ConfigImportCards.tsx';
-export { LOCALE_OBJECT_TYPE, useEntityTranslator } from './useEntityTranslator.ts';
-export type { EntityTranslationRequest, EntityTranslator, UseEntityTranslatorOptions } from './useEntityTranslator.ts';
+export type { ConfigImport, ConfigImportCardProps, ConfigImportKind, ConfigImportOptions, ConfigImportTexts } from './ConfigImportCards.tsx';
+export { LOCALE_OBJECT_TYPE, useEntitiesTranslator, useEntityTranslator } from './useEntityTranslator.ts';
+export type {
+  EntitiesTranslationRequest,
+  EntitiesTranslator,
+  EntityTranslationRequest,
+  EntityTranslator,
+  UseEntityTranslatorOptions,
+} from './useEntityTranslator.ts';
 export { toContentLocaleKeys, useContentLocales } from './useContentLocales.ts';
 export type { UseContentLocalesOptions } from './useContentLocales.ts';

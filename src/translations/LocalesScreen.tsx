@@ -134,7 +134,13 @@ export const LocalesScreen = ({ api, urlStateAdapter, title, description, asSpec
       description={description ?? t('The locales of the platform. Active locales are offered in the translation pickers and counted in the translation completeness.')}
       headerActions={
         <PageToolbar>
-          <Button type="button" variant="outline" onClick={() => void configImport.run()} disabled={!writeAccess.allowed || configImport.isRunning} title={writeAccess.allowed ? undefined : writeAccess.reason}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void configImport.run()}
+            disabled={!writeAccess.allowed || configImport.isRunning}
+            title={writeAccess.allowed ? t('Creates or updates every locale of the configuration, matched by language and country code.') : writeAccess.reason}
+          >
             <Download aria-hidden />
             {configImport.isRunning ? t('Importing…') : t('Import from configuration')}
           </Button>
