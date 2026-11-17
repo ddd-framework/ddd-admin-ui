@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, useCallback, useId, useMemo, useState } from 'react';
+import { type CSSProperties, type ReactNode, useCallback, useEffect, useId, useMemo, useState } from 'react';
 
 import { useTranslate } from '../i18n/useTranslate.ts';
 import {
@@ -12,7 +12,13 @@ import {
 import { cn } from '../primitives/cn.ts';
 import { useCurrentPathname } from '../primitives/pathname.tsx';
 import { ShellBreadcrumbs } from './ShellBreadcrumbs.tsx';
-import { type ShellNavigationValue, ShellNavigationContext, type UseEntityLabel } from './shellContext.ts';
+import {
+  type ShellNavDisplay,
+  ShellNavDisplayContext,
+  type ShellNavigationValue,
+  ShellNavigationContext,
+  type UseEntityLabel,
+} from './shellContext.ts';
 import { ShellDocumentTitle, type ShellDocumentTitleProps } from './ShellDocumentTitle.tsx';
 import { ShellMenuButton, ShellMobileMenu } from './ShellMobileMenu.tsx';
 import { ShellSidebar } from './ShellSidebar.tsx';
@@ -93,6 +99,30 @@ export interface AppShellProps<TEntity extends string = string> {
   className?: string;
   /** Classes of `<main>` (the page inset is the page's: `PageFrame` brings one). */
   contentClassName?: string;
+  /** Inline style of the frame root (e.g. `--nav-h` for a taller banner). */
+  style?: CSSProperties;
+  /** Inline style of `<main>`. */
+  contentStyle?: CSSProperties;
+  /** `data-*` attributes of `<main>` (the root takes `data-*` props directly). */
+  contentAttributes?: Readonly<Record<`data-${string}`, string | undefined>>;
+  /** `data-*` attributes of the frame root. */
+  [dataAttribute: `data-${string}`]: string | undefined;
+  /** Extra classes of every navigation row in the sidebar column and the mobile menu (height, text size, gap). */
+  navRowClassName?: string;
+  /** Extra classes of every icon of the collapsed rail. */
+  navRailRowClassName?: string;
+  /** A child entry's icon in the list (default `true`); `false` hides it there and keeps it in the rail's flyout. */
+  childIconsInList?: boolean;
+  /** Classes of the menu button below `lg` (a host surface behind it). */
+  menuButtonClassName?: string;
+  /** Classes of the mobile menu's sheet. */
+  mobileMenuClassName?: string;
+  /** Classes of the mobile menu's header row (`--nav-h` tall by default). */
+  mobileMenuHeaderClassName?: string;
+  /** Called with the collapsed state after hydration and on every change (fixed elements outside the frame). */
+  onCollapsedChange?: (collapsed: boolean) => void;
+  /** Mirrors the collapsed state as `data-shell-collapsed` on `<html>` (for fixed elements outside the frame). */
+  markDocumentCollapsed?: boolean;
   children: ReactNode;
 }
 
@@ -127,7 +157,19 @@ export const AppShell = <TEntity extends string = string>({
   navigationLabel,
   className,
   contentClassName,
+  style,
+  contentStyle,
+  contentAttributes,
+  navRowClassName,
+  navRailRowClassName,
+  childIconsInList = true,
+  menuButtonClassName,
+  mobileMenuClassName,
+  mobileMenuHeaderClassName,
+  onCollapsedChange,
+  markDocumentCollapsed = false,
   children,
+  ...rootAttributes
 }: AppShellProps<TEntity>) => {
   const { t } = useTranslate();
   const adapterPathname = useCurrentPathname();
@@ -136,6 +178,21 @@ export const AppShell = <TEntity extends string = string>({
   const toggleCollapsed = useCallback(() => setCollapsed(), [setCollapsed]);
   useShellShortcut(collapseShortcut, toggleCollapsed);
   const [mobileOpen, setMobileOpen] = useState(false);
+  // the collapsed state for elements outside the frame (after hydration, like the frame's own attribute)
+  useEffect(() => {
+    onCollapsedChange?.(collapsed);
+  }, [collapsed, onCollapsedChange]);
+  useEffect(() => {
+    if (!markDocumentCollapsed) return;
+    const root = document.documentElement;
+    root.toggleAttribute('data-shell-collapsed', collapsed);
+    return () => root.removeAttribute('data-shell-collapsed');
+  }, [collapsed, markDocumentCollapsed]);
+  const navDisplay = useMemo<ShellNavDisplay>(
+    () => ({ rowClassName: navRowClassName, railRowClassName: navRailRowClassName, childIconsInList }),
+    [navRowClassName, navRailRowClassName, childIconsInList]
+  );
+  const dataAttributes = Object.fromEntries(Object.entries(rootAttributes).filter(([name]) => name.startsWith('data-')));
   const ids = useId();
   const sidebarId = `${ids}-sidebar`;
   const mobileMenuId = `${ids}-menu`;
@@ -151,7 +208,8 @@ export const AppShell = <TEntity extends string = string>({
 
   return (
     <ShellNavigationContext.Provider value={value}>
-      <div data-shell="" data-shell-collapsed={collapsed || undefined} className={cn('min-h-svh pt-(--nav-h)', className)}>
+      <ShellNavDisplayContext.Provider value={navDisplay}>
+      <div {...dataAttributes} data-shell="" data-shell-collapsed={collapsed || undefined} className={cn('min-h-svh pt-(--nav-h)', className)} style={style}>
         <a
           href={`#${mainId}`}
           className="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-(--layer-popover) focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-surface-raised focus:ring-2 focus:ring-ring"
@@ -161,7 +219,7 @@ export const AppShell = <TEntity extends string = string>({
         {background}
         <ShellTopBar
           banner={banner}
-          menuButton={<ShellMenuButton open={mobileOpen} onOpenChange={setMobileOpen} controls={mobileMenuId} />}
+          menuButton={<ShellMenuButton open={mobileOpen} onOpenChange={setMobileOpen} controls={mobileMenuId} className={menuButtonClassName} />}
           brand={brand}
           start={topBarStart}
           breadcrumbs={breadcrumbs === true ? <ShellBreadcrumbs /> : breadcrumbs === false ? null : breadcrumbs}
@@ -190,14 +248,17 @@ export const AppShell = <TEntity extends string = string>({
           label={navigationLabel}
           header={brand}
           footer={mobileMenuFooter}
+          className={mobileMenuClassName}
+          headerClassName={mobileMenuHeaderClassName}
         />
         <div data-shell-content="">
-          <main id={mainId} tabIndex={-1} className={cn('w-full outline-none', contentClassName)}>
+          <main {...contentAttributes} id={mainId} tabIndex={-1} className={cn('w-full outline-none', contentClassName)} style={contentStyle}>
             {children}
           </main>
         </div>
         {documentTitle && <ShellDocumentTitle {...documentTitle} />}
       </div>
+      </ShellNavDisplayContext.Provider>
     </ShellNavigationContext.Provider>
   );
 };

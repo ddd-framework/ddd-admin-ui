@@ -67,6 +67,18 @@ export const SHADER_MOTION = {
   blob2: { radius: 0.18, fx: 0.21, fy: 0.17, ox: 0.38, oy: 0.42, opacity: 0.6 },
 } as const;
 
+/**
+ * What a host may tune of the look (each absent value keeps `SHADER_MOTION`): the strength of the displacement field
+ * (`displacementScale`, default 2.2; 0 turns it off), its grain (`displacementCells`, lattice cells per tile, default
+ * 8; more = finer), and the opacity of each blob (0–1; default 1 and 0.6).
+ */
+export interface ShaderLook {
+  displacementScale?: number;
+  displacementCells?: number;
+  blob1Opacity?: number;
+  blob2Opacity?: number;
+}
+
 /** Render budget: quarter resolution, at most 512 px wide, at most 20 frames per second. */
 export const SHADER_RENDER = { renderScale: 0.25, maxRenderWidth: 512, maxFps: 20 } as const;
 
@@ -145,12 +157,12 @@ export const displacementPixels = (size = 128, cells = 8): Uint8Array => {
 };
 
 /** The displacement texture (generated value noise, repeating). */
-export const createDisplacementTexture = (gl: WebGLRenderingContext, size = 128): WebGLTexture | null => {
+export const createDisplacementTexture = (gl: WebGLRenderingContext, size = 128, cells = 8): WebGLTexture | null => {
   const texture = gl.createTexture();
   if (!texture) return null;
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, texture);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, displacementPixels(size));
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, displacementPixels(size, cells));
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -165,17 +177,18 @@ export const setShaderUniforms = (
   canvas: HTMLCanvasElement,
   palette: ShaderPalette,
   dark: boolean,
-  frame: { time: number; rand: number; texture: WebGLTexture }
+  frame: { time: number; rand: number; texture: WebGLTexture; look?: ShaderLook }
 ): void => {
   const { blob1, blob2 } = SHADER_MOTION;
+  const look = frame.look ?? {};
   gl.uniform2fv(uniforms.resolution, [canvas.width, canvas.height]);
   gl.uniform1f(uniforms.time, frame.time);
   gl.uniform1f(uniforms.rand, frame.rand);
   gl.uniform3fv(uniforms.bg, palette.base);
   gl.uniform3fv(uniforms.col1, palette.blobs[0]);
-  gl.uniform1f(uniforms.opacity1, blob1.opacity);
+  gl.uniform1f(uniforms.opacity1, look.blob1Opacity ?? blob1.opacity);
   gl.uniform3fv(uniforms.col2, palette.blobs[1]);
-  gl.uniform1f(uniforms.opacity2, blob2.opacity);
+  gl.uniform1f(uniforms.opacity2, look.blob2Opacity ?? blob2.opacity);
   gl.uniform1f(uniforms.b1_radius, blob1.radius);
   gl.uniform1f(uniforms.b2_radius, blob2.radius);
   gl.uniform1f(uniforms.blur, SHADER_MOTION.blur);
@@ -183,7 +196,7 @@ export const setShaderUniforms = (
   gl.uniform1f(uniforms.bx, SHADER_MOTION.bx);
   gl.uniform1f(uniforms.by, SHADER_MOTION.by);
   gl.uniform1i(uniforms.blend, dark ? 0 : 1);
-  gl.uniform1f(uniforms.displace_scale, SHADER_MOTION.displaceScale);
+  gl.uniform1f(uniforms.displace_scale, look.displacementScale ?? SHADER_MOTION.displaceScale);
   gl.uniform1f(uniforms.b1_fx, blob1.fx);
   gl.uniform1f(uniforms.b1_fy, blob1.fy);
   gl.uniform1f(uniforms.b1_ox, blob1.ox);

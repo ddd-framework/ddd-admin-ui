@@ -72,8 +72,8 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
   translations: {
     shown: [
       'AppTranslationsScreen', 'ConfigImportCard', 'FormTranslatableInput', 'FormTranslatableMarkdown', 'LanguagesScreen',
-      'LocalesScreen', 'TranslatableField', 'TranslatableInput', 'TranslatableMarkdown', 'TranslationCompleteness',
-      'TranslationControls',
+      'LocalesScreen', 'TranslatableField', 'TranslatableInput', 'TranslatableLanguageInput', 'TranslatableMarkdown',
+      'TranslationCompleteness', 'TranslationControls',
     ],
     notShown: { AppTranslationKeyDrawer: 'drawn by AppTranslationsScreen when a row or Add opens it' },
   },

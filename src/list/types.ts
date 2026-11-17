@@ -57,6 +57,8 @@ export interface EntityListDataProps<TItem> {
    * size it like that button (`sm`).
    */
   emptyAction?: ReactNode;
+  /** An icon over the empty and the no-results message (a 24–32 px icon; not on the error state). */
+  emptyIcon?: ReactNode;
   /** True while a search or filter narrows the list (switches the empty state to "no results" + clear). */
   isSearchActive?: boolean;
   onClearSearch?: () => void;

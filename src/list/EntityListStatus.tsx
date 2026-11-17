@@ -6,7 +6,7 @@ import type { EntityListDataProps } from './types.ts';
 
 type EntityListStatusProps = Pick<
   EntityListDataProps<unknown>,
-  'isLoading' | 'emptyMessage' | 'noResultsMessage' | 'isSearchActive' | 'onClearSearch' | 'loadingMessage' | 'error' | 'emptyAction'
+  'isLoading' | 'emptyMessage' | 'noResultsMessage' | 'isSearchActive' | 'onClearSearch' | 'loadingMessage' | 'error' | 'emptyAction' | 'emptyIcon'
 > & { itemCount: number };
 
 /**
@@ -23,6 +23,7 @@ export const EntityListStatus = ({
   loadingMessage,
   error,
   emptyAction,
+  emptyIcon,
 }: EntityListStatusProps) => {
   const { t } = useTranslate();
   if (error) return <EntityListEmpty tone="error" message={error} />;
@@ -43,6 +44,7 @@ export const EntityListStatus = ({
       }
       onClearSearch={isSearchActive ? onClearSearch : undefined}
       action={emptyAction}
+      icon={emptyIcon}
     />
   );
 };

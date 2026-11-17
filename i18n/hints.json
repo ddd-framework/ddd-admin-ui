@@ -1085,5 +1085,10 @@
   "key__translation-key-noun": "App translations admin screen (the UI texts of the apps, stored in the database): noun in bulk toasts, singular: one translation key.",
   "keys__translation-key-noun": "App translations admin screen (the UI texts of the apps, stored in the database): noun in bulk toasts, plural: translation keys.",
   "{count, plural, one {# key is missing.} other {# keys are missing.}}": "App translations admin, completeness per locale: sentence in the confirmation before an AI generation: keys without a value in this locale and style.",
-  "{count, plural, one {About # AI request.} other {About # AI requests.}}": "App translations admin, completeness per locale: sentence in the confirmation before an AI generation: the estimated number of requests to the AI service (the cost)."
+  "{count, plural, one {About # AI request.} other {About # AI requests.}}": "App translations admin, completeness per locale: sentence in the confirmation before an AI generation: the estimated number of requests to the AI service (the cost).",
+  "Clear other languages": "Button in the label row of a translatable text field in an admin form, and the confirm button of the dialog that follows: deletes the texts of every language except the one being edited. Imperative.",
+  "Clear the other languages?": "Title of a confirmation dialog in a translatable text field of an admin form; asks whether to delete the texts of every language except the one being edited.",
+  "This removes the text of every language except %language%. It is gone once you save.": "Body of the confirmation dialog that clears the other languages of a translatable text field. %language% is the spelled-out name of the language being kept, e.g. German.",
+  "Editing: %language%": "Small line under a translatable text field in an admin form naming the language whose text the field currently edits. %language% is the spelled-out language name, e.g. German or German · Informal.",
+  "Close__form-dialog": "Button at the bottom of a dialog after its form was submitted and the result is shown (e.g. a created key to copy); closes the dialog. Imperative."
 }

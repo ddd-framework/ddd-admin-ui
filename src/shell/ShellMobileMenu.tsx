@@ -54,6 +54,8 @@ export interface ShellMobileMenuProps {
   /** Under the list (the account, sign out). */
   footer?: ReactNode;
   className?: string;
+  /** Classes of the header row (it is `--nav-h` tall: a host whose banner makes `--nav-h` taller sets `h-14`). */
+  headerClassName?: string;
 }
 
 /**
@@ -61,7 +63,19 @@ export interface ShellMobileMenuProps {
  * header and a footer slot. A followed link closes it, so does a route change; the focus returns to the menu button.
  * A dialog with its own name ("Navigation") holding a `<nav>` landmark.
  */
-export const ShellMobileMenu = ({ open, onOpenChange, items, active, pathname, id, label, header, footer, className }: ShellMobileMenuProps) => {
+export const ShellMobileMenu = ({
+  open,
+  onOpenChange,
+  items,
+  active,
+  pathname,
+  id,
+  label,
+  header,
+  footer,
+  className,
+  headerClassName,
+}: ShellMobileMenuProps) => {
   const { t } = useTranslate();
   const side = Direction.useDirection() === 'rtl' ? 'right' : 'left';
   // a route change (a link, back / forward) closes the menu
@@ -76,7 +90,7 @@ export const ShellMobileMenu = ({ open, onOpenChange, items, active, pathname, i
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent id={id} side={side} aria-describedby={undefined} data-shell-mobile-menu="" className={cn('w-72 gap-0 bg-card p-0 lg:hidden', className)}>
         <SheetTitle className="sr-only">{t('Navigation')}</SheetTitle>
-        {header && <div className="flex h-(--nav-h) shrink-0 items-center gap-2 border-b px-4 pe-12">{header}</div>}
+        {header && <div className={cn('flex h-(--nav-h) shrink-0 items-center gap-2 border-b px-4 pe-12', headerClassName)}>{header}</div>}
         <nav aria-label={label ?? t('Main', { context: 'navigation' })} className="min-h-0 flex-1 overflow-y-auto px-2 py-4">
           <ShellNavList items={items} active={active} pathname={pathname} onNavigate={() => onOpenChange(false)} />
         </nav>

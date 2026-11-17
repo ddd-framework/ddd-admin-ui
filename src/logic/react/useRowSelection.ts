@@ -2,6 +2,12 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
+/** Modifier state of a selection click (`EntityListTable` passes it with every checkbox or select-cell click). */
+export interface SelectionModifiers {
+  /** Shift held: with `rangeSelection` the rows between the anchor and this one take the new state. */
+  shiftKey?: boolean;
+}
+
 /** What `EntityListTable` needs to draw the checkbox column (the `selection` prop). */
 export interface EntityListSelection<TItem> {
   isItemSelected: (item: TItem) => boolean;
@@ -12,7 +18,8 @@ export interface EntityListSelection<TItem> {
    * still gets none). Absent: no such rows.
    */
   isItemSelectionDisabled?: (item: TItem) => boolean;
-  setItemSelected: (item: TItem, selected: boolean) => void;
+  /** `modifiers`: the click's modifier state (the table passes it; a host selection may ignore it). */
+  setItemSelected: (item: TItem, selected: boolean, modifiers?: SelectionModifiers) => void;
   /** The header checkbox: every loaded row, some of them, or none. */
   allLoadedState: boolean | 'indeterminate';
   setAllLoadedSelected: (selected: boolean) => void;
@@ -36,6 +43,11 @@ export interface UseRowSelectionOptions<TItem, TKey extends string | number> {
    * "Select all loaded", the header state and the count take only selectable rows. Keep it stable (`useCallback`).
    */
   isSelectable?: (item: TItem) => boolean;
+  /**
+   * Shift-click selects a range: a click with Shift sets every selectable loaded row between the anchor (the row of
+   * the last click without Shift) and the clicked one to the clicked row's new state. Default `false`.
+   */
+  rangeSelection?: boolean;
 }
 
 export interface RowSelection<TItem, TKey extends string | number> extends EntityListSelection<TItem> {
@@ -46,7 +58,24 @@ export interface RowSelection<TItem, TKey extends string | number> extends Entit
   isSelected: (key: TKey) => boolean;
   setSelected: (key: TKey, selected: boolean) => void;
   clear: () => void;
+  /** The anchor of range selection: the key of the last row set without Shift (`null`: none yet or no longer loaded). */
+  anchorKey: TKey | null;
+  /** Sets the anchor (e.g. a host's own keyboard selection). */
+  setAnchorKey: (key: TKey | null) => void;
+  /**
+   * Sets every selectable loaded row from `fromKey` to `toKey` (inclusive, list order, either direction) to
+   * `selected`. Keys not loaded select nothing.
+   */
+  setRangeSelected: (fromKey: TKey, toKey: TKey, selected: boolean) => void;
 }
+
+/** The keys of `keys` from `from` to `to` inclusive (either direction); empty when one of them is missing. */
+export const keysBetween = <TKey>(keys: readonly TKey[], from: TKey, to: TKey): TKey[] => {
+  const start = keys.indexOf(from);
+  const end = keys.indexOf(to);
+  if (start === -1 || end === -1) return [];
+  return keys.slice(Math.min(start, end), Math.max(start, end) + 1);
+};
 
 const EMPTY: ReadonlySet<never> = new Set();
 
@@ -62,7 +91,9 @@ export const useRowSelection = <TItem, TKey extends string | number>({
   disabled,
   rowLabel,
   isSelectable,
+  rangeSelection = false,
 }: UseRowSelectionOptions<TItem, TKey>): RowSelection<TItem, TKey> => {
+  const [anchorState, setAnchorState] = useState<{ resetKey: string; key: TKey | null }>({ resetKey, key: null });
   const [state, setState] = useState<{ resetKey: string; keys: ReadonlySet<TKey> }>({ resetKey, keys: EMPTY });
   const keys = state.resetKey === resetKey ? state.keys : (EMPTY as ReadonlySet<TKey>);
 
@@ -111,6 +142,24 @@ export const useRowSelection = <TItem, TKey extends string | number>({
     [update, loadedKeys]
   );
 
+  const setRangeSelected = useCallback(
+    (fromKey: TKey, toKey: TKey, selected: boolean) => {
+      const range = keysBetween(loadedKeys, fromKey, toKey);
+      if (range.length === 0) return;
+      update(previous => {
+        const next = new Set(previous);
+        for (const key of range) {
+          if (selected) next.add(key);
+          else next.delete(key);
+        }
+        return next;
+      });
+    },
+    [update, loadedKeys]
+  );
+  const anchorKey = anchorState.resetKey === resetKey && anchorState.key !== null && loadedKeys.includes(anchorState.key) ? anchorState.key : null;
+  const setAnchorKey = useCallback((key: TKey | null) => setAnchorState({ resetKey, key }), [resetKey]);
+
   const count = selectedKeys.length;
   const allLoadedState: boolean | 'indeterminate' =
     count === 0 ? false : count === loadedKeys.length ? true : 'indeterminate';
@@ -122,6 +171,9 @@ export const useRowSelection = <TItem, TKey extends string | number>({
     isSelected: key => keys.has(key),
     setSelected,
     clear,
+    anchorKey,
+    setAnchorKey,
+    setRangeSelected,
     isItemSelected: item => {
       const key = getKey(item);
       return key !== null && key !== undefined && keys.has(key) && (isSelectable?.(item) ?? true);
@@ -138,9 +190,15 @@ export const useRowSelection = <TItem, TKey extends string | number>({
           },
         }
       : {}),
-    setItemSelected: (item, selected) => {
+    setItemSelected: (item, selected, modifiers) => {
       const key = getKey(item);
-      if (key !== null && key !== undefined && key !== '' && (isSelectable?.(item) ?? true)) setSelected(key, selected);
+      if (key === null || key === undefined || key === '' || !(isSelectable?.(item) ?? true)) return;
+      if (rangeSelection && modifiers?.shiftKey && anchorKey !== null && anchorKey !== key) {
+        setRangeSelected(anchorKey, key, selected);
+        return;
+      }
+      setSelected(key, selected);
+      setAnchorKey(key);
     },
     allLoadedState,
     setAllLoadedSelected,

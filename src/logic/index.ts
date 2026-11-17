@@ -163,8 +163,8 @@ export type { LatestSearch } from './react/useLatestSearch.ts';
 export { useLocaleName } from './react/useLocaleName.ts';
 export { useRowActivation } from './react/useRowActivation.ts';
 export type { RowActivationHandlers } from './react/useRowActivation.ts';
-export { useRowSelection } from './react/useRowSelection.ts';
-export type { EntityListSelection, RowSelection, UseRowSelectionOptions } from './react/useRowSelection.ts';
+export { keysBetween, useRowSelection } from './react/useRowSelection.ts';
+export type { EntityListSelection, RowSelection, SelectionModifiers, UseRowSelectionOptions } from './react/useRowSelection.ts';
 export { useTranslationRunner } from './react/useTranslationRunner.ts';
 export type {
   TranslationRunner,
@@ -199,8 +199,18 @@ export {
 } from './pure/dateRangePresets.ts';
 export type { DateRange, DateRangePreset } from './pure/dateRangePresets.ts';
 export { isContentTrack, listTrackLayoutTemplate } from './pure/listTracks.ts';
-export { mergeLanguageTabs, translationLanguageOf } from './pure/locales.ts';
-export type { LanguageTabsOptions } from './pure/locales.ts';
+export {
+  DEFAULT_STYLE_ORDER,
+  languageEditedKey,
+  languageFieldTabs,
+  languageTextsOf,
+  mergeLanguageTabs,
+  storeWithLanguageTexts,
+  translationFieldKey,
+  translationKeyOf,
+  translationLanguageOf,
+} from './pure/locales.ts';
+export type { LanguageTabsOptions, LocaleKeyTabsOptions } from './pure/locales.ts';
 export { countCodePoints, overLimitKeys } from './pure/textLimits.ts';
 export type { TextCounter, TextLimits } from './pure/textLimits.ts';
 export { TextLimitsContext, useTextLimits } from './react/textLimits.ts';

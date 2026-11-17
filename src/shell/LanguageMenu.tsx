@@ -40,6 +40,13 @@ export interface LanguageMenuProps {
   /** With one language or none the menu renders nothing (default `true`). */
   hideWhenSingle?: boolean;
   className?: string;
+  /**
+   * The trigger's accessible name, already translated, instead of "Language: <name>" (e.g. one that also names the
+   * writing style chosen in `children`: "Language: Deutsch, informal").
+   */
+  triggerAriaLabel?: string;
+  /** The submenu trigger's text (`LanguageMenuSub`), already translated, instead of "Language: <name>". */
+  triggerLabel?: string;
 }
 
 const PILL_CLASS =
@@ -82,13 +89,23 @@ const currentName = (languages: readonly LanguageOption[], current: string): str
  * languages by their native names (each in its own `lang`), the current one checked (`menuitemradio`). `onChange` gets
  * the code; the host applies and saves it. Nothing with fewer than two languages (unless `hideWhenSingle={false}`).
  */
-export const LanguageMenu = ({ languages, current, onChange, isPending, note, children, hideWhenSingle = true, className }: LanguageMenuProps) => {
+export const LanguageMenu = ({
+  languages,
+  current,
+  onChange,
+  isPending,
+  note,
+  children,
+  hideWhenSingle = true,
+  className,
+  triggerAriaLabel,
+}: LanguageMenuProps) => {
   const { t } = useTranslate();
   if (hideWhenSingle && languages.length < 2 && !children) return null;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        aria-label={t('Language: %language%', { replacements: { language: currentName(languages, current) } })}
+        aria-label={triggerAriaLabel ?? t('Language: %language%', { replacements: { language: currentName(languages, current) } })}
         data-shell-language-menu=""
         className={cn(PILL_CLASS, className)}
       >
@@ -110,13 +127,22 @@ export const LanguageMenu = ({ languages, current, onChange, isPending, note, ch
 };
 
 /** The same choice as a submenu ("Language: Deutsch"), for the account menu. */
-export const LanguageMenuSub = ({ languages, current, onChange, isPending, note }: Omit<LanguageMenuProps, 'children' | 'hideWhenSingle' | 'className'>) => {
+export const LanguageMenuSub = ({
+  languages,
+  current,
+  onChange,
+  isPending,
+  note,
+  triggerLabel,
+}: Omit<LanguageMenuProps, 'children' | 'hideWhenSingle' | 'className' | 'triggerAriaLabel'>) => {
   const { t } = useTranslate();
   return (
     <DropdownMenuSub>
       <DropdownMenuSubTrigger>
         <Languages aria-hidden />
-        <span className="min-w-0 flex-1 truncate">{t('Language: %language%', { replacements: { language: currentName(languages, current) } })}</span>
+        <span className="min-w-0 flex-1 truncate">
+          {triggerLabel ?? t('Language: %language%', { replacements: { language: currentName(languages, current) } })}
+        </span>
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent className="max-h-[min(32rem,var(--radix-dropdown-menu-content-available-height))] w-60 overflow-y-auto">
         <LanguageMenuItems languages={languages} current={current} onChange={onChange} isPending={isPending} />

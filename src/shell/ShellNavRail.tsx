@@ -1,7 +1,7 @@
 'use client';
 
 import { Direction } from 'radix-ui';
-import { Fragment, type ReactNode, useEffect, useRef, useState } from 'react';
+import { Fragment, type ReactNode, useContext, useEffect, useRef, useState } from 'react';
 
 import { useTranslate } from '../i18n/useTranslate.ts';
 import {
@@ -25,12 +25,14 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../primitives/tooltip.t
 import { NAV_ICON_CLASS, NAV_RAIL_ROW_CLASS, NAV_ROW_ACTIVE_CLASS, NAV_ROW_CLASS } from './navClasses.ts';
 import { MarkedNavIcon, NavItemMarks, useNavMarkText } from './NavItemMarks.tsx';
 import { ShellNavLink } from './ShellNavLink.tsx';
+import { ShellNavDisplayContext } from './shellContext.ts';
 
 /** Delay before hover opens / closes a group flyout: sweeping along the rail does not flash every menu. */
 const FLYOUT_HOVER_DELAY_MS = 150;
 
 const RailLeaf = ({ item, active, side }: { item: NavigationLeaf<string>; active: ActiveNavigation<string> | null; side: 'left' | 'right' }) => {
   const { t } = useTranslate();
+  const display = useContext(ShellNavDisplayContext);
   const current = active?.item.key === item.key;
   const marks = useNavMarkText(item);
   const label = t(item.label);
@@ -41,7 +43,7 @@ const RailLeaf = ({ item, active, side }: { item: NavigationLeaf<string>; active
           item={item}
           aria-label={[label, ...(item.badge ? [String(item.badge)] : []), ...marks].join(', ')}
           aria-current={current ? 'page' : undefined}
-          className={cn(NAV_ROW_CLASS, NAV_RAIL_ROW_CLASS, current && NAV_ROW_ACTIVE_CLASS)}
+          className={cn(NAV_ROW_CLASS, NAV_RAIL_ROW_CLASS, display.railRowClassName, current && NAV_ROW_ACTIVE_CLASS)}
         >
           <MarkedNavIcon icon={item.icon} item={item} />
         </ShellNavLink>
@@ -99,6 +101,7 @@ const FlyoutEntries = ({ items, active }: { items: readonly NavigationItem<strin
  */
 const RailGroup = ({ group, active, side }: { group: NavigationGroup<string>; active: ActiveNavigation<string> | null; side: 'left' | 'right' }) => {
   const { t } = useTranslate();
+  const display = useContext(ShellNavDisplayContext);
   const [open, setOpen] = useState(false);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const openedByHover = useRef(false);
@@ -147,7 +150,7 @@ const RailGroup = ({ group, active, side }: { group: NavigationGroup<string>; ac
             openedByHover.current = false;
             event.preventDefault();
           }}
-          className={cn(NAV_ROW_CLASS, NAV_RAIL_ROW_CLASS, holdsActive && NAV_ROW_ACTIVE_CLASS)}
+          className={cn(NAV_ROW_CLASS, NAV_RAIL_ROW_CLASS, display.railRowClassName, holdsActive && NAV_ROW_ACTIVE_CLASS)}
         >
           {Icon ? <Icon aria-hidden className={NAV_ICON_CLASS} /> : <span aria-hidden className="text-xs font-semibold">{t(group.label).slice(0, 2)}</span>}
         </button>

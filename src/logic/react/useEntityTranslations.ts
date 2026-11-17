@@ -38,6 +38,17 @@ export interface UseEntityTranslationsOptions<F extends string> {
    * default locale.
    */
   initialLocale?: string;
+  /**
+   * Tabs for the default and the offered locales only (default `false`): a stored key, region or language that is not
+   * offered gets no tab. Its texts are still hydrated, kept in the value and sent back in the payload.
+   */
+  offeredTabsOnly?: boolean;
+  /**
+   * Tab model `language`: the edited key is chosen per field, not per form (default `false`). Each tab carries
+   * `fieldKeys`; a field edits the first key of the language with text in that field in `styleOrder` (FORMAL, else
+   * INFORMAL when only that exists), so one form can edit `de::INFORMAL` in one field and `de::FORMAL` in the next.
+   */
+  editedKeyPerField?: boolean;
 }
 
 /** The tab state every translatable field of one form shares (pass it to `FormTranslatableInput`). */
@@ -90,6 +101,8 @@ export const useEntityTranslations = <F extends string>({
   tabModel = 'key',
   styleOrder,
   initialLocale,
+  offeredTabsOnly = false,
+  editedKeyPerField = false,
 }: UseEntityTranslationsOptions<F>): UseEntityTranslationsReturn<F> => {
   /** Store entries of translatable properties this form does not edit: sent back unchanged. */
   const passthroughRef = useRef<TranslationsStore>({});
@@ -101,9 +114,9 @@ export const useEntityTranslations = <F extends string>({
   const locales = useMemo(
     () =>
       tabModel === 'language'
-        ? mergeLanguageTabs(defaultLocale, offeredLocales, storedKeys, { styleOrder })
-        : mergeLocaleKeys(defaultLocale, offeredLocales, storedKeys),
-    [tabModel, defaultLocale, offeredLocales, storedKeys, styleSignature]
+        ? mergeLanguageTabs(defaultLocale, offeredLocales, storedKeys, { styleOrder, offeredOnly: offeredTabsOnly, editedKeyPerField })
+        : mergeLocaleKeys(defaultLocale, offeredLocales, storedKeys, { offeredOnly: offeredTabsOnly }),
+    [tabModel, defaultLocale, offeredLocales, storedKeys, styleSignature, offeredTabsOnly, editedKeyPerField]
   );
   /** The tab of a key or a language: the exact key, else (tab model `language`) the tab of its language. */
   const tabOf = (wanted: string | null | undefined) => {

@@ -8,6 +8,7 @@ import {
   SHADER_MOTION,
   SHADER_RENDER,
   SHADER_TIME_PERIOD,
+  type ShaderLook,
   setShaderUniforms,
   type ShaderPalette,
   type UniformMap,
@@ -21,6 +22,8 @@ export interface ShaderCanvasProps {
   dark: boolean;
   /** No input for this long → the frame holds until the next input. */
   idleAfterMs: number;
+  /** Displacement field and blob opacities (`ShaderLook`); absent values keep the defaults. */
+  look?: ShaderLook;
   className?: string;
 }
 
@@ -30,10 +33,11 @@ export interface ShaderCanvasProps {
  * `idleAfterMs` without input hold the last frame; it resumes with an immediate draw. A palette change redraws.
  * Browser-only; loaded lazily by `ShaderBackground`.
  */
-export const ShaderCanvas = ({ palette, dark, idleAfterMs, className }: ShaderCanvasProps) => {
+export const ShaderCanvas = ({ palette, dark, idleAfterMs, look, className }: ShaderCanvasProps) => {
   const hostRef = useRef<HTMLDivElement | null>(null);
-  const paletteRef = useRef({ palette, dark });
-  paletteRef.current = { palette, dark };
+  const paletteRef = useRef({ palette, dark, look });
+  paletteRef.current = { palette, dark, look };
+  const displacementCells = look?.displacementCells;
   const redrawRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -59,7 +63,7 @@ export const ShaderCanvas = ({ palette, dark, idleAfterMs, className }: ShaderCa
       if (!built) return false;
       program = built.program;
       uniforms = built.uniforms;
-      texture = createDisplacementTexture(gl);
+      texture = createDisplacementTexture(gl, 128, displacementCells ?? 8);
       return texture !== null;
     };
     if (!buildResources()) {
@@ -105,6 +109,7 @@ export const ShaderCanvas = ({ palette, dark, idleAfterMs, className }: ShaderCa
         time: (elapsedMs() * 0.0001 * SHADER_MOTION.speed) % SHADER_TIME_PERIOD,
         rand: randSeed,
         texture,
+        look: current.look,
       });
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     };
@@ -194,14 +199,16 @@ export const ShaderCanvas = ({ palette, dark, idleAfterMs, className }: ShaderCa
       gl.getExtension('WEBGL_lose_context')?.loseContext();
       canvas.remove();
     };
-  }, [idleAfterMs]);
+  }, [idleAfterMs, displacementCells]);
 
   // a palette change on a held frame redraws it in the new colours
+  const lookSignature = `${look?.displacementScale}/${look?.blob1Opacity}/${look?.blob2Opacity}`;
   useEffect(() => {
     void palette;
     void dark;
+    void lookSignature;
     redrawRef.current?.();
-  }, [palette, dark]);
+  }, [palette, dark, lookSignature]);
 
   return <div ref={hostRef} aria-hidden data-shell-background-canvas="" className={className} />;
 };

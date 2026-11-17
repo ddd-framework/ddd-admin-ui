@@ -7,6 +7,7 @@
 #         lazily loaded ./notify-sonner section, and bundles for the browser (esbuild) without reaching an optional peer
 #         links rendered by blocks go through AdminUiProvider.linkComponent and keep sticky parameters (withStickyParams)
 #         the shell renders on the server from one navigation (sidebar, breadcrumbs, title) and never reaches ./shell-background
+#         the optional props of 0.3.2 render on the server (options-render.mjs)
 #     T4  Node imports of every entry but ./next and ./notify-sonner (those two fail on the missing peer) and a
 #         strict tsc (skipLibCheck false) with moduleResolution bundler and nodenext
 #     T3  (server render) bound fields from ./translations and ./media find the form of ./form
@@ -146,6 +147,8 @@ node database-render.mjs
 node crons-render.mjs
 echo "── the shell on the server: one navigation for sidebar, breadcrumbs and title; rights predicate; no background reach"
 node shell-render.mjs
+echo "── the optional props of 0.3.2 on the server: language tabs, table, bulk bar, filter buttons, shell, segmented control"
+node options-render.mjs
 echo "── shipped i18n manifest"
 if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-i18n-manifest --check; else pnpm exec ddd-admin-ui-i18n-manifest --check; fi
 
@@ -193,6 +196,8 @@ else
   node browser-operations.mjs "http://127.0.0.1:$PORT"
   echo "── shell: sidebar, rail, shortcut, mobile menu, breadcrumbs, title, RTL (headless browser)"
   node browser-shell.mjs "http://127.0.0.1:$PORT"
+  echo "── the options of 0.3.2: range selection, page-sticky header, dialog isolation and result (headless browser)"
+  node browser-options.mjs "http://127.0.0.1:$PORT"
   kill $SERVER_PID 2>/dev/null || true
 fi
 

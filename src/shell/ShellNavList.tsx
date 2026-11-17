@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronDown } from 'lucide-react';
-import { useEffect, useId, useState } from 'react';
+import { useContext, useEffect, useId, useState } from 'react';
 
 import { useTranslate } from '../i18n/useTranslate.ts';
 import {
@@ -17,6 +17,7 @@ import { cn } from '../primitives/cn.ts';
 import { NAV_GROUP_ACTIVE_CLASS, NAV_ICON_CLASS, NAV_ROW_ACTIVE_CLASS, NAV_ROW_CLASS } from './navClasses.ts';
 import { NavItemMarks } from './NavItemMarks.tsx';
 import { ShellNavLink } from './ShellNavLink.tsx';
+import { ShellNavDisplayContext } from './shellContext.ts';
 
 export interface ShellNavListProps {
   /** The tree the viewer may see (already filtered by the rights predicate). */
@@ -34,15 +35,16 @@ const activeGroupKeyOf = (items: readonly NavigationItem<string>[], active: Acti
 
 const NavLeafRow = ({ item, pathname, active, onNavigate, child }: { item: NavigationLeaf<string>; pathname: string | null; active: ActiveNavigation<string> | null; onNavigate?: () => void; child: boolean }) => {
   const { t } = useTranslate();
+  const display = useContext(ShellNavDisplayContext);
   // the one active entry (the longest match), not every prefix of the path
   const current = active?.item.key === item.key && isNavigationLeafActive(item, pathname);
-  const Icon = item.icon;
+  const Icon = child && !display.childIconsInList ? undefined : item.icon;
   return (
     <ShellNavLink
       item={item}
       onClick={onNavigate}
       aria-current={current ? 'page' : undefined}
-      className={cn(NAV_ROW_CLASS, current && NAV_ROW_ACTIVE_CLASS, item.lockedReason && !current && 'text-muted-foreground')}
+      className={cn(NAV_ROW_CLASS, display.rowClassName, current && NAV_ROW_ACTIVE_CLASS, item.lockedReason && !current && 'text-muted-foreground')}
     >
       {Icon ? <Icon aria-hidden className={cn(NAV_ICON_CLASS, child && 'size-4')} /> : child ? null : <span aria-hidden className="size-[1.125rem] shrink-0" />}
       <span className="min-w-0 truncate">{t(item.label)}</span>
@@ -69,6 +71,7 @@ const NavGroupRow = ({
   depth: number;
 }) => {
   const { t } = useTranslate();
+  const display = useContext(ShellNavDisplayContext);
   const listId = useId();
   const Icon = group.icon;
   const holdsActive = isNavigationGroupActive(group, active);
@@ -91,7 +94,7 @@ const NavGroupRow = ({
             item={{ key: group.key, href: group.href }}
             onClick={onNavigate}
             aria-current={isCurrent ? 'page' : undefined}
-            className={cn(NAV_ROW_CLASS, 'flex-1', isCurrent && NAV_ROW_ACTIVE_CLASS)}
+            className={cn(NAV_ROW_CLASS, display.rowClassName, 'flex-1', isCurrent && NAV_ROW_ACTIVE_CLASS)}
           >
             {icon}
             <span className="min-w-0 truncate">{label}</span>
@@ -113,7 +116,7 @@ const NavGroupRow = ({
           aria-expanded={open}
           aria-controls={listId}
           onClick={onToggle}
-          className={cn(NAV_ROW_CLASS, holdsActive && NAV_GROUP_ACTIVE_CLASS)}
+          className={cn(NAV_ROW_CLASS, display.rowClassName, holdsActive && NAV_GROUP_ACTIVE_CLASS)}
         >
           {icon}
           <span className="min-w-0 flex-1 truncate">{label}</span>

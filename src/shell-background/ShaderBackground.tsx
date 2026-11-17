@@ -2,7 +2,7 @@
 
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 
-import { type Rgb, type ShaderPalette, type ShaderTint, tintShaderPalette } from './shader.ts';
+import { type Rgb, type ShaderLook, type ShaderPalette, type ShaderTint, tintShaderPalette } from './shader.ts';
 
 const ShaderCanvas = lazy(() => import('./ShaderCanvas.tsx').then(module => ({ default: module.ShaderCanvas })));
 
@@ -63,6 +63,14 @@ export interface ShaderBackgroundProps {
   dark?: boolean;
   /** No input for this long → the frame holds (default 60 s). */
   idleAfterMs?: number;
+  /** Strength of the displacement field (default 2.2; `0` turns it off). */
+  displacementScale?: number;
+  /** Grain of the displacement field: lattice cells per tile (default 8; more = finer). */
+  displacementCells?: number;
+  /** Opacity of the first blob, 0–1 (default 1). */
+  blob1Opacity?: number;
+  /** Opacity of the second blob, 0–1 (default 0.6). */
+  blob2Opacity?: number;
   className?: string;
 }
 
@@ -75,7 +83,20 @@ export interface ShaderBackgroundProps {
  * `aria-hidden` layer (`data-shell-background`), so hydration matches. The page background must sit on `<html>` (or
  * the body must be transparent), or it covers the layer.
  */
-export const ShaderBackground = ({ tint, dark: darkProp, idleAfterMs = 60_000, className }: ShaderBackgroundProps) => {
+export const ShaderBackground = ({
+  tint,
+  dark: darkProp,
+  idleAfterMs = 60_000,
+  displacementScale,
+  displacementCells,
+  blob1Opacity,
+  blob2Opacity,
+  className,
+}: ShaderBackgroundProps) => {
+  const look: ShaderLook | undefined =
+    displacementScale === undefined && displacementCells === undefined && blob1Opacity === undefined && blob2Opacity === undefined
+      ? undefined
+      : { displacementScale, displacementCells, blob1Opacity, blob2Opacity };
   const hostRef = useRef<HTMLDivElement | null>(null);
   const [state, setState] = useState<{ palette: ShaderPalette; dark: boolean } | null>(null);
   const [reducedMotion, setReducedMotion] = useState(true);
@@ -110,7 +131,7 @@ export const ShaderBackground = ({ tint, dark: darkProp, idleAfterMs = 60_000, c
     <div ref={hostRef} aria-hidden data-shell-background="" className={className ?? 'pointer-events-none fixed inset-0 -z-10'}>
       {state && !reducedMotion && (
         <Suspense fallback={null}>
-          <ShaderCanvas palette={state.palette} dark={state.dark} idleAfterMs={idleAfterMs} className="size-full" />
+          <ShaderCanvas palette={state.palette} dark={state.dark} idleAfterMs={idleAfterMs} look={look} className="size-full" />
         </Suspense>
       )}
     </div>

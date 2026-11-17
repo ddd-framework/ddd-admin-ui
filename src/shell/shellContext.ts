@@ -37,3 +37,15 @@ export const ShellNavigationContext = createContext<ShellNavigationValue | null>
 
 /** The nearest shell's navigation, `null` outside one. */
 export const useShellNavigation = (): ShellNavigationValue | null => useContext(ShellNavigationContext);
+
+/** How the shell draws its navigation rows (set by `AppShell`; the defaults apply outside one). */
+export interface ShellNavDisplay {
+  /** Extra classes of every row of the list (sidebar column and mobile menu): height, text size, gap. */
+  rowClassName?: string;
+  /** Extra classes of every icon of the rail. */
+  railRowClassName?: string;
+  /** A child entry's icon in the list (`false`: hidden in the list, still shown in the rail's flyout). */
+  childIconsInList: boolean;
+}
+
+export const ShellNavDisplayContext = createContext<ShellNavDisplay>({ childIconsInList: true });

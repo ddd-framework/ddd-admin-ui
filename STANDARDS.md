@@ -150,7 +150,16 @@ const bulkBar = (
 ```
 
 The bar's actions and Delete follow the write access; an action that only reads (export, copy ids) passes
-`ignoreWriteAccess`. Never a hand-made checkbox column, never `Promise.all` for bulk writes. A typed confirmation is
+`ignoreWriteAccess`. Never a hand-made checkbox column, never `Promise.all` for bulk writes.
+
+- **Range selection**: `useRowSelection({ rangeSelection: true })` — Shift with a click sets every selectable loaded
+  row from the anchor (the last row clicked without Shift) to the clicked one; `anchorKey`, `setAnchorKey` and
+  `setRangeSelected(from, to, selected)` serve a host's own keyboard selection. `selectionHitArea="cell"` on the table
+  makes the whole select cell the target.
+- **Bulk bar options**: `variant: 'destructive'` on an irreversible action (choices, confirmation, hint included);
+  Delete takes `deleteDisabled`, `deleteHint` and `deleteConfirm`; `confirm.cancelLabel`; `translate: false` for texts
+  that are already translated; `countClassName`, `className`, `choicesClassName`; `countLive` makes the count a polite
+  live region. A typed confirmation is
 `confirm({ …, requirePhrase: entity.name })`; a job that needs a result summary uses the host's dialogs.
 
 ## 5. Columns and cells
@@ -233,6 +242,16 @@ const columns: EntityListColumn<Project>[] = [
   focused row runs it. For lists whose rows have no labelled control of their own that opens them; a row with a link
   or an open button needs none.
 - `align: 'center' | 'end'` aligns header and cells (numbers and actions `end`).
+- **Fill**: `fillWidth` gives a table whose tracks are all fixed or `'content'` a filler track (before trailing end
+  pins), so it fills its card.
+- **Page-sticky header**: `stickyHeader="page"` (tables with tracks) sticks the header to the page at
+  `stickyHeaderTop` while the body scrolls sideways in its own scroller; ancestors up to the page must not scroll or
+  clip.
+- **Rows** are memoised: keep `columns` (`useMemo`) and `rowAction` (`useCallback`) stable and a selection change
+  re-renders only the rows it touches.
+- `markUnsortedHeaders` puts `aria-sort="none"` on sortable unsorted headers; `rowHover="action"` tints only rows with a
+  row action; `emptyIcon` draws an icon over the empty state; `headerClassName` / `cellClassName` style one side of a
+  column.
 
 ## 6. Status badges
 
@@ -518,6 +537,11 @@ const entity = id ? (query.currentData?.supplier ?? null) : null;   // currentDa
 - Labels are English UI texts, translated by the control (`context` for an ambiguous word, marked as literal
   `m('Open', { context: 'filter' })`); already translated text (names from the server) passes `translate: false`.
 - A disabled option says why (`disabledReason`); a count goes in `badge` and, when it matters, in `description`.
+- On a coloured bar: `tone="current"` (track and indicator from the bar's text colour); `indicatorClassName` and
+  `tooltipClassName` for own looks; an option's `tooltip` replaces its default tooltip. The option under the indicator
+  carries `data-highlighted` (style badge content with `in-data-highlighted:`).
+- Drag: `dragPreview="continuous"` (the indicator follows the pointer), `dragFrom="selected"`, `dragCursor`; the press
+  scale's timing comes from `--segmented-control-held-duration` / `--segmented-control-held-easing`.
 
 ## 14. Short forms in a dialog, confirmations — `FormDialog`, `useConfirm`
 
@@ -551,6 +575,9 @@ const rename = useRenameMutation();
 - While pending (or while the promise `onSubmit` returns runs) Escape, the backdrop and Cancel do nothing. After a
   failed save the handler shows the error and the dialog is usable again; the screen closes it after a success.
 - `submitVariant="destructive"` for an irreversible submit, `submitDisabled` while nothing can be saved.
+- `footerStart` holds a third action; `result` replaces the fields and actions with the outcome and one Close button
+  (`closeLabel`); `noValidate` overrides the default; `data-*` props reach the dialog content; `isolateEvents` keeps
+  clicks inside the dialog and on its overlay from React ancestors (a dialog opened from a list row).
 
 Confirmations ask through the provider: `const confirm = useConfirm()` (`./logic`) and
 `if (!(await confirm({ title, description, confirmLabel, confirmVariant: 'destructive' }))) return;`. Nothing renders
@@ -640,6 +667,16 @@ focusFirstOverLimitTranslation(formElement);
   over-limit tab is marked, the field is `aria-invalid`; nothing is cut and a stored value over the limit stays. The
   host sets defaults once (`AdminUiProvider textLimits={{ singleLine: 120, multiline: 2000 }}`); a field's
   `maxLength` wins. The helper searches only the container it gets (the form or dialog that was submitted).
+- **Offered tabs only**: `offeredTabsOnly: true` gives no tab to a stored key, region or language that is not offered
+  (its texts are still kept and sent back).
+- **Edited key per field**: with `tabModel: 'language'`, `editedKeyPerField: true` lets each field edit the key that
+  holds its text (FORMAL, else INFORMAL when only that exists) instead of one key per form.
+- **One text per language**: call sites that keep `{ de: '…', en: '…' }` plus the field's store use
+  `TranslatableLanguageInput` (`texts`, `store`, `onChange({ texts, store })`, `languages`, `activeLanguage`) or the
+  pure helpers `languageTextsOf` / `storeWithLanguageTexts`.
+- Field options: `autoGenerateDisabledReason` (AI off with a reason, the field stays editable), `autoGenerateSlot`,
+  `autoGenerateVariant`; `showCounterFrom` (counter from a threshold), `announceOverLimit` (one announcement per
+  crossing); `clearOtherLanguages`, `clearLabelVisible`, `showEditingLanguage`.
 
 ## 18. Key figures — `MetricTile`, `MetricGrid`, `DeltaText`, `NoteList`
 
@@ -757,4 +794,12 @@ breadcrumbs, the mobile menu or the tab title: they all resolve the same tree.
 - **Background**: `ShaderBackground` from `./shell-background`, passed as `background`; a host without it never loads
   it.
 - **Page widths and insets** stay the page's (`PageFrame`, `EntityListPage`): `<main>` has no padding of its own.
+- **Frame options**: `navRowClassName` / `navRailRowClassName` (row height, text size, gap), `childIconsInList={false}`
+  (child icons only in the rail flyout), `menuButtonClassName`, `mobileMenuClassName`, `mobileMenuHeaderClassName` (a
+  taller banner), `style` / `contentStyle` / `contentAttributes` and `data-*` on the root, `onCollapsedChange` and
+  `markDocumentCollapsed` (`data-shell-collapsed` on `<html>`) for fixed elements outside the frame.
+- **Account menu**: `avatar` (an own node, e.g. `AccountAvatar icon={…}`), `avatarClassName` (the fill),
+  `beforeEntries`. **Language menu**: `triggerAriaLabel` (a name that also says the writing style), `triggerLabel` on
+  `LanguageMenuSub`. **Title**: `formatTitle` for page-specific wording, `reassert` against a router writing the title
+  after a navigation. **Background**: `displacementScale`, `displacementCells`, `blob1Opacity`, `blob2Opacity`.
 

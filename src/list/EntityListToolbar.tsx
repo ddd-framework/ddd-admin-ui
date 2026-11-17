@@ -73,8 +73,20 @@ export interface FilterToggleButtonProps {
   activeFilterCount?: number;
   /** `aria-controls` of the panel it opens. */
   'aria-controls'?: string;
+  /** The accessible name, already translated (default "Toggle filters", with the count when filters are set). */
+  'aria-label'?: string;
   className?: string;
+  /** Classes of the count badge. */
+  badgeClassName?: string;
+  /** The badge inverts its colours while the toggle is open (filled); default `true`. */
+  badgeInvertWhenOpen?: boolean;
+  /** `data-*` attributes of the button. */
+  [dataAttribute: `data-${string}`]: string | undefined;
 }
+
+/** The `data-*` entries of a props object (passed through to a block's button). */
+const dataAttributesOf = (props: Record<string, unknown>) =>
+  Object.fromEntries(Object.entries(props).filter(([name]) => name.startsWith('data-')));
 
 /** The toolbar's Filters toggle with its count, for a filter panel or sheet outside `EntityListToolbar`. */
 export const FilterToggleButton = ({
@@ -82,18 +94,24 @@ export const FilterToggleButton = ({
   onOpenChange,
   activeFilterCount = 0,
   'aria-controls': ariaControls,
+  'aria-label': ariaLabel,
   className,
+  badgeClassName,
+  badgeInvertWhenOpen = true,
+  ...rest
 }: FilterToggleButtonProps) => {
   const { t } = useTranslate();
   return (
     <Button
+      {...dataAttributesOf(rest)}
       size="sm"
       variant={open ? 'default' : 'outline'}
       onClick={() => onOpenChange(!open)}
       aria-label={
-        activeFilterCount > 0
+        ariaLabel ??
+        (activeFilterCount > 0
           ? t('Toggle filters (%count% active)', { replacements: { count: activeFilterCount } })
-          : t('Toggle filters')
+          : t('Toggle filters'))
       }
       aria-expanded={open}
       aria-controls={ariaControls}
@@ -102,7 +120,7 @@ export const FilterToggleButton = ({
     >
       <SlidersHorizontal />
       <span className="hidden sm:inline">{t('Filters')}</span>
-      <FilterCountBadge count={activeFilterCount} inverted={open} />
+      <FilterCountBadge count={activeFilterCount} inverted={open && badgeInvertWhenOpen} className={badgeClassName} />
     </Button>
   );
 };
@@ -113,14 +131,16 @@ export interface ClearFiltersButtonProps {
   /** Set filters: nothing renders at 0. Absent: always shown. */
   activeFilterCount?: number;
   className?: string;
+  /** `data-*` attributes of the button. */
+  [dataAttribute: `data-${string}`]: string | undefined;
 }
 
 /** The one "Clear filters" button of the toolbar, for a host's own filter row or sheet. */
-export const ClearFiltersButton = ({ onClear, activeFilterCount, className }: ClearFiltersButtonProps) => {
+export const ClearFiltersButton = ({ onClear, activeFilterCount, className, ...rest }: ClearFiltersButtonProps) => {
   const { t } = useTranslate();
   if (activeFilterCount !== undefined && activeFilterCount <= 0) return null;
   return (
-    <Button size="sm" variant="outline" rounded="full" onClick={onClear} className={cn(CONTROL_TEXT, className)}>
+    <Button {...dataAttributesOf(rest)} size="sm" variant="outline" rounded="full" onClick={onClear} className={cn(CONTROL_TEXT, className)}>
       <X />
       {t('Clear filters')}
     </Button>

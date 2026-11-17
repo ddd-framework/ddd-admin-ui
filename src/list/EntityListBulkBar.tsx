@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronDown, Loader2, Trash2 } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 
 import { useConfirm } from '../logic/react/useConfirm.ts';
 import { useWriteAccess } from '../logic/react/writeAccess.ts';
@@ -19,6 +19,9 @@ import {
 } from '../primitives/index.ts';
 import { useTranslate } from '../i18n/index.ts';
 import { cn } from '../primitives/cn.ts';
+
+/** The red outline of the destructive bulk actions (`Delete (n)`, an action with `variant: 'destructive'`). */
+const DESTRUCTIVE_CLASS = 'border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive';
 
 /** One sub-choice of a bulk action with `choices` (a destination, a status). */
 export interface EntityListBulkActionChoice {
@@ -38,6 +41,8 @@ export interface EntityListBulkActionConfirm {
   title: string;
   description?: string;
   confirmLabel?: string;
+  /** The dismiss button's label (default: the confirmation's own "Cancel"). */
+  cancelLabel?: string;
   confirmVariant?: 'default' | 'destructive';
 }
 
@@ -69,6 +74,19 @@ export interface EntityListBulkAction {
   busy?: boolean;
   /** An action that only reads (export, copy ids): not disabled by `WriteAccessProvider`. */
   ignoreWriteAccess?: boolean;
+  /** `destructive`: the red outline of `Delete (n)` (an irreversible action with choices or a confirmation). */
+  variant?: 'default' | 'destructive';
+  /**
+   * `false`: `label`, `hint`, `choicesLabel` and the `confirm` texts are already translated and shown as given
+   * (`%count%` is still filled in). Default: English UI texts, translated by the bar.
+   */
+  translate?: boolean;
+  /** Classes of the count in the label (` (3)`), e.g. a muted tone; without it the label is one text. */
+  countClassName?: string;
+  /** Classes of the action's button. */
+  className?: string;
+  /** Classes of the choices menu (an action with `choices`). */
+  choicesClassName?: string;
 }
 
 export interface EntityListBulkBarProps {
@@ -76,10 +94,16 @@ export interface EntityListBulkBarProps {
   selection: { count: number; clear: () => void; allLoadedState?: boolean | 'indeterminate' };
   /** Secondary bulk actions, outline, in this order. */
   actions?: EntityListBulkAction[];
-  /** The destructive bulk action, always last: `Delete (n)`. Confirm inside the handler. */
+  /** The destructive bulk action, always last: `Delete (n)`. Confirm inside the handler, or set `deleteConfirm`. */
   onDelete?: () => void;
   deleteLabel?: string;
   deleteBusy?: boolean;
+  /** Delete is off for this selection (with `deleteHint` saying why). */
+  deleteDisabled?: boolean;
+  /** Tooltip of Delete (e.g. why it is disabled); English UI text, translated by the bar. */
+  deleteHint?: string;
+  /** Ask before `onDelete` runs (same rules as an action's `confirm`). */
+  deleteConfirm?: EntityListBulkActionConfirm;
   /**
    * Disables every action (writes not allowed, another bulk action running); Clear stays usable unless `busy`. A
    * `WriteAccessProvider` with `allowed: false` disables the actions and Delete as well (not Clear, not an action with
@@ -96,6 +120,8 @@ export interface EntityListBulkBarProps {
    * `true` on the selection), the bar notes that only the loaded rows are selected.
    */
   moreOnServer?: boolean;
+  /** The visible count is a polite live region: a screen reader hears "3 selected" when the selection changes. */
+  countLive?: boolean;
 }
 
 /**
@@ -114,6 +140,10 @@ export const EntityListBulkBar = ({
   children,
   className,
   moreOnServer = false,
+  deleteDisabled = false,
+  deleteHint,
+  deleteConfirm,
+  countLive = false,
 }: EntityListBulkBarProps) => {
   const { t } = useTranslate();
   const writeAccess = useWriteAccess();
@@ -123,21 +153,26 @@ export const EntityListBulkBar = ({
   const writeBlocked = !writeAccess.allowed;
   const blockedTitle = writeBlocked ? writeAccess.reason : undefined;
 
-  const fill = (text: string) => t(text, { count, replacements: { count } });
+  /** A text of an action: translated (default) or as given, `%count%` filled in either way. */
+  const textOf = (action: Pick<EntityListBulkAction, 'translate'>, text: string) =>
+    action.translate === false ? text.replaceAll('%count%', String(count)) : t(text);
+  const fill = (action: Pick<EntityListBulkAction, 'translate'>, text: string) =>
+    action.translate === false ? text.replaceAll('%count%', String(count)) : t(text, { count, replacements: { count } });
   /** Runs `run` after the action's confirmation (if any) was accepted. */
-  const confirmThen = async (action: EntityListBulkAction, run: () => void) => {
+  const confirmThen = async (action: Pick<EntityListBulkAction, 'confirm' | 'translate'>, run: () => void) => {
     if (action.confirm) {
       const accepted = await confirm({
-        title: fill(action.confirm.title),
-        description: action.confirm.description ? fill(action.confirm.description) : undefined,
-        confirmLabel: action.confirm.confirmLabel ? t(action.confirm.confirmLabel) : undefined,
+        title: fill(action, action.confirm.title),
+        description: action.confirm.description ? fill(action, action.confirm.description) : undefined,
+        confirmLabel: action.confirm.confirmLabel ? textOf(action, action.confirm.confirmLabel) : undefined,
+        ...(action.confirm.cancelLabel ? { cancelLabel: textOf(action, action.confirm.cancelLabel) } : {}),
         confirmVariant: action.confirm.confirmVariant,
       });
       if (!accepted) return;
     }
     run();
   };
-  const withHint = (action: EntityListBulkAction, control: ReactNode) =>
+  const withHint = (action: Pick<EntityListBulkAction, 'id' | 'hint' | 'translate'>, control: ReactNode) =>
     action.hint ? (
       <Tooltip key={action.id}>
         <TooltipTrigger asChild>
@@ -145,11 +180,29 @@ export const EntityListBulkBar = ({
             {control}
           </span>
         </TooltipTrigger>
-        <TooltipContent>{t(action.hint)}</TooltipContent>
+        <TooltipContent>{textOf(action, action.hint)}</TooltipContent>
       </Tooltip>
     ) : (
       control
     );
+  /** `Label (n)`: one text, or (with `countClassName`) the count in its own span, in the order the translation puts it. */
+  const labelWithCount = (label: string, countClassName?: string): ReactNode => {
+    if (!countClassName) return t('%label% (%count%)', { replacements: { label, count } });
+    const template = t('%label% (%count%)', { replacements: { label: '\u0001', count: '\u0002' } });
+    return template.split(/(\u0001|\u0002)/).map((part, index) =>
+      part === '\u0001' ? (
+        // biome-ignore lint/suspicious/noArrayIndexKey: the parts of one fixed template
+        <Fragment key={index}>{label}</Fragment>
+      ) : part === '\u0002' ? (
+        // biome-ignore lint/suspicious/noArrayIndexKey: the parts of one fixed template
+        <span key={index} className={countClassName}>
+          {count}
+        </span>
+      ) : (
+        part
+      )
+    );
+  };
 
   return (
     <div
@@ -161,7 +214,9 @@ export const EntityListBulkBar = ({
       )}
     >
       <div className="flex items-center gap-2 text-[13px]">
-        <span className="font-bold tabular-nums">{t('{count, plural, other {# selected}}', { count })}</span>
+        <span className="font-bold tabular-nums" {...(countLive ? { role: 'status', 'aria-live': 'polite' as const } : {})}>
+          {t('{count, plural, other {# selected}}', { count })}
+        </span>
         <span className="text-muted-foreground" aria-hidden>
           ·
         </span>
@@ -179,9 +234,10 @@ export const EntityListBulkBar = ({
           const content = (
             <>
               {action.busy ? <Loader2 className="animate-spin" aria-hidden /> : action.icon}
-              {t('%label% (%count%)', { replacements: { label: t(action.label), count } })}
+              {labelWithCount(textOf(action, action.label), action.countClassName)}
             </>
           );
+          const buttonClass = cn('h-8 bg-card', action.variant === 'destructive' && DESTRUCTIVE_CLASS, action.className);
           if (action.choices) {
             const choices = action.choices;
             return withHint(
@@ -194,16 +250,16 @@ export const EntityListBulkBar = ({
                     variant="outline"
                     disabled={actionDisabled || choices.length === 0}
                     title={action.ignoreWriteAccess || action.hint ? undefined : blockedTitle}
-                    className="h-8 bg-card"
+                    className={buttonClass}
                   >
                     {content}
                     <ChevronDown aria-hidden className="opacity-60" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className={action.choicesClassName}>
                   {action.choicesLabel && (
                     <>
-                      <DropdownMenuLabel>{t(action.choicesLabel)}</DropdownMenuLabel>
+                      <DropdownMenuLabel>{textOf(action, action.choicesLabel)}</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                     </>
                   )}
@@ -230,26 +286,29 @@ export const EntityListBulkBar = ({
               onClick={action.confirm ? () => void confirmThen(action, () => action.onClick?.()) : action.onClick}
               disabled={actionDisabled}
               title={action.ignoreWriteAccess || action.hint ? undefined : blockedTitle}
-              className="h-8 bg-card"
+              className={buttonClass}
             >
               {content}
             </Button>
           );
         })}
-        {onDelete && (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={onDelete}
-            disabled={disabled || busy || writeBlocked}
-            title={blockedTitle}
-            className="h-8 border-destructive/40 bg-card text-destructive hover:bg-destructive/10 hover:text-destructive"
-          >
-            {deleteBusy ? <Loader2 className="animate-spin" aria-hidden /> : <Trash2 aria-hidden />}
-            {t('%label% (%count%)', { replacements: { label: t(deleteLabel), count } })}
-          </Button>
-        )}
+        {onDelete &&
+          withHint(
+            { id: 'delete', hint: deleteHint },
+            <Button
+              key="delete"
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={deleteConfirm ? () => void confirmThen({ confirm: deleteConfirm }, onDelete) : onDelete}
+              disabled={disabled || busy || writeBlocked || deleteDisabled}
+              title={deleteHint ? undefined : blockedTitle}
+              className="h-8 border-destructive/40 bg-card text-destructive hover:bg-destructive/10 hover:text-destructive"
+            >
+              {deleteBusy ? <Loader2 className="animate-spin" aria-hidden /> : <Trash2 aria-hidden />}
+              {t('%label% (%count%)', { replacements: { label: t(deleteLabel), count } })}
+            </Button>
+          )}
       </div>
     </div>
   );

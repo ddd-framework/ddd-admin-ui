@@ -1,6 +1,6 @@
 'use client';
 
-import { type FormEvent, type ReactNode, useContext, useRef, useState } from 'react';
+import { type FormEvent, type ReactNode, type SyntheticEvent, useContext, useRef, useState } from 'react';
 import { type FieldValues, FormProvider, type SubmitHandler, type UseFormReturn } from 'react-hook-form';
 
 import { useTranslate } from '../i18n/index.ts';
@@ -53,6 +53,25 @@ interface FormDialogBaseProps {
   ignoreWriteAccess?: boolean;
   /** Classes of the dialog content (width: `sm:max-w-xl`). */
   className?: string;
+  /** `data-*` attributes of the dialog content. */
+  [dataAttribute: `data-${string}`]: string | undefined;
+  /** A third action at the start of the footer (a secondary step, a link to the full form), before Cancel. */
+  footerStart?: ReactNode;
+  /**
+   * The result of a finished submit (what was created, a generated secret): replaces the fields, Cancel and the submit
+   * button with this content and one "Close" button; closing never asks about unsaved changes. `footerStart` stays.
+   */
+  result?: ReactNode;
+  /** The Close button's label in the result state; default "Close". */
+  closeLabel?: ReactNode;
+  /** The browser's own validation off (`noValidate`); default: off with `form` (the form library validates), on without. */
+  noValidate?: boolean;
+  /**
+   * Clicks and presses inside the dialog and on its overlay stop at the dialog: they do not reach the React ancestors
+   * of the place it is rendered (a portal bubbles through the React tree, so a dialog opened from a list row would
+   * otherwise run the row's action). Default `false`.
+   */
+  isolateEvents?: boolean;
 }
 
 export type FormDialogProps<TFieldValues extends FieldValues = FieldValues, TTransformed = TFieldValues> = FormDialogBaseProps &
@@ -97,7 +116,16 @@ export const FormDialog = <TFieldValues extends FieldValues = FieldValues, TTran
     submitVariant = 'default',
     ignoreWriteAccess = false,
     className,
+    footerStart,
+    result,
+    closeLabel,
+    noValidate,
+    isolateEvents = false,
   } = props;
+  const dataAttributes = Object.fromEntries(Object.entries(props).filter(([name]) => name.startsWith('data-')));
+  const stopAtDialog = (event: SyntheticEvent) => event.stopPropagation();
+  const isolation = isolateEvents ? { onClick: stopAtDialog, onPointerDown: stopAtDialog, onMouseDown: stopAtDialog } : undefined;
+  const showsResult = result !== undefined && result !== null && result !== false;
   const { t } = useTranslate();
   const writeAccess = useWriteAccess();
   const providerConfirm = useContext(ConfirmContext);
@@ -123,7 +151,7 @@ export const FormDialog = <TFieldValues extends FieldValues = FieldValues, TTran
 
   const requestClose = async () => {
     if (busy) return;
-    if (isDirty && !(await confirm(discardConfirm))) return;
+    if (isDirty && !showsResult && !(await confirm(discardConfirm))) return;
     onOpenChange(false);
   };
 
@@ -132,7 +160,7 @@ export const FormDialog = <TFieldValues extends FieldValues = FieldValues, TTran
     if (event.target !== event.currentTarget) return;
     event.preventDefault();
     event.stopPropagation();
-    if (busy) return;
+    if (busy || showsResult) return;
     const result = props.form ? props.form.handleSubmit(props.onSubmit)(event) : props.onSubmit(event);
     if (!isPromiseLike(result)) return;
     setSubmitting(true);
@@ -143,7 +171,7 @@ export const FormDialog = <TFieldValues extends FieldValues = FieldValues, TTran
   const body = (
     <form
       ref={formRef}
-      noValidate={props.form !== undefined}
+      noValidate={noValidate ?? props.form !== undefined}
       onSubmit={handleSubmit}
       aria-busy={busy || undefined}
       className="grid gap-4"
@@ -159,19 +187,28 @@ export const FormDialog = <TFieldValues extends FieldValues = FieldValues, TTran
             </DialogDescription>
           ))}
       </DialogHeader>
-      {children}
+      {showsResult ? result : children}
       <DialogFooter ref={footerRef}>
-        <Button type="button" variant="outline" disabled={busy} onClick={() => void requestClose()}>
-          {cancelLabel ?? t('Cancel', { context: 'form-dialog' })}
-        </Button>
-        <Button
-          type="submit"
-          variant={submitVariant === 'destructive' ? 'destructive' : 'default'}
-          disabled={busy || submitDisabled || writeBlocked}
-          title={writeBlocked ? writeAccess.reason : undefined}
-        >
-          {busy && pendingLabel ? pendingLabel : submitLabel}
-        </Button>
+        {footerStart && <div className="flex flex-wrap items-center gap-2 sm:me-auto">{footerStart}</div>}
+        {showsResult ? (
+          <Button type="button" onClick={() => onOpenChange(false)}>
+            {closeLabel ?? t('Close', { context: 'form-dialog' })}
+          </Button>
+        ) : (
+          <>
+            <Button type="button" variant="outline" disabled={busy} onClick={() => void requestClose()}>
+              {cancelLabel ?? t('Cancel', { context: 'form-dialog' })}
+            </Button>
+            <Button
+              type="submit"
+              variant={submitVariant === 'destructive' ? 'destructive' : 'default'}
+              disabled={busy || submitDisabled || writeBlocked}
+              title={writeBlocked ? writeAccess.reason : undefined}
+            >
+              {busy && pendingLabel ? pendingLabel : submitLabel}
+            </Button>
+          </>
+        )}
       </DialogFooter>
     </form>
   );
@@ -180,6 +217,9 @@ export const FormDialog = <TFieldValues extends FieldValues = FieldValues, TTran
     <>
       <Dialog open={open} onOpenChange={next => (next ? onOpenChange(true) : void requestClose())}>
         <DialogContent
+          {...dataAttributes}
+          {...isolation}
+          overlayProps={isolation}
           className={cn('sm:max-w-lg', className)}
           onEscapeKeyDown={event => busy && event.preventDefault()}
           onInteractOutside={event => busy && event.preventDefault()}

@@ -746,6 +746,13 @@ const useEntityLabel: UseEntityLabel<'item'> = ({ id }) => { const query = useIt
   motion or without WebGL). The page background then sits on `<html>`.
 - **RTL**: logical sides throughout; with Radix's `Direction.Provider dir="rtl"` the menus and the mobile sheet open
   from the right.
+- **Host looks** (all optional): `navRowClassName` / `navRailRowClassName`, `childIconsInList={false}`,
+  `menuButtonClassName`, `mobileMenuClassName`, `mobileMenuHeaderClassName`, `style`, `contentStyle`,
+  `contentAttributes` and `data-*` on the root; `onCollapsedChange` / `markDocumentCollapsed` (`data-shell-collapsed` on
+  `<html>`) for fixed elements outside the frame. `AccountMenu` takes `avatar` (an own node; `AccountAvatar icon`),
+  `avatarClassName` and `beforeEntries`; `LanguageMenu` `triggerAriaLabel`, `LanguageMenuSub` `triggerLabel`;
+  `documentTitle` `formatTitle` and `reassert` (written again after a router changes the title); `ShaderBackground`
+  `displacementScale`, `displacementCells`, `blob1Opacity`, `blob2Opacity`.
 
 ## Texts
 
@@ -777,7 +784,7 @@ project's `.claude/skills/`. Idempotent; repoints an existing symlink, never tou
 
 ## Versioning
 
-0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.1"`,
+0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.2"`,
 `pnpm add -E` / `npm install -E`); modules peer on the version they were tested with. Stable releases are published
 under the `latest` dist-tag, pre-releases (`x.y.z-…`) under `next`. Changes per release: [CHANGELOG.md](CHANGELOG.md).
 

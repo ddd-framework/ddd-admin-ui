@@ -47,6 +47,11 @@ export interface SegmentedControlOption<TValue extends string = string> {
   translate?: boolean;
   /** Overrides the control's `badgeStyle` for this option. */
   badgeStyle?: SegmentedControlBadgeStyle;
+  /**
+   * The option's own tooltip content (shown as given, not translated), instead of the label (`iconOnly`) or the
+   * disabled reason; also gives an option without either a tooltip.
+   */
+  tooltip?: ReactNode;
   className?: string;
 }
 
@@ -92,8 +97,24 @@ export interface SegmentedControlProps<TValue extends string = string> {
   fullWidth?: boolean;
   /** The selected option's look: the raised card surface (default) or the primary colour. */
   selection?: 'surface' | 'primary';
-  /** `onBrand` on a brand-coloured background. */
-  tone?: 'default' | 'onBrand';
+  /**
+   * `onBrand` on a brand-coloured background. `current`: track and indicator are drawn from the surrounding text colour
+   * (a control on a coloured bar: set the bar's text colour and the control follows).
+   */
+  tone?: 'default' | 'onBrand' | 'current';
+  /** Classes of the sliding indicator (its fill, shadow, ring). The track takes `className`. */
+  indicatorClassName?: string;
+  /** Classes of every option's tooltip. */
+  tooltipClassName?: string;
+  /**
+   * How the indicator follows a drag. `snap` (default): it jumps from option to option. `continuous`: it follows the
+   * pointer, sized like the option under it, and settles on release.
+   */
+  dragPreview?: 'snap' | 'continuous';
+  /** Where a drag may start: `any` option (default) or only the `selected` one (a press elsewhere still selects on click). */
+  dragFrom?: 'any' | 'selected';
+  /** A grabbing cursor while a drag runs (the root carries `data-dragging` either way). */
+  dragCursor?: boolean;
   /**
    * `automatic` (default): arrow keys, Home and End move and select. `manual`: they move the focus only, Space or Enter
    * selects (an expensive change, e.g. one that loads data).
@@ -110,16 +131,27 @@ const OPTION_HEIGHT_CLASS = { 32: 'h-8', 36: 'h-9', 40: 'h-10', 48: 'h-12' } as 
 const OPTION_TEXT_CLASS = { 32: 'text-[13px]', 36: 'text-[13px]', 40: 'text-sm', 48: 'text-sm' } as const;
 const ICON_ONLY_WIDTH_CLASS = { 32: 'w-7', 36: 'w-8', 40: 'w-9', 48: 'w-11' } as const;
 
-const TRACK_CLASS = { default: 'bg-tint text-muted-foreground', onBrand: 'bg-brand-ink/25 text-brand-light' } as const;
+const TRACK_CLASS = {
+  default: 'bg-tint text-muted-foreground',
+  onBrand: 'bg-brand-ink/25 text-brand-light',
+  current: 'bg-current/10 text-current',
+} as const;
 const INDICATOR_CLASS = {
-  surface: { default: 'bg-segment-active shadow-[var(--surface-shadow)]', onBrand: 'bg-brand-light' },
-  primary: { default: 'bg-primary', onBrand: 'bg-primary' },
+  surface: { default: 'bg-segment-active shadow-[var(--surface-shadow)]', onBrand: 'bg-brand-light', current: 'bg-current/20' },
+  primary: { default: 'bg-primary', onBrand: 'bg-primary', current: 'bg-current/30' },
 } as const;
 const HIGHLIGHT_TEXT_CLASS = {
-  surface: { default: 'text-foreground', onBrand: 'text-brand-ink' },
-  primary: { default: 'text-primary-foreground', onBrand: 'text-primary-foreground' },
+  surface: { default: 'text-foreground', onBrand: 'text-brand-ink', current: 'text-current' },
+  primary: { default: 'text-primary-foreground', onBrand: 'text-primary-foreground', current: 'text-current' },
 } as const;
-const HOVER_TEXT_CLASS = { default: 'hover:text-foreground', onBrand: 'hover:text-primary-foreground' } as const;
+const HOVER_TEXT_CLASS = { default: 'hover:text-foreground', onBrand: 'hover:text-primary-foreground', current: 'hover:text-current' } as const;
+
+/**
+ * The indicator's transition: slide and size on `--segmented-control-duration` / `--segmented-control-easing`, the
+ * press scale on `--segmented-control-held-duration` / `--segmented-control-held-easing` (default: the slide's).
+ */
+const INDICATOR_TRANSITION_CLASS =
+  '[transition:translate_var(--segmented-control-duration)_var(--segmented-control-easing,cubic-bezier(0,0,0.2,1)),width_var(--segmented-control-duration)_var(--segmented-control-easing,cubic-bezier(0,0,0.2,1)),height_var(--segmented-control-duration)_var(--segmented-control-easing,cubic-bezier(0,0,0.2,1)),top_var(--segmented-control-duration)_var(--segmented-control-easing,cubic-bezier(0,0,0.2,1)),scale_var(--segmented-control-held-duration,var(--segmented-control-duration))_var(--segmented-control-held-easing,var(--segmented-control-easing,cubic-bezier(0,0,0.2,1)))]';
 
 /**
  * Coarse pointers: an invisible hit area of at least 44 × 44 px around each option, so a 32 px control stays easy to
@@ -164,7 +196,10 @@ interface DragState {
  * default: `--segmented-control-easing` (indicator slide, default ease-out), `--segmented-control-option-duration` /
  * `--segmented-control-option-easing` (option colour; default the slide's duration), `--segmented-control-track-duration`
  * / `--segmented-control-track-easing` (track background; default none), `--segmented-control-coarse-option-height` and
- * `--segmented-control-coarse-gap` (`coarsePointer="grow"`), `--segmented-control-held-scale` (`pressFeedback`). The
+ * `--segmented-control-coarse-gap` (`coarsePointer="grow"`), `--segmented-control-held-scale` (`pressFeedback`) and
+ * `--segmented-control-held-duration` / `--segmented-control-held-easing` (the press scale's timing; default the slide's).
+ * Each option carries `data-highlighted` while the indicator is under it (badge content can style on it with
+ * `in-data-highlighted:`, independent of `aria-checked`). The
  * indicator takes the selected option's box, so a host track padding (`p-1`) insets it as much as the options.
  */
 export const SegmentedControl = <TValue extends string = string>({
@@ -185,6 +220,11 @@ export const SegmentedControl = <TValue extends string = string>({
   translate = true,
   pressFeedback = false,
   style,
+  indicatorClassName,
+  tooltipClassName,
+  dragPreview = 'snap',
+  dragFrom = 'any',
+  dragCursor = false,
 }: SegmentedControlProps<TValue>) => {
   const { t } = useTranslate();
   const baseId = useId();
@@ -196,6 +236,8 @@ export const SegmentedControl = <TValue extends string = string>({
   // wider than its container (five options in a phone column): it scrolls inside itself, never the page
   const [overflowing, setOverflowing] = useState(false);
   const drag = useRef<DragState | null>(null);
+  // `dragPreview="continuous"`: the pointer's x relative to the track while a drag runs
+  const [dragX, setDragX] = useState<number | null>(null);
   const suppressClick = useRef(false);
 
   const disabled = options.map(option => option.disabled === true);
@@ -211,7 +253,13 @@ export const SegmentedControl = <TValue extends string = string>({
     const group = groupRef.current;
     if (!group) return;
     const place = () => {
-      const wider = group.scrollWidth > group.clientWidth + 1;
+      // the options' extent, not the scroll width: a swollen (pressed) indicator must not count as overflow
+      const paddingRight = Number.parseFloat(getComputedStyle(group).paddingRight) || 0;
+      const optionsRight = optionRefs.current.reduce(
+        (right, option) => (option ? Math.max(right, option.offsetLeft + option.offsetWidth) : right),
+        0
+      );
+      const wider = optionsRight + paddingRight > group.clientWidth + 1;
       // the attribute at once (a resize observer runs before the paint), the state for the drag rules: until React
       // renders the state, a track that turned wider would widen the page (a phone, a slow device)
       group.toggleAttribute('data-overflowing', wider);
@@ -237,6 +285,8 @@ export const SegmentedControl = <TValue extends string = string>({
     if (typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(place);
     observer.observe(group);
+    // one option's size may change without the track resizing (a badge count, a label)
+    for (const option of optionRefs.current) if (option) observer.observe(option);
     return () => observer.disconnect();
   }, [targetIndex, layoutKey]);
 
@@ -266,6 +316,7 @@ export const SegmentedControl = <TValue extends string = string>({
     if (group && state && group.hasPointerCapture?.(state.pointerId)) group.releasePointerCapture(state.pointerId);
     drag.current = null;
     setPreview(null);
+    setDragX(null);
     setHeld(false);
   }, []);
 
@@ -278,6 +329,7 @@ export const SegmentedControl = <TValue extends string = string>({
       event.preventDefault();
       drag.current.cancelled = true;
       setPreview(null);
+      setDragX(null);
     };
     window.addEventListener('keydown', onKeyDown, true);
     return () => window.removeEventListener('keydown', onKeyDown, true);
@@ -306,6 +358,9 @@ export const SegmentedControl = <TValue extends string = string>({
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (event.button !== 0 || !event.isPrimary) return;
+    const onSelected = selectedIndex !== -1 && optionRefs.current[selectedIndex]?.contains(event.target as Node) === true;
+    // `dragFrom="selected"`: a press elsewhere is a plain click (the option's click selects it)
+    if (dragFrom === 'selected' && !onSelected) return;
     if (pressFeedback && selectedIndex !== -1 && optionRefs.current[selectedIndex]?.contains(event.target as Node)) setHeld(true);
     drag.current = {
       pointerId: event.pointerId,
@@ -336,6 +391,10 @@ export const SegmentedControl = <TValue extends string = string>({
     const index = indexAt(event.clientX);
     const option = options[index];
     if (option) setPreview(option.value);
+    if (dragPreview === 'continuous' && groupRef.current) {
+      const frame = groupRef.current.getBoundingClientRect();
+      setDragX(event.clientX - frame.left + groupRef.current.scrollLeft);
+    }
   };
 
   const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
@@ -369,6 +428,16 @@ export const SegmentedControl = <TValue extends string = string>({
   };
 
   const indicatorReady = indicator !== null;
+  // continuous preview: centred on the pointer, kept inside the options' extent
+  let indicatorLeft = indicator?.left ?? 0;
+  if (indicator && dragX !== null && preview !== null) {
+    const first = optionRefs.current.find(Boolean);
+    const last = [...optionRefs.current].reverse().find(Boolean);
+    const minimum = first?.offsetLeft ?? 0;
+    const maximum = last ? last.offsetLeft + last.offsetWidth - indicator.width : indicator.left;
+    indicatorLeft = Math.min(Math.max(dragX - indicator.width / 2, minimum), Math.max(minimum, maximum));
+  }
+  const following = dragX !== null && preview !== null;
 
   return (
     <div
@@ -377,6 +446,7 @@ export const SegmentedControl = <TValue extends string = string>({
       aria-label={translate ? t(ariaLabel) : ariaLabel}
       data-held={held || undefined}
       data-overflowing={overflowing || undefined}
+      data-dragging={isDragging || undefined}
       style={style}
       data-slot="segmented-control"
       onKeyDown={onKeyDown}
@@ -392,6 +462,7 @@ export const SegmentedControl = <TValue extends string = string>({
         coarsePointer === 'grow' && COARSE_GROW_TRACK_CLASS,
         TRACK_TRANSITION_CLASS,
         TRACK_CLASS[tone],
+        dragCursor && 'data-dragging:cursor-grabbing data-dragging:[&_button]:cursor-grabbing',
         className
       )}
     >
@@ -400,11 +471,20 @@ export const SegmentedControl = <TValue extends string = string>({
           aria-hidden
           data-slot="segmented-control-indicator"
           className={cn(
-            'pointer-events-none absolute inset-y-0.5 left-0 -z-10 rounded-(--segmented-control-radius) transition-[translate,width,height,top,scale] duration-(--segmented-control-duration) ease-[var(--segmented-control-easing,cubic-bezier(0,0,0.2,1))] motion-reduce:transition-none',
+            'pointer-events-none absolute inset-y-0.5 left-0 -z-10 rounded-(--segmented-control-radius) motion-reduce:transition-none',
+            INDICATOR_TRANSITION_CLASS,
             held && 'scale-[var(--segmented-control-held-scale,1.06)]',
-            INDICATOR_CLASS[selection][tone]
+            INDICATOR_CLASS[selection][tone],
+            indicatorClassName
           )}
-          style={{ translate: `${indicator.left}px 0`, width: indicator.width, top: indicator.top, height: indicator.height }}
+          style={{
+            translate: `${indicatorLeft}px 0`,
+            width: indicator.width,
+            top: indicator.top,
+            height: indicator.height,
+            // following the pointer: the slide itself is not animated (it would lag behind)
+            ...(following ? { transitionProperty: 'width, height, top, scale' } : {}),
+          }}
         />
       )}
       {options.map((option, index) => {
@@ -429,6 +509,7 @@ export const SegmentedControl = <TValue extends string = string>({
             aria-describedby={describedBy}
             tabIndex={index === tabStop ? 0 : -1}
             data-state={checked ? 'checked' : 'unchecked'}
+            data-highlighted={highlighted || undefined}
             onClick={() => onOptionClick(index)}
             className={cn(
               'relative inline-flex min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-(--segmented-control-radius) px-3 font-bold whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-4',
@@ -479,7 +560,7 @@ export const SegmentedControl = <TValue extends string = string>({
             )}
           </>
         );
-        if (!iconOnly && !reason) {
+        if (!iconOnly && !reason && option.tooltip === undefined) {
           return (
             <Fragment key={option.value}>
               {button}
@@ -491,8 +572,10 @@ export const SegmentedControl = <TValue extends string = string>({
           <Fragment key={option.value}>
             <Tooltip>
               <TooltipTrigger asChild>{button}</TooltipTrigger>
-              <TooltipContent>
-                {iconOnly && reason ? (
+              <TooltipContent className={tooltipClassName}>
+                {option.tooltip !== undefined ? (
+                  option.tooltip
+                ) : iconOnly && reason ? (
                   <>
                     {label}
                     <br />

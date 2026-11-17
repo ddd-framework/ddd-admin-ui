@@ -3,7 +3,7 @@ name: ddd-admin-ui-specialist
 description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries, import matrix, host setup (AdminUiProvider, theme.css, components.css, tokens.json, ddd-admin-ui-check-tokens, -radix, -contrast), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title from one navigation; ./shell-background), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route states, form drawers and dialogs, the save shortcut, useConfirm, write access, locale::style translations, media with image crop, colour fields, key figures (./data), markdown, the admin screens ./workers, ./translations, ./issues, ./database (schema diff), ./crons, status text roles, ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form or admin screen, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast fails or status text is too light, or URL filters get lost."
 metadata:
   author: mgamadeus
-  version: 0.3.1
+  version: 0.3.2
 ---
 
 # ddd-admin-ui specialist
@@ -40,6 +40,9 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | a short form in a dialog (rename, a reason) | `FormDialog` (`form` optional: react-hook-form or plain state) | form |
 | drawer state in the URL (`?edit=<id>`, `?create=1`) | `useEntityDrawer` with `useNextDrawerUrlAdapter` | logic, next |
 | a text per content locale | `useEntityTranslations` + `FormTranslatableInput` / `FormTranslatableMarkdown` | logic, translations |
+| one text per language plus the field's store (`{ de, en }` call sites) | `TranslatableLanguageInput` (`languageTextsOf` / `storeWithLanguageTexts`) | translations, logic |
+| tabs only for offered locales; the edited key per field (FORMAL, else INFORMAL) | `useEntityTranslations({ offeredTabsOnly, editedKeyPerField })` | logic |
+| Shift-click ranges, a header that sticks to the page over a sideways scroller, a table that fills its card | `useRowSelection({ rangeSelection })`, `EntityListTable` `selectionHitArea`, `stickyHeader="page"`, `fillWidth` | logic, list |
 | a media reference | `FormMediaItemField` (+ the host's `MediaItemPickerDialog`) | media |
 | a confirmation from screen code | `useConfirm()` → `confirm(options)` (the provider draws it; `requirePhrase` for a typed name) | logic |
 | a confirmation inside a block with its own dialog | `useConfirmDialog` (returns `{ confirm, dialog }`) | form |

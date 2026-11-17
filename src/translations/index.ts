@@ -12,6 +12,15 @@ export { TranslatableField } from './TranslatableField.tsx';
 export type { TranslatableFieldBaseProps } from './TranslatableField.tsx';
 export { TranslatableInput } from './TranslatableInput.tsx';
 export type { TranslatableInputProps } from './TranslatableInput.tsx';
+export { TranslatableLanguageInput } from './TranslatableLanguageInput.tsx';
+export type { LanguageTextsChange, TranslatableLanguageInputProps } from './TranslatableLanguageInput.tsx';
+export {
+  languageEditedKey,
+  languageFieldTabs,
+  languageTextsOf,
+  storeWithLanguageTexts,
+  translationFieldKey,
+} from '../logic/pure/locales.ts';
 export { TranslatableMarkdown } from './TranslatableMarkdown.tsx';
 export type { MarkdownEditorRenderArgs, TranslatableMarkdownProps } from './TranslatableMarkdown.tsx';
 export { TranslationControls } from './TranslationControls.tsx';

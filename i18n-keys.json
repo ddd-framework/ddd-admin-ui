@@ -1,6 +1,6 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
@@ -1188,6 +1188,14 @@
       "hint": "Button in a list toolbar that resets all active filters at once. It only appears while at least one filter is set."
     },
     {
+      "key": "Clear other languages",
+      "text": "Clear other languages",
+      "files": [
+        "translations/TranslatableField.tsx"
+      ],
+      "hint": "Button in the label row of a translatable text field in an admin form, and the confirm button of the dialog that follows: deletes the texts of every language except the one being edited. Imperative."
+    },
+    {
       "key": "Clear search",
       "text": "Clear search",
       "files": [
@@ -1195,6 +1203,14 @@
         "list/SearchField.tsx"
       ],
       "hint": "Outlined button in the empty state of a list when a search or filter found nothing; it resets the search so all rows show again. Imperative."
+    },
+    {
+      "key": "Clear the other languages?",
+      "text": "Clear the other languages?",
+      "files": [
+        "translations/TranslatableField.tsx"
+      ],
+      "hint": "Title of a confirmation dialog in a translatable text field of an admin form; asks whether to delete the texts of every language except the one being edited."
     },
     {
       "key": "Clear__selection-action",
@@ -1230,6 +1246,15 @@
         "form/FormDrawer.tsx"
       ],
       "hint": "Accessible label (screen reader and tooltip) of the small X icon button in the corner of a right-side form drawer. Closes the drawer and may ask to discard unsaved changes."
+    },
+    {
+      "key": "Close__form-dialog",
+      "text": "Close",
+      "context": "form-dialog",
+      "files": [
+        "form/FormDialog.tsx"
+      ],
+      "hint": "Button at the bottom of a dialog after its form was submitted and the result is shown (e.g. a created key to copy); closes the dialog. Imperative."
     },
     {
       "key": "Close__sheet-close-button",
@@ -1987,6 +2012,14 @@
         "page/EditableCard.tsx"
       ],
       "hint": "Default accessible name and tooltip of the small pencil icon button in the top-right corner of a settings card; clicking it opens the edit form for that card. Imperative verb."
+    },
+    {
+      "key": "Editing: %language%",
+      "text": "Editing: %language%",
+      "files": [
+        "translations/TranslatableField.tsx"
+      ],
+      "hint": "Small line under a translatable text field in an admin form naming the language whose text the field currently edits. %language% is the spelled-out language name, e.g. German or German · Informal."
     },
     {
       "key": "Ended and reported its stop__worker-process-state",
@@ -7045,6 +7078,14 @@
         "translations/TranslatableField.tsx"
       ],
       "hint": "Body of the confirmation dialog for clearing all translations of one field; warns that the removal becomes permanent after saving the form."
+    },
+    {
+      "key": "This removes the text of every language except %language%. It is gone once you save.",
+      "text": "This removes the text of every language except %language%. It is gone once you save.",
+      "files": [
+        "translations/TranslatableField.tsx"
+      ],
+      "hint": "Body of the confirmation dialog that clears the other languages of a translatable text field. %language% is the spelled-out name of the language being kept, e.g. German."
     },
     {
       "key": "This transport records no runs (messageLog: off); the statistics stay complete.",

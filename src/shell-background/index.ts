@@ -3,4 +3,4 @@
 export { SHADER_BACKGROUND_PROPERTIES, ShaderBackground } from './ShaderBackground.tsx';
 export type { ShaderBackgroundProps } from './ShaderBackground.tsx';
 export { tintShaderPalette } from './shader.ts';
-export type { Rgb, ShaderPalette, ShaderTint } from './shader.ts';
+export type { Rgb, ShaderLook, ShaderPalette, ShaderTint } from './shader.ts';

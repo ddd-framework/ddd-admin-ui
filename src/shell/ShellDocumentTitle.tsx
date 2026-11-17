@@ -24,6 +24,17 @@ export interface ShellDocumentTitleProps<TEntity extends string = string> {
   useEntityLabel?: UseEntityLabel<TEntity>;
   /** Default: the enclosing shell's, else the provider's pathname hook. */
   pathname?: string | null;
+  /**
+   * Page-specific wording: gets the computed title and its parts (the current page first, `appName` last) and
+   * returns the text to set (`null`: leave the title alone on this page).
+   */
+  formatTitle?: (title: string, context: { parts: readonly string[]; pathname: string | null }) => string | null;
+  /**
+   * Keep the title against later writers: after every navigation and whenever something else (a router applying page
+   * metadata after the navigation) changes `<title>`, the computed title is written again. Default `false` (written
+   * only when the computed text changes).
+   */
+  reassert?: boolean;
 }
 
 /** Calls the host hook for one entity crumb and reports its text (renders nothing). */
@@ -48,6 +59,8 @@ export const ShellDocumentTitle = <TEntity extends string = string>({
   navigation,
   useEntityLabel,
   pathname,
+  formatTitle,
+  reassert = false,
 }: ShellDocumentTitleProps<TEntity>) => {
   const { t } = useTranslate();
   const shell = useShellNavigation();
@@ -66,7 +79,8 @@ export const ShellDocumentTitle = <TEntity extends string = string>({
   const named = crumbs.filter(crumb => crumb.kind !== 'group').slice(-Math.max(1, depth));
   const probes = entityHook ? (named.filter(crumb => crumb.kind === 'entity') as EntityCrumb[]) : [];
   const parts = documentTitleParts(crumbs, { depth, appName, entityText: crumb => entityTexts[crumb.key] });
-  const title = crumbs.length === 0 ? (outside === 'app-name' && appName ? appName : null) : parts.join(separator);
+  const computed = crumbs.length === 0 ? (outside === 'app-name' && appName ? appName : null) : parts.join(separator);
+  const title = computed !== null && formatTitle ? formatTitle(computed, { parts, pathname: path }) : computed;
 
   const original = useRef<string | null>(null);
   useEffect(() => {
@@ -74,6 +88,18 @@ export const ShellDocumentTitle = <TEntity extends string = string>({
     if (original.current === null) original.current = document.title;
     document.title = title;
   }, [title]);
+  // `reassert`: written again after a navigation and whenever another writer changes `<title>`
+  useEffect(() => {
+    if (!reassert || title === null) return;
+    void path;
+    if (document.title !== title) document.title = title;
+    if (typeof MutationObserver === 'undefined') return;
+    const observer = new MutationObserver(() => {
+      if (document.title !== title) document.title = title;
+    });
+    observer.observe(document.head, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
+  }, [reassert, title, path]);
   useEffect(
     () => () => {
       if (original.current !== null) document.title = original.current;
