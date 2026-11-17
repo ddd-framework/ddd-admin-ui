@@ -39,3 +39,45 @@ export type {
   TranslationTaskProgress,
   TranslationTaskStatus,
 } from '../logic/react/useTranslationRunner.ts';
+
+// Admin screens on the host's RTK Query api (`createTranslationsApi`): app translation keys with their drawer and
+// completeness, languages, locales, the import from configuration, the entity translator and the content locales.
+export {
+  APP_TRANSLATIONS_TAG,
+  buildTranslationsRequests,
+  createStaticTranslationsApi,
+  createTranslationsApi,
+  DEFAULT_TRANSLATIONS_API_PATHS,
+  LANGUAGES_TAG,
+  LOCALES_TAG,
+  translationsEndpointDefinitions,
+} from './api.ts';
+export type { CreateTranslationsApiOptions, StaticTranslationsData, TranslationsApi, TranslationsApiPaths } from './api.ts';
+export type * from './adminTypes.ts';
+export {
+  APP_TRANSLATION_CONTEXT_OPTIONS,
+  APP_TRANSLATION_WRITING_STYLE_OPTIONS,
+  appTranslationValueLocaleKey,
+  completenessPercent,
+  LANGUAGE_WRITING_STYLES_OPTIONS,
+  sortAppTranslationValues,
+  TEXT_DIRECTION_OPTIONS,
+  toLanguageCodeMap,
+} from './adminFormat.ts';
+export type { LanguageCodeMap } from './adminFormat.ts';
+export { AppTranslationsScreen } from './AppTranslationsScreen.tsx';
+export type { AppTranslationsScreenProps } from './AppTranslationsScreen.tsx';
+export { AppTranslationKeyDrawer } from './AppTranslationKeyDrawer.tsx';
+export type { AppTranslationKeyDrawerProps } from './AppTranslationKeyDrawer.tsx';
+export { TranslationCompleteness } from './TranslationCompleteness.tsx';
+export type { TranslationCompletenessProps } from './TranslationCompleteness.tsx';
+export { LanguagesScreen } from './LanguagesScreen.tsx';
+export type { LanguagesScreenProps } from './LanguagesScreen.tsx';
+export { LocalesScreen } from './LocalesScreen.tsx';
+export type { LocaleFlag, LocalesScreenProps } from './LocalesScreen.tsx';
+export { ConfigImportCard, useConfigImport } from './ConfigImportCards.tsx';
+export type { ConfigImport, ConfigImportCardProps, ConfigImportKind } from './ConfigImportCards.tsx';
+export { LOCALE_OBJECT_TYPE, useEntityTranslator } from './useEntityTranslator.ts';
+export type { EntityTranslationRequest, EntityTranslator, UseEntityTranslatorOptions } from './useEntityTranslator.ts';
+export { toContentLocaleKeys, useContentLocales } from './useContentLocales.ts';
+export type { UseContentLocalesOptions } from './useContentLocales.ts';

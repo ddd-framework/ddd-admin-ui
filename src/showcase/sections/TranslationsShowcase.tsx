@@ -7,14 +7,49 @@ import { Form } from '../../form/index.ts';
 import { toTranslatableLocale, useEntityTranslations } from '../../logic/index.ts';
 import { Textarea } from '../../primitives/index.ts';
 import {
+  AppTranslationsScreen,
+  ConfigImportCard,
+  createStaticTranslationsApi,
   FormTranslatableInput,
+  LanguagesScreen,
+  LocalesScreen,
   FormTranslatableMarkdown,
   TranslatableField,
   TranslatableInput,
   TranslatableMarkdown,
   TranslationControls,
 } from '../../translations/index.ts';
+import { showcaseTranslationsData } from '../fixtures.ts';
 import { Sample, Samples } from './PrimitivesShowcase.tsx';
+
+const adminApi = createStaticTranslationsApi(showcaseTranslationsData);
+
+/** The admin screens of `./translations` on sample payloads (no request). */
+export const TranslationAdminShowcase = () => (
+  <div className="space-y-10">
+    <Sample title="AppTranslationsScreen (TranslationCompleteness, AppTranslationKeyDrawer on a row)">
+      <div className="w-full">
+        <AppTranslationsScreen api={adminApi} asSpecimen />
+      </div>
+    </Sample>
+    <Sample title="LanguagesScreen">
+      <div className="w-full">
+        <LanguagesScreen api={adminApi} asSpecimen />
+      </div>
+    </Sample>
+    <Sample title="LocalesScreen">
+      <div className="w-full">
+        <LocalesScreen api={adminApi} asSpecimen />
+      </div>
+    </Sample>
+    <Sample title="ConfigImportCard (MaintenanceActionCard of ./page)">
+      <div className="grid w-full gap-4 md:grid-cols-2">
+        <ConfigImportCard api={adminApi} kind="languages" />
+        <ConfigImportCard api={adminApi} kind="locales" />
+      </div>
+    </Sample>
+  </div>
+);
 
 const LOCALE_KEYS = ['en::FORMAL', 'de::FORMAL', 'de::INFORMAL'];
 const LOCALES = LOCALE_KEYS.map(toTranslatableLocale);

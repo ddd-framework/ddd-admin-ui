@@ -3,6 +3,46 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.2.0
+
+### Framework screens: `./workers` and `./translations`
+
+- New entry `./workers`: the screens of Core's worker monitoring (`WorkersControllerTrait`, mgamadeus/ddd 3.23.1 or
+  later). `createWorkersApi({ baseApi, apiPrefix })` injects the six operations into the host's RTK Query api (tag
+  `AdminUiWorkers`; the restart request invalidates the live reads) and returns the hooks. `WorkersOverviewScreen`:
+  totals as tiles with sparklines, the monitoring-off and sampler banners, the live row per transport with its
+  processes, the throughput table per window, the history of every transport over a window switch (1 h – 14 d), the
+  transports table by state severity, the loops, the restart of all workers (confirmed). `WorkerTransportScreen`:
+  facts, five charts (queue, workers with the configured range, throughput, duration and wait with a logarithmic axis
+  when the maximum dwarfs the average), message classes, live processes, and the tabs Message runs and Processes (with
+  a lifetime timeline). Their parts are exported, with the status maps `WORKER_TRANSPORT_STATE`,
+  `WORKER_PROCESS_STATE`, `WORKER_MESSAGE_OUTCOME` and the payload types. Charts are SVG drawn by the entry (no chart
+  library, no optional peer); a step without a reading is a gap, never a 0.
+- `./translations` gains the admin screens on the application's translation controllers (the entities of
+  mgamadeus/ddd-common-translations and -political): `createTranslationsApi({ baseApi, apiPrefix, paths? })` (tags
+  `AdminUiAppTranslations`, `AdminUiLanguages`, `AdminUiLocales`; a locale write refetches the locales and the
+  completeness), `AppTranslationsScreen` (keys with their values per `locale::style`, search and filters, bulk delete,
+  "Generate all missing"), `AppTranslationKeyDrawer` (key fields, one row per value, a new value),
+  `TranslationCompleteness` (per active locale and writing style, generation per locale and style), `LanguagesScreen`
+  (active and writing styles in place), `LocalesScreen` (`isActive` and the default flags in place), `ConfigImportCard`
+  / `useConfigImport` (import of the configured languages or locales), `useEntityTranslator` (one
+  `translateEntities` request per target locale, for `useTranslationRunner`) and `useContentLocales`.
+- `./page`: `MaintenanceActionCard` — a maintenance action with its run button (write access applies), pending state
+  and the outcome of the last run.
+- `./logic`: the api injection of the screen entries (`InjectableBaseApi`, `ApiQueryHook`, `ApiMutationHook`,
+  `injectEndpointsOnce`, `toQueryString`, `staticQueryHook`, `staticMutationHook`), `useMemoryUrlState` (search
+  parameters in component state for a screen without a router adapter) and `useOptimisticRowPatches` (in-place edits
+  of list rows with rollback).
+- `./showcase`: sections for both screen entries and `MaintenanceActionCard`; the sample payloads
+  `showcaseWorkersData`, `showcaseTranslationsData` (with `createStaticWorkersApi` / `createStaticTranslationsApi`).
+- Import matrix: `./workers` may import logic, i18n, primitives, list and page; `./translations` additionally list and
+  page and, from form, `Form`, `FormActions`, `FormDrawer`, `FormField`, `FormSubmitButton`; `./showcase` also workers.
+- Checks: unit tests of both injections (operations, paths, tags, invalidation; the workers one also on the real RTK
+  Query store where the install has it), `screens-render.mjs` in `test:render` (both entries on the sample payloads,
+  write access disables restart, generation, toggles and imports), and `browser-screens.mjs` in the Next consumer
+  (real RTK Query with an in-memory base query: window switch, restart and refetch, chart tooltip, tabs and filters,
+  the `isActive` toggle with its refetches, the key drawer, the import, 390 px).
+
 ## 0.1.0
 
 First stable release: 0.1.0-rc.6 plus the description fix below. Published under the `latest` dist-tag; prereleases

@@ -5,3 +5,4 @@ export type { ShowcaseProps, ShowcaseSection, ShowcaseTheme } from './Showcase.t
 export type { NotifySonnerLoader, NotifySonnerModule } from './sections/OptionalShowcase.tsx';
 export { SHOWCASE_COVERAGE } from './coverage.ts';
 export type { ShowcaseEntryCoverage } from './coverage.ts';
+export { SHOWCASE_NOW_MS, showcaseTranslationsData, showcaseWorkersData } from './fixtures.ts';

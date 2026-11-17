@@ -14,6 +14,8 @@
 #         FormActions, FormSubmitButton, AddEntityButton, EntityListBulkBar and the headers without the props of
 #         0.1.0-rc.6 render as in 0.1.0-rc.5 (form-actions-snapshot.html); WriteAccessProvider disables write controls
 #         a status map's translation context reaches StatusBadge
+#         the ./workers and ./translations screens render on the showcase's sample payloads (static apis); write access
+#         disables restart, generation, toggles and imports; the entity translator and the content locales
 #     the shipped i18n manifest matches the installed package (ddd-admin-ui-i18n-manifest --check)
 #   next      a Next 16 app router project with Tailwind 4:
 #     T1  `next build`; the server page's metadata title is m('Users'), pure helpers render on the server
@@ -31,6 +33,9 @@
 #         FormActions (focus nowhere, in another form, a disabled primary, a drawer footer, nested dialogs), header slots
 #         (closest slot, form attribute, floating pill) and useConfirm (Escape, focus, queue, phrase, drawer, two
 #         providers, Strict Mode, unmount)
+#         (browser) the ./workers and ./translations screens on RTK Query (app/screens, @reduxjs/toolkit and react-redux
+#         added to the app): window switch, restart and its refetch, chart tooltip, tabs, the isActive toggle and its
+#         refetches, the key drawer, the import from configuration, 390 px
 #     T7  (browser) a select inside a dialog inside a sheet, and inside a host overlay at z-index 10000 with
 #         --layer-popover: 10001, is clickable (with a negative control at the default layer)
 #   link-skills  `ddd-admin-ui link-skills` links the shipped skill
@@ -119,6 +124,8 @@ node showcase-render.mjs
 node showcase-build.mjs
 echo "── links through the provider's link component keep sticky parameters"
 node sticky-links.mjs
+echo "── ./workers and ./translations screens on the static apis (server render, write access)"
+node screens-render.mjs
 echo "── shipped i18n manifest"
 if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-i18n-manifest --check; else pnpm exec ddd-admin-ui-i18n-manifest --check; fi
 
@@ -127,6 +134,8 @@ APP="$WORK/next-app"
 install_into "$APP" "${PEERS[@]}" "${TYPES[@]}" "next@^16" sonner "tailwindcss@^4" "@tailwindcss/postcss@^4" tw-animate-css playwright-core
 cp -R "$HERE/fixtures/next-app/." "$APP/"
 cd "$APP"
+echo "── screens: RTK Query for the ./workers and ./translations fixtures (app/screens)"
+if [ "$PM" = pnpm ]; then pnpm add @reduxjs/toolkit react-redux; else npm install --no-audit --no-fund @reduxjs/toolkit react-redux; fi
 echo "── T1 next build"
 NEXT_TELEMETRY_DISABLED=1 ./node_modules/.bin/next build
 echo "── T1 / T5 build output"
@@ -153,6 +162,8 @@ else
   node browser.mjs "http://127.0.0.1:$PORT"
   echo "── form dialog, save shortcut, header slot, confirmations (headless browser)"
   node browser-dialogs.mjs "http://127.0.0.1:$PORT"
+  echo "── ./workers and ./translations screens on RTK Query (headless browser)"
+  node browser-screens.mjs "http://127.0.0.1:$PORT"
   kill $SERVER_PID 2>/dev/null || true
 fi
 

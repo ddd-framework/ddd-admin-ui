@@ -1,6 +1,6 @@
 ---
 name: ddd-admin-ui-specialist
-description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend the package. Covers entries, import matrix, host setup (AdminUiProvider above every page, theme.css, components.css, tokens.json with ddd-admin-ui-check-tokens, one Radix copy with ddd-admin-ui-check-radix), list pages with URL filters, bulk actions, wide tables (tracks, pins, sort), the segmented control, the showcase, detail shells, form drawers and dialogs (FormDialog), the save shortcut, FormActions in a header slot, useConfirm with typed phrases, write access (WriteAccessProvider), server errors, the unsaved-changes guard, locale::style translations, media fields, layers, i18n-keys.json, server vs client files, adding a block. Use when building or reviewing a list, detail, form or dialog screen, a page fails with Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form or none, a confirm answers false, write controls must go off for read-only users, a table squeezes, an overlay misbehaves, or URL filters get lost."
+description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it. Covers entries, import matrix, host setup (AdminUiProvider above every page, theme.css, components.css, tokens.json, ddd-admin-ui-check-tokens, ddd-admin-ui-check-radix), list pages with URL filters, bulk actions, wide tables (tracks, pins, sort), the segmented control, the showcase, detail shells, form drawers and dialogs, the save shortcut, FormActions in a header slot, useConfirm, WriteAccessProvider, server errors, the unsaved-changes guard, locale::style translations, media fields, workers and translation admin screens, layers, i18n-keys.json, client files, adding a block. Use when building or reviewing a list, detail, form or dialog screen, a page fails with Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form or none, a confirm answers false, write controls must go off for read-only users, a table squeezes, an overlay misbehaves, URL filters get lost, or a workers or translations admin screen is needed."
 metadata:
   author: mgamadeus
   version: 0.1.0
@@ -41,6 +41,10 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | a confirmation inside a block with its own dialog | `useConfirmDialog` (returns `{ confirm, dialog }`) | form |
 | write controls off for a read-only user | `WriteAccessProvider value={{ allowed, reason }}`, `useWriteAccess()`, `ignoreWriteAccess` on reading controls | logic |
 | a toast | `notify.success / info / error / loading / submitError` | logic |
+| the workers monitoring (overview, transport, runs, processes, restart) | `createWorkersApi({ baseApi, apiPrefix })` + `WorkersOverviewScreen` / `WorkerTransportScreen` | workers |
+| app translations, languages, locales, import from configuration | `createTranslationsApi({ baseApi, apiPrefix })` + `AppTranslationsScreen` / `LanguagesScreen` / `LocalesScreen` / `ConfigImportCard` | translations |
+| AI translation of an entity form, content locales from the active locales | `useEntityTranslator(api)` + `useTranslationRunner`, `useContentLocales(api)` | translations, logic |
+| a maintenance action (run, pending, last outcome) | `MaintenanceActionCard` | page |
 
 ## Rules that fail silently
 
@@ -183,6 +187,18 @@ const tabs = useEntityTranslations({ fields: ['name'], locales: ['en::FORMAL', '
 ```
 
 A server violation on `translations.name` shows with the field's label ("Display name: …").
+
+### Framework screens on the host's api
+
+```ts
+export const workersApi = createWorkersApi({ baseApi: adminApi, apiPrefix: '/api/admin/maintenance/workers' });
+export const translationsApi = createTranslationsApi({ baseApi: adminApi, apiPrefix: '/api/admin/common', paths: { appTranslations: 'app-translations' } });
+```
+
+Call them once at module scope with the host's RTK Query api (the React hooks module); screens take the result as
+`api`, links come from the provider's `linkComponent`, writes follow `WriteAccessProvider`, URL state needs the host's
+adapters (`urlStateAdapter`, `drawerUrlAdapter`). Workers need mgamadeus/ddd ≥ 3.23.1; the translation routes are the
+application's controllers (paths in `README.md`). For reviews and tests: `createStaticWorkersApi(showcaseWorkersData)`.
 
 ## Adding a block to the package
 

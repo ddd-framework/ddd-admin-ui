@@ -4,6 +4,46 @@
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
+      "key": "%count% failed",
+      "text": "%count% failed",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a number of failed jobs."
+    },
+    {
+      "key": "%count% handled",
+      "text": "%count% handled",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a number of finished jobs."
+    },
+    {
+      "key": "%count% in work",
+      "text": "%count% in work",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a number of jobs being handled now."
+    },
+    {
+      "key": "%count% stuck",
+      "text": "%count% stuck",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile hint: how many transports are stuck."
+    },
+    {
+      "key": "%count% waiting",
+      "text": "%count% waiting",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a number of waiting jobs (may end with + when some queues were not counted)."
+    },
+    {
       "key": "%done% %count% %noun%",
       "text": "%done% %count% %noun%",
       "files": [
@@ -26,6 +66,22 @@
         "i18n/serverMessages.ts"
       ],
       "hint": "Error message from the server when a record cannot be loaded: it does not exist or the signed-in user may not see it. %entity% is the technical English record type name (e.g. Campaign, Challenge) and stays as it is."
+    },
+    {
+      "key": "%handled% handled · %failed% failed",
+      "text": "%handled% handled · %failed% failed",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): process timeline tooltip; both are numbers of jobs."
+    },
+    {
+      "key": "%host% · pid %pid%",
+      "text": "%host% · pid %pid%",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): one worker process in the restart result; %host% is the machine or pod name, %pid% the process id."
     },
     {
       "key": "%label% (%count%)",
@@ -60,12 +116,28 @@
       "hint": "Error message shown when a picked file is not an image during upload. %name% is the file name, for example holiday-photo.pdf."
     },
     {
+      "key": "%percent% % of the last hour",
+      "text": "%percent% % of the last hour",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile hint: the failed share of the jobs of the last hour; %percent% is a number."
+    },
+    {
       "key": "%progress% %nouns%… %done%/%total%",
       "text": "%progress% %nouns%… %done%/%total%",
       "files": [
         "logic/pure/runSequential.ts"
       ],
       "hint": "Progress toast of a bulk action running on many selected rows. %progress% is a verb like Deleting, %nouns% the plural item name like tracks, %done%/%total% e.g. 2/5."
+    },
+    {
+      "key": "%thrown% thrown · %caught% caught",
+      "text": "%thrown% thrown · %caught% caught",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): how failures split: thrown = an exception left the handler, caught = the handler logged an error and returned; both are numbers."
     },
     {
       "key": "%title% sections",
@@ -76,6 +148,62 @@
       "hint": "Accessible name (screen reader label) of the sub-tab bar below a section heading. %title% is the section title, e.g. Top riders."
     },
     {
+      "key": "%value% /h",
+      "text": "%value% /h",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a rate per hour; %value% is a number."
+    },
+    {
+      "key": "%value% /min",
+      "text": "%value% /min",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a rate per minute; %value% is a number."
+    },
+    {
+      "key": "(%thrown% thrown · %caught% caught)",
+      "text": "(%thrown% thrown · %caught% caught)",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): after a failure count: how it splits; both are numbers."
+    },
+    {
+      "key": "(plural)",
+      "text": "(plural)",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): marker after a translated value that is the plural form."
+    },
+    {
+      "key": "A new app translation key, stored in the database.",
+      "text": "A new app translation key, stored in the database.",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: subtitle of the drawer while creating a new key."
+    },
+    {
+      "key": "A restart was requested; a live process has not stopped for it yet",
+      "text": "A restart was requested; a live process has not stopped for it yet",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tooltip of the 'Restart requested' badge."
+    },
+    {
+      "key": "A stopping process and its successor overlap, or the range changed",
+      "text": "A stopping process and its successor overlap, or the range changed",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tooltip when more processes run than configured."
+    },
+    {
       "key": "Account not found or current Auth Account is not authorized to access it",
       "text": "Account not found or current Auth Account is not authorized to access it",
       "files": [
@@ -84,12 +212,72 @@
       "hint": "Error message from the server when a user account cannot be loaded: it does not exist or the signed-in user may not see it."
     },
     {
+      "key": "Actions__table-column",
+      "text": "Actions",
+      "context": "table-column",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): hidden header of the column with the row buttons."
+    },
+    {
+      "key": "Active",
+      "text": "Active",
+      "files": [
+        "translations/LanguagesScreen.tsx",
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Languages and locales admin: column header, filter and switch label — whether the language or locale is in use."
+    },
+    {
+      "key": "Active: %name%",
+      "text": "Active: %name%",
+      "files": [
+        "translations/LanguagesScreen.tsx"
+      ],
+      "hint": "Languages admin screen: accessible name of the active switch of a row; %name% is the language name."
+    },
+    {
       "key": "Add %entity%",
       "text": "Add %entity%",
       "files": [
         "page/PageToolbar.tsx"
       ],
       "hint": "Label of the primary button at the top right of a list page that creates a new item. %entity% is the singular item name, e.g. World or Push Notification. Imperative."
+    },
+    {
+      "key": "Add a translation",
+      "text": "Add a translation",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: heading of the form that adds a translation of the key in one more language."
+    },
+    {
+      "key": "Add__action",
+      "text": "Add",
+      "context": "action",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: button that adds the new translation value (an action, verb)."
+    },
+    {
+      "key": "Alive, waiting for messages__worker-process-state",
+      "text": "Alive, waiting for messages",
+      "context": "worker-process-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker process: description of Running."
+    },
+    {
+      "key": "All transports",
+      "text": "All transports",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): throughput table: the row of every queue together."
     },
     {
       "key": "All__filter-option",
@@ -101,6 +289,39 @@
       "hint": "On the admin UI Showcase page (Maintenance), label of the quick-filter pill that clears the status filter and shows every item. Single word."
     },
     {
+      "key": "An exception left the handler__worker-message-outcome",
+      "text": "An exception left the handler",
+      "context": "worker-message-outcome",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Outcome badge of one processed job (message run): description of Thrown."
+    },
+    {
+      "key": "App translations",
+      "text": "App translations",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): page title."
+    },
+    {
+      "key": "Asked %processes% to restart",
+      "text": "Asked %processes% to restart",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): dialog title after the restart request; %processes% is a count like '3 processes'."
+    },
+    {
+      "key": "Attempt",
+      "text": "Attempt",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): column header: which delivery attempt of the job this run was."
+    },
+    {
       "key": "Auto-translate",
       "text": "Auto-translate",
       "files": [
@@ -109,12 +330,104 @@
       "hint": "Button next to a translatable text field that fills the other languages automatically from the current text by AI. Imperative."
     },
     {
+      "key": "Autoscaled %min%–%max%",
+      "text": "Autoscaled %min%–%max%",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): the transport's configured scaling: between %min% and %max% worker processes."
+    },
+    {
+      "key": "Autoscaled between %min% and %max%",
+      "text": "Autoscaled between %min% and %max%",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tooltip of the process range; %min% and %max% are process counts."
+    },
+    {
+      "key": "Average and maximum handling time over the window",
+      "text": "Average and maximum handling time over the window",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: accessible description of the chart."
+    },
+    {
+      "key": "Average and maximum queue wait over the window",
+      "text": "Average and maximum queue wait over the window",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: accessible description of the chart."
+    },
+    {
+      "key": "Average__chart-series",
+      "text": "Average",
+      "context": "chart-series",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: series name: the average."
+    },
+    {
+      "key": "Avg duration (%minutes% min)",
+      "text": "Avg duration (%minutes% min)",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): label: average handling time of a job over the last %minutes% minutes."
+    },
+    {
+      "key": "Avg duration · wait",
+      "text": "Avg duration · wait",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header: average handling time and average queue wait."
+    },
+    {
+      "key": "Avg wait (%minutes% min)",
+      "text": "Avg wait (%minutes% min)",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): label: average time a job waited in the queue over the last %minutes% minutes."
+    },
+    {
+      "key": "Back to workers",
+      "text": "Back to workers",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): back link to the workers overview."
+    },
+    {
+      "key": "Backlog__worker-transport-state",
+      "text": "Backlog",
+      "context": "worker-transport-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker transport (queue): jobs wait while every process works."
+    },
+    {
       "key": "Bulk actions",
       "text": "Bulk actions",
       "files": [
         "list/EntityListBulkBar.tsx"
       ],
       "hint": "Accessible name (screen-reader label) of the toolbar that appears above a list when rows are selected, holding actions that apply to all selected rows."
+    },
+    {
+      "key": "Busy__worker-process-state",
+      "text": "Busy",
+      "context": "worker-process-state",
+      "files": [
+        "workers/status.ts",
+        "workers/transport.tsx"
+      ],
+      "hint": "Status badge of a worker process: handling a job (it cannot report while it works)."
     },
     {
       "key": "Cancel",
@@ -132,6 +445,16 @@
         "primitives/confirmDialogView.tsx"
       ],
       "hint": "Button on the left of a generic confirmation dialog that dismisses it without doing the action. Shown when the caller did not set its own label."
+    },
+    {
+      "key": "Cancel__dialog-action",
+      "text": "Cancel",
+      "context": "dialog-action",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx",
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Button that closes a dialog or drawer without doing anything (workers restart dialog, translation key drawer)."
     },
     {
       "key": "Cancel__form-dialog",
@@ -159,6 +482,23 @@
         "translations/TranslationControls.tsx"
       ],
       "hint": "Status badge label (short pill) in lists, cards and detail views, describing the state of a partner contract. Keep it short, like a status word."
+    },
+    {
+      "key": "Caught",
+      "text": "Caught",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): filter chip: runs whose handler logged an error and returned."
+    },
+    {
+      "key": "Caught__worker-message-outcome",
+      "text": "Caught",
+      "context": "worker-message-outcome",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Outcome badge of one processed job (message run): the handler logged an error and returned."
     },
     {
       "key": "Change__media-field-action",
@@ -272,6 +612,14 @@
       "hint": "Screen-reader label of the X icon in the corner of a side panel (sheet) that slides in from the screen edge. Imperative: closes the panel."
     },
     {
+      "key": "Code",
+      "text": "Code",
+      "files": [
+        "translations/LanguagesScreen.tsx"
+      ],
+      "hint": "Languages admin screen: column header and filter label: the two-letter language code (ISO 639-1, e.g. de)."
+    },
+    {
       "key": "Collapse %title%",
       "text": "Collapse %title%",
       "files": [
@@ -295,6 +643,22 @@
         "primitives/confirmDialogView.tsx"
       ],
       "hint": "Button on the right of a generic confirmation dialog that carries out the action asked about. Shown when the caller did not set its own label."
+    },
+    {
+      "key": "Console commands the cluster runs in a loop. Listed from the worker list, not monitored.",
+      "text": "Console commands the cluster runs in a loop. Listed from the worker list, not monitored.",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): description of the loops section."
+    },
+    {
+      "key": "Context of %label%",
+      "text": "Context of %label%",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: accessible name of the singular/plural select of a value; %label% names the value, e.g. a locale like de::INFORMAL."
     },
     {
       "key": "Copied",
@@ -322,12 +686,45 @@
       "hint": "Accessible label (screen reader and tooltip) of the small button that copies the record ID to the clipboard, shown in the metadata block of every detail screen. %id% is the record ID, for example 4711 or a UUID. Imperative tone."
     },
     {
+      "key": "Copy issue group hash",
+      "text": "Copy issue group hash",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): button that copies the id of the error group to the clipboard."
+    },
+    {
       "key": "Could not copy",
       "text": "Could not copy",
       "files": [
         "list/CopyButton.tsx"
       ],
       "hint": "Error toast when the browser refused to put a value on the clipboard (no permission or an insecure page)."
+    },
+    {
+      "key": "Counted at %time%",
+      "text": "Counted at %time%",
+      "files": [
+        "workers/WorkerTransportScreen.tsx",
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tooltip of a queue count: when it was counted; %time% is a clock time."
+    },
+    {
+      "key": "Country",
+      "text": "Country",
+      "files": [
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Locales admin screen (language + country combinations): column header and filter label: the country code of the locale (e.g. DE)."
+    },
+    {
+      "key": "Create translation key",
+      "text": "Create translation key",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: drawer title and submit button when a new key is created."
     },
     {
       "key": "Create “%term%”",
@@ -345,6 +742,72 @@
         "page/EntityMetadata.tsx"
       ],
       "hint": "Label in the metadata block of a detail screen, placed before the date and time the record was created, for example 'Created 12 Nov 2026, 10:15'. Keep it short."
+    },
+    {
+      "key": "Creates or updates every language of the configuration, matched by language code.",
+      "text": "Creates or updates every language of the configuration, matched by language code.",
+      "files": [
+        "translations/ConfigImportCards.tsx"
+      ],
+      "hint": "Import of the configured languages or locales (maintenance action): description of the languages import."
+    },
+    {
+      "key": "Creates or updates every locale of the configuration, matched by language and country code.",
+      "text": "Creates or updates every locale of the configuration, matched by language and country code.",
+      "files": [
+        "translations/ConfigImportCards.tsx"
+      ],
+      "hint": "Import of the configured languages or locales (maintenance action): description of the locales import."
+    },
+    {
+      "key": "Current message",
+      "text": "Current message",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): column header: the job a process handles now."
+    },
+    {
+      "key": "Default for the country",
+      "text": "Default for the country",
+      "files": [
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Locales admin screen (language + country combinations): column header and switch: the locale is the default one of its country."
+    },
+    {
+      "key": "Default for the language",
+      "text": "Default for the language",
+      "files": [
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Locales admin screen (language + country combinations): column header and switch: the locale is the default one of its language."
+    },
+    {
+      "key": "Delete this translation value?",
+      "text": "Delete this translation value?",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: title of the confirmation before one translated value of the key is deleted."
+    },
+    {
+      "key": "Delete__action",
+      "text": "Delete",
+      "context": "action",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx",
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "Button that deletes (an action, verb), in the app translations admin."
+    },
+    {
+      "key": "Dev only",
+      "text": "Dev only",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tag: the transport runs only on development stages."
     },
     {
       "key": "Discard changes?",
@@ -373,6 +836,31 @@
       "hint": "Button in the AI translation panel that hides the finished progress list of the last translation run. Imperative."
     },
     {
+      "key": "Dispatch to handler start per step; a message without a dispatch time has none.",
+      "text": "Dispatch to handler start per step; a message without a dispatch time has none.",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: description of the queue wait chart."
+    },
+    {
+      "key": "Do not translate automatically",
+      "text": "Do not translate automatically",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: checkbox: the key is skipped by the automatic (AI) translation."
+    },
+    {
+      "key": "Done__dialog-action",
+      "text": "Done",
+      "context": "dialog-action",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Button that closes the dialog after the action finished (workers restart dialog)."
+    },
+    {
       "key": "Done__translation-status",
       "text": "Done",
       "context": "translation-status",
@@ -380,6 +868,22 @@
         "translations/TranslationControls.tsx"
       ],
       "hint": "Status badge of one language in the translation progress list: the translation finished successfully."
+    },
+    {
+      "key": "Duration",
+      "text": "Duration",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): column header and chart title: how long a job took."
+    },
+    {
+      "key": "Each one stops after its current message and is started again. Its stop shows as “Restart requested” under Processes.",
+      "text": "Each one stops after its current message and is started again. Its stop shows as “Restart requested” under Processes.",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): restart result: what happens to the asked processes."
     },
     {
       "key": "Edit__action",
@@ -391,6 +895,15 @@
       "hint": "Default accessible name and tooltip of the small pencil icon button in the top-right corner of a settings card; clicking it opens the edit form for that card. Imperative verb."
     },
     {
+      "key": "Ended and reported its stop__worker-process-state",
+      "text": "Ended and reported its stop",
+      "context": "worker-process-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker process: description of Stopped."
+    },
+    {
       "key": "Enter %language% text…",
       "text": "Enter %language% text…",
       "files": [
@@ -399,12 +912,127 @@
       "hint": "Placeholder of a text input in a translatable field; %language% is the name of the active language tab, e.g. 'German'."
     },
     {
+      "key": "Error",
+      "text": "Error",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): column header: the error of a job run."
+    },
+    {
+      "key": "Every live process stops after its current message and is started again with the current code and settings. A process inside a long job finishes that job first; nothing is scaled and no message is lost.",
+      "text": "Every live process stops after its current message and is started again with the current code and settings. A process inside a long job finishes that job first; nothing is scaled and no message is lost.",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): restart confirmation: what a restart request does."
+    },
+    {
+      "key": "Every transport over the window; point at a chart to read one step.",
+      "text": "Every transport over the window; point at a chart to read one step.",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): description of the history charts section."
+    },
+    {
       "key": "Export to Excel",
       "text": "Export to Excel",
       "files": [
         "page/PageToolbar.tsx"
       ],
       "hint": "Sample text of the outline button specimen in the UI showcase; imperative, exports a list as a spreadsheet. Maintenance UI showcase screen, Buttons section."
+    },
+    {
+      "key": "Failed",
+      "text": "Failed",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): filter chip: failed job runs."
+    },
+    {
+      "key": "Failed (%minutes% min)",
+      "text": "Failed (%minutes% min)",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): label: failed jobs in the last %minutes% minutes."
+    },
+    {
+      "key": "Failed messages in the last hour",
+      "text": "Failed messages in the last hour",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): accessible description of a small chart."
+    },
+    {
+      "key": "Failed to delete keys",
+      "text": "Failed to delete keys",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): error toast when deleting the selected keys failed."
+    },
+    {
+      "key": "Failed to delete value",
+      "text": "Failed to delete value",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: error toast when deleting one translated value failed."
+    },
+    {
+      "key": "Failed to generate translations",
+      "text": "Failed to generate translations",
+      "files": [
+        "translations/AppTranslationsScreen.tsx",
+        "translations/TranslationCompleteness.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): error toast when starting the AI generation failed."
+    },
+    {
+      "key": "Failed to save key",
+      "text": "Failed to save key",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: error toast when saving the key failed."
+    },
+    {
+      "key": "Failed to save value",
+      "text": "Failed to save value",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: error toast when saving one translated value failed."
+    },
+    {
+      "key": "Failed to update the language",
+      "text": "Failed to update the language",
+      "files": [
+        "translations/LanguagesScreen.tsx"
+      ],
+      "hint": "Languages admin screen: error toast when saving a change of a language failed."
+    },
+    {
+      "key": "Failed to update the locale",
+      "text": "Failed to update the locale",
+      "files": [
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Locales admin screen (language + country combinations): error toast when saving a change of a locale failed."
+    },
+    {
+      "key": "Failed__chart-series",
+      "text": "Failed",
+      "context": "chart-series",
+      "files": [
+        "workers/history.tsx",
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: series name: failed jobs."
     },
     {
       "key": "Failed__translation-status",
@@ -416,12 +1044,95 @@
       "hint": "Status badge label (short pill) in lists, cards and detail views, describing the state of a push notification or mail delivery attempt. Keep it short, like a status word. Also used for other status families."
     },
     {
+      "key": "Failed__workers-kpi",
+      "text": "Failed",
+      "context": "workers-kpi",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile label: failed jobs."
+    },
+    {
+      "key": "Failures",
+      "text": "Failures",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): column header: failed jobs of a job class."
+    },
+    {
+      "key": "Filter by key",
+      "text": "Filter by key",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): accessible name of the key search field."
+    },
+    {
+      "key": "Filter by name",
+      "text": "Filter by name",
+      "files": [
+        "translations/LanguagesScreen.tsx",
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Languages and locales admin: accessible name of the name search field."
+    },
+    {
       "key": "Filters",
       "text": "Filters",
       "files": [
         "list/EntityListToolbar.tsx"
       ],
       "hint": "Button text in a list toolbar that opens or closes the collapsible panel with extra filters. Hidden on phones, where only the icon shows."
+    },
+    {
+      "key": "Finished",
+      "text": "Finished",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): column header: finished jobs of a job class."
+    },
+    {
+      "key": "Finished messages per step and transport, failed ones included.",
+      "text": "Finished messages per step and transport, failed ones included.",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: description; a step is one time bucket of the chart."
+    },
+    {
+      "key": "Finished messages per step, every transport together.",
+      "text": "Finished messages per step, every transport together.",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: description; a step is one time bucket of the chart."
+    },
+    {
+      "key": "Finished messages per step; redelivered = retries.",
+      "text": "Finished messages per step; redelivered = retries.",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: description of the throughput chart."
+    },
+    {
+      "key": "Finished messages per transport over the window",
+      "text": "Finished messages per transport over the window",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: accessible description of the chart."
+    },
+    {
+      "key": "Fixed at %max%",
+      "text": "Fixed at %max%",
+      "files": [
+        "workers/WorkerTransportScreen.tsx",
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): configured worker count without autoscaling; %max% is the number of processes."
     },
     {
       "key": "Form sections",
@@ -432,12 +1143,196 @@
       "hint": "Accessible label (aria-label) of the small sticky navigation bar at the top of a long admin form (challenge, campaign) that jumps between its panels."
     },
     {
+      "key": "Formal",
+      "text": "Formal",
+      "files": [
+        "translations/TranslationCompleteness.tsx",
+        "translations/adminFormat.ts"
+      ],
+      "hint": "Writing style (form of address): formal, e.g. German 'Sie'. Translation admin screens."
+    },
+    {
+      "key": "Formal and informal",
+      "text": "Formal and informal",
+      "files": [
+        "translations/adminFormat.ts"
+      ],
+      "hint": "Languages admin screen: writing styles option: the language supports both forms of address."
+    },
+    {
+      "key": "Generate all missing",
+      "text": "Generate all missing",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): button: AI-generates every missing translation."
+    },
+    {
+      "key": "Generate every missing value for every active locale and writing style",
+      "text": "Generate every missing value for every active locale and writing style",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): tooltip of the 'Generate all missing' button."
+    },
+    {
+      "key": "Generate missing formal translations for %locale%",
+      "text": "Generate missing formal translations for %locale%",
+      "files": [
+        "translations/TranslationCompleteness.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): button of a completeness card; %locale% is a locale code like de-DE."
+    },
+    {
+      "key": "Generate missing informal translations for %locale%",
+      "text": "Generate missing informal translations for %locale%",
+      "files": [
+        "translations/TranslationCompleteness.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): button of a completeness card; %locale% is a locale code like de-DE."
+    },
+    {
+      "key": "Generating…",
+      "text": "Generating…",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): 'Generate all missing' button while the request runs."
+    },
+    {
+      "key": "Generation started for %combinations% locale and style combinations, %keys% keys",
+      "text": "Generation started for %combinations% locale and style combinations, %keys% keys",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): success toast; %combinations% is a number of locale/writing style pairs, %keys% a number of keys."
+    },
+    {
+      "key": "Generation started for %locale% (%style%)",
+      "text": "Generation started for %locale% (%style%)",
+      "files": [
+        "translations/TranslationCompleteness.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): success toast; %locale% is a locale code like de-DE, %style% INFORMAL or FORMAL."
+    },
+    {
       "key": "Grid view",
       "text": "Grid view",
       "files": [
         "list/EntityListViewToggle.tsx"
       ],
       "hint": "Tooltip and accessible label of the icon button in a list toolbar that switches the list to a grid of cards."
+    },
+    {
+      "key": "Handled",
+      "text": "Handled",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): filter chip: job runs that finished without error."
+    },
+    {
+      "key": "Handled (%minutes% min)",
+      "text": "Handled (%minutes% min)",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): label: finished jobs in the last %minutes% minutes."
+    },
+    {
+      "key": "Handled / failed",
+      "text": "Handled / failed",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): column header: finished and failed jobs of a process."
+    },
+    {
+      "key": "Handled messages in the last hour",
+      "text": "Handled messages in the last hour",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): accessible description of a small chart."
+    },
+    {
+      "key": "Handled__worker-message-outcome",
+      "text": "Handled",
+      "context": "worker-message-outcome",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Outcome badge of one processed job (message run): finished without error."
+    },
+    {
+      "key": "Handled__workers-kpi",
+      "text": "Handled",
+      "context": "workers-kpi",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile label: finished jobs."
+    },
+    {
+      "key": "Handling a message__worker-process-state",
+      "text": "Handling a message",
+      "context": "worker-process-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker process: description of Busy."
+    },
+    {
+      "key": "Handling time per step.",
+      "text": "Handling time per step.",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: description of the duration chart."
+    },
+    {
+      "key": "Handling time per step. Logarithmic axis: the maximum dwarfs the average.",
+      "text": "Handling time per step. Logarithmic axis: the maximum dwarfs the average.",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: description of the duration chart with a logarithmic scale."
+    },
+    {
+      "key": "Hint: %hint%",
+      "text": "Hint: %hint%",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): under a key in the table: its translator hint; %hint% is the hint text."
+    },
+    {
+      "key": "History__workers-section",
+      "text": "History",
+      "context": "workers-section",
+      "files": [
+        "workers/WorkerTransportScreen.tsx",
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin: section title of the charts over a time window."
+    },
+    {
+      "key": "Host · PID",
+      "text": "Host · PID",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): column header: machine name and process id."
+    },
+    {
+      "key": "ID",
+      "text": "ID",
+      "files": [
+        "translations/AppTranslationsScreen.tsx",
+        "translations/LanguagesScreen.tsx",
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Column header and filter label: the numeric id of a row (translation keys, languages, locales)."
     },
     {
       "key": "ID__entity-id",
@@ -449,6 +1344,127 @@
       "hint": "Label in the metadata block of a detail screen, placed before the record's unique identifier, for example 'ID 4711'. Keep it short, uppercase-friendly."
     },
     {
+      "key": "ISO 639-3",
+      "text": "ISO 639-3",
+      "files": [
+        "translations/LanguagesScreen.tsx"
+      ],
+      "hint": "Languages admin screen: column header and filter label: the three-letter language code standard ISO 639-3 (keep as is)."
+    },
+    {
+      "key": "Idle__worker-transport-state",
+      "text": "Idle",
+      "context": "worker-transport-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker transport (queue): nothing to do."
+    },
+    {
+      "key": "Import from configuration",
+      "text": "Import from configuration",
+      "files": [
+        "translations/LanguagesScreen.tsx",
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Languages and locales admin: header button that imports the configured rows."
+    },
+    {
+      "key": "Import languages from the configuration",
+      "text": "Import languages from the configuration",
+      "files": [
+        "translations/ConfigImportCards.tsx"
+      ],
+      "hint": "Import of the configured languages or locales (maintenance action): title of the languages import card."
+    },
+    {
+      "key": "Import locales from the configuration",
+      "text": "Import locales from the configuration",
+      "files": [
+        "translations/ConfigImportCards.tsx"
+      ],
+      "hint": "Import of the configured languages or locales (maintenance action): title of the locales import card."
+    },
+    {
+      "key": "Import the languages from the configuration?",
+      "text": "Import the languages from the configuration?",
+      "files": [
+        "translations/ConfigImportCards.tsx"
+      ],
+      "hint": "Import of the configured languages or locales (maintenance action): confirmation title before the languages import."
+    },
+    {
+      "key": "Import the locales from the configuration?",
+      "text": "Import the locales from the configuration?",
+      "files": [
+        "translations/ConfigImportCards.tsx"
+      ],
+      "hint": "Import of the configured languages or locales (maintenance action): confirmation title before the locales import."
+    },
+    {
+      "key": "Import__action",
+      "text": "Import",
+      "context": "action",
+      "files": [
+        "translations/ConfigImportCards.tsx"
+      ],
+      "hint": "Import of the configured languages or locales (maintenance action): button that starts the import (an action, verb)."
+    },
+    {
+      "key": "Importing…",
+      "text": "Importing…",
+      "files": [
+        "translations/LanguagesScreen.tsx",
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Languages and locales admin: the import button while the import runs."
+    },
+    {
+      "key": "In work now",
+      "text": "In work now",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile label and column header: jobs being handled right now."
+    },
+    {
+      "key": "In work__chart-series",
+      "text": "In work",
+      "context": "chart-series",
+      "files": [
+        "workers/history.tsx",
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: series name: jobs being handled."
+    },
+    {
+      "key": "In work__live-stat",
+      "text": "In work",
+      "context": "live-stat",
+      "files": [
+        "workers/WorkerTransportScreen.tsx",
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): label of the number of jobs being handled right now."
+    },
+    {
+      "key": "Inferred: Messenger stops without a reason; a lost process reported no stop (stopped = when it was noticed)",
+      "text": "Inferred: Messenger stops without a reason; a lost process reported no stop (stopped = when it was noticed)",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): tooltip of a stop reason."
+    },
+    {
+      "key": "Informal",
+      "text": "Informal",
+      "files": [
+        "translations/TranslationCompleteness.tsx",
+        "translations/adminFormat.ts"
+      ],
+      "hint": "Writing style (form of address): informal, e.g. German 'du'. Translation admin screens."
+    },
+    {
       "key": "Informal__writing-style",
       "text": "Informal",
       "context": "writing-style",
@@ -456,6 +1472,23 @@
         "logic/react/useLocaleName.ts"
       ],
       "hint": "Writing style option: texts address the user informally (German 'du', French 'tu'). Shown in the language menu and account forms. One word, an adjective."
+    },
+    {
+      "key": "Issue group",
+      "text": "Issue group",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): column header: the error group in the error log."
+    },
+    {
+      "key": "Its current message runs longer than the busy limit__worker-process-state",
+      "text": "Its current message runs longer than the busy limit",
+      "context": "worker-process-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker process: description of Silent."
     },
     {
       "key": "Keep editing",
@@ -467,12 +1500,176 @@
       "hint": "Cancel button of the discard dialog; clicking it returns the user to the open form so no edits are lost. Imperative."
     },
     {
+      "key": "Key",
+      "text": "Key",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx",
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): column header and field label: the translation key (the English text that identifies a UI text)."
+    },
+    {
+      "key": "Key saved",
+      "text": "Key saved",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: success toast after the key was saved."
+    },
+    {
+      "key": "Language",
+      "text": "Language",
+      "files": [
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Locales admin screen (language + country combinations): column header and filter label: the language code of the locale (e.g. de)."
+    },
+    {
+      "key": "Language of the new translation",
+      "text": "Language of the new translation",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: accessible name of the language picker of the add-translation form."
+    },
+    {
+      "key": "Language updated",
+      "text": "Language updated",
+      "files": [
+        "translations/LanguagesScreen.tsx"
+      ],
+      "hint": "Languages admin screen: success toast after a language was changed."
+    },
+    {
       "key": "Languages",
       "text": "Languages",
       "files": [
+        "translations/LanguagesScreen.tsx",
         "translations/TranslatableField.tsx"
       ],
       "hint": "Navigation menu entry in the admin sidebar that opens the Languages area. Keep it short, as it is a single menu label."
+    },
+    {
+      "key": "Language…",
+      "text": "Language…",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: placeholder of the language picker (choose a language)."
+    },
+    {
+      "key": "Last %minutes% min",
+      "text": "Last %minutes% min",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header: counts of the last %minutes% minutes."
+    },
+    {
+      "key": "Last 15 min",
+      "text": "Last 15 min",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header: the last 15 minutes."
+    },
+    {
+      "key": "Last 24 h",
+      "text": "Last 24 h",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header: the last 24 hours."
+    },
+    {
+      "key": "Last 5 min",
+      "text": "Last 5 min",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header: the last 5 minutes."
+    },
+    {
+      "key": "Last error",
+      "text": "Last error",
+      "files": [
+        "workers/WorkerTransportScreen.tsx",
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header and label: the most recent error of a transport or job class."
+    },
+    {
+      "key": "Last error %time%: %message%",
+      "text": "Last error %time%: %message%",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tooltip; %time% is a clock time, %message% the error text."
+    },
+    {
+      "key": "Last hour",
+      "text": "Last hour",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header: the last hour."
+    },
+    {
+      "key": "Left to right",
+      "text": "Left to right",
+      "files": [
+        "translations/adminFormat.ts"
+      ],
+      "hint": "Languages admin screen: text direction option (e.g. English)."
+    },
+    {
+      "key": "Live processes",
+      "text": "Live processes",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): section title and table name: the worker processes running now."
+    },
+    {
+      "key": "Live processes per transport.",
+      "text": "Live processes per transport.",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: description while the data loads."
+    },
+    {
+      "key": "Live processes per transport; at most %peak% at once. A process counts from the moment its worker registers: container start and image pull are not visible.",
+      "text": "Live processes per transport; at most %peak% at once. A process counts from the moment its worker registers: container start and image pull are not visible.",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: description; %peak% is the highest number of processes at the same time."
+    },
+    {
+      "key": "Live worker processes and process starts over the window",
+      "text": "Live worker processes and process starts over the window",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: accessible description of the chart."
+    },
+    {
+      "key": "Live worker processes per transport over the window",
+      "text": "Live worker processes per transport over the window",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: accessible description of the chart."
+    },
+    {
+      "key": "Live__workers-section",
+      "text": "Live",
+      "context": "workers-section",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): section title: what is happening right now."
     },
     {
       "key": "Loading",
@@ -483,12 +1680,277 @@
       "hint": "Accessible label of a spinning loader shown while a chart on the activity statistics screens is loading. Screen readers announce it."
     },
     {
+      "key": "Loading completeness",
+      "text": "Loading completeness",
+      "files": [
+        "translations/TranslationCompleteness.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): accessible name of the loading placeholder of the completeness cards."
+    },
+    {
+      "key": "Loading languages",
+      "text": "Loading languages",
+      "files": [
+        "translations/LanguagesScreen.tsx"
+      ],
+      "hint": "Languages admin screen: accessible name of the loading placeholder."
+    },
+    {
+      "key": "Loading locales",
+      "text": "Loading locales",
+      "files": [
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Locales admin screen (language + country combinations): accessible name of the loading placeholder."
+    },
+    {
+      "key": "Loading message runs",
+      "text": "Loading message runs",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): accessible name of the loading placeholder."
+    },
+    {
       "key": "Loading more",
       "text": "Loading more",
       "files": [
         "list/EntityListLoadMore.tsx"
       ],
       "hint": "Accessible name (screen-reader label) of the spinner at the end of a list while the next page of rows is being loaded during infinite scroll."
+    },
+    {
+      "key": "Loading processes",
+      "text": "Loading processes",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): accessible name of the loading placeholder."
+    },
+    {
+      "key": "Loading translation keys",
+      "text": "Loading translation keys",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): accessible name of the loading placeholder of the table."
+    },
+    {
+      "key": "Loading transports",
+      "text": "Loading transports",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): accessible name of the loading placeholder."
+    },
+    {
+      "key": "Locale updated",
+      "text": "Locale updated",
+      "files": [
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Locales admin screen (language + country combinations): success toast after a locale was changed."
+    },
+    {
+      "key": "Locales",
+      "text": "Locales",
+      "files": [
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Locales admin screen (language + country combinations): page title."
+    },
+    {
+      "key": "Loops",
+      "text": "Loops",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): section title: console commands that run in a loop."
+    },
+    {
+      "key": "Lost",
+      "text": "Lost",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): filter chip: processes that vanished without a stop report."
+    },
+    {
+      "key": "Lost (no stop reported)",
+      "text": "Lost (no stop reported)",
+      "files": [
+        "workers/format.ts"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): stop reason of a process that vanished without reporting (killed, crashed)."
+    },
+    {
+      "key": "Lost__worker-process-state",
+      "text": "Lost",
+      "context": "worker-process-state",
+      "files": [
+        "workers/status.ts",
+        "workers/transport.tsx"
+      ],
+      "hint": "Status badge of a worker process: vanished without reporting a stop."
+    },
+    {
+      "key": "Maximum__chart-series",
+      "text": "Maximum",
+      "context": "chart-series",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: series name: the maximum."
+    },
+    {
+      "key": "Memory peak",
+      "text": "Memory peak",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): column header: the highest memory use of a process."
+    },
+    {
+      "key": "Message",
+      "text": "Message",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): column header: the job class and where it was dispatched from."
+    },
+    {
+      "key": "Message class",
+      "text": "Message class",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): column header: the kind of job (class name)."
+    },
+    {
+      "key": "Message classes",
+      "text": "Message classes",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): section title: the kinds of jobs (message classes) the transport handled."
+    },
+    {
+      "key": "Message runs",
+      "text": "Message runs",
+      "files": [
+        "workers/WorkerTransportScreen.tsx",
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): tab and table name: the single processed jobs (message = queued job)."
+    },
+    {
+      "key": "Messages are in work__worker-transport-state",
+      "text": "Messages are in work",
+      "context": "worker-transport-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker transport (queue): description of Working."
+    },
+    {
+      "key": "Messages finished per transport",
+      "text": "Messages finished per transport",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: chart title."
+    },
+    {
+      "key": "Messages finished per transport in the last 5 and 15 minutes, the last hour and the last 24 hours, with the rate and what one worker finished per minute.",
+      "text": "Messages finished per transport in the last 5 and 15 minutes, the last hour and the last 24 hours, with the rate and what one worker finished per minute.",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): description of the throughput table."
+    },
+    {
+      "key": "Messages in work in the last hour",
+      "text": "Messages in work in the last hour",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): accessible description of a small chart."
+    },
+    {
+      "key": "Messages wait and no worker process has run for a while__worker-transport-state",
+      "text": "Messages wait and no worker process has run for a while",
+      "context": "worker-transport-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker transport (queue): description of Stuck."
+    },
+    {
+      "key": "Messages wait while every process works__worker-transport-state",
+      "text": "Messages wait while every process works",
+      "context": "worker-transport-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker transport (queue): description of Backlog."
+    },
+    {
+      "key": "Messages waiting and in work (highest sample per step).",
+      "text": "Messages waiting and in work (highest sample per step).",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: description of the queue chart."
+    },
+    {
+      "key": "Messages waiting and in work over the window",
+      "text": "Messages waiting and in work over the window",
+      "files": [
+        "workers/history.tsx",
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: accessible description of the chart."
+    },
+    {
+      "key": "Messages waiting and in work, every transport together (highest sample per step).",
+      "text": "Messages waiting and in work, every transport together (highest sample per step).",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: description; a sample is one queue count."
+    },
+    {
+      "key": "Messages waiting per transport",
+      "text": "Messages waiting per transport",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: chart title."
+    },
+    {
+      "key": "Messages waiting per transport over the window",
+      "text": "Messages waiting per transport over the window",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: accessible description of the chart."
+    },
+    {
+      "key": "Messenger consumes it, but the worker list has no entry: nobody may start a worker__worker-transport-state",
+      "text": "Messenger consumes it, but the worker list has no entry: nobody may start a worker",
+      "context": "worker-transport-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker transport (queue): description of Undefined; Messenger is the queue library (keep)."
+    },
+    {
+      "key": "Messenger workers: queues, processes and message runs.",
+      "text": "Messenger workers: queues, processes and message runs.",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): page description; Messenger is the name of the job queue library (keep)."
     },
     {
       "key": "More actions",
@@ -508,6 +1970,47 @@
       "hint": "Screen reader only text next to the '...' icon in a shortened breadcrumb trail; announces that further, hidden path levels exist."
     },
     {
+      "key": "Most urgent first. Open a transport for its history, message runs and processes.",
+      "text": "Most urgent first. Open a transport for its history, message runs and processes.",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): description of the transports table."
+    },
+    {
+      "key": "Name",
+      "text": "Name",
+      "files": [
+        "translations/LanguagesScreen.tsx",
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Languages and locales admin: column header, the name of the language or locale."
+    },
+    {
+      "key": "Native name",
+      "text": "Native name",
+      "files": [
+        "translations/LanguagesScreen.tsx"
+      ],
+      "hint": "Languages admin screen: column header and filter label: the language's name in itself (e.g. Deutsch)."
+    },
+    {
+      "key": "Need attention",
+      "text": "Need attention",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile label: transports in a state someone should look at."
+    },
+    {
+      "key": "New translation",
+      "text": "New translation",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: accessible name of the text field for the new translation."
+    },
+    {
       "key": "No",
       "text": "No",
       "files": [
@@ -524,6 +2027,22 @@
       "hint": "Status text next to the Save and Cancel buttons of an edit form, shown while nothing has been changed since the form was loaded or saved."
     },
     {
+      "key": "No data",
+      "text": "No data",
+      "files": [
+        "workers/charts.tsx"
+      ],
+      "hint": "Workers admin chart: tooltip value of a step without a reading (a gap in the chart)."
+    },
+    {
+      "key": "No entry in the worker list",
+      "text": "No entry in the worker list",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): the transport has no entry in the worker configuration."
+    },
+    {
       "key": "No image",
       "text": "No image",
       "files": [
@@ -532,12 +2051,134 @@
       "hint": "Empty-state text inside a dashed placeholder box where an image preview would be, shown when a media item has no image or the file fails to load."
     },
     {
+      "key": "No language found",
+      "text": "No language found",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: language picker: no language matches the search."
+    },
+    {
+      "key": "No languages found",
+      "text": "No languages found",
+      "files": [
+        "translations/LanguagesScreen.tsx"
+      ],
+      "hint": "Languages admin screen: empty table (or no language matches the filters)."
+    },
+    {
+      "key": "No live process right now.",
+      "text": "No live process right now.",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): empty table: no worker process runs now."
+    },
+    {
+      "key": "No live process to ask",
+      "text": "No live process to ask",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): restart result title when no worker process was running."
+    },
+    {
+      "key": "No locales found",
+      "text": "No locales found",
+      "files": [
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Locales admin screen (language + country combinations): empty table (or no locale matches the filters)."
+    },
+    {
       "key": "No media items found",
       "text": "No media items found",
       "files": [
         "media/MediaItemPickerDialog.tsx"
       ],
       "hint": "Empty-state message in the media picker dialog when the search or filter returns no media items (images) to choose from."
+    },
+    {
+      "key": "No message finished in the last 24 hours and every queue is empty.",
+      "text": "No message finished in the last 24 hours and every queue is empty.",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): empty throughput table."
+    },
+    {
+      "key": "No message finished in this window",
+      "text": "No message finished in this window",
+      "files": [
+        "workers/history.tsx",
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: empty chart."
+    },
+    {
+      "key": "No message finished in this window.",
+      "text": "No message finished in this window.",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): empty message classes table."
+    },
+    {
+      "key": "No message run recorded in the retention period.",
+      "text": "No message run recorded in the retention period.",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): empty message runs table."
+    },
+    {
+      "key": "No message run with this outcome.",
+      "text": "No message run with this outcome.",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): no run matches the outcome filter."
+    },
+    {
+      "key": "No message waited in this window",
+      "text": "No message waited in this window",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: empty chart."
+    },
+    {
+      "key": "No message waited or was in work",
+      "text": "No message waited or was in work",
+      "files": [
+        "workers/history.tsx",
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: empty chart."
+    },
+    {
+      "key": "No messages",
+      "text": "No messages",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a transport without jobs in the last hour."
+    },
+    {
+      "key": "No process matches this filter.",
+      "text": "No process matches this filter.",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): no process matches the filter."
+    },
+    {
+      "key": "No process started in this window",
+      "text": "No process started in this window",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: empty chart."
     },
     {
       "key": "No results",
@@ -549,6 +2190,104 @@
       "hint": "Empty-state message inside an opened dropdown picker when the typed search matches none of the options."
     },
     {
+      "key": "No stop reported and no heartbeat: killed, out of memory or host gone__worker-process-state",
+      "text": "No stop reported and no heartbeat: killed, out of memory or host gone",
+      "context": "worker-process-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker process: description of Lost."
+    },
+    {
+      "key": "No translation keys found",
+      "text": "No translation keys found",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): empty table (or no key matches the filters)."
+    },
+    {
+      "key": "No translation returned for %locale%",
+      "text": "No translation returned for %locale%",
+      "files": [
+        "translations/useEntityTranslator.ts"
+      ],
+      "hint": "Error of the AI translation of a form: the server returned no translation for %locale% (a content locale key like de::FORMAL)."
+    },
+    {
+      "key": "No translation values yet.",
+      "text": "No translation values yet.",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: the key has no translated value yet."
+    },
+    {
+      "key": "No translations",
+      "text": "No translations",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): a key without any translated value."
+    },
+    {
+      "key": "No transport is configured.",
+      "text": "No transport is configured.",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): empty transports table."
+    },
+    {
+      "key": "No transport matches your search.",
+      "text": "No transport matches your search.",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): no transport matches the search."
+    },
+    {
+      "key": "No wait time in this window",
+      "text": "No wait time in this window",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: empty queue wait chart."
+    },
+    {
+      "key": "No worker is running and every queue is empty.",
+      "text": "No worker is running and every queue is empty.",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): empty live section."
+    },
+    {
+      "key": "No worker process is running right now: nothing to restart.",
+      "text": "No worker process is running right now: nothing to restart.",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): restart result description when no worker process was running."
+    },
+    {
+      "key": "No worker process of this transport is recorded.",
+      "text": "No worker process of this transport is recorded.",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): empty processes table."
+    },
+    {
+      "key": "No worker process ran in this window",
+      "text": "No worker process ran in this window",
+      "files": [
+        "workers/history.tsx",
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: empty chart."
+    },
+    {
       "key": "No__boolean-flag",
       "text": "No",
       "context": "boolean-flag",
@@ -556,6 +2295,31 @@
         "list/cells.tsx"
       ],
       "hint": "Default label of a yes/no flag cell in a list table, shown with a grey minus when the flag is off, e.g. Active column."
+    },
+    {
+      "key": "Not consumed__worker-transport-state",
+      "text": "Not consumed",
+      "context": "worker-transport-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker transport (queue): configured, but nothing reads this queue."
+    },
+    {
+      "key": "Not counted",
+      "text": "Not counted",
+      "files": [
+        "workers/format.ts"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): the queue was not counted (shown instead of a number)."
+    },
+    {
+      "key": "Not stopped",
+      "text": "Not stopped",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): filter chip: processes that have not stopped."
     },
     {
       "key": "Nothing here yet",
@@ -566,12 +2330,29 @@
       "hint": "Empty-state message shown in a list or table that contains no entries at all, before any search or filter is applied."
     },
     {
+      "key": "Nothing in this window",
+      "text": "Nothing in this window",
+      "files": [
+        "workers/charts.tsx"
+      ],
+      "hint": "Workers admin chart: placeholder when the chart has nothing to show in the chosen time window."
+    },
+    {
       "key": "Nothing matches your search",
       "text": "Nothing matches your search",
       "files": [
         "list/EntityListStatus.tsx"
       ],
       "hint": "Empty-state message shown in a list or table when the current search or filters return no rows. A Clear search button is shown below it."
+    },
+    {
+      "key": "Nothing to do__worker-transport-state",
+      "text": "Nothing to do",
+      "context": "worker-transport-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker transport (queue): description of Idle."
     },
     {
       "key": "One or more of the given values is invalid.",
@@ -582,6 +2363,14 @@
       "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. A multi-select field contains a value that is not one of the allowed options."
     },
     {
+      "key": "Only the worker list and the live queue counts are shown: no processes, history or message runs. Switch it on and restart the workers.",
+      "text": "Only the worker list and the live queue counts are shown: no processes, history or message runs. Switch it on and restart the workers.",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): warning banner when the monitoring is switched off."
+    },
+    {
       "key": "Open original of %title%",
       "text": "Open original of %title%",
       "files": [
@@ -590,12 +2379,195 @@
       "hint": "Screen-reader label of the small link on a media tile that opens the full-size original in a new tab; %title% is the item's title, e.g. 'Logo'."
     },
     {
+      "key": "Other (%count%)",
+      "text": "Other (%count%)",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: legend entry that groups the remaining transports; %count% is how many."
+    },
+    {
+      "key": "Other__stop-reason",
+      "text": "Other",
+      "context": "stop-reason",
+      "files": [
+        "workers/format.ts"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): stop reason of a worker process: another reason."
+    },
+    {
+      "key": "Outcome",
+      "text": "Outcome",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): column header: the result of a job run."
+    },
+    {
+      "key": "Outcome__filter",
+      "text": "Outcome",
+      "context": "filter",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): accessible name of the outcome filter chips."
+    },
+    {
+      "key": "Overview",
+      "text": "Overview",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): tab with facts, charts and live processes."
+    },
+    {
+      "key": "Per worker",
+      "text": "Per worker",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header: jobs one worker process finished per minute."
+    },
+    {
+      "key": "Plural",
+      "text": "Plural",
+      "files": [
+        "translations/adminFormat.ts"
+      ],
+      "hint": "App translations admin, drawer of one translation key: context option of a value: the plural form."
+    },
+    {
+      "key": "Probably failure limit",
+      "text": "Probably failure limit",
+      "files": [
+        "workers/format.ts"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): inferred stop reason: the process stopped after too many failures."
+    },
+    {
+      "key": "Probably memory limit",
+      "text": "Probably memory limit",
+      "files": [
+        "workers/format.ts"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): inferred stop reason: the process reached its memory limit."
+    },
+    {
+      "key": "Probably message limit",
+      "text": "Probably message limit",
+      "files": [
+        "workers/format.ts"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): inferred stop reason: the process handled its maximum number of jobs."
+    },
+    {
+      "key": "Probably time limit",
+      "text": "Probably time limit",
+      "files": [
+        "workers/format.ts"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): inferred stop reason: the process reached its time limit."
+    },
+    {
+      "key": "Process lifetimes",
+      "text": "Process lifetimes",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): title of the timeline of the processes."
+    },
+    {
+      "key": "Process state",
+      "text": "Process state",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): accessible name of the process filter chips."
+    },
+    {
+      "key": "Processes",
+      "text": "Processes",
+      "files": [
+        "workers/WorkerTransportScreen.tsx",
+        "workers/overview.tsx",
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header, label and tab: the worker processes."
+    },
+    {
+      "key": "Processes__chart-series",
+      "text": "Processes",
+      "context": "chart-series",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: series name: worker processes."
+    },
+    {
+      "key": "Production only",
+      "text": "Production only",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tag: the loop runs only in production."
+    },
+    {
       "key": "Property \"%propertyName%\" in class \"%className%\" has to be unique but value \"%value%\" is already in use",
       "text": "Property \"%propertyName%\" in class \"%className%\" has to be unique but value \"%value%\" is already in use",
       "files": [
         "i18n/serverMessages.ts"
       ],
       "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. Another record already uses this value for a field that must be unique. %propertyName% and %className% are technical English names, %value% is the entered value; all stay as they are."
+    },
+    {
+      "key": "Queue",
+      "text": "Queue",
+      "files": [
+        "workers/overview.tsx",
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header and chart title: the waiting jobs of a transport."
+    },
+    {
+      "key": "Queue not set up",
+      "text": "Queue not set up",
+      "files": [
+        "workers/format.ts"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): the queue does not exist yet, so it could not be counted."
+    },
+    {
+      "key": "Queue wait",
+      "text": "Queue wait",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: chart title: time from dispatch to handler start."
+    },
+    {
+      "key": "Queue, all transports",
+      "text": "Queue, all transports",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: chart title: waiting and in-work jobs of every queue together."
+    },
+    {
+      "key": "Received a signal",
+      "text": "Received a signal",
+      "files": [
+        "workers/format.ts"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): stop reason: the process was told to stop by the operating system."
+    },
+    {
+      "key": "Redelivered__chart-series",
+      "text": "Redelivered",
+      "context": "chart-series",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: series name: retried jobs."
     },
     {
       "key": "Refresh token invalid",
@@ -639,6 +2611,120 @@
       "hint": "Title of the red error toast and error box above a form after the server rejected a save because one or more fields are invalid (the fields are listed below it)."
     },
     {
+      "key": "Request restart",
+      "text": "Request restart",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): confirm button of the restart dialog."
+    },
+    {
+      "key": "Requesting…",
+      "text": "Requesting…",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): confirm button while the restart request runs."
+    },
+    {
+      "key": "Requires a singular/plural context",
+      "text": "Requires a singular/plural context",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: checkbox: the key needs separate singular and plural translations."
+    },
+    {
+      "key": "Restart all workers",
+      "text": "Restart all workers",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): button and tooltip: restart every worker process."
+    },
+    {
+      "key": "Restart all workers?",
+      "text": "Restart all workers?",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): title of the restart confirmation for every transport."
+    },
+    {
+      "key": "Restart requested",
+      "text": "Restart requested",
+      "files": [
+        "workers/format.ts",
+        "workers/overview.tsx",
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): badge, filter and stop reason: a restart of the worker processes was requested."
+    },
+    {
+      "key": "Restart requested for %processes%",
+      "text": "Restart requested for %processes%",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): success toast; %processes% is a count like '3 processes'."
+    },
+    {
+      "key": "Restart the workers of %transport%?",
+      "text": "Restart the workers of %transport%?",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): title of the restart confirmation; %transport% is the queue name (code, keep as is)."
+    },
+    {
+      "key": "Restart workers",
+      "text": "Restart workers",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): button on a transport's page that restarts its worker processes."
+    },
+    {
+      "key": "Restart workers of %transport%",
+      "text": "Restart workers of %transport%",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): accessible name of the restart icon button of a row; %transport% is the queue name."
+    },
+    {
+      "key": "Retries",
+      "text": "Retries",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): column header: redelivered jobs."
+    },
+    {
+      "key": "Retry",
+      "text": "Retry",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): button that loads the overview again after an error."
+    },
+    {
+      "key": "Right now, per transport",
+      "text": "Right now, per transport",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): heading of the live section."
+    },
+    {
+      "key": "Right to left",
+      "text": "Right to left",
+      "files": [
+        "translations/adminFormat.ts"
+      ],
+      "hint": "Languages admin screen: text direction option (e.g. Arabic)."
+    },
+    {
       "key": "Row number",
       "text": "Row number",
       "files": [
@@ -647,12 +2733,73 @@
       "hint": "Screen-reader name of the narrow '#' column at the start of a list table that numbers the loaded rows 1, 2, 3 …"
     },
     {
+      "key": "Run__maintenance-action",
+      "text": "Run",
+      "context": "maintenance-action",
+      "files": [
+        "page/MaintenanceActionCard.tsx"
+      ],
+      "hint": "Button of a maintenance action card that starts the action (an action, verb)."
+    },
+    {
+      "key": "Running now",
+      "text": "Running now",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile label: worker processes running now."
+    },
+    {
+      "key": "Running or busy now. A busy process is inside a handler and cannot report until it returns.",
+      "text": "Running or busy now. A busy process is inside a handler and cannot report until it returns.",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): description of the live processes section."
+    },
+    {
+      "key": "Running__worker-process-state",
+      "text": "Running",
+      "context": "worker-process-state",
+      "files": [
+        "workers/status.ts",
+        "workers/transport.tsx"
+      ],
+      "hint": "Status badge of a worker process: alive, waiting for jobs."
+    },
+    {
+      "key": "Running…__maintenance-action",
+      "text": "Running…",
+      "context": "maintenance-action",
+      "files": [
+        "page/MaintenanceActionCard.tsx"
+      ],
+      "hint": "The run button of a maintenance action card while the action runs."
+    },
+    {
       "key": "Save changes",
       "text": "Save changes",
       "files": [
         "i18n/Translate.tsx"
       ],
       "hint": "Sample text of the primary button specimen in the UI showcase; imperative, a typical save action. Maintenance UI showcase screen, Buttons section."
+    },
+    {
+      "key": "Save__action",
+      "text": "Save",
+      "context": "action",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "Button that saves (an action, verb), in the app translations admin."
+    },
+    {
+      "key": "Saving…",
+      "text": "Saving…",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: submit button while the key is being saved."
     },
     {
       "key": "Search",
@@ -670,6 +2817,62 @@
         "primitives/command.tsx"
       ],
       "hint": "Hidden (screen-reader only) description of the command palette dialog, telling the user to search for a command or page to run."
+    },
+    {
+      "key": "Search keys…",
+      "text": "Search keys…",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): placeholder of the key search field."
+    },
+    {
+      "key": "Search languages by name…",
+      "text": "Search languages by name…",
+      "files": [
+        "translations/LanguagesScreen.tsx"
+      ],
+      "hint": "Languages admin screen: placeholder of the name search."
+    },
+    {
+      "key": "Search languages…",
+      "text": "Search languages…",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: search placeholder inside the language picker."
+    },
+    {
+      "key": "Search locales by name…",
+      "text": "Search locales by name…",
+      "files": [
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Locales admin screen (language + country combinations): placeholder of the name search."
+    },
+    {
+      "key": "Search translations…",
+      "text": "Search translations…",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): placeholder of the filter on the translated texts."
+    },
+    {
+      "key": "Search transports",
+      "text": "Search transports",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): accessible name of the transport search."
+    },
+    {
+      "key": "Search transports…",
+      "text": "Search transports…",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): placeholder of the transport search."
     },
     {
       "key": "Search…",
@@ -723,6 +2926,14 @@
       "hint": "Tooltip and accessible label of the checkbox in the table header that selects every row currently loaded in the list. Used for bulk actions."
     },
     {
+      "key": "Select key %id%",
+      "text": "Select key %id%",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): accessible name of a row checkbox; %id% is the key's number."
+    },
+    {
       "key": "Select row %rowKey%",
       "text": "Select row %rowKey%",
       "files": [
@@ -765,6 +2976,23 @@
       "hint": "Small floating pill button at the bottom edge of an expanded group panel; clicking it shows only the first few rows again."
     },
     {
+      "key": "Silent__worker-process-state",
+      "text": "Silent",
+      "context": "worker-process-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker process: its current job runs longer than the busy limit."
+    },
+    {
+      "key": "Singular",
+      "text": "Singular",
+      "files": [
+        "translations/adminFormat.ts"
+      ],
+      "hint": "App translations admin, drawer of one translation key: context option of a value: the singular form."
+    },
+    {
       "key": "Sort by__media-picker",
       "text": "Sort by",
       "context": "media-picker",
@@ -783,12 +3011,158 @@
       "hint": "Fallback label of the sort dropdown button in the media picker dialog, shown when no sort option is currently selected."
     },
     {
+      "key": "Started",
+      "text": "Started",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): column header: when the process or job run started."
+    },
+    {
+      "key": "Starts__chart-series",
+      "text": "Starts",
+      "context": "chart-series",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: series name: process starts."
+    },
+    {
+      "key": "State",
+      "text": "State",
+      "files": [
+        "workers/WorkerTransportScreen.tsx",
+        "workers/overview.tsx",
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header and label: the state of a transport or a worker process."
+    },
+    {
+      "key": "Stopped",
+      "text": "Stopped",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): column header and filter chip: when or whether a process stopped."
+    },
+    {
+      "key": "Stopped__worker-process-state",
+      "text": "Stopped",
+      "context": "worker-process-state",
+      "files": [
+        "workers/status.ts",
+        "workers/transport.tsx"
+      ],
+      "hint": "Status badge of a worker process: ended and reported its stop."
+    },
+    {
+      "key": "Stopping or silent",
+      "text": "Stopping or silent",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): timeline legend for two process states."
+    },
+    {
+      "key": "Stopping__worker-process-state",
+      "text": "Stopping",
+      "context": "worker-process-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker process: stops after its current job."
+    },
+    {
+      "key": "Stops after its current message__worker-process-state",
+      "text": "Stops after its current message",
+      "context": "worker-process-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker process: description of Stopping."
+    },
+    {
+      "key": "Stored rows are matched and updated with the configured values, new ones are added. Rows that are not configured stay.",
+      "text": "Stored rows are matched and updated with the configured values, new ones are added. Rows that are not configured stay.",
+      "files": [
+        "translations/ConfigImportCards.tsx"
+      ],
+      "hint": "Import of the configured languages or locales (maintenance action): confirmation description: what the import changes."
+    },
+    {
+      "key": "Stuck since %time%",
+      "text": "Stuck since %time%",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): hint under the state: since when the transport is stuck; %time% is a clock time."
+    },
+    {
+      "key": "Stuck__worker-transport-state",
+      "text": "Stuck",
+      "context": "worker-transport-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker transport (queue): jobs wait and no worker ran for a while."
+    },
+    {
+      "key": "Succeeded and failed messages over the window",
+      "text": "Succeeded and failed messages over the window",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: accessible description of the chart."
+    },
+    {
+      "key": "Succeeded, failed and redelivered messages over the window",
+      "text": "Succeeded, failed and redelivered messages over the window",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: accessible description of the chart."
+    },
+    {
+      "key": "Succeeded__chart-series",
+      "text": "Succeeded",
+      "context": "chart-series",
+      "files": [
+        "workers/history.tsx",
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: series name: jobs finished without error."
+    },
+    {
       "key": "Table view",
       "text": "Table view",
       "files": [
         "list/EntityListViewToggle.tsx"
       ],
       "hint": "Tooltip and accessible label of the icon button in a list toolbar that switches the list to a table with rows and columns."
+    },
+    {
+      "key": "Template text for the translation (optional)",
+      "text": "Template text for the translation (optional)",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: placeholder of the template field: a text the translation is built from."
+    },
+    {
+      "key": "Text direction",
+      "text": "Text direction",
+      "files": [
+        "translations/LanguagesScreen.tsx"
+      ],
+      "hint": "Languages admin screen: column header and filter label: left to right or right to left script."
+    },
+    {
+      "key": "The %locale% value is deleted; the key and its other values stay.",
+      "text": "The %locale% value is deleted; the key and its other values stay.",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: description of the delete confirmation; %locale% is a content locale key like de::INFORMAL."
     },
     {
       "key": "The file is not an image this browser can read",
@@ -799,6 +3173,175 @@
       "hint": "Error message shown when a picked file cannot be decoded as an image by the browser while preparing an upload in the media picker."
     },
     {
+      "key": "The handler logged an error and returned__worker-message-outcome",
+      "text": "The handler logged an error and returned",
+      "context": "worker-message-outcome",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Outcome badge of one processed job (message run): description of Caught."
+    },
+    {
+      "key": "The history could not be loaded.",
+      "text": "The history could not be loaded.",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): error when the charts could not be loaded."
+    },
+    {
+      "key": "The import from the configuration failed.",
+      "text": "The import from the configuration failed.",
+      "files": [
+        "translations/ConfigImportCards.tsx"
+      ],
+      "hint": "Import of the configured languages or locales (maintenance action): error when the import failed (fallback when the server sends no message)."
+    },
+    {
+      "key": "The languages could not be loaded.",
+      "text": "The languages could not be loaded.",
+      "files": [
+        "translations/LanguagesScreen.tsx"
+      ],
+      "hint": "Languages admin screen: error when the table could not be loaded."
+    },
+    {
+      "key": "The languages of the platform. Active languages take part in the app translation generation, in the styles they support.",
+      "text": "The languages of the platform. Active languages take part in the app translation generation, in the styles they support.",
+      "files": [
+        "translations/LanguagesScreen.tsx"
+      ],
+      "hint": "Languages admin screen: page description."
+    },
+    {
+      "key": "The locales could not be loaded.",
+      "text": "The locales could not be loaded.",
+      "files": [
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Locales admin screen (language + country combinations): error when the table could not be loaded."
+    },
+    {
+      "key": "The locales of the platform. Active locales are offered in the translation pickers and counted in the translation completeness.",
+      "text": "The locales of the platform. Active locales are offered in the translation pickers and counted in the translation completeness.",
+      "files": [
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Locales admin screen (language + country combinations): page description."
+    },
+    {
+      "key": "The message carried no dispatch time",
+      "text": "The message carried no dispatch time",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): tooltip: the wait of this job is unknown."
+    },
+    {
+      "key": "The message runs could not be loaded.",
+      "text": "The message runs could not be loaded.",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): error when the runs could not be loaded."
+    },
+    {
+      "key": "The process list has no running process yet.",
+      "text": "The process list has no running process yet.",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a transport counts a live process the process list does not show yet."
+    },
+    {
+      "key": "The processes could not be loaded.",
+      "text": "The processes could not be loaded.",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): error when the processes could not be loaded."
+    },
+    {
+      "key": "The queue could not be counted.",
+      "text": "The queue could not be counted.",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tooltip when the queue length is unknown."
+    },
+    {
+      "key": "The queue history has holes and lost processes are closed late. app:workers:sample must run every minute.",
+      "text": "The queue history has holes and lost processes are closed late. app:workers:sample must run every minute.",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): warning banner; app:workers:sample is a console command (keep as is)."
+    },
+    {
+      "key": "The queue of every transport, stacked (highest sample per step).",
+      "text": "The queue of every transport, stacked (highest sample per step).",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: description."
+    },
+    {
+      "key": "The restart could not be requested.",
+      "text": "The restart could not be requested.",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): error in the restart dialog (fallback when the server sends no message)."
+    },
+    {
+      "key": "The sampler is not running",
+      "text": "The sampler is not running",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): warning banner title: the job that samples the queues every minute does not run."
+    },
+    {
+      "key": "The selected translation keys and all their values are deleted. This cannot be undone.",
+      "text": "The selected translation keys and all their values are deleted. This cannot be undone.",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): description of the bulk delete confirmation."
+    },
+    {
+      "key": "The translation key could not be loaded.",
+      "text": "The translation key could not be loaded.",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: error when the key could not be loaded."
+    },
+    {
+      "key": "The translation keys could not be loaded.",
+      "text": "The translation keys could not be loaded.",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): error when the table could not be loaded."
+    },
+    {
+      "key": "The transport could not be loaded.",
+      "text": "The transport could not be loaded.",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): error when the page could not be loaded (fallback when the server sends no message)."
+    },
+    {
+      "key": "The transport over the window; point at a chart to read one step.",
+      "text": "The transport over the window; point at a chart to read one step.",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): description of the charts section."
+    },
+    {
       "key": "The value you selected is not a valid choice.",
       "text": "The value you selected is not a valid choice.",
       "files": [
@@ -807,12 +3350,77 @@
       "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. A dropdown field contains a value that is not one of the allowed options."
     },
     {
+      "key": "The worker history could not be loaded.",
+      "text": "The worker history could not be loaded.",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: error when the charts could not be loaded."
+    },
+    {
+      "key": "The worker list has a consumer for it, but Messenger does not consume this transport__worker-transport-state",
+      "text": "The worker list has a consumer for it, but Messenger does not consume this transport",
+      "context": "worker-transport-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker transport (queue): description of Not consumed; Messenger is the queue library (keep)."
+    },
+    {
+      "key": "The worker monitoring is off",
+      "text": "The worker monitoring is off",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): warning banner title."
+    },
+    {
+      "key": "The worker monitoring is off: the live processes are not known, so none can be asked.",
+      "text": "The worker monitoring is off: the live processes are not known, so none can be asked.",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tooltip of the disabled restart button."
+    },
+    {
+      "key": "The worker overview could not be loaded.",
+      "text": "The worker overview could not be loaded.",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): error when the overview could not be loaded."
+    },
+    {
+      "key": "There is no transport “%transport%”.",
+      "text": "There is no transport “%transport%”.",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): error for an unknown transport; %transport% is the queue name."
+    },
+    {
       "key": "This removes the text for every language. It is gone once you save.",
       "text": "This removes the text for every language. It is gone once you save.",
       "files": [
         "translations/TranslatableField.tsx"
       ],
       "hint": "Body of the confirmation dialog for clearing all translations of one field; warns that the removal becomes permanent after saving the form."
+    },
+    {
+      "key": "This transport records no runs (messageLog: off); the statistics stay complete.",
+      "text": "This transport records no runs (messageLog: off); the statistics stay complete.",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): note; messageLog: off is a setting (keep)."
+    },
+    {
+      "key": "This transport records only failed runs (messageLog: failures); the statistics stay complete.",
+      "text": "This transport records only failed runs (messageLog: failures); the statistics stay complete.",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): note; messageLog: failures is a setting (keep)."
     },
     {
       "key": "This value is not a valid URL.",
@@ -879,6 +3487,56 @@
       "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. A required field was left empty."
     },
     {
+      "key": "Throughput",
+      "text": "Throughput",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx",
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin: section or chart title, how many jobs were finished per time."
+    },
+    {
+      "key": "Throughput, all transports",
+      "text": "Throughput, all transports",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: chart title: finished jobs of every queue together."
+    },
+    {
+      "key": "Thrown",
+      "text": "Thrown",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): filter chip: runs where an exception left the handler."
+    },
+    {
+      "key": "Thrown__worker-message-outcome",
+      "text": "Thrown",
+      "context": "worker-message-outcome",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Outcome badge of one processed job (message run): an exception left the handler."
+    },
+    {
+      "key": "Tick: first message of the process.",
+      "text": "Tick: first message of the process.",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): timeline legend: the tick marks the first job of the process."
+    },
+    {
+      "key": "Time window",
+      "text": "Time window",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: accessible name of the 1 hour … 14 days switch."
+    },
+    {
       "key": "Toggle filters",
       "text": "Toggle filters",
       "files": [
@@ -901,6 +3559,23 @@
         "i18n/serverMessages.ts"
       ],
       "hint": "Error message from the server when the login session token is invalid or expired; the user has to sign in again."
+    },
+    {
+      "key": "Total__chart-tooltip",
+      "text": "Total",
+      "context": "chart-tooltip",
+      "files": [
+        "workers/charts.tsx"
+      ],
+      "hint": "Workers admin chart: tooltip line with the sum of the stacked values of one step."
+    },
+    {
+      "key": "Translate again",
+      "text": "Translate again",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: checkbox: the key's values are translated again by the next automatic translation run."
     },
     {
       "key": "Translate to",
@@ -937,12 +3612,117 @@
       "hint": "Label of a button while the automatic AI translation is running for the selected languages; progress state, keep the ellipsis."
     },
     {
+      "key": "Translation",
+      "text": "Translation",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): filter label: search in the translated texts."
+    },
+    {
+      "key": "Translation (%locale%)",
+      "text": "Translation (%locale%)",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: accessible name of the text field of one value; %locale% is a content locale key like de::INFORMAL."
+    },
+    {
+      "key": "Translation completeness",
+      "text": "Translation completeness",
+      "files": [
+        "translations/TranslationCompleteness.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): heading of the cards that show, per active locale, how many keys are translated."
+    },
+    {
       "key": "Translation failed",
       "text": "Translation failed",
       "files": [
         "logic/react/useTranslationRunner.ts"
       ],
       "hint": "Fallback error message shown in the tooltip of a failed language in the translation progress list when the server gave no message."
+    },
+    {
+      "key": "Translation hint",
+      "text": "Translation hint",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: label of the field that explains the text to the translator."
+    },
+    {
+      "key": "Translation key",
+      "text": "Translation key",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): the entity name in the Add button ('Add translation key')."
+    },
+    {
+      "key": "Translation key #%id%",
+      "text": "Translation key #%id%",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: drawer title while the key loads; %id% is its number."
+    },
+    {
+      "key": "Translation keys of the apps and the backend, stored in the database, with their values per locale and writing style.",
+      "text": "Translation keys of the apps and the backend, stored in the database, with their values per locale and writing style.",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): page description."
+    },
+    {
+      "key": "Translation template",
+      "text": "Translation template",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: label of the template field (a text the translation is built from)."
+    },
+    {
+      "key": "Translation text…",
+      "text": "Translation text…",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: placeholder of the text field of a new translation."
+    },
+    {
+      "key": "Translations",
+      "text": "Translations",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): column header: the translated values of a key."
+    },
+    {
+      "key": "Transport",
+      "text": "Transport",
+      "files": [
+        "workers/WorkerTransportScreen.tsx",
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header and fallback title: the transport (a named queue of background jobs)."
+    },
+    {
+      "key": "Transport sections",
+      "text": "Transport sections",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): accessible name of the tab bar."
+    },
+    {
+      "key": "Transports",
+      "text": "Transports",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): section title and table name: the queues of background jobs."
     },
     {
       "key": "Type “%phrase%” to confirm",
@@ -961,12 +3741,30 @@
       "hint": "Short error message from the server when the request needs a valid login (session expired or missing); the user has to sign in again."
     },
     {
+      "key": "Undefined__worker-transport-state",
+      "text": "Undefined",
+      "context": "worker-transport-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker transport (queue): consumed, but without an entry in the worker configuration."
+    },
+    {
       "key": "Unknown error",
       "text": "Unknown error",
       "files": [
         "logic/pure/serverViolations.ts"
       ],
       "hint": "Fallback text for a single server-side validation message that arrived without any error text. Shown in the error list above a form after a failed save."
+    },
+    {
+      "key": "Unknown__queue-count-state",
+      "text": "Unknown",
+      "context": "queue-count-state",
+      "files": [
+        "workers/format.ts"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): the queue length is unknown (it could not be counted)."
     },
     {
       "key": "Unreadable file",
@@ -983,6 +3781,14 @@
         "form/FormActions.tsx"
       ],
       "hint": "Status text next to the Save and Cancel buttons of an edit form, shown while the user has changed fields that are not saved yet."
+    },
+    {
+      "key": "Updated %time%",
+      "text": "Updated %time%",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): next to the description: when the data was produced; %time% is a clock time."
     },
     {
       "key": "Updated__entity-metadata",
@@ -1012,12 +3818,80 @@
       "hint": "Button label in the media picker dialog while selected image files are being uploaded; the button is disabled meanwhile."
     },
     {
+      "key": "Value deleted",
+      "text": "Value deleted",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: success toast after one translated value was deleted."
+    },
+    {
+      "key": "Value saved",
+      "text": "Value saved",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: success toast after one translated value was saved."
+    },
+    {
+      "key": "Values per locale and writing style",
+      "text": "Values per locale and writing style",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: heading above the translated values, one per locale and writing style (informal/formal)."
+    },
+    {
       "key": "View",
       "text": "View",
       "files": [
         "list/EntityListViewToggle.tsx"
       ],
       "hint": "Label and accessible name of the toggle on the Home screen that switches between the Timeline and Kanban views."
+    },
+    {
+      "key": "Wait",
+      "text": "Wait",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): column header: time a job waited in the queue."
+    },
+    {
+      "key": "Waiting messages in the last hour",
+      "text": "Waiting messages in the last hour",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): accessible description of a small chart."
+    },
+    {
+      "key": "Waiting now",
+      "text": "Waiting now",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile label and column header: jobs waiting in the queues right now."
+    },
+    {
+      "key": "Waiting__chart-series",
+      "text": "Waiting",
+      "context": "chart-series",
+      "files": [
+        "workers/history.tsx",
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: series name: jobs waiting in the queue."
+    },
+    {
+      "key": "Waiting__live-stat",
+      "text": "Waiting",
+      "context": "live-stat",
+      "files": [
+        "workers/WorkerTransportScreen.tsx",
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): label of the number of jobs waiting in the queue right now."
     },
     {
       "key": "Waiting__translation-status",
@@ -1027,6 +3901,121 @@
         "translations/TranslationControls.tsx"
       ],
       "hint": "Short form of the status 'Waiting for Customer', on a compact status button in the support ticket sidebar. Keep it to one short word."
+    },
+    {
+      "key": "What the workers did per message class in the window.",
+      "text": "What the workers did per message class in the window.",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): description of the message classes section."
+    },
+    {
+      "key": "Where the text appears, for the translator (optional)",
+      "text": "Where the text appears, for the translator (optional)",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: placeholder of the translation hint field."
+    },
+    {
+      "key": "Worker process starts per transport over the window",
+      "text": "Worker process starts per transport over the window",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: accessible description of the chart."
+    },
+    {
+      "key": "Worker processes in the last hour",
+      "text": "Worker processes in the last hour",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): accessible description of a small chart."
+    },
+    {
+      "key": "Workers",
+      "text": "Workers",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): page title: the background job workers."
+    },
+    {
+      "key": "Workers over time",
+      "text": "Workers over time",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: chart title: how many worker processes ran when."
+    },
+    {
+      "key": "Workers running against the configured range, messages in work and waiting.",
+      "text": "Workers running against the configured range, messages in work and waiting.",
+      "files": [
+        "workers/WorkersOverviewScreen.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): description of the live section."
+    },
+    {
+      "key": "Workers__chart-title",
+      "text": "Workers",
+      "context": "chart-title",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: chart title: worker processes of the transport."
+    },
+    {
+      "key": "Workers__live-stat",
+      "text": "Workers",
+      "context": "live-stat",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): label of the number of worker processes running."
+    },
+    {
+      "key": "Working__worker-transport-state",
+      "text": "Working",
+      "context": "worker-transport-state",
+      "files": [
+        "workers/status.ts"
+      ],
+      "hint": "Status badge of a worker transport (queue): jobs are being handled."
+    },
+    {
+      "key": "Writes are switched off",
+      "text": "Writes are switched off",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Tooltip of a disabled write button when writes are switched off for this screen."
+    },
+    {
+      "key": "Writing style of %label%",
+      "text": "Writing style of %label%",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: accessible name of the informal/formal select of a value; %label% names the value, e.g. de::INFORMAL."
+    },
+    {
+      "key": "Writing styles",
+      "text": "Writing styles",
+      "files": [
+        "translations/LanguagesScreen.tsx"
+      ],
+      "hint": "Languages admin screen: column header and filter label: which forms of address the language supports (informal, formal or both)."
+    },
+    {
+      "key": "Writing styles of %name%",
+      "text": "Writing styles of %name%",
+      "files": [
+        "translations/LanguagesScreen.tsx"
+      ],
+      "hint": "Languages admin screen: accessible name of the writing styles select of a row; %name% is the language name."
     },
     {
       "key": "Wrong credentials.",
@@ -1063,6 +4052,30 @@
       "hint": "Body text of the discard confirmation dialog, warning that closing the form drawer throws away the user's unsaved edits."
     },
     {
+      "key": "at %time%",
+      "text": "at %time%",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): hint under the last error: when it happened; %time% is a clock time."
+    },
+    {
+      "key": "backlog, undefined or not consumed",
+      "text": "backlog, undefined or not consumed",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile hint: the kinds of problems counted (transport states)."
+    },
+    {
+      "key": "being handled",
+      "text": "being handled",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): hint under the in-work count."
+    },
+    {
       "key": "breadcrumb__navigation",
       "text": "breadcrumb",
       "context": "navigation",
@@ -1072,12 +4085,593 @@
       "hint": "Accessible name (screen reader label) of the breadcrumb navigation trail at the top of admin pages; use a short lowercase noun like the English."
     },
     {
+      "key": "command line",
+      "text": "command line",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): a job run without a worker process (run from the console)."
+    },
+    {
+      "key": "configured %range%",
+      "text": "configured %range%",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): hint: the configured process count; %range% is like 0–8 or 'fixed 2'."
+    },
+    {
+      "key": "configured %range% · above range",
+      "text": "configured %range% · above range",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): warning hint: more processes run than configured; %range% like 0–8."
+    },
+    {
+      "key": "context required",
+      "text": "context required",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): badge on a key that needs singular and plural translations."
+    },
+    {
+      "key": "dispatch origin unknown",
+      "text": "dispatch origin unknown",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): where the job was dispatched from is unknown."
+    },
+    {
+      "key": "e.g. DE",
+      "text": "e.g. DE",
+      "files": [
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Locales admin screen (language + country combinations): placeholder: an example country code."
+    },
+    {
+      "key": "e.g. Save changes",
+      "text": "e.g. Save changes",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: placeholder of the key field: an example key (keys are English UI texts)."
+    },
+    {
+      "key": "e.g. de",
+      "text": "e.g. de",
+      "files": [
+        "translations/LanguagesScreen.tsx",
+        "translations/LocalesScreen.tsx"
+      ],
+      "hint": "Languages and locales admin: placeholder, an example language code."
+    },
+    {
+      "key": "e.g. deu",
+      "text": "e.g. deu",
+      "files": [
+        "translations/LanguagesScreen.tsx"
+      ],
+      "hint": "Languages admin screen: placeholder: an example ISO 639-3 code."
+    },
+    {
+      "key": "every %minutes% min",
+      "text": "every %minutes% min",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a loop repeats every %minutes% minutes."
+    },
+    {
+      "key": "every %seconds% s",
+      "text": "every %seconds% s",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a loop repeats every %seconds% seconds."
+    },
+    {
+      "key": "every transport is fine",
+      "text": "every transport is fine",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile hint: no transport needs attention."
+    },
+    {
+      "key": "final__attempt",
+      "text": "final",
+      "context": "attempt",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): the last attempt of a failed job (no retry follows)."
+    },
+    {
+      "key": "finishing %messageClass% first",
+      "text": "finishing %messageClass% first",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): restart result: the process ends its current job first; %messageClass% is the job's class name (code)."
+    },
+    {
+      "key": "first message %delay%",
+      "text": "first message %delay%",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): how long after its start a process got its first job; %delay% like +3 s."
+    },
+    {
+      "key": "fixed %max%",
+      "text": "fixed %max%",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a fixed number of worker processes (no autoscaling); %max% is a number."
+    },
+    {
+      "key": "from %origin%",
+      "text": "from %origin%",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): where the job was dispatched from; %origin% is a route or console command."
+    },
+    {
+      "key": "idle, stops at its next tick",
+      "text": "idle, stops at its next tick",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): restart result: an idle process that stops at once."
+    },
+    {
+      "key": "idle, waiting for a message",
+      "text": "idle, waiting for a message",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a worker process without a current job."
+    },
+    {
+      "key": "idle__worker-process",
+      "text": "idle",
+      "context": "worker-process",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): a process without a current job."
+    },
+    {
+      "key": "in every queue",
+      "text": "in every queue",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile hint under the waiting count."
+    },
+    {
+      "key": "in the last hour",
+      "text": "in the last hour",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile hint under a count."
+    },
+    {
+      "key": "in the queue",
+      "text": "in the queue",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): hint under the waiting count of a transport."
+    },
+    {
+      "key": "last 15 min",
+      "text": "last 15 min",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): hint: the rate covers the last 15 minutes."
+    },
+    {
+      "key": "limit %count%",
+      "text": "limit %count%",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a process restarts after %count% jobs."
+    },
+    {
+      "key": "live right now.",
+      "text": "live right now.",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): after a count of processes in the restart confirmation: '3 processes live right now.'"
+    },
+    {
+      "key": "loops by itself",
+      "text": "loops by itself",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a loop without a pause between runs."
+    },
+    {
+      "key": "max %duration%",
+      "text": "max %duration%",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): the maximum duration; %duration% like 4.2 s."
+    },
+    {
+      "key": "max %value%",
+      "text": "max %value%",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: label of the reference line of the configured maximum processes."
+    },
+    {
+      "key": "memory limit %limit%",
+      "text": "memory limit %limit%",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): part of the configuration line; %limit% is a memory size like 256M."
+    },
+    {
+      "key": "message log: %value%",
+      "text": "message log: %value%",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): part of the configuration line: which job runs are recorded; %value% is all, failures or off (keep)."
+    },
+    {
+      "key": "messages being handled",
+      "text": "messages being handled",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile hint under the in-work count."
+    },
+    {
+      "key": "min %value%",
+      "text": "min %value%",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: label of the reference line of the configured minimum processes."
+    },
+    {
+      "key": "no automatic translation",
+      "text": "no automatic translation",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): badge on a key the automatic translation skips."
+    },
+    {
+      "key": "no dispatch times",
+      "text": "no dispatch times",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): hint: no job carried its dispatch time, so the wait is unknown."
+    },
+    {
+      "key": "no message yet",
+      "text": "no message yet",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): a process that got no job yet."
+    },
+    {
+      "key": "no worker list entry",
+      "text": "no worker list entry",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): the transport has no entry in the worker configuration."
+    },
+    {
+      "key": "not measured",
+      "text": "not measured",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): shown instead of a number while the monitoring is off."
+    },
+    {
+      "key": "nothing finished in 5 min",
+      "text": "nothing finished in 5 min",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): hint: no job finished in the last 5 minutes, so no time to empty the queue can be estimated."
+    },
+    {
+      "key": "now",
+      "text": "now",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): timeline tooltip: the process still runs."
+    },
+    {
+      "key": "restart requested",
+      "text": "restart requested",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): a restart of the process was requested."
+    },
+    {
+      "key": "restart requested %time%",
+      "text": "restart requested %time%",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a restart of the process was requested; %time% is a clock time."
+    },
+    {
+      "key": "restarts after %count% messages",
+      "text": "restarts after %count% messages",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): part of the configuration line: a process restarts after handling %count% jobs."
+    },
+    {
+      "key": "running since %time%",
+      "text": "running since %time%",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): since when the process runs; %time% is a clock time and a duration."
+    },
+    {
+      "key": "running__live-stat",
+      "text": "running",
+      "context": "live-stat",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): unit after the number of worker processes ('2 running')."
+    },
+    {
+      "key": "scales down after %seconds% s idle",
+      "text": "scales down after %seconds% s idle",
+      "files": [
+        "workers/WorkerTransportScreen.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): part of the configuration line: idle processes are removed after %seconds% seconds."
+    },
+    {
+      "key": "since %time%",
+      "text": "since %time%",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): hint under a stuck state; %time% is a clock time."
+    },
+    {
+      "key": "the new value",
+      "text": "the new value",
+      "files": [
+        "translations/AppTranslationKeyDrawer.tsx"
+      ],
+      "hint": "App translations admin, drawer of one translation key: inserted into 'Context of %label%' / 'Writing style of %label%' for the value being added."
+    },
+    {
+      "key": "translate again",
+      "text": "translate again",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): badge on a key marked to be translated again."
+    },
+    {
+      "key": "unknown host",
+      "text": "unknown host",
+      "files": [
+        "workers/format.ts"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): placeholder when a process has no host name."
+    },
+    {
+      "key": "unknown__wait-time",
+      "text": "unknown",
+      "context": "wait-time",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): the wait of a job is unknown."
+    },
+    {
+      "key": "wait %duration%",
+      "text": "wait %duration%",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): average queue wait; %duration% like 4.2 s."
+    },
+    {
+      "key": "wait unknown",
+      "text": "wait unknown",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): the queue wait is unknown (no job carried its dispatch time)."
+    },
+    {
+      "key": "will retry",
+      "text": "will retry",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): the failed job will be retried."
+    },
+    {
+      "key": "workers on %count% transports",
+      "text": "workers on %count% transports",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile hint; %count% is a number of transports."
+    },
+    {
+      "key": "working on %messageClass%",
+      "text": "working on %messageClass%",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): what a process handles now; %messageClass% is a job class name (code)."
+    },
+    {
+      "key": "working on %messageClass% since %since%",
+      "text": "working on %messageClass% since %since%",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): what a process handles and since when; %messageClass% is a class name, %since% a clock time and duration."
+    },
+    {
+      "key": "{count, plural, one {# day} other {# days}}",
+      "text": "{count, plural, one {# day} other {# days}}",
+      "files": [
+        "workers/window.ts"
+      ],
+      "hint": "Workers admin chart: option of the time window switch: a number of days."
+    },
+    {
+      "key": "{count, plural, one {# hour} other {# hours}}",
+      "text": "{count, plural, one {# hour} other {# hours}}",
+      "files": [
+        "workers/window.ts"
+      ],
+      "hint": "Workers admin chart: option of the time window switch: a number of hours."
+    },
+    {
+      "key": "{count, plural, one {# key deleted} other {# keys deleted}}",
+      "text": "{count, plural, one {# key deleted} other {# keys deleted}}",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): success toast after the bulk delete; # is the number of keys."
+    },
+    {
+      "key": "{count, plural, one {# message in work} other {# messages in work}}",
+      "text": "{count, plural, one {# message in work} other {# messages in work}}",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): summary in the live section heading."
+    },
+    {
+      "key": "{count, plural, one {# more transport: no worker running, queue empty.} other {# more transports: no worker running, queue empty.}}",
+      "text": "{count, plural, one {# more transport: no worker running, queue empty.} other {# more transports: no worker running, queue empty.}}",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): line under the live section for the quiet transports."
+    },
+    {
+      "key": "{count, plural, one {# process start in this window, per transport} other {# process starts in this window, per transport}}",
+      "text": "{count, plural, one {# process start in this window, per transport} other {# process starts in this window, per transport}}",
+      "files": [
+        "workers/history.tsx"
+      ],
+      "hint": "Workers admin chart: caption of the process starts chart; # is the number of starts."
+    },
+    {
+      "key": "{count, plural, one {# process} other {# processes}}",
+      "text": "{count, plural, one {# process} other {# processes}}",
+      "files": [
+        "workers/WorkerRestartButton.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a number of worker processes, inserted into other texts."
+    },
+    {
+      "key": "{count, plural, one {# queue not counted} other {# queues not counted}}",
+      "text": "{count, plural, one {# queue not counted} other {# queues not counted}}",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile hint: queues whose length is unknown."
+    },
+    {
       "key": "{count, plural, one {# validation error} other {# validation errors}}",
       "text": "{count, plural, one {# validation error} other {# validation errors}}",
       "files": [
         "logic/pure/notify.ts"
       ],
       "hint": "Second line of the red error toast after a failed save: how many fields the server rejected (the list is shown above the form)."
+    },
+    {
+      "key": "{count, plural, one {# worker running} other {# workers running}}",
+      "text": "{count, plural, one {# worker running} other {# workers running}}",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): summary in the live section heading."
+    },
+    {
+      "key": "{count, plural, one {Delete # key?} other {Delete # keys?}}",
+      "text": "{count, plural, one {Delete # key?} other {Delete # keys?}}",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): title of the bulk delete confirmation; # is the number of selected keys."
+    },
+    {
+      "key": "{count, plural, one {Generation started for %locale% (%style%): # key} other {Generation started for %locale% (%style%): # keys}}",
+      "text": "{count, plural, one {Generation started for %locale% (%style%): # key} other {Generation started for %locale% (%style%): # keys}}",
+      "files": [
+        "translations/TranslationCompleteness.tsx"
+      ],
+      "hint": "App translations admin screen (the UI texts of the apps, stored in the database): success toast; %locale% is a locale code like de-DE, %style% INFORMAL or FORMAL, # the number of keys."
+    },
+    {
+      "key": "{count, plural, one {Imported # language from the configuration} other {Imported # languages from the configuration}}",
+      "text": "{count, plural, one {Imported # language from the configuration} other {Imported # languages from the configuration}}",
+      "files": [
+        "translations/ConfigImportCards.tsx"
+      ],
+      "hint": "Import of the configured languages or locales (maintenance action): result after the languages import; # is the number of imported languages."
+    },
+    {
+      "key": "{count, plural, one {Imported # locale from the configuration} other {Imported # locales from the configuration}}",
+      "text": "{count, plural, one {Imported # locale from the configuration} other {Imported # locales from the configuration}}",
+      "files": [
+        "translations/ConfigImportCards.tsx"
+      ],
+      "hint": "Import of the configured languages or locales (maintenance action): result after the locales import; # is the number of imported locales."
+    },
+    {
+      "key": "{count, plural, one {Live processes and # process start in this window; dashed: the configured range.} other {Live processes and # process starts in this window; dashed: the configured range.}}",
+      "text": "{count, plural, one {Live processes and # process start in this window; dashed: the configured range.} other {Live processes and # process starts in this window; dashed: the configured range.}}",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin chart: description of the workers chart; # is the number of process starts."
+    },
+    {
+      "key": "{count, plural, one {The # process listed below, from its start to its stop (or now).} other {The # processes listed below, from their start to their stop (or now).}}",
+      "text": "{count, plural, one {The # process listed below, from its start to its stop (or now).} other {The # processes listed below, from their start to their stop (or now).}}",
+      "files": [
+        "workers/transport.tsx"
+      ],
+      "hint": "Workers admin, page of one transport (one queue of background jobs): description of the process timeline."
     },
     {
       "key": "{count, plural, one {This collection should contain # element or less.} other {This collection should contain # elements or less.}}",
@@ -1120,12 +4714,28 @@
       "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. The text must have exactly this many characters (e.g. a code)."
     },
     {
+      "key": "{count, plural, one {message} other {messages}}",
+      "text": "{count, plural, one {message} other {messages}}",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): unit after a number of jobs ('3 messages')."
+    },
+    {
       "key": "{count, plural, other {# selected}}",
       "text": "{count, plural, other {# selected}}",
       "files": [
         "list/EntityListBulkBar.tsx"
       ],
       "hint": "Label in the bulk-action bar of a list showing how many rows the user has ticked, e.g. '3 selected'. # is the number of selected rows."
+    },
+    {
+      "key": "≈ %duration% at this rate",
+      "text": "≈ %duration% at this rate",
+      "files": [
+        "workers/overview.tsx"
+      ],
+      "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): estimated time until the queue is empty; %duration% like 1 h 43 min."
     }
   ]
 }

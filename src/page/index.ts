@@ -40,3 +40,7 @@ export { PAGE_INSET_CLASS } from './PageHeader.tsx';
 // One notice box in four tones.
 export { StatusCallout, StatusCalloutAction } from './StatusCallout.tsx';
 export type { StatusCalloutProps, StatusCalloutTone } from './StatusCallout.tsx';
+
+// One maintenance action: run button and the outcome of the last run.
+export { MaintenanceActionCard } from './MaintenanceActionCard.tsx';
+export type { MaintenanceActionCardProps, MaintenanceActionOutcome } from './MaintenanceActionCard.tsx';

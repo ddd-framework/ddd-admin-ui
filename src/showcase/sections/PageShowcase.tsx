@@ -18,6 +18,7 @@ import {
   ExportButton,
   IconValue,
   IconValueRow,
+  MaintenanceActionCard,
   MoreActionsMenu,
   PageFrame,
   PageHeader,
@@ -137,6 +138,13 @@ export const PageShowcase = () => {
           />
           <StatusCallout tone="destructive" title="Failed" size="compact" />
           <StatusCallout tone="success" title="Done" size="compact" />
+        </Sample>
+        <Sample title="MaintenanceActionCard">
+          <div className="grid w-full gap-3">
+            <MaintenanceActionCard title="Rebuild the search index" description="Indexes every item again." onRun={() => {}} outcome={{ result: 'Indexed 1,204 items' }} />
+            <MaintenanceActionCard title="Import countries" description="Creates or updates every configured country." onRun={() => {}} isRunning outcome={null} />
+            <MaintenanceActionCard title="Backfill defaults" onRun={() => {}} outcome={{ error: 'The backfill failed: the table is locked.' }} />
+          </div>
         </Sample>
         <Sample title="DefinitionList">
           <Card className="w-full">

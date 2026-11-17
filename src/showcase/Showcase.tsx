@@ -11,7 +11,8 @@ import { MediaShowcase } from './sections/MediaShowcase.tsx';
 import { NextShowcase, NotifySonnerShowcase, type NotifySonnerLoader } from './sections/OptionalShowcase.tsx';
 import { PageShowcase } from './sections/PageShowcase.tsx';
 import { PrimitivesShowcase } from './sections/PrimitivesShowcase.tsx';
-import { TranslationsShowcase } from './sections/TranslationsShowcase.tsx';
+import { TranslationAdminShowcase, TranslationsShowcase } from './sections/TranslationsShowcase.tsx';
+import { WorkersShowcase } from './sections/WorkersShowcase.tsx';
 
 /** One section of the showcase: a heading and what it draws. Hosts append their own (`Showcase.sections`). */
 export interface ShowcaseSection {
@@ -35,7 +36,7 @@ export interface ShowcaseProps {
    * (the peer is missing), the section says it is skipped.
    */
   loadNotifySonner?: NotifySonnerLoader;
-  /** Leave out package sections by id (`primitives`, `list`, `page`, `form`, `translations`, `media`, `glass`, `notify-sonner`, `next`). */
+  /** Leave out package sections by id (`primitives`, `list`, `page`, `form`, `translations`, `media`, `workers`, `glass`, `notify-sonner`, `next`). */
   omit?: readonly string[];
   className?: string;
 }
@@ -46,8 +47,19 @@ const packageSections = (loadNotifySonner: NotifySonnerLoader | undefined): Show
   { id: 'list', title: './list', description: 'List card, toolbar, filters, table and grid, cells, pickers.', content: <ListShowcase /> },
   { id: 'page', title: './page', description: 'Page frame and header, detail shell, cards and toolbars.', content: <PageShowcase /> },
   { id: 'form', title: './form', description: 'Form shell, fields, sections, actions, errors, drawer.', content: <FormShowcase /> },
-  { id: 'translations', title: './translations', description: 'Inputs per content locale and the translation controls.', content: <TranslationsShowcase /> },
+  {
+    id: 'translations',
+    title: './translations',
+    description: 'Inputs per content locale, the translation controls, and the admin screens (app translations, languages, locales).',
+    content: (
+      <div className="space-y-12">
+        <TranslationsShowcase />
+        <TranslationAdminShowcase />
+      </div>
+    ),
+  },
   { id: 'media', title: './media', description: 'Media field, preview and picker.', content: <MediaShowcase /> },
+  { id: 'workers', title: './workers', description: 'The worker monitoring screens: overview, transport, runs, processes (SVG charts).', content: <WorkersShowcase /> },
   { id: 'glass', title: './glass', description: 'Glass pills, quick filters, collapsible cards, groups and rows.', content: <GlassShowcase /> },
   {
     id: 'notify-sonner',

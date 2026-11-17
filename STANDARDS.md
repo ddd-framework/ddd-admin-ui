@@ -10,11 +10,13 @@ Where the names below come from (setup and the entry list: [`README.md`](./READM
 |---|---|
 | `@mgamadeus/ddd-admin-ui/logic` | `useUrlListState`, `useRowSelection`, `useEntityDrawer`, `drawerKey`, `defineStatusMap`, `formatDate`, `formatDateTime`, `runSequentialWithSummary`, `nextListSort`, `parseListSort`, `formatListSort`, `useConfirm`, `WriteAccessProvider`, `useWriteAccess` |
 | `@mgamadeus/ddd-admin-ui/list` | `EntityListToolbar`, `EntityListBody`, `EntityListTable`, `EntityListViewToggle`, `EntityListBulkBar`, `FilterPanel`, `FilterText`, `FilterSelect`, `FilterMultiSelect`, `FilterDateRange`, `YES_NO_FILTER_OPTIONS`, `StatusBadge`, `IdCell`, `DateCell`, `BooleanCell`, `ImageCell`, `EmptyValue`, `orEmpty`, `MultiSelect`, `ChipToggleGroup`, `Combobox`, `Tag` |
-| `@mgamadeus/ddd-admin-ui/page` | `EntityListPage`, `PageToolbar`, `ExportButton`, `AddEntityButton`, `EntityDetailShell`, `SectionHeader`, `DefinitionList`, `EditableCard`, `IconValue`, `IconValueRow`, `PageSections`, `CardGrid`, `PageFrame`, `PageHeader` |
+| `@mgamadeus/ddd-admin-ui/page` | `EntityListPage`, `PageToolbar`, `ExportButton`, `AddEntityButton`, `EntityDetailShell`, `SectionHeader`, `DefinitionList`, `EditableCard`, `IconValue`, `IconValueRow`, `PageSections`, `CardGrid`, `PageFrame`, `PageHeader`, `MaintenanceActionCard` |
 | `@mgamadeus/ddd-admin-ui/form` | `FormDrawer`, `FormDialog`, `FormActions`, `FormField`, `FormSection`, `FormHeader`, `useConfirmDialog` |
 | `@mgamadeus/ddd-admin-ui/glass` | `QuickFilterPills`, `CollapsibleCard`, `GlassGroup`, `ActionRow` |
 | `@mgamadeus/ddd-admin-ui/primitives` | `Button`, `Card`, `CardContent`, `SegmentedControl`, `FormActionsSlotProvider`, `FormActionsSlot` |
 | `@mgamadeus/ddd-admin-ui/next` | `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useListViewParam` |
+| `@mgamadeus/ddd-admin-ui/workers` | `createWorkersApi`, `WorkersOverviewScreen`, `WorkerTransportScreen` |
+| `@mgamadeus/ddd-admin-ui/translations` | `createTranslationsApi`, `AppTranslationsScreen`, `LanguagesScreen`, `LocalesScreen` |
 
 Every screen renders below `AdminUiProvider`. A screen that may not write sets that once with `WriteAccessProvider`
 (§ 15).
@@ -555,3 +557,25 @@ read `useWriteAccess()` (`disabled={!writeAccess.allowed}`).
 
 It replaces no guard: every write handler keeps its own check (`if (!writeAccess.allowed) return;`), and the server
 checks every request. Without a provider writes are allowed.
+
+## 16. Framework screens — `./workers`, `./translations`
+
+The worker monitoring and the translation admin are package screens: mount them, do not rebuild them.
+
+```tsx
+// once, at module scope: the operations are injected into the host's RTK Query api
+export const workersApi = createWorkersApi({ baseApi: adminApi, apiPrefix: '/api/admin/maintenance/workers' });
+export const translationsApi = createTranslationsApi({ baseApi: adminApi, apiPrefix: '/api/admin/common' });
+
+<WorkersOverviewScreen api={workersApi} transportHref={transportHref} urlStateAdapter={useNextUrlStateAdapter({ listId: 'workers' })} />
+<LocalesScreen api={translationsApi} urlStateAdapter={useNextUrlStateAdapter({ listId: 'locales' })} />
+```
+
+- Pass the host's URL adapters (`urlStateAdapter`, `drawerUrlAdapter`), so windows, tabs, filters and drawers are
+  links; without them the state is local to the screen.
+- Gate writes with the screen's `WriteAccessProvider` like any other screen: restart, generation, toggles, imports and
+  saves follow it.
+- A maintenance action of the host (a backfill, an import) is a `MaintenanceActionCard` (`./page`): the screen owns the
+  request and the confirmation (`useConfirm`), the card shows run, pending and the last outcome.
+- Charts of the workers screens are the entry's SVG charts (`WorkerTimeChart`, `WorkerSparkline`): a `null` reading
+  is a gap, never a 0; no chart library is added for them.

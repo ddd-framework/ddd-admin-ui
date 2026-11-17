@@ -264,14 +264,25 @@ export function checkPackage(packageDirectory, options = {}) {
       primitives: ['i18n'],
       provider: ['logic', 'i18n', 'primitives'],
       // the development page: every block entry, never an entry with an optional peer (./next, ./notify-sonner)
-      showcase: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'translations', 'media', 'glass'],
-      translations: ['logic', 'i18n', 'primitives', 'form'],
+      showcase: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'translations', 'media', 'glass', 'workers'],
+      // the inputs (form only through fieldLabels and useConfirmDialog) and the admin screens (lists, pages, the key drawer)
+      translations: ['logic', 'i18n', 'primitives', 'form', 'list', 'page'],
+      // the screens of the worker monitoring; charts are SVG, no chart library
+      workers: ['logic', 'i18n', 'primitives', 'list', 'page'],
     };
     const TYPE_ONLY = { provider: ['media', 'translations'] };
     const FILE_LIMITS = {
       'form->page': ['page/DetailHeader', 'page/EntityMetadata'],
       'page->list': ['list/EmptyValue', 'list/EntityListEmpty', 'list/EntityListCard'],
-      'translations->form': ['form/fieldLabels', 'form/useConfirmDialog'],
+      'translations->form': [
+        'form/fieldLabels',
+        'form/useConfirmDialog',
+        'form/Form',
+        'form/FormActions',
+        'form/FormDrawer',
+        'form/FormField',
+        'form/FormSubmitButton',
+      ],
     };
     // known and documented: the deprecated re-export of EntityListPage (removed with the rewrite of old import paths)
     const EXCEPTIONS = ['list/index -> page/EntityListPage'];
