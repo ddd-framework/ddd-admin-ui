@@ -3,5 +3,6 @@
 export { Showcase } from './Showcase.tsx';
 export type { ShowcaseProps, ShowcaseSection, ShowcaseTheme } from './Showcase.tsx';
 export type { NotifySonnerLoader, NotifySonnerModule } from './sections/OptionalShowcase.tsx';
+export type { MarkdownLoader, MarkdownModule } from './sections/MarkdownShowcase.tsx';
 export { SHOWCASE_COVERAGE } from './coverage.ts';
 export type { ShowcaseEntryCoverage } from './coverage.ts';

@@ -80,6 +80,14 @@
       "types": "./dist/showcase/index.d.ts",
       "default": "./dist/showcase/index.js"
     },
+    "./data": {
+      "types": "./dist/data/index.d.ts",
+      "default": "./dist/data/index.js"
+    },
+    "./markdown": {
+      "types": "./dist/markdown/index.d.ts",
+      "default": "./dist/markdown/index.js"
+    },
     "./theme.css": "./dist/theme.css",
     "./components.css": "./dist/components.css",
     "./tokens.json": "./dist/tokens.json",
@@ -89,7 +97,8 @@
     "ddd-admin-ui": "./dist/cli/ddd-admin-ui.js",
     "ddd-admin-ui-check-radix": "./dist/scripts/check-radix.mjs",
     "ddd-admin-ui-check-tokens": "./dist/scripts/check-tokens.mjs",
-    "ddd-admin-ui-i18n-manifest": "./dist/scripts/build-i18n-manifest.mjs"
+    "ddd-admin-ui-i18n-manifest": "./dist/scripts/build-i18n-manifest.mjs",
+    "ddd-admin-ui-check-contrast": "./dist/scripts/check-contrast.mjs"
   },
   "files": [
     "dist",
@@ -131,7 +140,9 @@
     "react-hook-form": "^7.65.0",
     "sonner": "^2.0.0",
     "tailwindcss": "^4.1.0",
-    "zod": "^4.0.0"
+    "zod": "^4.0.0",
+    "@uiw/react-md-editor": "^4.1.0",
+    "rehype-sanitize": "^6.0.0"
   },
   "peerDependenciesMeta": {
     "next": {
@@ -142,6 +153,12 @@
     },
     "tailwindcss": {
       "optional": true
+    },
+    "@uiw/react-md-editor": {
+      "optional": true
+    },
+    "rehype-sanitize": {
+      "optional": true
     }
   },
   "devDependencies": {
@@ -149,12 +166,14 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@uiw/react-md-editor": "^4.2.3",
     "lucide-react": "^1.73.0",
     "next": "^16.4.6",
     "radix-ui": "^1.8.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-hook-form": "^7.92.0",
+    "rehype-sanitize": "^6.0.0",
     "sonner": "^2.0.8",
     "typescript": "^6.0.3",
     "zod": "^4.6.7"

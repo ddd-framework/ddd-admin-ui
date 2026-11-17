@@ -12,6 +12,8 @@ export interface QuickFilterOption {
   icon?: ReactNode;
   /** Only when the screen already has the number (never an extra request for it). */
   count?: number;
+  /** `false`: `label` is already translated (a name from the server). Default: the block's `translate`. */
+  translate?: boolean;
 }
 
 interface QuickFilterPillsBaseProps {
@@ -22,6 +24,11 @@ interface QuickFilterPillsBaseProps {
   disabled?: boolean;
   size?: 'sm' | 'md';
   className?: string;
+  /**
+   * `false`: `allLabel` and the option labels are already translated and shown as they are (an option's
+   * own `translate` wins). Default: English UI texts, translated by the block.
+   */
+  translate?: boolean;
 }
 
 interface QuickFilterPillsSingleProps extends QuickFilterPillsBaseProps {
@@ -46,8 +53,9 @@ export type QuickFilterPillsProps = QuickFilterPillsSingleProps | QuickFilterPil
  * (or "All") clears it. Multi mode: each pill toggles its value.
  */
 export const QuickFilterPills = (props: QuickFilterPillsProps) => {
-  const { options, allLabel, disabled, size = 'md', className } = props;
+  const { options, allLabel, disabled, size = 'md', className, translate = true } = props;
   const { t } = useTranslate();
+  const text = (raw: string, own?: boolean) => ((own ?? translate) ? t(raw) : raw);
   const isActive = (value: string) => (props.mode === 'multi' ? props.value.includes(value) : props.value === value);
   const nothingPicked = props.mode === 'multi' ? props.value.length === 0 : props.value === '';
 
@@ -69,7 +77,7 @@ export const QuickFilterPills = (props: QuickFilterPillsProps) => {
     >
       {allLabel && (
         <GlassPill size={size} active={nothingPicked} aria-pressed={nothingPicked} disabled={disabled} onClick={clear}>
-          {t(allLabel)}
+          {text(allLabel)}
         </GlassPill>
       )}
       {options.map(option => {
@@ -85,7 +93,7 @@ export const QuickFilterPills = (props: QuickFilterPillsProps) => {
             disabled={disabled}
             onClick={() => toggle(option.value)}
           >
-            {t(option.label)}
+            {text(option.label, option.translate)}
           </GlassPill>
         );
       })}

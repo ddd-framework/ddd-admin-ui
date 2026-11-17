@@ -74,3 +74,7 @@ export { DISCARD_CHANGES_CONFIRM } from '../logic/pure/confirm.ts';
 export { UnsavedChangesContext, useUnsavedChangesBoundary, useUnsavedChangesGuard } from '../logic/react/useUnsavedChangesGuard.ts';
 /** @deprecated moved to logic/react/useUnsavedChangesGuard — the re-export is removed in a later minor */
 export type { ConfirmFn, UnsavedChangesRegistry } from '../logic/react/useUnsavedChangesGuard.ts';
+
+// Colour value field (0.2.0).
+export { ColorValueField } from './ColorValueField.tsx';
+export type { ColorValueFieldProps } from './ColorValueField.tsx';

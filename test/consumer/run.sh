@@ -18,6 +18,7 @@
 #   next      a Next 16 app router project with Tailwind 4:
 #     T1  `next build`; the server page's metadata title is m('Users'), pure helpers render on the server
 #     T5  the production CSS has the package's component rules and utilities; ddd-admin-ui-check-tokens passes on it
+#         ddd-admin-ui-check-contrast passes on it (the package's exceptions only)
 #         one Radix copy in the host (ddd-admin-ui-check-radix)
 #     T2  (browser) a client page sets German translations: date, text and number are German after hydration,
 #         without a hydration warning
@@ -31,6 +32,9 @@
 #         FormActions (focus nowhere, in another form, a disabled primary, a drawer footer, nested dialogs), header slots
 #         (closest slot, form attribute, floating pill) and useConfirm (Escape, focus, queue, phrase, drawer, two
 #         providers, Strict Mode, unmount)
+#         (browser) date presets, bulk menus with a counted confirmation, a content-sized pinned actions column, the
+#         segmented control's option height, translatable limits, the colour field, the route error, the side-by-side
+#         drawer, ./markdown after hydration (sanitised, absent from pages that do not import it)
 #     T7  (browser) a select inside a dialog inside a sheet, and inside a host overlay at z-index 10000 with
 #         --layer-popover: 10001, is clickable (with a negative control at the default layer)
 #   link-skills  `ddd-admin-ui link-skills` links the shipped skill
@@ -83,7 +87,7 @@ PLAIN="$WORK/plain"
 install_into "$PLAIN" "${PEERS[@]}" "${TYPES[@]}" esbuild
 cp "$HERE/fixtures/plain/"* "$PLAIN/"
 cd "$PLAIN"
-node -e "for (const name of ['next','sonner','tailwindcss','recharts']) { try { require.resolve(name); console.error(name + ' is installed'); process.exit(1); } catch {} }"
+node -e "for (const name of ['next','sonner','tailwindcss','recharts','@uiw/react-md-editor','rehype-sanitize']) { try { require.resolve(name); console.error(name + ' is installed'); process.exit(1); } catch {} }"
 node -p "'installed: ddd-web ' + require('@mgamadeus/ddd-web/package.json').version + ', lucide-react ' + require('lucide-react/package.json').version"
 echo "── T4 Node imports"
 node smoke.mjs
@@ -124,7 +128,8 @@ if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-i18n-manifest --check; el
 
 echo "── Next project ($PM)"
 APP="$WORK/next-app"
-install_into "$APP" "${PEERS[@]}" "${TYPES[@]}" "next@^16" sonner "tailwindcss@^4" "@tailwindcss/postcss@^4" tw-animate-css playwright-core
+install_into "$APP" "${PEERS[@]}" "${TYPES[@]}" "next@^16" sonner "tailwindcss@^4" "@tailwindcss/postcss@^4" tw-animate-css playwright-core \
+  "@uiw/react-md-editor@^4.1.0" "rehype-sanitize@^6.0.0"
 cp -R "$HERE/fixtures/next-app/." "$APP/"
 cd "$APP"
 echo "── T1 next build"
@@ -135,6 +140,8 @@ echo "── T5 check-tokens on the built CSS"
 # every built stylesheet in one folder: the check reads them as one stylesheet
 mkdir -p built-css && xargs -I{} cp {} built-css/ < built-css-files.txt
 if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-check-tokens built-css; else pnpm exec ddd-admin-ui-check-tokens built-css; fi
+echo "── contrast of the declared pairs on the built CSS (fails on any miss not on an exception list)"
+if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-check-contrast built-css; else pnpm exec ddd-admin-ui-check-contrast built-css; fi
 echo "── one Radix copy"
 if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-check-radix; else pnpm exec ddd-admin-ui-check-radix; fi
 
@@ -153,6 +160,8 @@ else
   node browser.mjs "http://127.0.0.1:$PORT"
   echo "── form dialog, save shortcut, header slot, confirmations (headless browser)"
   node browser-dialogs.mjs "http://127.0.0.1:$PORT"
+  echo "── date presets, bulk menus, sized actions, segmented options, limits, colour, route error, side-by-side drawer, ./markdown (headless browser)"
+  node browser-blocks.mjs "http://127.0.0.1:$PORT"
   kill $SERVER_PID 2>/dev/null || true
 fi
 

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { FormActionsSlot, Skeleton } from '../primitives/index.ts';
 import { cn } from '../primitives/cn.ts';
+import { isInlineDescription } from '../primitives/descriptionContent.ts';
 
 export interface DetailHeaderProps {
   /** The ghost back button (left column). */
@@ -59,7 +60,12 @@ export const DetailHeader = ({
         >
           {title}
         </Heading>
-        {description && <p className="mt-1.5 truncate text-sm text-muted-foreground">{description}</p>}
+        {description &&
+          (isInlineDescription(description) ? (
+            <p className="mt-1.5 truncate text-sm text-muted-foreground">{description}</p>
+          ) : (
+            <div className="mt-1.5 truncate text-sm text-muted-foreground">{description}</div>
+          ))}
       </div>
     )}
     <div className="flex flex-wrap items-center justify-center gap-3 md:flex-1 md:basis-0 md:justify-end">

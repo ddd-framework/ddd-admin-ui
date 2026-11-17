@@ -15,3 +15,7 @@ export { prepareImageFile } from '../logic/browser/prepareImageFile.ts';
 /** @deprecated moved to logic/browser/prepareImageFile — the re-export is removed in a later minor */
 export type { PreparedImage } from '../logic/browser/prepareImageFile.ts';
 export type { MediaPickerSortOption, MediaPickerTile, MediaUploadAdapter } from './types.ts';
+
+// Image crop surface (0.2.0); the normaliser lives in ./logic.
+export { ImageCropDialog } from './ImageCropDialog.tsx';
+export type { ImageCropDialogProps, ImageCropResult } from './ImageCropDialog.tsx';

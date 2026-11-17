@@ -12,6 +12,9 @@ const expectations = {
   glass: ['GlassPill', 'QuickFilterPills', 'CollapsibleCard', 'GlassGroup', 'ActionRow'],
   provider: ['AdminUiProvider', 'useAdminUi', 'defaultStorageKey'],
   showcase: ['Showcase', 'SHOWCASE_COVERAGE'],
+  data: ['MetricTile', 'MetricGrid', 'DeltaText', 'NoteList', 'relativeChange'],
+  // its optional peers are imported only after hydration, so the entry loads without them
+  markdown: ['MarkdownEditor', 'MarkdownPreview', 'renderMarkdownEditor'],
 };
 
 let failed = false;

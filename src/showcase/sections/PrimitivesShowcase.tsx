@@ -97,6 +97,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '../../primitives/index.ts';
+import { PrimitivesAdditionsShowcase } from './PrimitivesAdditionsShowcase.tsx';
 
 /** A labelled sample inside a section. */
 export const Sample = ({ title, children }: { title: string; children: ReactNode }) => (
@@ -420,6 +421,7 @@ export const PrimitivesShowcase = () => {
           </TableFooter>
         </Table>
       </Sample>
+      <PrimitivesAdditionsShowcase />
     </Samples>
   );
 };

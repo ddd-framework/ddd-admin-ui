@@ -264,10 +264,12 @@ export function checkPackage(packageDirectory, options = {}) {
       primitives: ['i18n'],
       provider: ['logic', 'i18n', 'primitives'],
       // the development page: every block entry, never an entry with an optional peer (./next, ./notify-sonner)
-      showcase: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'translations', 'media', 'glass'],
+      showcase: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'translations', 'media', 'glass', 'data'],
       translations: ['logic', 'i18n', 'primitives', 'form'],
+      data: ['logic', 'i18n', 'primitives'],
+      markdown: ['logic', 'i18n', 'primitives'],
     };
-    const TYPE_ONLY = { provider: ['media', 'translations'] };
+    const TYPE_ONLY = { provider: ['media', 'translations'], markdown: ['translations'] };
     const FILE_LIMITS = {
       'form->page': ['page/DetailHeader', 'page/EntityMetadata'],
       'page->list': ['list/EmptyValue', 'list/EntityListEmpty', 'list/EntityListCard'],
@@ -321,6 +323,7 @@ export function checkPackage(packageDirectory, options = {}) {
       { test: name => name === 'next' || name.startsWith('next/'), only: ['next'], label: 'next/*' },
       { test: name => name === 'sonner', only: ['notify-sonner'], label: 'sonner' },
       { test: name => name === 'recharts', only: [], label: 'recharts' },
+      { test: name => name.startsWith('@uiw/') || name === 'rehype-sanitize', only: ['markdown'], label: 'markdown editor peers' },
       { test: name => name.startsWith('@reduxjs/') || name.startsWith('@mgamadeus/ddd-web/api'), only: [], label: 'Redux / ddd-web/api' },
     ];
     const UI_ONLY = name => /^(radix-ui|@radix-ui\/|class-variance-authority$|cmdk$|clsx$|tailwind-merge$|lucide-react$)/.test(name);

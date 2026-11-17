@@ -39,6 +39,7 @@ import {
 import { defineStatusMap, type EntityListSort, type ListDisplayMode, useLatestSearch, useRowSelection } from '../../logic/index.ts';
 import { Input } from '../../primitives/index.ts';
 import { Sample, Samples } from './PrimitivesShowcase.tsx';
+import { ListAdditionsShowcase } from './ListAdditionsShowcase.tsx';
 
 export interface ShowcaseRow {
   id: number;
@@ -297,6 +298,7 @@ export const ListShowcase = () => {
           <FilterDateRange label="Created" hideLabel from={from} to={to} onFromChange={setFrom} onToChange={setTo} fromLabel="Created after" toLabel="Created before" />
         </Sample>
       </Samples>
+      <ListAdditionsShowcase />
     </div>
   );
 };

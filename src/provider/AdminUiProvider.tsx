@@ -7,6 +7,8 @@ import type { ConfirmOptions } from '../logic/pure/confirm.ts';
 import { createConfirmQueue } from '../logic/pure/confirmQueue.ts';
 import { setNotificationAdapter } from '../logic/pure/notify.ts';
 import { ConfirmContext } from '../logic/react/useConfirm.ts';
+import { FormatLocaleContext } from '../i18n/formatLocale.ts';
+import { TextLimitsContext } from '../logic/react/textLimits.ts';
 import { LinkComponentProvider } from '../primitives/link.tsx';
 import { PortalContainerProvider } from '../primitives/portal.tsx';
 import { TooltipProvider } from '../primitives/tooltip.tsx';
@@ -50,6 +52,8 @@ export const AdminUiProvider = ({
   preserveSearchParams,
   linkComponent,
   confirm: hostConfirm,
+  formatLocale,
+  textLimits,
 }: AdminUiProviderProps) => {
   const [confirmQueue] = useState(() => createConfirmQueue<ConfirmOptions>());
   const confirm = hostConfirm ?? confirmQueue.request;
@@ -74,13 +78,18 @@ export const AdminUiProvider = ({
     [storageKey, useUrlStateAdapter, useDrawerUrlAdapter, upload, renderMarkdownEditor, aiTranslation, preserveSearchParams]
   );
 
+  // optional contexts: mounted only when the host sets them (the default value stands otherwise)
+  let content = linkComponent ? <LinkComponentProvider linkComponent={linkComponent}>{children}</LinkComponentProvider> : children;
+  if (formatLocale) content = <FormatLocaleContext.Provider value={formatLocale}>{content}</FormatLocaleContext.Provider>;
+  if (textLimits) content = <TextLimitsContext.Provider value={textLimits}>{content}</TextLimitsContext.Provider>;
+
   return (
     <AdminUiContext.Provider value={value}>
       {translations && <TranslationBridge adapter={translations} />}
       <TooltipProvider delayDuration={tooltipDelayMs}>
         <PortalContainerProvider container={portalContainer}>
           <ConfirmContext.Provider value={confirm}>
-            {linkComponent ? <LinkComponentProvider linkComponent={linkComponent}>{children}</LinkComponentProvider> : children}
+            {content}
             {hostConfirm ? null : <ConfirmHost queue={confirmQueue} />}
           </ConfirmContext.Provider>
         </PortalContainerProvider>

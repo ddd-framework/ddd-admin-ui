@@ -43,6 +43,90 @@ export interface EntityListToolbarProps {
 
 const CONTROL_TEXT = 'h-8 shrink-0 text-[13px] font-bold';
 
+export interface FilterCountBadgeProps {
+  /** Set filters; nothing renders at 0. */
+  count: number;
+  /** On a filled (primary) control: the inverted colours. */
+  inverted?: boolean;
+  className?: string;
+}
+
+/** The count badge of the Filters toggle, for a host's own filter control (a sheet trigger, a menu). */
+export const FilterCountBadge = ({ count, inverted = false, className }: FilterCountBadgeProps) =>
+  count > 0 ? (
+    <span
+      className={cn(
+        'inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[11px] leading-none font-black tabular-nums',
+        inverted ? 'bg-primary-foreground text-primary' : 'bg-primary text-primary-foreground',
+        className
+      )}
+    >
+      {count}
+    </span>
+  ) : null;
+
+export interface FilterToggleButtonProps {
+  /** The panel (or the host's sheet) is open: the filled look and `aria-expanded`. */
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** Set filters: the badge and the accessible name say how many. */
+  activeFilterCount?: number;
+  /** `aria-controls` of the panel it opens. */
+  'aria-controls'?: string;
+  className?: string;
+}
+
+/** The toolbar's Filters toggle with its count, for a filter panel or sheet outside `EntityListToolbar`. */
+export const FilterToggleButton = ({
+  open,
+  onOpenChange,
+  activeFilterCount = 0,
+  'aria-controls': ariaControls,
+  className,
+}: FilterToggleButtonProps) => {
+  const { t } = useTranslate();
+  return (
+    <Button
+      size="sm"
+      variant={open ? 'default' : 'outline'}
+      onClick={() => onOpenChange(!open)}
+      aria-label={
+        activeFilterCount > 0
+          ? t('Toggle filters (%count% active)', { replacements: { count: activeFilterCount } })
+          : t('Toggle filters')
+      }
+      aria-expanded={open}
+      aria-controls={ariaControls}
+      rounded="full"
+      className={cn(CONTROL_TEXT, className)}
+    >
+      <SlidersHorizontal />
+      <span className="hidden sm:inline">{t('Filters')}</span>
+      <FilterCountBadge count={activeFilterCount} inverted={open} />
+    </Button>
+  );
+};
+
+export interface ClearFiltersButtonProps {
+  /** Empties every filter. */
+  onClear: () => void;
+  /** Set filters: nothing renders at 0. Absent: always shown. */
+  activeFilterCount?: number;
+  className?: string;
+}
+
+/** The one "Clear filters" button of the toolbar, for a host's own filter row or sheet. */
+export const ClearFiltersButton = ({ onClear, activeFilterCount, className }: ClearFiltersButtonProps) => {
+  const { t } = useTranslate();
+  if (activeFilterCount !== undefined && activeFilterCount <= 0) return null;
+  return (
+    <Button size="sm" variant="outline" rounded="full" onClick={onClear} className={cn(CONTROL_TEXT, className)}>
+      <X />
+      {t('Clear filters')}
+    </Button>
+  );
+};
+
 /**
  * The list card's fixed chrome: the `SearchField` pill with its clear button, the Filters toggle (with
  * the active-filter count) and its collapsible panel, the one Clear filters button, trailing scope controls, the view
@@ -62,46 +146,10 @@ export const EntityListToolbar = ({
   const showClear = onClearFilters !== undefined && activeFilterCount > 0;
 
   const filterToggle = filters && (
-    <Button
-      size="sm"
-      variant={filtersOpen ? 'default' : 'outline'}
-      onClick={() => setFiltersOpen(open => !open)}
-      aria-label={
-        activeFilterCount > 0
-          ? t('Toggle filters (%count% active)', { replacements: { count: activeFilterCount } })
-          : t('Toggle filters')
-      }
-      aria-expanded={filtersOpen}
-      rounded="full"
-      className={CONTROL_TEXT}
-    >
-      <SlidersHorizontal />
-      <span className="hidden sm:inline">{t('Filters')}</span>
-      {activeFilterCount > 0 && (
-        <span
-          className={cn(
-            'inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[11px] leading-none font-black tabular-nums',
-            filtersOpen ? 'bg-primary-foreground text-primary' : 'bg-primary text-primary-foreground'
-          )}
-        >
-          {activeFilterCount}
-        </span>
-      )}
-    </Button>
+    <FilterToggleButton open={filtersOpen} onOpenChange={setFiltersOpen} activeFilterCount={activeFilterCount} />
   );
 
-  const clearButton = showClear && (
-    <Button
-      size="sm"
-      variant="outline"
-      rounded="full"
-      onClick={onClearFilters}
-      className={cn(CONTROL_TEXT, 'self-start sm:self-auto')}
-    >
-      <X />
-      {t('Clear filters')}
-    </Button>
-  );
+  const clearButton = showClear && <ClearFiltersButton onClear={onClearFilters} className="self-start sm:self-auto" />;
 
   return (
     <div>

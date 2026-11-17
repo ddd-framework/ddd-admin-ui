@@ -10,14 +10,15 @@ import { getTranslationState } from './store.ts';
 /** The `Intl` locale of the active UI language (`de`, `en-GB` for English, …). */
 export const getUiLocale = (): string => toIntlLocale(getTranslationState().languageCode);
 
-export const uiDateTimeFormat = (options: Intl.DateTimeFormatOptions = {}): Intl.DateTimeFormat =>
-  dateTimeFormatFor(getUiLocale(), options);
+/** A date-time format in `locale`, or in the UI language's locale without one. */
+export const uiDateTimeFormat = (options: Intl.DateTimeFormatOptions = {}, locale?: string): Intl.DateTimeFormat =>
+  dateTimeFormatFor(locale ?? getUiLocale(), options);
 
 export const uiNumberFormat = (options: Intl.NumberFormatOptions = {}): Intl.NumberFormat =>
   numberFormatFor(getUiLocale(), options);
 
-export const uiRelativeTimeFormat = (options: Intl.RelativeTimeFormatOptions = {}): Intl.RelativeTimeFormat =>
-  relativeTimeFormatFor(getUiLocale(), options);
+export const uiRelativeTimeFormat = (options: Intl.RelativeTimeFormatOptions = {}, locale?: string): Intl.RelativeTimeFormat =>
+  relativeTimeFormatFor(locale ?? getUiLocale(), options);
 
 /** A number in the UI language (`1.234,5` in German, `1,234.5` in English). */
 export const formatUiNumber = (value: number, options: Intl.NumberFormatOptions = {}): string =>

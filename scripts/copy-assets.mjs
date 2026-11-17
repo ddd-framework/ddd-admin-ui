@@ -20,6 +20,7 @@ const ASSETS = [
   { from: 'scripts/check-radix.mjs', to: 'dist/scripts/check-radix.mjs' },
   { from: 'scripts/check-tokens.mjs', to: 'dist/scripts/check-tokens.mjs' },
   { from: 'scripts/build-i18n-manifest.mjs', to: 'dist/scripts/build-i18n-manifest.mjs' },
+  { from: 'scripts/check-contrast.mjs', to: 'dist/scripts/check-contrast.mjs' },
 ];
 
 for (const asset of ASSETS) {

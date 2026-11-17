@@ -12,6 +12,8 @@ import { NextShowcase, NotifySonnerShowcase, type NotifySonnerLoader } from './s
 import { PageShowcase } from './sections/PageShowcase.tsx';
 import { PrimitivesShowcase } from './sections/PrimitivesShowcase.tsx';
 import { TranslationsShowcase } from './sections/TranslationsShowcase.tsx';
+import { DataShowcase } from './sections/DataShowcase.tsx';
+import { type MarkdownLoader, MarkdownShowcase } from './sections/MarkdownShowcase.tsx';
 
 /** One section of the showcase: a heading and what it draws. Hosts append their own (`Showcase.sections`). */
 export interface ShowcaseSection {
@@ -35,20 +37,39 @@ export interface ShowcaseProps {
    * (the peer is missing), the section says it is skipped.
    */
   loadNotifySonner?: NotifySonnerLoader;
-  /** Leave out package sections by id (`primitives`, `list`, `page`, `form`, `translations`, `media`, `glass`, `notify-sonner`, `next`). */
+  /**
+   * Loads `./markdown` for its section; only a host with the optional peers `@uiw/react-md-editor` and
+   * `rehype-sanitize` passes it: `loadMarkdown={() => import('@mgamadeus/ddd-admin-ui/markdown')}`. Without it the
+   * section says it is skipped.
+   */
+  loadMarkdown?: MarkdownLoader;
+  /**
+   * Leave out package sections by id (`primitives`, `list`, `page`, `form`, `translations`, `markdown`, `media`,
+   * `glass`, `data`, `notify-sonner`, `next`).
+   */
   omit?: readonly string[];
   className?: string;
 }
 
 /** The package's sections, one per entry, in import-matrix order. */
-const packageSections = (loadNotifySonner: NotifySonnerLoader | undefined): ShowcaseSection[] => [
+const packageSections = (
+  loadNotifySonner: NotifySonnerLoader | undefined,
+  loadMarkdown: MarkdownLoader | undefined
+): ShowcaseSection[] => [
   { id: 'primitives', title: './primitives', description: 'Buttons, fields, overlays, tables, the segmented control.', content: <PrimitivesShowcase /> },
   { id: 'list', title: './list', description: 'List card, toolbar, filters, table and grid, cells, pickers.', content: <ListShowcase /> },
   { id: 'page', title: './page', description: 'Page frame and header, detail shell, cards and toolbars.', content: <PageShowcase /> },
   { id: 'form', title: './form', description: 'Form shell, fields, sections, actions, errors, drawer.', content: <FormShowcase /> },
   { id: 'translations', title: './translations', description: 'Inputs per content locale and the translation controls.', content: <TranslationsShowcase /> },
+  {
+    id: 'markdown',
+    title: './markdown',
+    description: 'Markdown editor and sanitised preview (optional peers, loaded lazily).',
+    content: <MarkdownShowcase load={loadMarkdown} />,
+  },
   { id: 'media', title: './media', description: 'Media field, preview and picker.', content: <MediaShowcase /> },
   { id: 'glass', title: './glass', description: 'Glass pills, quick filters, collapsible cards, groups and rows.', content: <GlassShowcase /> },
+  { id: 'data', title: './data', description: 'Key figures: metric tiles with a change and a sparkline slot, their grid, notes.', content: <DataShowcase /> },
   {
     id: 'notify-sonner',
     title: './notify-sonner',
@@ -94,8 +115,15 @@ const ThemePane = ({ theme, sections }: { theme: ShowcaseTheme; sections: readon
  * `./notify-sonner` section loads only through `loadNotifySonner` and is skipped without it; `./next` is described,
  * never imported. Texts are developer-facing English and not part of the text manifest.
  */
-export const Showcase = ({ sections = [], themes = ['light', 'dark'], loadNotifySonner, omit = [], className }: ShowcaseProps) => {
-  const all = [...packageSections(loadNotifySonner).filter(section => !omit.includes(section.id)), ...sections];
+export const Showcase = ({
+  sections = [],
+  themes = ['light', 'dark'],
+  loadNotifySonner,
+  loadMarkdown,
+  omit = [],
+  className,
+}: ShowcaseProps) => {
+  const all = [...packageSections(loadNotifySonner, loadMarkdown).filter(section => !omit.includes(section.id)), ...sections];
   return (
     <div data-showcase className={cn('flex flex-col gap-6 xl:flex-row', className)}>
       {themes.map(theme => (

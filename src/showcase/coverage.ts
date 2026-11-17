@@ -46,6 +46,7 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
       'EntityListCard', 'EntityListEmpty', 'EntityListGrid', 'EntityListGridSkeleton', 'EntityListLoadMore', 'EntityListTable',
       'EntityListToolbar', 'EntityListViewToggle', 'FilterDateRange', 'FilterField', 'FilterMultiSelect', 'FilterPanel',
       'FilterSelect', 'FilterText', 'IdCell', 'ImageCell', 'MultiSelect', 'SearchField', 'StatusBadge', 'Tag',
+      'ClearFiltersButton', 'FilterCountBadge', 'FilterToggleButton',
     ],
     notShown: { EntityListPage: 'deprecated re-export; shown under ./page' },
   },
@@ -54,6 +55,7 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
       'AddEntityButton', 'AnchorLink', 'CardGrid', 'DefinitionList', 'DetailHeader', 'EditableCard', 'EntityDetailShell',
       'EntityListPage', 'EntityMetadata', 'EntityTabs', 'ExportButton', 'IconValue', 'IconValueRow', 'MoreActionsMenu',
       'PageFrame', 'PageHeader', 'PageSections', 'PageToolbar', 'SectionHeader', 'StatusCallout', 'StatusCalloutAction',
+      'RouteError', 'RouteLoading',
     ],
     notShown: {},
   },
@@ -61,6 +63,7 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
     shown: [
       'DrawerFooter', 'Form', 'FormActions', 'FormDialog', 'FormDrawer', 'FormErrors', 'FormField', 'FormFieldFrame', 'FormHeader',
       'FormJumpBar', 'FormSection', 'FormSubmitButton', 'FormWrapper', 'VisibleWhen',
+      'ColorValueField',
     ],
     notShown: { UnsavedChangesContext: 'a context (used by FormDrawer)' },
   },
@@ -72,12 +75,23 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
     notShown: {},
   },
   media: {
-    shown: ['FormMediaItemField', 'MediaItemField', 'MediaItemPickerDialog', 'MediaPreview'],
+    shown: ['FormMediaItemField', 'MediaItemField', 'MediaItemPickerDialog', 'MediaPreview', 'ImageCropDialog'],
     notShown: {},
   },
   glass: {
     shown: ['ActionRow', 'CollapsibleCard', 'GlassGroup', 'GlassPill', 'QuickFilterPills'],
     notShown: {},
+  },
+  data: {
+    shown: ['DeltaText', 'MetricGrid', 'MetricTile', 'NoteList'],
+    notShown: { MetricTileSkeleton: DRAWN_BY('MetricGrid isLoading') },
+  },
+  markdown: {
+    shown: [],
+    notShown: {
+      MarkdownEditor: 'drawn by the ./markdown section when the host passes loadMarkdown (optional peers)',
+      MarkdownPreview: 'drawn by the ./markdown section when the host passes loadMarkdown (optional peers)',
+    },
   },
   provider: {
     shown: [],

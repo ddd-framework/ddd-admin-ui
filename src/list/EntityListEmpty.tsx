@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 
 import { Button } from '../primitives/index.ts';
 import { useTranslate } from '../i18n/index.ts';
@@ -12,8 +12,13 @@ export interface EntityListEmptyProps {
   icon?: ReactNode;
   /** Renders an outlined "Clear search" button (the no-results state). */
   onClearSearch?: () => void;
-  /** One outlined call to action (e.g. "Create …"). */
+  /**
+   * One outlined call to action (e.g. "Create …"), rendered as given: give it the size of the built-in "Clear search"
+   * button (`sm`; `xs` with `size="compact"`) or set `clearSearchSize` to match yours.
+   */
   action?: ReactNode;
+  /** Button size of the built-in "Clear search" (default `sm`, `xs` with `size="compact"`). */
+  clearSearchSize?: ComponentProps<typeof Button>['size'];
   /**
    * `default`: the 64 px centred block of a list card. `compact`: one inline line (icon, message, buttons), for a
    * small list inside a card or a section.
@@ -22,7 +27,15 @@ export interface EntityListEmptyProps {
 }
 
 /** Empty, no-results and error state of a list: one short sentence, at most one CTA. */
-export const EntityListEmpty = ({ message, tone = 'default', icon, onClearSearch, action, size = 'default' }: EntityListEmptyProps) => {
+export const EntityListEmpty = ({
+  message,
+  tone = 'default',
+  icon,
+  onClearSearch,
+  action,
+  size = 'default',
+  clearSearchSize,
+}: EntityListEmptyProps) => {
   const { t } = useTranslate();
   if (size === 'compact') {
     return (
@@ -34,7 +47,7 @@ export const EntityListEmpty = ({ message, tone = 'default', icon, onClearSearch
         {icon && <span className="flex shrink-0 [&_svg]:size-4">{icon}</span>}
         <span className={cn(tone === 'error' && 'text-destructive')}>{message}</span>
         {onClearSearch && (
-          <Button variant="outline" size="xs" onClick={onClearSearch}>
+          <Button variant="outline" size={clearSearchSize ?? 'xs'} onClick={onClearSearch}>
             {t('Clear search')}
           </Button>
         )}
@@ -49,7 +62,7 @@ export const EntityListEmpty = ({ message, tone = 'default', icon, onClearSearch
     {(onClearSearch || action) && (
       <div className="mt-4 flex items-center justify-center gap-2">
         {onClearSearch && (
-          <Button variant="outline" size="sm" onClick={onClearSearch}>
+          <Button variant="outline" size={clearSearchSize ?? 'sm'} onClick={onClearSearch}>
             {t('Clear search')}
           </Button>
         )}

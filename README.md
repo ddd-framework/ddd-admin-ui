@@ -21,19 +21,21 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 
 | Entry | What it holds | May import (besides React and its peers) |
 |---|---|---|
-| `./logic` | pure helpers (`formatDate`, `defineStatusMap`, conditions, schemas, `notify`, `runSequential`), React hooks without markup (`useUrlListState`, `useEntityDrawer`, `useRowSelection`, `useEntityTranslations`, …), browser helpers (`prepareImageFile`, `readStored` / `writeStored`, `buildStorageKey`), date input values (`toDateInputValue`, `fromDateTimeInputValue`, …), `withStickyParams`, `useLatestSearch`, `useConfirm` (the provider's confirmation), `WriteAccessProvider` / `useWriteAccess` | `./i18n` |
+| `./logic` | pure helpers (`formatDate`, `defineStatusMap`, conditions, schemas, `notify`, `runSequential`), React hooks without markup (`useUrlListState`, `useEntityDrawer`, `useRowSelection`, `useEntityTranslations`, …), browser helpers (`prepareImageFile`, `readStored` / `writeStored`, `buildStorageKey`), date input values (`toDateInputValue`, `fromDateTimeInputValue`, …), `withStickyParams`, `useLatestSearch`, `useConfirm` (the provider's confirmation), `WriteAccessProvider` / `useWriteAccess`, date range presets, bulk summaries with skipped rows (`skipSequential`, `bulkSummaryText`), text limits (`countCodePoints`, `overLimitKeys`), colour values, `useMediaQuery`, the image normaliser (`normalizeImage`) and crop geometry | `./i18n` |
 | `./i18n` | the UI text store (`m`, `translateText`, `setTranslations`), `useTranslate`, `<Translate>`, number / date formats of the UI locale, server-message translation | — |
 | `./primitives` | buttons, inputs, selects, dialogs, sheets, popovers, menus, tooltips, tables, badges, `SegmentedControl`, `cn`, the portal container, the header slot of form actions (`FormActionsSlotProvider`, `FormActionsSlot`) | `./i18n` |
-| `./list` | entity list card, toolbar, search, filters, table, grid, load-more, status badge, cells, multi-select, combobox, bulk bar | logic, i18n, primitives |
-| `./page` | page header and frame, `EntityListPage`, detail shell and header, tabs, section header, definition list, page toolbar, editable card, status callout, entity metadata | logic, i18n, primitives; from list only `EmptyValue`, `EntityListEmpty`, `EntityListCard` |
-| `./form` | `Form`, `FormField`, `FormSection`, `FormActions`, `FormDrawer`, `FormDialog`, `FormHeader`, `FormWrapper`, `FormJumpBar`, `FormErrors`, `FormSubmitButton`, `useConfirmDialog` | logic, i18n, primitives; from page only `DetailHeader`, `EntityMetadata` |
+| `./list` | entity list card, toolbar, search, filters, table, grid, load-more, status badge, cells, multi-select, combobox, bulk bar, column factories (`textColumn`, `moneyColumn`, `actionsColumn`, …), the toolbar's filter toggle, count and clear as blocks | logic, i18n, primitives |
+| `./page` | page header and frame, `EntityListPage`, detail shell and header, tabs, section header, definition list, page toolbar, editable card, status callout, entity metadata, route states (`RouteError`, `RouteLoading`) | logic, i18n, primitives; from list only `EmptyValue`, `EntityListEmpty`, `EntityListCard` |
+| `./form` | `Form`, `FormField`, `FormSection`, `FormActions`, `FormDrawer`, `FormDialog`, `FormHeader`, `FormWrapper`, `FormJumpBar`, `FormErrors`, `FormSubmitButton`, `useConfirmDialog`, `ColorValueField` | logic, i18n, primitives; from page only `DetailHeader`, `EntityMetadata` |
 | `./translations` | `TranslatableInput`, `TranslatableMarkdown` (editor injected), their form-bound variants, `TranslationControls` | logic, i18n, primitives; from form only `fieldLabels`, `useConfirmDialog` |
-| `./media` | `MediaItemField`, `FormMediaItemField`, `MediaItemPickerDialog`, `MediaPreview` | logic, i18n, primitives, list, form |
+| `./media` | `MediaItemField`, `FormMediaItemField`, `MediaItemPickerDialog`, `MediaPreview`, `ImageCropDialog` (crop surface: file and aspect options in; cropped blob, skip or cancel out) | logic, i18n, primitives, list, form |
 | `./glass` | `GlassPill`, `QuickFilterPills`, `CollapsibleCard`, `GlassGroup`, `ActionRow` | logic, i18n, primitives |
 | `./provider` | `AdminUiProvider` (also the dialog behind `useConfirm`), `useAdminUi`, `defaultStorageKey` | logic, i18n, primitives; types only from media and translations |
 | `./next` | Next.js adapters: `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useListViewParam`, the one URL writer (`queueSearchParamsWrite`) | logic, provider; the only entry importing `next/*` |
 | `./notify-sonner` | `sonnerNotifications` (the notification adapter on `sonner`) and its `Toaster` | logic; the only entry importing `sonner` |
-| `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE` | logic, i18n, primitives, list, page, form, translations, media, glass; never `./next` or `./notify-sonner` |
+| `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE` | logic, i18n, primitives, list, page, form, translations, media, glass, data; never `./next`, `./notify-sonner` or `./markdown` (its section loads through `loadMarkdown`) |
+| `./data` | key figures: `MetricTile` (label, value, delta, hint, sparkline slot, skeleton), `MetricTileSkeleton`, `MetricGrid`, `DeltaText`, `NoteList`, the delta helpers `resolveDelta`, `relativeChange`, `deltaDirectionOf`, `deltaToneOf` | logic, i18n, primitives |
+| `./markdown` | `MarkdownEditor`, `MarkdownPreview` (sanitised), `renderMarkdownEditor` (the `renderEditor` slot of `./translations` and `AdminUiProvider.renderMarkdownEditor`); loads `@uiw/react-md-editor` and `rehype-sanitize` after hydration | logic, i18n, primitives; translations type-only; the only entry reaching its optional peers |
 | `./theme.css`, `./components.css` | the Tailwind theme binding and the structural CSS of the blocks | — |
 | `./tokens.json`, `./i18n-keys.json` | the host contract (colour roles, properties, layers, data attributes) and the text manifest | — |
 
@@ -54,10 +56,14 @@ from the entry that owns it.
 | `next` | optional peer | `^16.0.0` — needed by `./next` only |
 | `sonner` | optional peer | `^2.0.0` — needed by `./notify-sonner` only |
 | `tailwindcss` | optional peer | `^4.1.0` — the host's build compiles the CSS |
+| `@uiw/react-md-editor` | optional peer | `^4.1.0` — needed by `./markdown` only |
+| `rehype-sanitize` | optional peer | `^6.0.0` — needed by `./markdown` only |
 | `radix-ui` | peer | `^1.8.1` — one copy per app, as with React (see below) |
 | `class-variance-authority`, `cmdk`, `clsx`, `tailwind-merge` | dependencies | imported inside `./primitives` only |
 
-Without `next` or `sonner` every entry except `./next` and `./notify-sonner` imports and type-checks.
+Without `next` or `sonner` every entry except `./next` and `./notify-sonner` imports and type-checks. `./markdown`
+imports its two peers only after hydration (a dynamic import), so it loads without them and a host that never imports
+it never bundles them.
 
 **One Radix copy.** Radix keeps focus traps, outside-click layers and portals in module state. Two copies of one
 Radix package in an app (the package's dialogs from `radix-ui`, a host dialog from an older single
@@ -130,6 +136,36 @@ It reads the host's `node_modules` (npm and pnpm layouts) and the folders above 
    theme stores HSL channels); a property read anywhere else (`background-color: var(--card)`, `color-mix()`,
    `light-dark()`, or passed on to another custom property that is read so) must hold a colour.
 
+   Check the contrast of the pairs `tokens.json` declares (`contrast.pairs`: text and UI roles on their backgrounds,
+   4.5:1 for text, 3:1 for large text and UI parts), light and dark:
+
+   ```sh
+   npx ddd-admin-ui-check-contrast <built css file or folder> [tokens.json] [--exceptions <file.json>] [--allow-unevaluated]
+   ```
+
+   It prints each pair's ratio per theme and exits 1 on a pair below its minimum that no exception list names: the
+   package's (`contrast.exceptions` of `tokens.json`) merged with the host's file passed as `--exceptions`. A background
+   `role/NN` is that role at NN % over the card (status badges). Values it cannot compute (named colours, `color-mix()`,
+   `lab()`, `light-dark()`, …) count as failures unless `--allow-unevaluated` is passed. Run it in the host's CI on its
+   built CSS, like `ddd-admin-ui-check-tokens`.
+
+   An exception file is an array (or `{ "exceptions": [...] }`) of entries in the format of the package's list; `theme`
+   is optional (both themes when absent), `reason` is required:
+
+   ```json
+   [
+     { "foreground": "muted-foreground", "background": "card", "theme": "dark", "reason": "captions only, large text" }
+   ]
+   ```
+
+   The package lists the light status pairs (`success` on `card`, and `success`, `warning`, `destructive`, `info` on
+   their 15 % tints): status colours used as text or on their tint, themed by each host, until an emphasis role exists.
+
+   **Layers checklist.** The package's dialogs, sheets and drawers open at layer 50 (`--layer-overlay`), its popovers,
+   selects, menus and tooltips at 50 too (`--layer-popover`). A host whose own overlay scale is higher (a dialog at
+   9999, toasts at 100) raises them on `:root` (`--layer-overlay: 10000; --layer-popover: 10001`), or the package's
+   dialogs open under the host's chrome.
+
 3. **Provider** above every page. Blocks draw tooltips (a date cell shows the relative time on hover), so a page
    without the provider fails with "`Tooltip` must be used within `TooltipProvider`".
 
@@ -158,7 +194,9 @@ It reads the host's `node_modules` (npm and pnpm layouts) and the folders above 
    host store), `useUrlStateAdapter`, `useDrawerUrlAdapter`, `upload`, `renderMarkdownEditor`, `aiTranslation`,
    `preserveSearchParams` (search parameters the URL writer never removes), `linkComponent` (the router link of every
    block that renders a link; wrap it with `withStickyParams` to keep sticky search parameters), `confirm` (the
-   host's confirmation service behind `useConfirm()`). Without a notification adapter `notify.*` does nothing and
+   host's confirmation service behind `useConfirm()`), `formatLocale` (the `Intl` locale date cells format in, when it
+differs from the UI language's), `textLimits` (`{ singleLine, multiline }`: default length limits of translatable text
+fields, in code points). Without a notification adapter `notify.*` does nothing and
    warns once outside production.
 
    ```tsx
@@ -180,6 +218,13 @@ It reads the host's `node_modules` (npm and pnpm layouts) and the folders above 
    function): `FormDrawer` ("Discard changes?") and `TranslatableInput` / `TranslatableMarkdown` and their form-bound
    variants ("Clear all translations?"). The package dialog then does not render. The host's dialog must come from the
    same Radix copy as the blocks (see Peers).
+
+5. **Markdown** (optional): with `@uiw/react-md-editor` and `rehype-sanitize` installed, pass
+   `renderMarkdownEditor({ rows: 8 })` from `./markdown` as `AdminUiProvider.renderMarkdownEditor` or as a field's
+   `renderEditor`. The editor loads after hydration (the server draws a skeleton, no `next/*`); its stylesheet comes
+   with the library's module, and a bundler that cannot import CSS from `node_modules` adds
+   `@import '@uiw/react-md-editor/markdown-editor.css'`. If the editor cannot be loaded at run time, the field is a plain
+   text area.
 
 ## Server and client
 
@@ -289,6 +334,7 @@ pnpm pack --pack-destination "$TMPDIR" && test/consumer/run.sh "$TMPDIR"/mgamade
 | `node scripts/build-i18n-manifest.mjs [--check]` (`pnpm i18n:manifest`) | regenerates `i18n-keys.json` from the source and `i18n/hints.json`; run it after changing a text or the version |
 | `node scripts/check-tokens.mjs <css> [tokens.json]` | the host check above (shipped as `ddd-admin-ui-check-tokens`) |
 | `node scripts/check-radix.mjs [host folder]` | the Radix copy check above (shipped as `ddd-admin-ui-check-radix`) |
+| `node scripts/check-contrast.mjs <css> [tokens.json]` | the contrast check above (shipped as `ddd-admin-ui-check-contrast`) |
 
 Source files import each other with explicit `.ts` / `.tsx` extensions and never through a directory. The consumer
 tests (`test/consumer/run.sh <tarball> <npm|pnpm> <workDir>`) install the packed tarball into a project without the

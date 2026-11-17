@@ -3,6 +3,7 @@
 import { Input } from '../primitives/index.ts';
 import { Textarea } from '../primitives/textarea.tsx';
 import { useTranslate } from '../i18n/index.ts';
+import { useTextLimits } from '../logic/react/textLimits.ts';
 import { TranslatableField, type TranslatableFieldBaseProps } from './TranslatableField.tsx';
 
 export interface TranslatableInputProps extends TranslatableFieldBaseProps {
@@ -19,9 +20,11 @@ export interface TranslatableInputProps extends TranslatableFieldBaseProps {
  */
 export const TranslatableInput = ({ multiline = false, rows = 4, placeholder, ...fieldProps }: TranslatableInputProps) => {
   const { t } = useTranslate();
+  const limits = useTextLimits();
+  const maxLength = fieldProps.maxLength ?? (multiline ? limits.multiline : limits.singleLine);
   return (
-  <TranslatableField {...fieldProps}>
-    {({ id, text, setText, localeLabel }) =>
+  <TranslatableField {...fieldProps} maxLength={maxLength}>
+    {({ id, text, setText, localeLabel, invalid }) =>
       multiline ? (
         <Textarea
           id={id}
@@ -30,7 +33,7 @@ export const TranslatableInput = ({ multiline = false, rows = 4, placeholder, ..
           placeholder={placeholder ?? t('Enter %language% text…', { replacements: { language: localeLabel } })}
           rows={rows}
           disabled={fieldProps.disabled}
-          aria-invalid={!!fieldProps.error}
+          aria-invalid={invalid}
           className="field-sizing-fixed resize-y"
         />
       ) : (
@@ -40,7 +43,7 @@ export const TranslatableInput = ({ multiline = false, rows = 4, placeholder, ..
           onChange={event => setText(event.target.value)}
           placeholder={placeholder ?? t('Enter %language% text…', { replacements: { language: localeLabel } })}
           disabled={fieldProps.disabled}
-          aria-invalid={!!fieldProps.error}
+          aria-invalid={invalid}
         />
       )
     }

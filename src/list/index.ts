@@ -105,3 +105,21 @@ export type { UrlStateAdapter } from '../logic/pure/urlListState.ts';
 export { useUrlListState } from '../logic/react/useUrlListState.ts';
 /** @deprecated moved to logic/react/useUrlListState — the re-export is removed in a later minor */
 export type { UrlListState, UseUrlListStateOptions } from '../logic/react/useUrlListState.ts';
+
+// Column factories, toolbar parts outside the toolbar, bulk action menus, the table breakpoint (0.2.0).
+export {
+  actionsColumn,
+  booleanColumn,
+  dateColumn,
+  idColumn,
+  imageColumn,
+  moneyColumn,
+  numberColumn,
+  statusColumn,
+  textColumn,
+} from './columns.tsx';
+export type { ColumnFactoryOptions } from './columns.tsx';
+export { ClearFiltersButton, FilterCountBadge, FilterToggleButton } from './EntityListToolbar.tsx';
+export type { ClearFiltersButtonProps, FilterCountBadgeProps, FilterToggleButtonProps } from './EntityListToolbar.tsx';
+export type { EntityListBulkActionChoice, EntityListBulkActionConfirm } from './EntityListBulkBar.tsx';
+export type { ListTableBreakpoint } from './EntityListBody.tsx';

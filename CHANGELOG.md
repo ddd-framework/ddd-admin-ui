@@ -3,6 +3,113 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.2.0
+
+All additions below are optional props, new exports or new entries: a caller that uses none of them renders the same
+DOM (the list snapshot of 0.1.0-rc.2 and the form actions snapshot of 0.1.0-rc.5 are unchanged).
+
+Lists:
+
+- `FilterDateRange presets` (`true` or the host's list; `preset` / `onPresetChange`, `onRangeChange`, `today`): all
+  time, today, last 7 days, last 30 days, custom on a `SegmentedControl`; a preset writes the same `YYYY-MM-DD` bounds as
+  typed dates, so "Clear filters" is "All time" again; the resolved range shows next to the label; custom reveals the two
+  fields without a second visible label. Pure helpers in `./logic`: `DEFAULT_DATE_RANGE_PRESETS`,
+  `resolveDateRangePreset`, `dateRangePresetOf`, `addCalendarDays`, `localToday`, `CUSTOM_DATE_RANGE_PRESET` (types
+  `DateRange`, `DateRangePreset`).
+- Bulk runs with skipped rows: a run of `runSequential` / `runSequentialWithSummary` returns `skipSequential(reason?)`
+  for a row it leaves alone; the outcome gains `skipped`, the toast reads `Deleted 3 of 5 tracks · 2 skipped` (clauses
+  per reason through `skipReasons`). `bulkSummaryText`, `bulkOutcomeCounts`, `summarizeSkipReasons` for bulk endpoints
+  (types `BulkOutcomeCounts`, `SequentialSkip`, `SequentialSkipMark`).
+- Column factories in `./list`: `textColumn`, `numberColumn`, `moneyColumn` (currency required), `dateColumn`,
+  `booleanColumn`, `imageColumn`, `idColumn`, `statusColumn`, `actionsColumn` (type `ColumnFactoryOptions`); each
+  returns an `EntityListColumn`, display id, sort key and filter are separate, formats explicit.
+- `EntityListColumn.width: 'content'`: a track as wide as its widest cell (`max-content`, measured after hydration),
+  also among pinned columns (`actionsColumn` uses it with `pin: 'end'`). `isContentTrack`, `listTrackLayoutTemplate`
+  in `./logic`.
+- `EntityListBody tableBreakpoint` and `EntityListViewToggle tableBreakpoint`: `md` (default), `lg`, `always` (type
+  `ListTableBreakpoint`).
+- `EntityListBulkBar`: an action with `choices` opens a menu (`choicesLabel`, `onChoose`; `onClick` is optional now),
+  `confirm` asks through `useConfirm()` with the count filled in (`%count%`, ICU plurals), `hint` shows a tooltip (also
+  on a disabled action), `moreOnServer` notes that only the loaded rows are selected (types
+  `EntityListBulkActionChoice`, `EntityListBulkActionConfirm`).
+- `FilterToggleButton`, `FilterCountBadge`, `ClearFiltersButton`: the toolbar's controls for a host's own filter row or
+  sheet (the toolbar renders them, same DOM).
+- `Combobox translate` and `ComboboxOption.translate` (also the group heading), `QuickFilterPills translate` and
+  `QuickFilterOption.translate`: `false` for texts from the server.
+- `DateCell locale` (default: the provider's `formatLocale`, else the UI language); `formatDate`, `formatDateTime`,
+  `formatRelativeTime`, `uiDateTimeFormat`, `uiRelativeTimeFormat` take an optional locale. `ImageCell bordered`,
+  `objectFit`, `imageClassName`.
+- `EntityListEmpty clearSearchSize` (the built-in "Clear search" is `sm`, `xs` when compact).
+
+Primitives:
+
+- `SegmentedControl`: `heightOf: 'option'` (the option carries the height, the track adds its padding),
+  `coarsePointer: 'grow'` (44 px options and an 8 px gap on touch, `--segmented-control-coarse-option-height`,
+  `--segmented-control-coarse-gap`), `badgeStyle: 'unstyled'` (also per option; there a falsy badge renders nothing),
+  `translate: false` (the `aria-label` and the option texts as given), `style` on the root, `pressFeedback`
+  (`--segmented-control-held-scale`). The indicator takes the selected option's box, so a host track padding insets it
+  like the options. Optional variables, unset by default: `--segmented-control-easing`,
+  `--segmented-control-option-duration`, `--segmented-control-option-easing`, `--segmented-control-track-duration`,
+  `--segmented-control-track-easing`. Measured in headless Chromium against an earlier host control in seven call-site
+  shapes (fine and coarse pointer): track, indicator and option geometry, timings and widths equal.
+
+Pages, forms, media, translations:
+
+- `RouteError` (`onRetry`, optional `onReport` with its own pending / sent / failed state, `title`, `description`,
+  `detail`, `variant`) and `RouteLoading` (`list`, `detail`, `form`; `rows`, `inset`) in `./page`.
+- `ColorValueField` in `./form`: an explicit `format` (`hex`, `hex-alpha`), `letterCase`, presets, `clearable`; typed
+  text is normalised on blur and refused when it is not a colour of that format. `parseHexColor`, `formatHexColor`,
+  `normalizeColorValue` in `./logic` (types `ColorValueFormat`, `RgbaValue`).
+- `FormDrawer modal={false}` (with `nonModalFrom`, `nonModalClassName`): beside the page from `md` up, no overlay, the
+  page stays clickable, a click outside never closes it; below that the modal drawer. `useMediaQuery`,
+  `BREAKPOINT_QUERIES` in `./logic`.
+- `ImageCropDialog` in `./media` (types `ImageCropDialogProps`, `ImageCropResult`): one picked image, aspect choices
+  (free, ratio, round), move, resize, wheel and pinch zoom, arrows and +/− on the focused frame; Apply answers the
+  cropped and normalised blob, "Use original" the untouched file, Cancel `onCancel`; a corrupt file shows an error.
+  `normalizeImage`, `decodeImage`, `renderNormalizedImage`, `ImageNormalizeError` / `isImageNormalizeError` (`code`
+  `decode`, `too-large`, `encode`, `unsupported`) in `./logic`: EXIF orientation, crop, round clip, size limits without
+  upscaling, alpha kept, an optional `runInWorker` adapter with a main-thread fallback; the crop geometry
+  (`initialCrop`, `moveCrop`, `resizeCrop`, `zoomCrop`, `planImageNormalization`, …) too. Upload, validation and presets
+  stay with the host.
+- Translatable inputs: `useEntityTranslations({ tabModel: 'language', styleOrder, initialLocale })`: one tab per
+  language, each editing one full key chosen deterministically and named on the tab when not FORMAL; the language's
+  other keys stay and go back in the payload (`mergeLanguageTabs`, `translationLanguageOf`, `TranslatableLocale.otherKeys`).
+  `maxLength` / `countText` on `TranslatableInput`, `TranslatableMarkdown` and their form-bound variants: a counter in
+  code points, the over-limit tab marked, `aria-invalid`, nothing cut; `AdminUiProvider textLimits` sets the defaults by
+  kind; `focusFirstOverLimitTranslation(container)` in `./translations`; `countCodePoints`, `overLimitKeys`,
+  `TextLimitsContext`, `useTextLimits` in `./logic`. `MarkdownEditorRenderArgs.invalid`.
+- A ReactNode description of `PageHeader`, `SectionHeader`, `DetailHeader`, `MediaItemField` and `TranslatableField`
+  renders in a `<div>` (a string or number stays in the `<p>`).
+
+New entries:
+
+- `./markdown` (optional peers `@uiw/react-md-editor` ^4.1.0 and `rehype-sanitize` ^6.0.0, imported after hydration,
+  never from another entry): `MarkdownEditor`, `MarkdownPreview`, `renderMarkdownEditor(options)` for the
+  `renderEditor` slot and `AdminUiProvider.renderMarkdownEditor`, `MARKDOWN_ROW_HEIGHT`, `loadMarkdownLibrary`,
+  `useMarkdownLibrary`, `extendMarkdownSanitizeSchema`, `MARKDOWN_IMAGE_ATTRIBUTES`, `remarkLineBreaks`. The preview is
+  sanitised (raw HTML parsed, then GitHub's rules plus images; a single newline is a line break); the editor follows the
+  nearest `.dark` ancestor; the server draws a skeleton; a failed load falls back to a plain text area.
+- `./data`: `MetricTile` (label, value, icon, delta, hint, sparkline slot, `isLoading` skeleton, `compact`),
+  `MetricTileSkeleton`, `MetricGrid`, `DeltaText` (signed change in the UI language; `preference` higher / lower /
+  none; `format` number / percent / explicit `Intl.NumberFormatOptions`; arrow, sign and a hidden word), `NoteList`, and
+  `resolveDelta`, `relativeChange`, `deltaDirectionOf`, `deltaToneOf`.
+- `ddd-admin-ui-check-contrast <css> [tokens.json]` (bin): WCAG 2.x contrast of the pairs `tokens.json` declares
+  (`contrast.pairs`, 4.5 for text, 3 for large text and UI parts; `role/NN` backgrounds), light and dark; fails on a pair
+  below its minimum that no exception list names, and on a value it cannot compute (unless `--allow-unevaluated`).
+  `--exceptions <file.json>` adds a host's written exceptions (same entry format) to the package's. The package lists
+  the five light status pairs (`success` on `card`; `success`, `warning`, `destructive`, `info` on their 15 % tints) as
+  exceptions: status colours used as text or on their tint, themed by the host, until an emphasis role exists. Gated in
+  the consumer runs (CI and release) on the fixture app's built CSS, whose dark `--primary` moved from `#3b82f6` to
+  `#3472d8` (white on it: 3.68:1 → 4.62:1).
+
+Provider and contract:
+
+- `AdminUiProvider formatLocale` and `textLimits`; `FormatLocaleContext`, `useFormatLocale` in `./i18n`.
+- `tokens.json`: the optional `--segmented-control-*` variables above and the `contrast` key.
+- README: the layers checklist (dialogs open at `--layer-overlay` 50; a host with a higher overlay scale raises it).
+- Showcase: sections `./markdown` (through `loadMarkdown`) and `./data`, samples of the new blocks;
+  `SHOWCASE_COVERAGE` lists them.
+
 ## 0.1.0
 
 First stable release: 0.1.0-rc.6 plus the description fix below. Published under the `latest` dist-tag; prereleases

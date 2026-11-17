@@ -25,6 +25,7 @@ import {
 import { fieldEquals, type FormSubmitError, useConfirm, WriteAccessProvider } from '../../logic/index.ts';
 import { Button, FormActionsSlotProvider, Input, Label, Switch } from '../../primitives/index.ts';
 import { Sample, Samples } from './PrimitivesShowcase.tsx';
+import { FormAdditionsShowcase } from './FormAdditionsShowcase.tsx';
 
 interface ShowcaseFormValues {
   name: string;
@@ -266,6 +267,7 @@ export const FormShowcase = () => {
       <Sample title="WriteAccessProvider (./logic): write controls off, links and reads stay">
         <WriteAccessSample />
       </Sample>
+      <FormAdditionsShowcase />
     </Samples>
   );
 };

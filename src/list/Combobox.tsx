@@ -30,6 +30,11 @@ export interface ComboboxOption {
   group?: string;
   /** A small marker after the label (a count, a status). */
   badge?: ReactNode;
+  /**
+   * `false`: `label`, `description` and `group` are already translated (names from the server) and shown as they are.
+   * Default: the combobox's `translate`.
+   */
+  translate?: boolean;
 }
 
 /** Wait (ms) after the last keystroke before `onSearch` runs. */
@@ -79,6 +84,11 @@ export interface ComboboxProps {
   selectedOption?: ComboboxOption;
   /** Classes of the popover (e.g. a wider list than the trigger). */
   popoverClassName?: string;
+  /**
+   * `false`: the option texts (label, description, group) are already translated and shown as they are; an option's
+   * own `translate` wins. Default `true`: texts with a key in the text store are translated, others stay as they are.
+   */
+  translate?: boolean;
 }
 
 /** Groups in the order they first appear; options without a group first. */
@@ -118,6 +128,7 @@ export const Combobox = ({
   onRequestCreate,
   selectedOption,
   popoverClassName,
+  translate: translateTexts = true,
 }: ComboboxProps) => {
   const { t } = useTranslate();
   const [open, setOpen] = useState(false);
@@ -129,11 +140,15 @@ export const Combobox = ({
 
   // Labels marked with `m()` (status / type option lists) are translated here; an already translated or a user text
   // (a name) has no key and stays as it is.
-  const translate = (option: ComboboxOption) => ({
-    ...option,
-    label: t(option.label),
-    description: option.description ? t(option.description) : undefined,
-  });
+  const translate = (option: ComboboxOption) =>
+    (option.translate ?? translateTexts)
+      ? {
+          ...option,
+          label: t(option.label),
+          description: option.description ? t(option.description) : undefined,
+          group: option.group ? t(option.group) : undefined,
+        }
+      : option;
   const options = rawOptions.map(translate);
   const selected =
     options.find(option => option.value === value) ??
@@ -211,7 +226,7 @@ export const Combobox = ({
               <>
                 <CommandEmpty>{emptyMessage ?? t('No results')}</CommandEmpty>
                 {groupOptions(options).map(([group, groupOptionsList]) => (
-                  <CommandGroup key={group || '__ungrouped__'} heading={group ? t(group) : undefined}>
+                  <CommandGroup key={group || '__ungrouped__'} heading={group || undefined}>
                     {groupOptionsList.map(option => (
                       <CommandItem key={option.value} value={`${option.label} ${option.value}`} onSelect={() => pick(option)}>
                         <Check className={cn('size-4', option.value === value ? 'opacity-100' : 'opacity-0')} aria-hidden />

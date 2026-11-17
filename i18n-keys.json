@@ -4,12 +4,36 @@
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
+      "key": "%count% / %max%",
+      "text": "%count% / %max%",
+      "files": [
+        "translations/TranslatableField.tsx"
+      ],
+      "hint": "Character counter under a text field: characters typed / the maximum allowed."
+    },
+    {
+      "key": "%count% skipped",
+      "text": "%count% skipped",
+      "files": [
+        "logic/pure/runSequential.ts"
+      ],
+      "hint": "Part of a bulk action summary toast: how many selected rows were left alone on purpose (e.g. already in that state)."
+    },
+    {
       "key": "%done% %count% %noun%",
       "text": "%done% %count% %noun%",
       "files": [
         "logic/pure/runSequential.ts"
       ],
       "hint": "Success toast after a bulk action finished on all selected rows. %done% is a past-tense verb like Deleted, %count% a number like 5, %noun% the item name like tracks."
+    },
+    {
+      "key": "%done% %succeeded% of %total% %noun%",
+      "text": "%done% %succeeded% of %total% %noun%",
+      "files": [
+        "logic/pure/runSequential.ts"
+      ],
+      "hint": "Summary toast of a bulk action where some rows were skipped, e.g. \"Deleted 3 of 5 tracks\"; %done% is a past participle, %noun% a plural noun."
     },
     {
       "key": "%done% %succeeded% of %total% %noun% · %failed% failed",
@@ -76,12 +100,30 @@
       "hint": "Accessible name (screen reader label) of the sub-tab bar below a section heading. %title% is the section title, e.g. Top riders."
     },
     {
+      "key": "%width% × %height% px",
+      "text": "%width% × %height% px",
+      "files": [
+        "media/ImageCropDialog.tsx"
+      ],
+      "hint": "Size of the crop frame in pixels, announced while it changes."
+    },
+    {
       "key": "Account not found or current Auth Account is not authorized to access it",
       "text": "Account not found or current Auth Account is not authorized to access it",
       "files": [
         "i18n/serverMessages.ts"
       ],
       "hint": "Error message from the server when a user account cannot be loaded: it does not exist or the signed-in user may not see it."
+    },
+    {
+      "key": "Actions__table-column",
+      "text": "Actions",
+      "context": "table-column",
+      "files": [
+        "list/ActionsHeaderText.tsx",
+        "list/columns.tsx"
+      ],
+      "hint": "Screen-reader name of the last table column, which holds a row's buttons (edit, delete)."
     },
     {
       "key": "Add %entity%",
@@ -92,6 +134,14 @@
       "hint": "Label of the primary button at the top right of a list page that creates a new item. %entity% is the singular item name, e.g. World or Push Notification. Imperative."
     },
     {
+      "key": "All time",
+      "text": "All time",
+      "files": [
+        "logic/pure/dateRangePresets.ts"
+      ],
+      "hint": "Preset of a date range filter (a segmented control above two date fields): no date limit."
+    },
+    {
       "key": "All__filter-option",
       "text": "All",
       "context": "filter-option",
@@ -99,6 +149,46 @@
         "list/filters.tsx"
       ],
       "hint": "On the admin UI Showcase page (Maintenance), label of the quick-filter pill that clears the status filter and shows every item. Single word."
+    },
+    {
+      "key": "Also stored, kept as is: %keys%",
+      "text": "Also stored, kept as is: %keys%",
+      "files": [
+        "translations/TranslatableField.tsx"
+      ],
+      "hint": "Tooltip of a language tab: other stored variants of this language (e.g. the informal text) that this tab does not edit and that are saved unchanged."
+    },
+    {
+      "key": "Apply",
+      "text": "Apply",
+      "files": [
+        "media/ImageCropDialog.tsx"
+      ],
+      "hint": "Button of the image crop dialog: crop the image as framed."
+    },
+    {
+      "key": "Applying…",
+      "text": "Applying…",
+      "files": [
+        "media/ImageCropDialog.tsx"
+      ],
+      "hint": "Button text of the image crop dialog while the cropped image is being produced."
+    },
+    {
+      "key": "Arrow keys move the frame (with Shift further), + and − zoom.",
+      "text": "Arrow keys move the frame (with Shift further), + and − zoom.",
+      "files": [
+        "media/ImageCropDialog.tsx"
+      ],
+      "hint": "Hidden help text of the crop frame for keyboard users."
+    },
+    {
+      "key": "Aspect ratio",
+      "text": "Aspect ratio",
+      "files": [
+        "media/ImageCropDialog.tsx"
+      ],
+      "hint": "Accessible name of the choice of crop shapes (free, square, 16:9, round)."
     },
     {
       "key": "Auto-translate",
@@ -120,6 +210,7 @@
       "key": "Cancel",
       "text": "Cancel",
       "files": [
+        "media/ImageCropDialog.tsx",
         "translations/TranslationControls.tsx"
       ],
       "hint": "Button at the bottom of the world form that discards the entries and returns to the world list; asks for confirmation if there are unsaved changes."
@@ -280,6 +371,14 @@
       "hint": "Accessible label (screen reader and tooltip) of the round chevron button that collapses a group panel on a dashboard. %title% is the group name, for example 'Running'."
     },
     {
+      "key": "Colour",
+      "text": "Colour",
+      "files": [
+        "form/ColorValueField.tsx"
+      ],
+      "hint": "Label of the colour input inside a colour picker popover."
+    },
+    {
       "key": "Command Palette",
       "text": "Command Palette",
       "files": [
@@ -347,6 +446,39 @@
       "hint": "Label in the metadata block of a detail screen, placed before the date and time the record was created, for example 'Created 12 Nov 2026, 10:15'. Keep it short."
     },
     {
+      "key": "Crop area",
+      "text": "Crop area",
+      "files": [
+        "media/ImageCropDialog.tsx"
+      ],
+      "hint": "Accessible name of the movable crop frame over an image."
+    },
+    {
+      "key": "Crop image",
+      "text": "Crop image",
+      "files": [
+        "media/ImageCropDialog.tsx"
+      ],
+      "hint": "Title of the dialog that crops a picked image."
+    },
+    {
+      "key": "Custom__date-range",
+      "text": "Custom",
+      "context": "date-range",
+      "files": [
+        "logic/pure/dateRangePresets.ts"
+      ],
+      "hint": "Preset of a date range filter: the user picks the start and end dates in two date fields."
+    },
+    {
+      "key": "Decrease",
+      "text": "Decrease",
+      "files": [
+        "data/DeltaText.tsx"
+      ],
+      "hint": "Screen-reader word before a signed change under a key figure: the value went down."
+    },
+    {
       "key": "Discard changes?",
       "text": "Discard changes?",
       "files": [
@@ -382,6 +514,14 @@
       "hint": "Status badge of one language in the translation progress list: the translation finished successfully."
     },
     {
+      "key": "Drag the frame to move it and its handles to resize it; scroll or pinch to zoom.",
+      "text": "Drag the frame to move it and its handles to resize it; scroll or pinch to zoom.",
+      "files": [
+        "media/ImageCropDialog.tsx"
+      ],
+      "hint": "Help line under the title of the image crop dialog."
+    },
+    {
       "key": "Edit__action",
       "text": "Edit",
       "context": "action",
@@ -397,6 +537,22 @@
         "translations/TranslatableInput.tsx"
       ],
       "hint": "Placeholder of a text input in a translatable field; %language% is the name of the active language tab, e.g. 'German'."
+    },
+    {
+      "key": "Enter a colour as #RRGGBB or #RRGGBBAA.",
+      "text": "Enter a colour as #RRGGBB or #RRGGBBAA.",
+      "files": [
+        "form/ColorValueField.tsx"
+      ],
+      "hint": "Error under a colour field whose text is not a colour; keep #RRGGBB and #RRGGBBAA as they are."
+    },
+    {
+      "key": "Enter a colour as #RRGGBB.",
+      "text": "Enter a colour as #RRGGBB.",
+      "files": [
+        "form/ColorValueField.tsx"
+      ],
+      "hint": "Error under a colour field whose text is not a colour; keep #RRGGBB as it is."
     },
     {
       "key": "Export to Excel",
@@ -432,6 +588,14 @@
       "hint": "Accessible label (aria-label) of the small sticky navigation bar at the top of a long admin form (challenge, campaign) that jumps between its panels."
     },
     {
+      "key": "Free",
+      "text": "Free",
+      "files": [
+        "media/ImageCropDialog.tsx"
+      ],
+      "hint": "Crop shape without a fixed aspect ratio."
+    },
+    {
       "key": "Grid view",
       "text": "Grid view",
       "files": [
@@ -447,6 +611,14 @@
         "page/EntityMetadata.tsx"
       ],
       "hint": "Label in the metadata block of a detail screen, placed before the record's unique identifier, for example 'ID 4711'. Keep it short, uppercase-friendly."
+    },
+    {
+      "key": "Increase",
+      "text": "Increase",
+      "files": [
+        "data/DeltaText.tsx"
+      ],
+      "hint": "Screen-reader word before a signed change under a key figure (e.g. \"Increase +12 %\"): the value went up."
     },
     {
       "key": "Informal__writing-style",
@@ -475,6 +647,22 @@
       "hint": "Navigation menu entry in the admin sidebar that opens the Languages area. Keep it short, as it is a single menu label."
     },
     {
+      "key": "Last 30 days",
+      "text": "Last 30 days",
+      "files": [
+        "logic/pure/dateRangePresets.ts"
+      ],
+      "hint": "Preset of a date range filter: today and the 29 days before it."
+    },
+    {
+      "key": "Last 7 days",
+      "text": "Last 7 days",
+      "files": [
+        "logic/pure/dateRangePresets.ts"
+      ],
+      "hint": "Preset of a date range filter: today and the six days before it."
+    },
+    {
       "key": "Loading",
       "text": "Loading",
       "files": [
@@ -483,12 +671,36 @@
       "hint": "Accessible label of a spinning loader shown while a chart on the activity statistics screens is loading. Screen readers announce it."
     },
     {
+      "key": "Loading image…",
+      "text": "Loading image…",
+      "files": [
+        "media/ImageCropDialog.tsx"
+      ],
+      "hint": "Placeholder while the picked image loads in the crop dialog."
+    },
+    {
       "key": "Loading more",
       "text": "Loading more",
       "files": [
         "list/EntityListLoadMore.tsx"
       ],
       "hint": "Accessible name (screen-reader label) of the spinner at the end of a list while the next page of rows is being loaded during infinite scroll."
+    },
+    {
+      "key": "Loading…",
+      "text": "Loading…",
+      "files": [
+        "page/RouteLoading.tsx"
+      ],
+      "hint": "Screen-reader text of a page placeholder while the page loads."
+    },
+    {
+      "key": "Longer than %max% characters",
+      "text": "Longer than %max% characters",
+      "files": [
+        "translations/TranslatableField.tsx"
+      ],
+      "hint": "Tooltip of a language tab whose text is longer than the allowed number of characters."
     },
     {
       "key": "More actions",
@@ -514,6 +726,14 @@
         "list/filterOptions.ts"
       ],
       "hint": "Option of a yes/no filter in the filter panel of a list; selecting it shows only records where the flag is not set."
+    },
+    {
+      "key": "No change",
+      "text": "No change",
+      "files": [
+        "data/DeltaText.tsx"
+      ],
+      "hint": "Screen-reader word before a change of zero under a key figure."
     },
     {
       "key": "No changes",
@@ -558,6 +778,15 @@
       "hint": "Default label of a yes/no flag cell in a list table, shown with a grey minus when the flag is off, e.g. Active column."
     },
     {
+      "key": "None__color-value",
+      "text": "None",
+      "context": "color-value",
+      "files": [
+        "form/ColorValueField.tsx"
+      ],
+      "hint": "Colour field without a colour: shown on the swatch and as the choice that removes the colour."
+    },
+    {
       "key": "Nothing here yet",
       "text": "Nothing here yet",
       "files": [
@@ -582,12 +811,60 @@
       "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. A multi-select field contains a value that is not one of the allowed options."
     },
     {
+      "key": "Only the loaded rows are selected; more match on the server.",
+      "text": "Only the loaded rows are selected; more match on the server.",
+      "files": [
+        "list/EntityListBulkBar.tsx"
+      ],
+      "hint": "Note in the bulk action bar of a list when every loaded row is selected but the list has more rows that are not loaded yet."
+    },
+    {
+      "key": "Opacity",
+      "text": "Opacity",
+      "files": [
+        "form/ColorValueField.tsx"
+      ],
+      "hint": "Slider label in a colour picker: how opaque the colour is (0 to 100 %)."
+    },
+    {
       "key": "Open original of %title%",
       "text": "Open original of %title%",
       "files": [
         "media/MediaItemPickerDialog.tsx"
       ],
       "hint": "Screen-reader label of the small link on a media tile that opens the full-size original in a new tab; %title% is the item's title, e.g. 'Logo'."
+    },
+    {
+      "key": "Pick %label% (%none%)",
+      "text": "Pick %label% (%none%)",
+      "files": [
+        "form/ColorValueField.tsx"
+      ],
+      "hint": "Accessible name of a colour swatch button without a colour; %label% is the field name, %none% says that no colour is set."
+    },
+    {
+      "key": "Pick %label% (current %value%)",
+      "text": "Pick %label% (current %value%)",
+      "files": [
+        "form/ColorValueField.tsx"
+      ],
+      "hint": "Accessible name of a colour swatch button; %label% is the field name, %value% the colour code."
+    },
+    {
+      "key": "Presets",
+      "text": "Presets",
+      "files": [
+        "form/ColorValueField.tsx"
+      ],
+      "hint": "Accessible name of a row of preset colours in a colour picker."
+    },
+    {
+      "key": "Problem reported",
+      "text": "Problem reported",
+      "files": [
+        "page/RouteError.tsx"
+      ],
+      "hint": "Button text after a problem report was sent from an error page."
     },
     {
       "key": "Property \"%propertyName%\" in class \"%className%\" has to be unique but value \"%value%\" is already in use",
@@ -631,12 +908,36 @@
       "hint": "Button label next to a media field; click to clear the chosen image reference from the form. Takes effect only after the form is saved."
     },
     {
+      "key": "Report problem",
+      "text": "Report problem",
+      "files": [
+        "page/RouteError.tsx"
+      ],
+      "hint": "Button on the error page of a screen that crashed: sends a problem report."
+    },
+    {
+      "key": "Reporting…",
+      "text": "Reporting…",
+      "files": [
+        "page/RouteError.tsx"
+      ],
+      "hint": "Button text on an error page while a problem report is being sent."
+    },
+    {
       "key": "Request contains invalid data",
       "text": "Request contains invalid data",
       "files": [
         "i18n/serverMessages.ts"
       ],
       "hint": "Title of the red error toast and error box above a form after the server rejected a save because one or more fields are invalid (the fields are listed below it)."
+    },
+    {
+      "key": "Reset",
+      "text": "Reset",
+      "files": [
+        "media/ImageCropDialog.tsx"
+      ],
+      "hint": "Button of the image crop dialog: put the crop frame back to its start."
     },
     {
       "key": "Row number",
@@ -765,6 +1066,14 @@
       "hint": "Small floating pill button at the bottom edge of an expanded group panel; clicking it shows only the first few rows again."
     },
     {
+      "key": "Something went wrong",
+      "text": "Something went wrong",
+      "files": [
+        "page/RouteError.tsx"
+      ],
+      "hint": "Title of the error card shown when a screen crashed."
+    },
+    {
       "key": "Sort by__media-picker",
       "text": "Sort by",
       "context": "media-picker",
@@ -791,12 +1100,47 @@
       "hint": "Tooltip and accessible label of the icon button in a list toolbar that switches the list to a table with rows and columns."
     },
     {
+      "key": "The editor could not be loaded; edit the Markdown text directly.",
+      "text": "The editor could not be loaded; edit the Markdown text directly.",
+      "files": [
+        "markdown/MarkdownEditor.tsx"
+      ],
+      "hint": "Small note under a plain text box that replaces the Markdown editor when the editor could not be loaded. The user can still type Markdown (formatting syntax) directly."
+    },
+    {
       "key": "The file is not an image this browser can read",
       "text": "The file is not an image this browser can read",
       "files": [
-        "logic/browser/prepareImageFile.ts"
+        "logic/browser/normalizeImage.ts",
+        "logic/browser/prepareImageFile.ts",
+        "media/ImageCropDialog.tsx"
       ],
       "hint": "Error message shown when a picked file cannot be decoded as an image by the browser while preparing an upload in the media picker."
+    },
+    {
+      "key": "The image could not be encoded",
+      "text": "The image could not be encoded",
+      "files": [
+        "logic/browser/normalizeImage.ts",
+        "media/ImageCropDialog.tsx"
+      ],
+      "hint": "Error in the image crop dialog: the cropped image could not be produced."
+    },
+    {
+      "key": "The image is too large (%width% × %height% px)",
+      "text": "The image is too large (%width% × %height% px)",
+      "files": [
+        "logic/browser/normalizeImage.ts"
+      ],
+      "hint": "Error in the image crop dialog: the picked image has too many pixels to process."
+    },
+    {
+      "key": "The report could not be sent.",
+      "text": "The report could not be sent.",
+      "files": [
+        "page/RouteError.tsx"
+      ],
+      "hint": "Error under the report button of an error page."
     },
     {
       "key": "The value you selected is not a valid choice.",
@@ -805,6 +1149,22 @@
         "i18n/serverMessages.ts"
       ],
       "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. A dropdown field contains a value that is not one of the allowed options."
+    },
+    {
+      "key": "This browser cannot process images",
+      "text": "This browser cannot process images",
+      "files": [
+        "logic/browser/normalizeImage.ts"
+      ],
+      "hint": "Error in the image crop dialog when the browser lacks the image functions."
+    },
+    {
+      "key": "This page could not be shown. Try again, or reload the page.",
+      "text": "This page could not be shown. Try again, or reload the page.",
+      "files": [
+        "page/RouteError.tsx"
+      ],
+      "hint": "Text of the error card shown when a screen crashed."
     },
     {
       "key": "This removes the text for every language. It is gone once you save.",
@@ -879,6 +1239,14 @@
       "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. A required field was left empty."
     },
     {
+      "key": "Today",
+      "text": "Today",
+      "files": [
+        "logic/pure/dateRangePresets.ts"
+      ],
+      "hint": "Preset of a date range filter: only today."
+    },
+    {
       "key": "Toggle filters",
       "text": "Toggle filters",
       "files": [
@@ -943,6 +1311,14 @@
         "logic/react/useTranslationRunner.ts"
       ],
       "hint": "Fallback error message shown in the tooltip of a failed language in the translation progress list when the server gave no message."
+    },
+    {
+      "key": "Try again",
+      "text": "Try again",
+      "files": [
+        "page/RouteError.tsx"
+      ],
+      "hint": "Button on the error card of a crashed screen: render the screen again."
     },
     {
       "key": "Type “%phrase%” to confirm",
@@ -1012,6 +1388,14 @@
       "hint": "Button label in the media picker dialog while selected image files are being uploaded; the button is disabled meanwhile."
     },
     {
+      "key": "Use original",
+      "text": "Use original",
+      "files": [
+        "media/ImageCropDialog.tsx"
+      ],
+      "hint": "Button in the image crop dialog: keep the picked image without cropping."
+    },
+    {
       "key": "View",
       "text": "View",
       "files": [
@@ -1070,6 +1454,14 @@
         "primitives/breadcrumb.tsx"
       ],
       "hint": "Accessible name (screen reader label) of the breadcrumb navigation trail at the top of admin pages; use a short lowercase noun like the English."
+    },
+    {
+      "key": "{count, plural, one {# character over the limit} other {# characters over the limit}}",
+      "text": "{count, plural, one {# character over the limit} other {# characters over the limit}}",
+      "files": [
+        "translations/TranslatableField.tsx"
+      ],
+      "hint": "Warning next to the character counter of a text field that is longer than allowed (nothing is cut)."
     },
     {
       "key": "{count, plural, one {# validation error} other {# validation errors}}",

@@ -7,7 +7,7 @@ import { type MouseEvent, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../primitives/index.ts';
 import { cn } from '../primitives/cn.ts';
 import { EmptyValue } from './EmptyValue.tsx';
-import { useTranslate } from '../i18n/index.ts';
+import { useFormatLocale, useTranslate } from '../i18n/index.ts';
 import { formatDate, formatDateTime, formatRelativeTime, isDddDateOnly } from '../logic/pure/format.ts';
 import { useCopyToClipboard } from '../logic/react/useCopyToClipboard.ts';
 
@@ -60,6 +60,8 @@ export interface DateCellProps {
   value: string | null | undefined;
   /** `date` drops the time (Start / End of a day-based range); a `Y-m-d` value never shows a time. */
   format?: 'dateTime' | 'date';
+  /** `Intl` locale of the text (`de-CH`); default the provider's `formatLocale`, else the UI language. */
+  locale?: string;
   className?: string;
 }
 
@@ -67,11 +69,13 @@ export interface DateCellProps {
  * Every date column (Created, Updated, Start, End, Sent): the `EntityMetadata` format in the viewer's zone, the relative
  * time on hover, `—` when empty. Never print raw date strings in a table.
  */
-export const DateCell = ({ value, format = 'dateTime', className }: DateCellProps) => {
+export const DateCell = ({ value, format = 'dateTime', locale: ownLocale, className }: DateCellProps) => {
+  const providerLocale = useFormatLocale();
+  const locale = ownLocale ?? providerLocale;
   const date = parseDddDateTime(value);
   if (!value) return <EmptyValue />;
   if (!date) return <span className={cn('whitespace-nowrap', className)}>{value}</span>;
-  const text = format === 'date' || isDddDateOnly(value) ? formatDate(value) : formatDateTime(value);
+  const text = format === 'date' || isDddDateOnly(value) ? formatDate(value, undefined, locale) : formatDateTime(value, undefined, locale);
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -79,7 +83,7 @@ export const DateCell = ({ value, format = 'dateTime', className }: DateCellProp
           {text}
         </time>
       </TooltipTrigger>
-      <TooltipContent>{formatRelativeTime(date)}</TooltipContent>
+      <TooltipContent>{formatRelativeTime(date, undefined, locale)}</TooltipContent>
     </Tooltip>
   );
 };
@@ -129,17 +133,41 @@ export interface ImageCellProps {
   size?: keyof typeof IMAGE_SIZE_CLASS;
   /** `contain` for logos and icons, `cover` for photos and map tiles. */
   fit?: 'contain' | 'cover';
+  /** The hairline around the box (default `true`); `false` for photos that fill it. */
+  bordered?: boolean;
+  /** Overrides `fit` with any `object-fit` (`fill`, `scale-down`, `none`). */
+  objectFit?: 'contain' | 'cover' | 'fill' | 'scale-down' | 'none';
+  /** Classes of the `<img>` (e.g. `object-top`). */
+  imageClassName?: string;
   className?: string;
 }
 
+const OBJECT_FIT_CLASS = {
+  contain: 'object-contain',
+  cover: 'object-cover',
+  fill: 'object-fill',
+  'scale-down': 'object-scale-down',
+  none: 'object-none',
+} as const;
+
 /** The image column (first after select): a lazy thumbnail in a rounded box, `—` without an image or when it fails. */
-export const ImageCell = ({ src, alt, size = 'md', fit = 'contain', className }: ImageCellProps) => {
+export const ImageCell = ({
+  src,
+  alt,
+  size = 'md',
+  fit = 'contain',
+  bordered = true,
+  objectFit,
+  imageClassName,
+  className,
+}: ImageCellProps) => {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   if (!src || failedSrc === src) return <EmptyValue />;
   return (
     <div
       className={cn(
         'flex shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted/30',
+        !bordered && 'border-0',
         IMAGE_SIZE_CLASS[size],
         className
       )}
@@ -149,7 +177,7 @@ export const ImageCell = ({ src, alt, size = 'md', fit = 'contain', className }:
         src={src}
         alt={alt}
         loading="lazy"
-        className={cn('size-full', fit === 'cover' ? 'object-cover' : 'object-contain')}
+        className={cn('size-full', OBJECT_FIT_CLASS[objectFit ?? fit], imageClassName)}
         onError={() => setFailedSrc(src)}
       />
     </div>

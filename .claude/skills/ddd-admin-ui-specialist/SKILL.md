@@ -41,6 +41,19 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | a confirmation inside a block with its own dialog | `useConfirmDialog` (returns `{ confirm, dialog }`) | form |
 | write controls off for a read-only user | `WriteAccessProvider value={{ allowed, reason }}`, `useWriteAccess()`, `ignoreWriteAccess` on reading controls | logic |
 | a toast | `notify.success / info / error / loading / submitError` | logic |
+| a date filter with presets (today, last 7 / 30 days, custom) | `FilterDateRange presets` (+ `onRangeChange`) | list |
+| columns without boilerplate (id, text, number, money, date, status, actions) | `idColumn`, `textColumn`, `moneyColumn` (currency required), `actionsColumn` (`width: 'content'`, pinned end) | list |
+| bulk action with sub-choices, a counted confirmation, a hint | `EntityListBulkAction` `choices` / `onChoose`, `confirm`, `hint`; `moreOnServer` | list |
+| a bulk run that skips rows on purpose | `skipSequential(reason)` + `runSequentialWithSummary` (`skipReasons`), `bulkSummaryText` | logic |
+| filter toggle / count / clear outside the toolbar | `FilterToggleButton`, `FilterCountBadge`, `ClearFiltersButton` | list |
+| table only from `lg` (many columns) or at every width | `EntityListBody tableBreakpoint` + the same on `EntityListViewToggle` | list |
+| a master-detail drawer beside the page | `FormDrawer modal={false}` (`nonModalFrom`) | form |
+| one tab per language, length limits on translatable texts | `useEntityTranslations({ tabModel: 'language' })`, `maxLength` / `AdminUiProvider textLimits`, `focusFirstOverLimitTranslation` | logic, translations |
+| a markdown field or sanitised markdown text | `renderMarkdownEditor` / `MarkdownEditor`, `MarkdownPreview` (peers `@uiw/react-md-editor`, `rehype-sanitize`; loaded after hydration) | markdown |
+| key figures with a change, a sparkline slot, footnotes | `MetricGrid` + `MetricTile` + `DeltaText` (`preference`, `format`), `NoteList` | data |
+| a crashed or loading route (`error.tsx`, `loading.tsx`) | `RouteError` (`onRetry`, `onReport`), `RouteLoading` | page |
+| crop or normalise a picked image | `ImageCropDialog` (`aspectOptions`, `allowSkip`, `output`) + `normalizeImage` | media, logic |
+| a colour value | `ColorValueField` with an explicit `format` (`hex` / `hex-alpha`) | form |
 
 ## Rules that fail silently
 
@@ -91,6 +104,18 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 - **Text contexts are literals.** `m('Failed', { context: 'import-status' })`: extractors (the package manifest and
   host exports) read the text and the context as string literals; a context only on the status map or in a variable is
   not exported. Put the same context on the definition or the map so `StatusBadge` translates with it.
+- **Translatable limits never cut**: `maxLength` counts code points, marks the tab and the field, keeps the text; the
+  submit refuses with `overLimitKeys` and shows the text with `focusFirstOverLimitTranslation(form)`. Tab model
+  `language` still sends every loaded `locale::style` key back.
+- **`./markdown` loads its peers after hydration**: the server draws a skeleton; never import the editor library from
+  another entry, and never render user markdown with `dangerouslySetInnerHTML` (use `MarkdownPreview`).
+- **Contrast**: run `ddd-admin-ui-check-contrast <built css> [--exceptions host.json]` in CI and after a palette
+  change; declared pairs below AA fail in both themes unless the package's or the host's exception list names them
+  (`{ foreground, background, theme?, reason }`).
+- **SegmentedControl options of a host look**: `heightOf="option"` with a track padding class, `coarsePointer="grow"`,
+  `badgeStyle="unstyled"`, `translate={false}`, timings as `--segmented-control-*` variables on `style`; the indicator
+  follows the option box.
+- **Layers**: the package's dialogs open at `--layer-overlay` (50); a host with a higher overlay scale raises it.
 - **Server vs client.** Hooks and context live in files with `'use client'`; pure helpers (`m`, `formatDateTime`,
   `defineStatusMap`, schemas, conditions) may be called in server code and `metadata`.
 
