@@ -88,8 +88,11 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
     notShown: { WorkerKpiTilesSkeleton: 'drawn by WorkersOverviewScreen while the overview loads' },
   },
   issues: {
-    shown: [],
-    notShown: {},
+    shown: [
+      'IssueCauses', 'IssueCodeContext', 'IssueDetailBlock', 'IssueEventDetails', 'IssueFrameList', 'IssueGroupFlags',
+      'IssueGroupStatusActions', 'IssueWorkerContext', 'IssuesScreen', 'IssuesTrendBars', 'IssuesTrendCard', 'IssuesWindowSwitch',
+    ],
+    notShown: { IssueGroupDrawer: 'drawn by IssuesScreen when a row opens a group' },
   },
   database: {
     shown: [],
