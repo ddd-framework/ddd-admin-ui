@@ -92,6 +92,22 @@
       "hint": "Error message from the server when a record cannot be loaded: it does not exist or the signed-in user may not see it. %entity% is the technical English record type name (e.g. Campaign, Challenge) and stays as it is."
     },
     {
+      "key": "%failures% failed",
+      "text": "%failures% failed",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): hint under the tile with the number of runs of the last 24 hours: how many of them failed."
+    },
+    {
+      "key": "%from%–%to% of %total%",
+      "text": "%from%–%to% of %total%",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): pager of the runs list: rows shown (from–to) out of the total number of runs."
+    },
+    {
       "key": "%handled% handled · %failed% failed",
       "text": "%handled% handled · %failed% failed",
       "files": [
@@ -132,12 +148,52 @@
       "hint": "Accessible label of the end-date input in a date-range filter. %label% is the filter caption, e.g. \"Ends at\", so the result reads \"Ends at to\"."
     },
     {
+      "key": "%name% is active",
+      "text": "%name% is active",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): accessible name of the on/off switch of one Cron (%name% is its technical name)."
+    },
+    {
       "key": "%name% is not an image",
       "text": "%name% is not an image",
       "files": [
         "logic/browser/prepareImageFile.ts"
       ],
       "hint": "Error message shown when a picked file is not an image during upload. %name% is the file name, for example holiday-photo.pdf."
+    },
+    {
+      "key": "%name% is queued: it starts within a minute.",
+      "text": "%name% is queued: it starts within a minute.",
+      "files": [
+        "crons/useCronActions.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): toast after 'Run now': the job is queued and the runner starts it within a minute (it does not run yet)."
+    },
+    {
+      "key": "%name%: %message%",
+      "text": "%name%: %message%",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): title of a notice after a refused action: the Cron's name and the server's message."
+    },
+    {
+      "key": "%overdue% overdue · %failing% failing · %missing% command missing",
+      "text": "%overdue% overdue · %failing% failing · %missing% command missing",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): hint under the 'Need attention' tile: counts of overdue jobs, failing jobs and jobs whose console command is missing."
+    },
+    {
+      "key": "%paused% paused · %running% running",
+      "text": "%paused% paused · %running% running",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): hint under the 'Active' tile: how many jobs are paused and how many are running now."
     },
     {
       "key": "%percent% % of the last hour",
@@ -156,12 +212,44 @@
       "hint": "Progress toast of a bulk action running on many selected rows. %progress% is a verb like Deleting, %nouns% the plural item name like tracks, %done%/%total% e.g. 2/5."
     },
     {
+      "key": "%reading% · next runs (server time):",
+      "text": "%reading% · next runs (server time):",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): line under the schedule field: the schedule in words, followed by the next run times on the server's clock."
+    },
+    {
+      "key": "%runs% newest runs, %failed% failed",
+      "text": "%runs% newest runs, %failed% failed",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): accessible description of the small bar strip of the newest runs of a job."
+    },
+    {
       "key": "%thrown% thrown · %caught% caught",
       "text": "%thrown% thrown · %caught% caught",
       "files": [
         "workers/WorkerTransportScreen.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): how failures split: thrown = an exception left the handler, caught = the handler logged an error and returned; both are numbers."
+    },
+    {
+      "key": "%time%: %runs% runs, %failures% failed, longest %duration%",
+      "text": "%time%: %runs% runs, %failures% failed, longest %duration%",
+      "files": [
+        "crons/charts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): tooltip of one cell of the timeline: in the time bucket starting at %time%, number of runs, failed runs and the longest duration."
+    },
+    {
+      "key": "%time%: no run",
+      "text": "%time%: no run",
+      "files": [
+        "crons/charts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): tooltip of an empty timeline cell: no run in the bucket starting at %time%."
     },
     {
       "key": "%title% sections",
@@ -212,6 +300,46 @@
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): marker after a translated value that is the plural form."
     },
     {
+      "key": "24 h",
+      "text": "24 h",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): short column header: the success rate of the last 24 hours."
+    },
+    {
+      "key": "24 hours",
+      "text": "24 hours",
+      "files": [
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): option of the timeline window switch: the last 24 hours."
+    },
+    {
+      "key": "3 days",
+      "text": "3 days",
+      "files": [
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): option of the timeline window switch: the last 3 days."
+    },
+    {
+      "key": "3 to 80 lowercase letters, digits and single hyphens, e.g. send-reminders",
+      "text": "3 to 80 lowercase letters, digits and single hyphens, e.g. send-reminders",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): error under the name field when the name has the wrong form; keep the example name untranslated."
+    },
+    {
+      "key": "7 days",
+      "text": "7 days",
+      "files": [
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): option of the timeline window switch: the last 7 days."
+    },
+    {
       "key": "A new app translation key, stored in the database.",
       "text": "A new app translation key, stored in the database.",
       "files": [
@@ -226,6 +354,15 @@
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tooltip of the 'Restart requested' badge."
+    },
+    {
+      "key": "A run is in progress__cron-status",
+      "text": "A run is in progress",
+      "context": "cron-status",
+      "files": [
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): tooltip of the status badge 'Running'."
     },
     {
       "key": "A stopping process and its successor overlap, or the range changed",
@@ -256,6 +393,7 @@
       "text": "Actions",
       "context": "table-column",
       "files": [
+        "crons/parts.tsx",
         "list/ActionsHeaderText.tsx",
         "list/columns.tsx",
         "workers/overview.tsx"
@@ -272,6 +410,15 @@
       "hint": "Languages and locales admin: column header, filter and switch label — whether the language or locale is in use."
     },
     {
+      "key": "Active, the last run succeeded or none ended yet__cron-status",
+      "text": "Active, the last run succeeded or none ended yet",
+      "context": "cron-status",
+      "files": [
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): tooltip of the status badge 'OK'."
+    },
+    {
       "key": "Active: %name%",
       "text": "Active: %name%",
       "files": [
@@ -280,12 +427,38 @@
       "hint": "Languages admin screen: accessible name of the active switch of a row; %name% is the language name."
     },
     {
+      "key": "Active: the runner takes it at its next slot",
+      "text": "Active: the runner takes it at its next slot",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): label of the on/off switch in the create/edit form."
+    },
+    {
+      "key": "Active__cron-summary",
+      "text": "Active",
+      "context": "cron-summary",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): label of the summary tile with the number of switched-on jobs."
+    },
+    {
       "key": "Add %entity%",
       "text": "Add %entity%",
       "files": [
         "page/PageToolbar.tsx"
       ],
       "hint": "Label of the primary button at the top right of a list page that creates a new item. %entity% is the singular item name, e.g. World or Push Notification. Imperative."
+    },
+    {
+      "key": "Add Cron",
+      "text": "Add Cron",
+      "files": [
+        "crons/CronFormDrawer.tsx",
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): button and drawer title to create a new scheduled job. 'Cron' is the name of a scheduled job."
     },
     {
       "key": "Add a translation",
@@ -328,6 +501,15 @@
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): throughput table: the row of every queue together."
+    },
+    {
+      "key": "All__cron-run-filter",
+      "text": "All",
+      "context": "cron-run-filter",
+      "files": [
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): tab of the runs list: runs of every result."
     },
     {
       "key": "All__filter-option",
@@ -378,6 +560,14 @@
         "media/ImageCropDialog.tsx"
       ],
       "hint": "Button text of the image crop dialog while the cropped image is being produced."
+    },
+    {
+      "key": "Arguments",
+      "text": "Arguments",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): label of the field with the command-line arguments of the scheduled command."
     },
     {
       "key": "Arrow keys move the frame (with Shift further), + and − zoom.",
@@ -434,6 +624,14 @@
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tooltip of the process range; %min% and %max% are process counts."
+    },
+    {
+      "key": "Average",
+      "text": "Average",
+      "files": [
+        "crons/charts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): legend of the dashed line in the duration chart: the average duration."
     },
     {
       "key": "Average and maximum handling time over the window",
@@ -542,6 +740,7 @@
       "text": "Cancel",
       "context": "dialog-action",
       "files": [
+        "crons/CronFormDrawer.tsx",
         "translations/AppTranslationKeyDrawer.tsx",
         "workers/WorkerRestartButton.tsx"
       ],
@@ -599,6 +798,14 @@
         "media/MediaItemField.tsx"
       ],
       "hint": "Button label under a media field preview; click to open the picker and replace the currently chosen image. Shown only when an image is already set."
+    },
+    {
+      "key": "Checking the schedule…",
+      "text": "Checking the schedule…",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): shown under the schedule field while the server checks the expression."
     },
     {
       "key": "Clear",
@@ -743,12 +950,31 @@
       "hint": "Label of the colour input inside a colour picker popover."
     },
     {
+      "key": "Command",
+      "text": "Command",
+      "files": [
+        "crons/CronDetailsDrawer.tsx",
+        "crons/CronFormDrawer.tsx",
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): column header and form label: the console command the job runs."
+    },
+    {
       "key": "Command Palette",
       "text": "Command Palette",
       "files": [
         "primitives/command.tsx"
       ],
       "hint": "Hidden (screen-reader only) title of the command palette dialog, a search popup for jumping to pages and actions in the admin app."
+    },
+    {
+      "key": "Command missing__cron-status",
+      "text": "Command missing",
+      "context": "cron-status",
+      "files": [
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): status badge: the console command of the job does not exist in this build of the application."
     },
     {
       "key": "Confirm__confirm-dialog",
@@ -809,6 +1035,14 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): button that copies the id of the error group to the clipboard."
     },
     {
+      "key": "Copy the output",
+      "text": "Copy the output",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): button that copies the full output of a run."
+    },
+    {
       "key": "Could not copy",
       "text": "Could not copy",
       "files": [
@@ -834,6 +1068,14 @@
       "hint": "Locales admin screen (language + country combinations): column header and filter label: the country code of the locale (e.g. DE)."
     },
     {
+      "key": "Create Cron",
+      "text": "Create Cron",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): submit button of the create form."
+    },
+    {
       "key": "Create translation key",
       "text": "Create translation key",
       "files": [
@@ -848,6 +1090,14 @@
         "list/Combobox.tsx"
       ],
       "hint": "Last row of a picker's search list: creates a new entry named by the typed text (%term%) because no existing entry has that name."
+    },
+    {
+      "key": "Created %name%",
+      "text": "Created %name%",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): toast after creating a job."
     },
     {
       "key": "Created__entity-metadata",
@@ -875,6 +1125,38 @@
       "hint": "Import of the configured languages or locales (maintenance action): description of the locales import."
     },
     {
+      "key": "Cron",
+      "text": "Cron",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): column header of the runs list: the job a run belongs to. 'Cron' is a scheduled job."
+    },
+    {
+      "key": "Cron #%id%",
+      "text": "Cron #%id%",
+      "files": [
+        "crons/CronDetailsDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): drawer title while the job loads: its id."
+    },
+    {
+      "key": "Crons",
+      "text": "Crons",
+      "files": [
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): page title and tab: the scheduled jobs (plural of 'Cron')."
+    },
+    {
+      "key": "Crons views",
+      "text": "Crons views",
+      "files": [
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): accessible name of the tabs 'Crons' / 'Runs'."
+    },
+    {
       "key": "Crop area",
       "text": "Crop area",
       "files": [
@@ -899,6 +1181,14 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): column header: the job a process handles now."
     },
     {
+      "key": "Custom schedule",
+      "text": "Custom schedule",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): the schedule in words when it has no common shape; the cron expression is shown beside it."
+    },
+    {
       "key": "Custom__date-range",
       "text": "Custom",
       "context": "date-range",
@@ -906,6 +1196,22 @@
         "logic/pure/dateRangePresets.ts"
       ],
       "hint": "Preset of a date range filter: the user picks the start and end dates in two date fields."
+    },
+    {
+      "key": "Daily at %time%",
+      "text": "Daily at %time%",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): schedule in words: every day at %time% (server time)."
+    },
+    {
+      "key": "Daily at 03:00",
+      "text": "Daily at 03:00",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): preset button of the schedule field: every day at 03:00."
     },
     {
       "key": "Decrease",
@@ -932,6 +1238,22 @@
       "hint": "Locales admin screen (language + country combinations): column header and switch: the locale is the default one of its language."
     },
     {
+      "key": "Delete %name%",
+      "text": "Delete %name%",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): accessible name of the delete button of a job."
+    },
+    {
+      "key": "Delete %name%?",
+      "text": "Delete %name%?",
+      "files": [
+        "crons/useCronActions.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): title of the delete confirmation."
+    },
+    {
       "key": "Delete this translation value?",
       "text": "Delete this translation value?",
       "files": [
@@ -944,10 +1266,28 @@
       "text": "Delete",
       "context": "action",
       "files": [
+        "crons/parts.tsx",
+        "crons/useCronActions.ts",
         "translations/AppTranslationKeyDrawer.tsx",
         "translations/AppTranslationsScreen.tsx"
       ],
       "hint": "Button that deletes (an action, verb), in the app translations admin."
+    },
+    {
+      "key": "Deleted %name%",
+      "text": "Deleted %name%",
+      "files": [
+        "crons/useCronActions.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): toast after deleting a job."
+    },
+    {
+      "key": "Description",
+      "text": "Description",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): label of the description field of a job."
     },
     {
       "key": "Dev only",
@@ -979,6 +1319,7 @@
       "key": "Dismiss",
       "text": "Dismiss",
       "files": [
+        "crons/parts.tsx",
         "translations/TranslationControls.tsx"
       ],
       "hint": "Button in the AI translation panel that hides the finished progress list of the last translation run. Imperative."
@@ -1029,9 +1370,27 @@
       "key": "Duration",
       "text": "Duration",
       "files": [
+        "crons/CronDetailsDrawer.tsx",
+        "crons/runs.tsx",
         "workers/transport.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): column header and chart title: how long a job took."
+    },
+    {
+      "key": "Durations of the last %runs% ended runs, %failed% failed",
+      "text": "Durations of the last %runs% ended runs, %failed% failed",
+      "files": [
+        "crons/charts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): accessible description of the duration bar chart."
+    },
+    {
+      "key": "Durations of the last ended runs",
+      "text": "Durations of the last ended runs",
+      "files": [
+        "crons/CronDetailsDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): section title of the duration chart in the job's details."
     },
     {
       "key": "Each one stops after its current message and is started again. Its stop shows as “Restart requested” under Processes.",
@@ -1042,10 +1401,20 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): restart result: what happens to the asked processes."
     },
     {
+      "key": "Edit %name%",
+      "text": "Edit %name%",
+      "files": [
+        "crons/CronFormDrawer.tsx",
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): accessible name of the edit button and title of the edit drawer of a job."
+    },
+    {
       "key": "Edit__action",
       "text": "Edit",
       "context": "action",
       "files": [
+        "crons/parts.tsx",
         "page/EditableCard.tsx"
       ],
       "hint": "Default accessible name and tooltip of the small pencil icon button in the top-right corner of a settings card; clicking it opens the edit form for that card. Imperative verb."
@@ -1084,6 +1453,14 @@
       "hint": "Error under a colour field whose text is not a colour; keep #RRGGBB as it is."
     },
     {
+      "key": "Enter a cron expression",
+      "text": "Enter a cron expression",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): error under the empty schedule field."
+    },
+    {
       "key": "Error",
       "text": "Error",
       "files": [
@@ -1092,12 +1469,52 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): column header: the error of a job run."
     },
     {
+      "key": "Every 15 minutes",
+      "text": "Every 15 minutes",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): preset button of the schedule field."
+    },
+    {
+      "key": "Every 5 minutes",
+      "text": "Every 5 minutes",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): preset button of the schedule field."
+    },
+    {
+      "key": "Every active Cron is overdue. app:crons:execute must run every minute on one host; nothing runs until it does.",
+      "text": "Every active Cron is overdue. app:crons:execute must run every minute on one host; nothing runs until it does.",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): banner: the runner process is not running; keep 'app:crons:execute' untranslated (a console command)."
+    },
+    {
       "key": "Every live process stops after its current message and is started again with the current code and settings. A process inside a long job finishes that job first; nothing is scaled and no message is lost.",
       "text": "Every live process stops after its current message and is started again with the current code and settings. A process inside a long job finishes that job first; nothing is scaled and no message is lost.",
       "files": [
         "workers/WorkerRestartButton.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): restart confirmation: what a restart request does."
+    },
+    {
+      "key": "Every minute",
+      "text": "Every minute",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): schedule in words: every minute."
+    },
+    {
+      "key": "Every run of the last 14 days, newest first. Open one for its full output.",
+      "text": "Every run of the last 14 days, newest first. Open one for its full output.",
+      "files": [
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): description of the runs section."
     },
     {
       "key": "Every transport over the window; point at a chart to read one step.",
@@ -1223,6 +1640,34 @@
       "hint": "Workers admin chart: series name: failed jobs."
     },
     {
+      "key": "Failed__cron-run-filter",
+      "text": "Failed",
+      "context": "cron-run-filter",
+      "files": [
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): tab of the runs list: failed runs only."
+    },
+    {
+      "key": "Failed__cron-run-result",
+      "text": "Failed",
+      "context": "cron-run-result",
+      "files": [
+        "crons/charts.tsx",
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): result badge of one run: it failed."
+    },
+    {
+      "key": "Failed__cron-stats",
+      "text": "Failed",
+      "context": "cron-stats",
+      "files": [
+        "crons/CronDetailsDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): label of the number of failed runs in the 14-day statistics."
+    },
+    {
       "key": "Failed__translation-status",
       "text": "Failed",
       "context": "translation-status",
@@ -1239,6 +1684,15 @@
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile label: failed jobs."
+    },
+    {
+      "key": "Failing__cron-status",
+      "text": "Failing",
+      "context": "cron-status",
+      "files": [
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): status badge: the last run of the job failed."
     },
     {
       "key": "Failures",
@@ -1312,6 +1766,14 @@
         "workers/history.tsx"
       ],
       "hint": "Workers admin chart: accessible description of the chart."
+    },
+    {
+      "key": "Five fields: minute, hour, day of month, month, day of week (server time).",
+      "text": "Five fields: minute, hour, day of month, month, day of week (server time).",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): help text of the schedule field (a cron expression)."
     },
     {
       "key": "Fixed at %max%",
@@ -1521,6 +1983,22 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): column header: machine name and process id."
     },
     {
+      "key": "Hourly",
+      "text": "Hourly",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): preset button of the schedule field: every hour."
+    },
+    {
+      "key": "Hourly at :%minute%",
+      "text": "Hourly at :%minute%",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): schedule in words: every hour at minute %minute%."
+    },
+    {
       "key": "ID",
       "text": "ID",
       "files": [
@@ -1686,6 +2164,14 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): column header: the error group in the error log."
     },
     {
+      "key": "It is running now.",
+      "text": "It is running now.",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): why 'Run now' is unavailable: the job runs right now."
+    },
+    {
       "key": "Its current message runs longer than the busy limit__worker-process-state",
       "text": "Its current message runs longer than the busy limit",
       "context": "worker-process-state",
@@ -1693,6 +2179,15 @@
         "workers/status.ts"
       ],
       "hint": "Status badge of a worker process: description of Silent."
+    },
+    {
+      "key": "Its slot passed more than two minutes ago: the runner does not tick__cron-status",
+      "text": "Its slot passed more than two minutes ago: the runner does not tick",
+      "context": "cron-status",
+      "files": [
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): tooltip of the status badge 'Overdue'."
     },
     {
       "key": "Keep editing",
@@ -1779,6 +2274,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header: counts of the last %minutes% minutes."
     },
     {
+      "key": "Last 14 days",
+      "text": "Last 14 days",
+      "files": [
+        "crons/CronDetailsDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): section title of the statistics of the last 14 days."
+    },
+    {
       "key": "Last 15 min",
       "text": "Last 15 min",
       "files": [
@@ -1842,6 +2345,23 @@
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header: the last hour."
+    },
+    {
+      "key": "Last run",
+      "text": "Last run",
+      "files": [
+        "crons/CronDetailsDrawer.tsx",
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): column header and label: the newest run of a job."
+    },
+    {
+      "key": "Last run started",
+      "text": "Last run started",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): label of the summary tile with the start of the newest run of any job."
     },
     {
       "key": "Left to right",
@@ -1909,6 +2429,14 @@
       "hint": "Accessible label of a spinning loader shown while a chart on the activity statistics screens is loading. Screen readers announce it."
     },
     {
+      "key": "Loading Crons",
+      "text": "Loading Crons",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): accessible text while the list loads."
+    },
+    {
       "key": "Loading completeness",
       "text": "Loading completeness",
       "files": [
@@ -1963,6 +2491,22 @@
         "workers/transport.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): accessible name of the loading placeholder."
+    },
+    {
+      "key": "Loading runs",
+      "text": "Loading runs",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): accessible text while the runs list loads."
+    },
+    {
+      "key": "Loading the output…",
+      "text": "Loading the output…",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): dialog description while the run's output loads."
     },
     {
       "key": "Loading translation keys",
@@ -2045,6 +2589,14 @@
         "workers/transport.tsx"
       ],
       "hint": "Status badge of a worker process: vanished without reporting a stop."
+    },
+    {
+      "key": "Lowercase letters, digits and single hyphens: send-reminders",
+      "text": "Lowercase letters, digits and single hyphens: send-reminders",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): help text of the name field; keep the example name untranslated."
     },
     {
       "key": "Main__navigation",
@@ -2216,6 +2768,22 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): page description; Messenger is the name of the job queue library (keep)."
     },
     {
+      "key": "Mondays at 06:00",
+      "text": "Mondays at 06:00",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): preset button of the schedule field: every Monday at 06:00."
+    },
+    {
+      "key": "Monthly on day %day% at %time%",
+      "text": "Monthly on day %day% at %time%",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): schedule in words: every month on day %day% at %time%."
+    },
+    {
       "key": "More actions",
       "text": "More actions",
       "files": [
@@ -2244,6 +2812,8 @@
       "key": "Name",
       "text": "Name",
       "files": [
+        "crons/CronFormDrawer.tsx",
+        "crons/parts.tsx",
         "translations/LanguagesScreen.tsx",
         "translations/LocalesScreen.tsx"
       ],
@@ -2269,9 +2839,18 @@
       "key": "Need attention",
       "text": "Need attention",
       "files": [
+        "crons/parts.tsx",
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile label: transports in a state someone should look at."
+    },
+    {
+      "key": "Never ran",
+      "text": "Never ran",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): shown in the 'Last run' column of a job that has not run yet."
     },
     {
       "key": "New translation",
@@ -2282,12 +2861,61 @@
       "hint": "App translations admin, drawer of one translation key: accessible name of the text field for the new translation."
     },
     {
+      "key": "Newer",
+      "text": "Newer",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): pager button of the runs list: the newer page."
+    },
+    {
+      "key": "Next run",
+      "text": "Next run",
+      "files": [
+        "crons/CronDetailsDrawer.tsx",
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): column header: when the job runs next (a countdown)."
+    },
+    {
+      "key": "Next slots",
+      "text": "Next slots",
+      "files": [
+        "crons/CronDetailsDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): section title in the job's details: the next 5 scheduled run times."
+    },
+    {
       "key": "No",
       "text": "No",
       "files": [
         "list/filterOptions.ts"
       ],
       "hint": "Option of a yes/no filter in the filter panel of a list; selecting it shows only records where the flag is not set."
+    },
+    {
+      "key": "No Cron in the window.",
+      "text": "No Cron in the window.",
+      "files": [
+        "crons/charts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): timeline without any job."
+    },
+    {
+      "key": "No Cron matches the search.",
+      "text": "No Cron matches the search.",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): empty list after a search."
+    },
+    {
+      "key": "No Cron yet. Schedule a command with Add Cron.",
+      "text": "No Cron yet. Schedule a command with Add Cron.",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): empty list; 'Add Cron' is the button above it."
     },
     {
       "key": "No change",
@@ -2312,6 +2940,14 @@
         "workers/charts.tsx"
       ],
       "hint": "Workers admin chart: tooltip value of a step without a reading (a gap in the chart)."
+    },
+    {
+      "key": "No ended run yet.",
+      "text": "No ended run yet.",
+      "files": [
+        "crons/charts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): duration chart without runs."
     },
     {
       "key": "No entry in the worker list",
@@ -2444,6 +3080,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a transport without jobs in the last hour."
     },
     {
+      "key": "No next run",
+      "text": "No next run",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): next-run cell of a job whose command is missing."
+    },
+    {
       "key": "No process matches this filter.",
       "text": "No process matches this filter.",
       "files": [
@@ -2467,6 +3111,46 @@
         "list/MultiSelect.tsx"
       ],
       "hint": "Empty-state message inside an opened dropdown picker when the typed search matches none of the options."
+    },
+    {
+      "key": "No run in the retention period (14 days).",
+      "text": "No run in the retention period (14 days).",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): empty runs list."
+    },
+    {
+      "key": "No run with this result.",
+      "text": "No run with this result.",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): empty runs list for the selected result tab."
+    },
+    {
+      "key": "No run yet",
+      "text": "No run yet",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): hint under the 'Last run started' tile when no job has run."
+    },
+    {
+      "key": "No runs",
+      "text": "No runs",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): run strip of a job without runs."
+    },
+    {
+      "key": "No schedulable command",
+      "text": "No schedulable command",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): empty state of the command picker."
     },
     {
       "key": "No stop reported and no heartbeat: killed, out of memory or host gone__worker-process-state",
@@ -2576,6 +3260,14 @@
       "hint": "Default label of a yes/no flag cell in a list table, shown with a grey minus when the flag is off, e.g. Active column."
     },
     {
+      "key": "None: the Cron is paused or its command is missing.",
+      "text": "None: the Cron is paused or its command is missing.",
+      "files": [
+        "crons/CronDetailsDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): no next run times in the job's details."
+    },
+    {
       "key": "None__color-value",
       "text": "None",
       "context": "color-value",
@@ -2643,12 +3335,53 @@
       "hint": "Status badge of a worker transport (queue): description of Idle."
     },
     {
+      "key": "OK__cron-status",
+      "text": "OK",
+      "context": "cron-status",
+      "files": [
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): status badge: the job is healthy."
+    },
+    {
+      "key": "Older",
+      "text": "Older",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): pager button of the runs list: the older page."
+    },
+    {
+      "key": "One line without quote characters",
+      "text": "One line without quote characters",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): error under the arguments field."
+    },
+    {
+      "key": "One line, no quote characters.",
+      "text": "One line, no quote characters.",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): help text of the arguments field."
+    },
+    {
       "key": "One or more of the given values is invalid.",
       "text": "One or more of the given values is invalid.",
       "files": [
         "i18n/serverMessages.ts"
       ],
       "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. A multi-select field contains a value that is not one of the allowed options."
+    },
+    {
+      "key": "Only commands marked as schedulable are offered.",
+      "text": "Only commands marked as schedulable are offered.",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): help text of the command picker."
     },
     {
       "key": "Only the loaded rows are selected; more match on the server.",
@@ -2733,12 +3466,54 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): accessible name of the outcome filter chips."
     },
     {
+      "key": "Output",
+      "text": "Output",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): column header of the runs list: the first line of the run's output."
+    },
+    {
+      "key": "Overdue__cron-status",
+      "text": "Overdue",
+      "context": "cron-status",
+      "files": [
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): status badge: the job should have run more than two minutes ago."
+    },
+    {
       "key": "Overview",
       "text": "Overview",
       "files": [
         "workers/WorkerTransportScreen.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): tab with facts, charts and live processes."
+    },
+    {
+      "key": "Paused %name%",
+      "text": "Paused %name%",
+      "files": [
+        "crons/useCronActions.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): toast after switching a job off."
+    },
+    {
+      "key": "Paused: no next run",
+      "text": "Paused: no next run",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): next-run cell of a switched-off job."
+    },
+    {
+      "key": "Paused__cron-status",
+      "text": "Paused",
+      "context": "cron-status",
+      "files": [
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): status badge: the job is switched off."
     },
     {
       "key": "Per worker",
@@ -2763,6 +3538,22 @@
         "form/ColorValueField.tsx"
       ],
       "hint": "Accessible name of a colour swatch button; %label% is the field name, %value% the colour code."
+    },
+    {
+      "key": "Pick a command",
+      "text": "Pick a command",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): placeholder of the command picker; also its error when empty."
+    },
+    {
+      "key": "Pick a command of this build, or delete the Cron.",
+      "text": "Pick a command of this build, or delete the Cron.",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): notice in the edit form of a job whose command is missing."
     },
     {
       "key": "Plural",
@@ -2905,12 +3696,28 @@
       "hint": "Workers admin chart: chart title: waiting and in-work jobs of every queue together."
     },
     {
+      "key": "Queued: starts within a minute",
+      "text": "Queued: starts within a minute",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): next-run cell after 'Run now': the run is queued."
+    },
+    {
       "key": "Received a signal",
       "text": "Received a signal",
       "files": [
         "workers/format.ts"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): stop reason: the process was told to stop by the operating system."
+    },
+    {
+      "key": "Recent runs",
+      "text": "Recent runs",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): column header: a strip of the newest runs."
     },
     {
       "key": "Redelivered__chart-series",
@@ -2936,6 +3743,14 @@
         "list/EntityListCard.tsx"
       ],
       "hint": "Accessible name (screen-reader label) of the thin loading bar shown over a list's toolbar while the list reloads in the background."
+    },
+    {
+      "key": "Refused a moment ago: try again in a minute.",
+      "text": "Refused a moment ago: try again in a minute.",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): why 'Run now' is unavailable right after the server refused it."
     },
     {
       "key": "Remove %label%",
@@ -3069,6 +3884,23 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): accessible name of the restart icon button of a row; %transport% is the queue name."
     },
     {
+      "key": "Result",
+      "text": "Result",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): accessible name of the result filter of the runs list."
+    },
+    {
+      "key": "Result__cron-run-filter",
+      "text": "Result",
+      "context": "cron-run-filter",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): accessible name of the result tabs of the runs list."
+    },
+    {
       "key": "Retries",
       "text": "Retries",
       "files": [
@@ -3080,6 +3912,7 @@
       "key": "Retry",
       "text": "Retry",
       "files": [
+        "crons/CronsScreen.tsx",
         "workers/WorkersOverviewScreen.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): button that loads the overview again after an error."
@@ -3109,6 +3942,46 @@
       "hint": "Screen-reader name of the narrow '#' column at the start of a list table that numbers the loaded rows 1, 2, 3 …"
     },
     {
+      "key": "Run #%id%",
+      "text": "Run #%id%",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): title of the run dialog while it loads."
+    },
+    {
+      "key": "Run %name% now",
+      "text": "Run %name% now",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): accessible name of the 'Run now' button of a job."
+    },
+    {
+      "key": "Run now queues the Cron: the runner starts it within a minute. Open a Cron for its next slots and run history.",
+      "text": "Run now queues the Cron: the runner starts it within a minute. Open a Cron for its next slots and run history.",
+      "files": [
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): description of the list section."
+    },
+    {
+      "key": "Run now: the runner starts it within a minute",
+      "text": "Run now: the runner starts it within a minute",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): tooltip of the 'Run now' button."
+    },
+    {
+      "key": "Run of %name%",
+      "text": "Run of %name%",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): title of the dialog with the output of one run."
+    },
+    {
       "key": "Run__maintenance-action",
       "text": "Run",
       "context": "maintenance-action",
@@ -3121,6 +3994,7 @@
       "key": "Running now",
       "text": "Running now",
       "files": [
+        "crons/parts.tsx",
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile label: worker processes running now."
@@ -3132,6 +4006,33 @@
         "workers/WorkerTransportScreen.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): description of the live processes section."
+    },
+    {
+      "key": "Running__cron-run-filter",
+      "text": "Running",
+      "context": "cron-run-filter",
+      "files": [
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): tab of the runs list: runs in progress."
+    },
+    {
+      "key": "Running__cron-run-result",
+      "text": "Running",
+      "context": "cron-run-result",
+      "files": [
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): result badge of a run in progress."
+    },
+    {
+      "key": "Running__cron-status",
+      "text": "Running",
+      "context": "cron-status",
+      "files": [
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): status badge: a run of the job is in progress."
     },
     {
       "key": "Running__worker-process-state",
@@ -3153,6 +4054,48 @@
       "hint": "The run button of a maintenance action card while the action runs."
     },
     {
+      "key": "Runs",
+      "text": "Runs",
+      "files": [
+        "crons/CronDetailsDrawer.tsx",
+        "crons/CronsScreen.tsx",
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): tab and section title: the runs of the jobs."
+    },
+    {
+      "key": "Runs in 24 h",
+      "text": "Runs in 24 h",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): label of the summary tile: number of runs in the last 24 hours."
+    },
+    {
+      "key": "Runs per Cron and time bucket",
+      "text": "Runs per Cron and time bucket",
+      "files": [
+        "crons/charts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): accessible caption of the timeline table."
+    },
+    {
+      "key": "Runs per Cron and time bucket, on the server clock. Red: every run failed, amber: some failed.",
+      "text": "Runs per Cron and time bucket, on the server clock. Red: every run failed, amber: some failed.",
+      "files": [
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): description of the timeline section."
+    },
+    {
+      "key": "Runs:",
+      "text": "Runs:",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): label before the composed command line in the form."
+    },
+    {
       "key": "Save changes",
       "text": "Save changes",
       "files": [
@@ -3165,17 +4108,53 @@
       "text": "Save",
       "context": "action",
       "files": [
+        "crons/CronFormDrawer.tsx",
         "translations/AppTranslationKeyDrawer.tsx"
       ],
       "hint": "Button that saves (an action, verb), in the app translations admin."
     },
     {
+      "key": "Saved %name%",
+      "text": "Saved %name%",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): toast after saving a job."
+    },
+    {
       "key": "Saving…",
       "text": "Saving…",
       "files": [
+        "crons/CronFormDrawer.tsx",
         "translations/AppTranslationKeyDrawer.tsx"
       ],
       "hint": "App translations admin, drawer of one translation key: submit button while the key is being saved."
+    },
+    {
+      "key": "Schedule",
+      "text": "Schedule",
+      "files": [
+        "crons/CronDetailsDrawer.tsx",
+        "crons/CronFormDrawer.tsx",
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): column header and form label: the cron expression of a job."
+    },
+    {
+      "key": "Schedule a console command; it is due at the next slot of its schedule.",
+      "text": "Schedule a console command; it is due at the next slot of its schedule.",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): description of the create drawer."
+    },
+    {
+      "key": "Scheduled console commands: their health, runs and schedule.",
+      "text": "Scheduled console commands: their health, runs and schedule.",
+      "files": [
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): page description."
     },
     {
       "key": "Search",
@@ -3185,6 +4164,22 @@
         "list/SearchField.tsx"
       ],
       "hint": "Accessible label of a search input field in a list toolbar, read by screen readers. Use the plain noun or verb for searching."
+    },
+    {
+      "key": "Search Crons",
+      "text": "Search Crons",
+      "files": [
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): accessible name of the search field."
+    },
+    {
+      "key": "Search commands…",
+      "text": "Search commands…",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): search placeholder of the command picker."
     },
     {
       "key": "Search for a command to run…",
@@ -3225,6 +4220,14 @@
         "translations/LocalesScreen.tsx"
       ],
       "hint": "Locales admin screen (language + country combinations): placeholder of the name search."
+    },
+    {
+      "key": "Search name, description or command…",
+      "text": "Search name, description or command…",
+      "files": [
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): placeholder of the search field."
     },
     {
       "key": "Search translations…",
@@ -3336,6 +4339,14 @@
       "hint": "Placeholder of a multi-select dropdown while nothing is picked. Prompts the user to open the list and choose values. Ends with an ellipsis."
     },
     {
+      "key": "Server time %time%",
+      "text": "Server time %time%",
+      "files": [
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): page header: the server's current time, which every time on the page uses."
+    },
+    {
       "key": "Show all (%count%)",
       "text": "Show all (%count%)",
       "files": [
@@ -3414,9 +4425,18 @@
       "key": "Started",
       "text": "Started",
       "files": [
+        "crons/runs.tsx",
         "workers/transport.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): column header: when the process or job run started."
+    },
+    {
+      "key": "Started %start% (server time) · %duration%",
+      "text": "Started %start% (server time) · %duration%",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): description of the run dialog: start time and duration."
     },
     {
       "key": "Starts__chart-series",
@@ -3436,6 +4456,15 @@
         "workers/transport.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header and label: the state of a transport or a worker process."
+    },
+    {
+      "key": "Status",
+      "text": "Status",
+      "files": [
+        "crons/CronDetailsDrawer.tsx",
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): column header: the health status of a job."
     },
     {
       "key": "Stopped",
@@ -3533,6 +4562,82 @@
       "hint": "Workers admin chart: series name: jobs finished without error."
     },
     {
+      "key": "Success rate",
+      "text": "Success rate",
+      "files": [
+        "crons/CronDetailsDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): label in the 14-day statistics: share of successful runs."
+    },
+    {
+      "key": "Success rate of the runs that ended in the last 24 hours",
+      "text": "Success rate of the runs that ended in the last 24 hours",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): tooltip of the 24 h column."
+    },
+    {
+      "key": "Successful__cron-run-filter",
+      "text": "Successful",
+      "context": "cron-run-filter",
+      "files": [
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): tab of the runs list: successful runs only."
+    },
+    {
+      "key": "Successful__cron-run-result",
+      "text": "Successful",
+      "context": "cron-run-result",
+      "files": [
+        "crons/charts.tsx",
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): result badge of a successful run."
+    },
+    {
+      "key": "Switch it on first.",
+      "text": "Switch it on first.",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): why 'Run now' is unavailable: the job is switched off."
+    },
+    {
+      "key": "Switch off",
+      "text": "Switch off",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): tooltip of the on/off switch of an active job."
+    },
+    {
+      "key": "Switch on",
+      "text": "Switch on",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): tooltip of the on/off switch of a paused job."
+    },
+    {
+      "key": "Switched off: the runner skips it__cron-status",
+      "text": "Switched off: the runner skips it",
+      "context": "cron-status",
+      "files": [
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): tooltip of the status badge 'Paused'."
+    },
+    {
+      "key": "Switched on %name%",
+      "text": "Switched on %name%",
+      "files": [
+        "crons/useCronActions.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): toast after switching a job on."
+    },
+    {
       "key": "Table view",
       "text": "Table view",
       "files": [
@@ -3563,6 +4668,79 @@
         "translations/AppTranslationKeyDrawer.tsx"
       ],
       "hint": "App translations admin, drawer of one translation key: description of the delete confirmation; %locale% is a content locale key like de::INFORMAL."
+    },
+    {
+      "key": "The Cron and its whole run history are deleted. This cannot be undone.",
+      "text": "The Cron and its whole run history are deleted. This cannot be undone.",
+      "files": [
+        "crons/useCronActions.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): text of the delete confirmation."
+    },
+    {
+      "key": "The Cron could not be created.",
+      "text": "The Cron could not be created.",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): error after a failed create."
+    },
+    {
+      "key": "The Cron could not be deleted.",
+      "text": "The Cron could not be deleted.",
+      "files": [
+        "crons/useCronActions.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): error after a failed delete."
+    },
+    {
+      "key": "The Cron could not be loaded.",
+      "text": "The Cron could not be loaded.",
+      "files": [
+        "crons/CronDetailsDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): error in the details drawer."
+    },
+    {
+      "key": "The Cron could not be saved.",
+      "text": "The Cron could not be saved.",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): error after a failed save."
+    },
+    {
+      "key": "The Cron could not be switched.",
+      "text": "The Cron could not be switched.",
+      "files": [
+        "crons/useCronActions.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): error after a failed switch on/off."
+    },
+    {
+      "key": "The Cron is running or switched off. Try again in a minute.",
+      "text": "The Cron is running or switched off. Try again in a minute.",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): explanation of a refused action (HTTP 409)."
+    },
+    {
+      "key": "The Crons could not be loaded.",
+      "text": "The Crons could not be loaded.",
+      "files": [
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): error when the list fails to load."
+    },
+    {
+      "key": "The console of this build does not know the command: edit it or delete the Cron__cron-status",
+      "text": "The console of this build does not know the command: edit it or delete the Cron",
+      "context": "cron-status",
+      "files": [
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): tooltip of the status badge 'Command missing'."
     },
     {
       "key": "The editor could not be loaded; edit the Markdown text directly.",
@@ -3639,6 +4817,15 @@
         "translations/LanguagesScreen.tsx"
       ],
       "hint": "Languages admin screen: page description."
+    },
+    {
+      "key": "The last ended run failed__cron-status",
+      "text": "The last ended run failed",
+      "context": "cron-status",
+      "files": [
+        "crons/status.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): tooltip of the status badge 'Failing'."
     },
     {
       "key": "The locales could not be loaded.",
@@ -3729,6 +4916,46 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): error in the restart dialog (fallback when the server sends no message)."
     },
     {
+      "key": "The run could not be loaded.",
+      "text": "The run could not be loaded.",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): error in the run dialog."
+    },
+    {
+      "key": "The run could not be queued.",
+      "text": "The run could not be queued.",
+      "files": [
+        "crons/useCronActions.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): error after a refused 'Run now'."
+    },
+    {
+      "key": "The run wrote no output.",
+      "text": "The run wrote no output.",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): run dialog of a run without output."
+    },
+    {
+      "key": "The runner is not running",
+      "text": "The runner is not running",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): title of the banner shown when every active job is overdue."
+    },
+    {
+      "key": "The runs could not be loaded.",
+      "text": "The runs could not be loaded.",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): error of the runs list."
+    },
+    {
       "key": "The sampler is not running",
       "text": "The sampler is not running",
       "files": [
@@ -3743,6 +4970,14 @@
         "translations/AppTranslationsScreen.tsx"
       ],
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): description of the bulk delete confirmation."
+    },
+    {
+      "key": "The timeline could not be loaded.",
+      "text": "The timeline could not be loaded.",
+      "files": [
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): error of the timeline."
     },
     {
       "key": "The translation key could not be loaded.",
@@ -3840,6 +5075,30 @@
         "logic/browser/normalizeImage.ts"
       ],
       "hint": "Error in the image crop dialog when the browser lacks the image functions."
+    },
+    {
+      "key": "This build does not have its command.",
+      "text": "This build does not have its command.",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): why 'Run now' is unavailable: the command is missing in this build."
+    },
+    {
+      "key": "This build does not have the command %command%",
+      "text": "This build does not have the command %command%",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): notice title in the edit form; %command% is a console command name."
+    },
+    {
+      "key": "This is not a valid cron expression.",
+      "text": "This is not a valid cron expression.",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): error under the schedule field when the server gives no message."
     },
     {
       "key": "This page could not be shown. Try again, or reload the page.",
@@ -3986,6 +5245,30 @@
         "workers/history.tsx"
       ],
       "hint": "Workers admin chart: accessible name of the 1 hour … 14 days switch."
+    },
+    {
+      "key": "Timeline",
+      "text": "Timeline",
+      "files": [
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): section title: the runs per job over time."
+    },
+    {
+      "key": "Timeline window",
+      "text": "Timeline window",
+      "files": [
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): accessible name of the timeline window switch."
+    },
+    {
+      "key": "Times are on the server clock, the zone the runner evaluates the schedule in.",
+      "text": "Times are on the server clock, the zone the runner evaluates the schedule in.",
+      "files": [
+        "crons/CronDetailsDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): note in the job's details."
     },
     {
       "key": "Today",
@@ -4192,6 +5475,14 @@
       "hint": "Button on the error card of a crashed screen: render the screen again."
     },
     {
+      "key": "Try again in a minute.",
+      "text": "Try again in a minute.",
+      "files": [
+        "crons/useCronActions.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): appended to the server's message of a refused action."
+    },
+    {
       "key": "Type “%phrase%” to confirm",
       "text": "Type “%phrase%” to confirm",
       "files": [
@@ -4333,6 +5624,14 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): column header: time a job waited in the queue."
     },
     {
+      "key": "Wait for the run to finish.",
+      "text": "Wait for the run to finish.",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): why 'Delete' is unavailable while the job runs."
+    },
+    {
       "key": "Waiting messages in the last hour",
       "text": "Waiting messages in the last hour",
       "files": [
@@ -4376,6 +5675,22 @@
         "translations/TranslationControls.tsx"
       ],
       "hint": "Short form of the status 'Waiting for Customer', on a compact status button in the support ticket sidebar. Keep it to one short word."
+    },
+    {
+      "key": "Weekly on %weekday% at %time%",
+      "text": "Weekly on %weekday% at %time%",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): schedule in words: every week on %weekday% at %time%."
+    },
+    {
+      "key": "What it is for, %min% to %max% characters · %count%",
+      "text": "What it is for, %min% to %max% characters · %count%",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): help text and counter of the description field."
     },
     {
       "key": "What the workers did per message class in the window.",
@@ -4464,6 +5779,7 @@
       "key": "Writes are switched off",
       "text": "Writes are switched off",
       "files": [
+        "crons/parts.tsx",
         "workers/WorkerRestartButton.tsx"
       ],
       "hint": "Tooltip of a disabled write button when writes are switched off for this screen."
@@ -4535,6 +5851,22 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): hint under the last error: when it happened; %time% is a clock time."
     },
     {
+      "key": "average %duration%",
+      "text": "average %duration%",
+      "files": [
+        "crons/charts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): label above the duration chart."
+    },
+    {
+      "key": "avg %average% · max %max%",
+      "text": "avg %average% · max %max%",
+      "files": [
+        "crons/CronDetailsDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): duration statistics: average and longest run."
+    },
+    {
       "key": "backlog, undefined or not consumed",
       "text": "backlog, undefined or not consumed",
       "files": [
@@ -4600,6 +5932,22 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): where the job was dispatched from is unknown."
     },
     {
+      "key": "due %relative%",
+      "text": "due %relative%",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): next-run cell of an overdue job: when it was due (e.g. 'due 3 min. ago')."
+    },
+    {
+      "key": "e.g. --limit=100",
+      "text": "e.g. --limit=100",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): placeholder of the arguments field; keep the example untranslated."
+    },
+    {
       "key": "e.g. DE",
       "text": "e.g. DE",
       "files": [
@@ -4657,6 +6005,15 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile hint: no transport needs attention."
     },
     {
+      "key": "failed__cron-run",
+      "text": "failed",
+      "context": "cron-run",
+      "files": [
+        "crons/charts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): part of a bar tooltip in the duration chart: the run failed."
+    },
+    {
       "key": "final__attempt",
       "text": "final",
       "context": "attempt",
@@ -4712,6 +6069,15 @@
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a worker process without a current job."
+    },
+    {
+      "key": "idle__cron-lane",
+      "text": "idle",
+      "context": "cron-lane",
+      "files": [
+        "crons/charts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): marks a timeline lane without runs in the window."
     },
     {
       "key": "idle__worker-process",
@@ -4782,6 +6148,7 @@
       "key": "max %duration%",
       "text": "max %duration%",
       "files": [
+        "crons/charts.tsx",
         "workers/transport.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): the maximum duration; %duration% like 4.2 s."
@@ -4849,6 +6216,14 @@
         "workers/transport.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): a process that got no job yet."
+    },
+    {
+      "key": "no output",
+      "text": "no output",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): output column of a run without output."
     },
     {
       "key": "no worker list entry",
@@ -4973,6 +6348,14 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): the wait of a job is unknown."
     },
     {
+      "key": "used by %crons%",
+      "text": "used by %crons%",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): second line in the command picker: the jobs that already run the command."
+    },
+    {
       "key": "wait %duration%",
       "text": "wait %duration%",
       "files": [
@@ -5093,6 +6476,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile hint: queues whose length is unknown."
     },
     {
+      "key": "{count, plural, one {# run} other {# runs}}",
+      "text": "{count, plural, one {# run} other {# runs}}",
+      "files": [
+        "crons/parts.tsx"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): number of ended runs of the last 24 hours, under the success rate."
+    },
+    {
       "key": "{count, plural, one {# validation error} other {# validation errors}}",
       "text": "{count, plural, one {# validation error} other {# validation errors}}",
       "files": [
@@ -5115,6 +6506,22 @@
         "translations/AppTranslationsScreen.tsx"
       ],
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): title of the bulk delete confirmation; # is the number of selected keys."
+    },
+    {
+      "key": "{count, plural, one {Every # hour} other {Every # hours}}",
+      "text": "{count, plural, one {Every # hour} other {Every # hours}}",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): schedule in words: every N hours."
+    },
+    {
+      "key": "{count, plural, one {Every # minute} other {Every # minutes}}",
+      "text": "{count, plural, one {Every # minute} other {Every # minutes}}",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "In the admin screen of the scheduled jobs (Crons): schedule in words: every N minutes."
     },
     {
       "key": "{count, plural, one {Generation started for %locale% (%style%): # key} other {Generation started for %locale% (%style%): # keys}}",
