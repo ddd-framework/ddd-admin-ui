@@ -34,6 +34,7 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./next` | Next.js adapters: `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useListViewParam`, the one URL writer (`queueSearchParamsWrite`) | logic, provider; the only entry importing `next/*` |
 | `./notify-sonner` | `sonnerNotifications` (the notification adapter on `sonner`) and its `Toaster` | logic; the only entry importing `sonner` |
 | `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE` | logic, i18n, primitives, list, page, form, translations, media, glass; never `./next` or `./notify-sonner` |
+| `./design-studio` | `designStudioComponents`: the `components` of `@mgamadeus/ddd-design-studio`'s provider, every slot mapped to the block of the same name; the slot types (`DesignStudioComponentsContract`, structural copy) | primitives, list, page, glass; never imports the studio |
 | `./theme.css`, `./components.css` | the Tailwind theme binding and the structural CSS of the blocks | — |
 | `./tokens.json`, `./i18n-keys.json` | the host contract (colour roles, properties, layers, data attributes) and the text manifest | — |
 
@@ -203,6 +204,26 @@ function props there.
 (the browser's clock) or `'utc'`: `toDateInputValue(date, zone)` / `fromDateInputValue(text, zone)` and
 `toDateTimeInputValue` / `fromDateTimeInputValue` (`./logic`). Empty or invalid gives `''` / `null`; no arithmetic. A
 local time skipped when the clocks go forward resolves an hour later, a repeated one to its first occurrence.
+
+## Design studio
+
+`./design-studio` exports `designStudioComponents`, the `components` value the provider of
+`@mgamadeus/ddd-design-studio` takes (targets studio **0.7.x**, checked against 0.7.3). Every slot maps to the block of
+the same name: the shadcn-style primitives (`Button` … `DropdownMenuSeparator`), `Combobox`, `SearchField` and
+`StatusBadge` from `./list`, `QuickFilterPills` from `./glass`, `PageHeader`, `StatusCallout`, `CardGrid` and
+`PageSections` from `./page`.
+
+```tsx
+import { designStudioComponents } from '@mgamadeus/ddd-admin-ui/design-studio';
+
+<DesignStudioProvider components={designStudioComponents} /* api, router, paths, … */ />;
+// one slot of your own: components={{ ...designStudioComponents, Button: MyButton }}
+```
+
+The entry never imports the studio and adds no dependency: `DesignStudioComponentsContract` is a structural copy of
+the studio's `DesignStudioComponents`, and the map is typed against it; the studio passes a subset of each block's
+props, so the map is assignable to the studio's own type. A later studio minor that adds or changes a slot needs a new
+release of this entry. The host's `TooltipProvider` (part of `AdminUiProvider`) and theme apply as for every block.
 
 ## Showcase
 

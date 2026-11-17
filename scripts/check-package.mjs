@@ -266,6 +266,8 @@ export function checkPackage(packageDirectory, options = {}) {
       // the development page: every block entry, never an entry with an optional peer (./next, ./notify-sonner)
       showcase: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'translations', 'media', 'glass'],
       translations: ['logic', 'i18n', 'primitives', 'form'],
+      // the design studio's components map: blocks only
+      'design-studio': ['primitives', 'list', 'page', 'glass'],
     };
     const TYPE_ONLY = { provider: ['media', 'translations'] };
     const FILE_LIMITS = {

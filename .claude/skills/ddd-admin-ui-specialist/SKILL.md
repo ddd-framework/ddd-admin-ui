@@ -58,6 +58,9 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
   on `:root`; `PortalContainerProvider` / the provider's `portalContainer` moves every portal.
 - **Import boundary.** Blocks import only the entries the matrix in `README.md` allows, never app code. Only `./next`
   imports `next/*`, only `./notify-sonner` imports `sonner`; `./logic` pure files run without React.
+- **Design studio.** Pass `designStudioComponents` from `./design-studio` as the studio provider's `components`; replace
+  single slots by spreading it. The entry never imports the studio (`DesignStudioComponentsContract` is a structural
+  copy); a new studio slot means updating `contract.ts`, the map and the render test together.
 - **Translation keys.** Keys are full `locale::style` (`de::FORMAL`, `de::INFORMAL`). Never collapse them to the
   language: the payload of `useEntityTranslations` sends every loaded key back; a cleared text removes its key.
 - **URL state.** Build requests from `list.debounced`, never `list.values`. All writes (filters, view, drawer) go

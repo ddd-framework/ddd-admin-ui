@@ -12,6 +12,7 @@ const expectations = {
   glass: ['GlassPill', 'QuickFilterPills', 'CollapsibleCard', 'GlassGroup', 'ActionRow'],
   provider: ['AdminUiProvider', 'useAdminUi', 'defaultStorageKey'],
   showcase: ['Showcase', 'SHOWCASE_COVERAGE'],
+  'design-studio': ['designStudioComponents'],
 };
 
 let failed = false;

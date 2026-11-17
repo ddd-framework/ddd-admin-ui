@@ -3,6 +3,14 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.2.0
+
+- `./design-studio`: `designStudioComponents`, the `components` of `@mgamadeus/ddd-design-studio`'s provider
+  (studio 0.7.x), every slot mapped to the block of the same name; typed against `DesignStudioComponentsContract`, a
+  structural copy of the studio's slot types, so the entry neither imports the studio nor depends on it. Checks: a type
+  test (exactly the contract's slots), a server render of every slot (`test:render`), and the map assigned to the
+  published studio 0.7.3 type in a consumer.
+
 ## 0.1.0
 
 First stable release: 0.1.0-rc.6 plus the description fix below. Published under the `latest` dist-tag; prereleases
