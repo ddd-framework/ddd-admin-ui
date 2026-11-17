@@ -88,6 +88,13 @@ jobs:
           VERSION=$(node -p "require('./package.json').version")
           case "$VERSION" in *-*) DIST_TAG=next ;; *) DIST_TAG=latest ;; esac
           unset NODE_AUTH_TOKEN
+          # A stable patch of an older line (below the current latest) must not move latest.
+          LATEST=$(npm view @mgamadeus/ddd-admin-ui dist-tags.latest --registry https://registry.npmjs.org 2>/dev/null || true)
+          if [ "$DIST_TAG" = latest ] && [ -n "$LATEST" ] && [ "$LATEST" != "$VERSION" ] \
+            && [ "$(printf '%s\n%s\n' "$LATEST" "$VERSION" | sort -V | tail -n1)" = "$LATEST" ]; then
+            DIST_TAG="release-$(echo "$VERSION" | cut -d. -f1-2)"
+          fi
+          echo "dist-tag: $DIST_TAG"
           if npm view "@mgamadeus/ddd-admin-ui@${VERSION}" version --registry https://registry.npmjs.org >/dev/null 2>&1; then
             echo "@mgamadeus/ddd-admin-ui@${VERSION} is already on npm, nothing to publish"
             exit 0
