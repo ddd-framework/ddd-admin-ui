@@ -23,14 +23,17 @@
 #   next      a Next 16 app router project with Tailwind 4:
 #     T1  `next build`; the server page's metadata title is m('Users'), pure helpers render on the server
 #     T5  the production CSS has the package's component rules and utilities; ddd-admin-ui-check-tokens passes on it
-#         ddd-admin-ui-check-contrast passes on it (the package's exceptions only)
+#         ddd-admin-ui-check-contrast passes on it without exceptions (the fixture sets the status text roles)
+#         (browser) the status text roles: StatusBadge text is the host's text role; with the roles unset (a scope with
+#         `initial`) badge text, 15 % tint and callout icon compute exactly the values of 0.2.1
 #         one Radix copy in the host (ddd-admin-ui-check-radix)
 #     T2  (browser) a client page sets German translations: date, text and number are German after hydration,
 #         without a hydration warning
 #     T3  (browser) server violations on a translatable and a media field are named by the fields' labels (the label
 #         registry of ./form is one context across ./form, ./translations and ./media)
 #         (browser) Combobox: out-of-order server answers, picked label outside the results, reset on close, keyboard
-#         through groups and the create row, clearing; SegmentedControl incl. a 358 px container; the showcase at 390 px
+#         through groups and the create row, clearing; SegmentedControl incl. a 358 px container; the showcase at 390 px (also with the CPU throttled 6x, resized
+#         and loaded)
 #         (browser) a list table with column tracks, pins, sort and a row index: tracks, the pin guard at three widths,
 #         at 390 px the table scrolls inside its card and the page does not, the sort cycle, no hydration warning
 #         (browser) FormDialog (Enter, pending, failed submit, a nested dialog, two forms), the ⌘S / Ctrl+S rule of

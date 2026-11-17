@@ -13,7 +13,12 @@
 //
 // A background may name an alpha (`"success/15"`): the role at that alpha over `base` (default `card`), as the status
 // badges draw it. A translucent foreground is composited over the background; a translucent background over the
-// theme's `background` role.
+// pair's `base` when it names one, else over the theme's `background` role.
+//
+// Optional roles (`required: false` in tokens.json `colors`, e.g. the status text roles `--success-text` and the soft
+// surfaces `--success-soft`): a role the stylesheet does not declare is evaluated by its `fallback` — another role, or
+// `role/NN` (that role at NN % alpha) — exactly as the package's theme.css draws it, and the output names the fallback.
+// `color-mix(in <space>, <colour> NN%, transparent)` (a colour at NN % alpha, the form Tailwind writes) is understood.
 //
 // Host exceptions: `--exceptions <file.json>` adds a host's written exceptions to the package's (`contrast.exceptions`
 // of tokens.json). The file holds the same entries, as an array or as `{ "exceptions": [...] }`:
@@ -231,6 +236,12 @@ const oklabToRgb = (L, a, b) => {
 /** A colour as `{ rgb: [0..1 ×3], alpha }`, or `null` when it cannot be evaluated. */
 const parseColour = (raw, channelFunction) => {
   const value = raw.trim().toLowerCase();
+  // a colour mixed with transparent (premultiplied): the colour at that share of its alpha, in any interpolation space
+  const mix = /^color-mix\(\s*in\s+[a-z0-9-]+(?:\s+[a-z]+\s+hue)?\s*,\s*(.+?)\s+(\d+(?:\.\d+)?)%\s*,\s*transparent\s*\)$/.exec(value);
+  if (mix) {
+    const mixed = parseColour(mix[1], channelFunction);
+    return mixed ? { rgb: mixed.rgb, alpha: mixed.alpha * (Number(mix[2]) / 100) } : null;
+  }
   if (value === 'transparent') return { rgb: [0, 0, 0], alpha: 0 };
   if (value === 'white') return { rgb: [1, 1, 1], alpha: 1 };
   if (value === 'black') return { rgb: [0, 0, 0], alpha: 1 };
@@ -288,9 +299,17 @@ const ratioOf = (a, b) => {
   return (light + 0.05) / (dark + 0.05);
 };
 
-/** A role's colour in a scope: `{ colour }` or `{ problem }`. */
-const roleColour = (role, scope) => {
+/** A role's colour in a scope: `{ colour, fallback? }` or `{ problem }`; an undeclared optional role by its fallback. */
+const roleColour = (role, scope, depth = 0) => {
   const property = scope.has(`--${role}`) ? `--${role}` : scope.has(`--color-${role}`) ? `--color-${role}` : null;
+  const definition = tokens.colors?.[role];
+  if (!property && definition?.required === false && typeof definition.fallback === 'string' && depth < 5) {
+    const [fallbackRole, fallbackAlpha] = definition.fallback.split('/');
+    const resolved = roleColour(fallbackRole, scope, depth + 1);
+    if (resolved.problem) return resolved;
+    const alpha = fallbackAlpha === undefined ? 1 : Number(fallbackAlpha) / 100;
+    return { colour: { rgb: resolved.colour.rgb, alpha: resolved.colour.alpha * alpha }, fallback: definition.fallback };
+  }
   if (!property) return { problem: `--${role} not declared` };
   const resolved = substitute(scope.get(property), scope);
   const colour = parseColour(resolved, channelFunctionOf(`--${role}`) ?? channelFunctionOf(`--color-${role}`));
@@ -317,13 +336,16 @@ for (const theme of themes) {
   console.log(`${theme.name}:`);
   const page = roleColour('background', theme.scope).colour ?? { rgb: [1, 1, 1], alpha: 1 };
   for (const pair of pairs) {
-    const label = `${pair.foreground} on ${pair.background}${pair.base ? ` over ${pair.base}` : ''}`;
+    let label = `${pair.foreground} on ${pair.background}${pair.base ? ` over ${pair.base}` : ''}`;
     const minimum = pair.minimum ?? 4.5;
     const fgRef = parseRef(pair.foreground);
     const bgRef = parseRef(pair.background);
     const fg = roleColour(fgRef.role, theme.scope);
     const bg = roleColour(bgRef.role, theme.scope);
-    const base = bgRef.alpha < 1 ? roleColour(pair.base ?? 'card', theme.scope) : { colour: page };
+    const translucent = bgRef.alpha < 1 || (pair.base !== undefined && (bg.colour?.alpha ?? 1) < 1);
+    const base = translucent ? roleColour(pair.base ?? 'card', theme.scope) : { colour: page };
+    const fallbacks = [fg.fallback && `${fgRef.role} = ${fg.fallback}`, bg.fallback && `${bgRef.role} = ${bg.fallback}`].filter(Boolean);
+    if (fallbacks.length > 0) label += ` (not declared: ${fallbacks.join(', ')})`;
     const problem = fg.problem ?? bg.problem ?? base.problem;
     if (problem) {
       unevaluated += 1;

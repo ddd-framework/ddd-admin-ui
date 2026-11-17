@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Checks a host's built stylesheet against tokens.json: every colour role's utilities exist, every required custom
-// property is declared on :root (and on .dark when themed), declared colour values fit how the stylesheet uses them,
+// property is declared on :root (and on .dark when themed), an optional colour role the host declares is read by a
+// rule, declared colour values fit how the stylesheet uses them,
 // the layer defaults of components.css are present, and the data attributes components.css reads appear in its rules.
 //
 // Colour values follow use: a role property read only inside a channel function (`hsl(var(--card))`,
@@ -212,6 +213,17 @@ for (const role of Object.keys(tokens.colors ?? {})) {
       const why = needsColour === null ? 'neither a colour nor channels' : `not a colour, but ${needsColour}`;
       missing.push(`colour role "${role}": ${property} in "${rule.selector}" is ${why} (${value})`);
     }
+  }
+}
+
+// Optional roles (the status text roles and soft surfaces): nothing is required, but a role the host declares must be
+// read by some rule (theme.css binds them to text-<status> and bg-<status>/15); otherwise the value has no effect.
+for (const [role, definition] of Object.entries(tokens.colors ?? {})) {
+  if (definition.required !== false) continue;
+  const property = `--${role}`;
+  const declared = declaredIn(property, isRootSelector) || declaredIn(property, isDarkSelector);
+  if (declared && (readsOf.get(property) ?? []).length === 0) {
+    missing.push(`colour role "${role}": ${property} is declared but no rule reads it (is theme.css imported, or does the host's own binding read it?)`);
   }
 }
 

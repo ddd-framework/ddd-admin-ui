@@ -3,6 +3,11 @@
   names (`--card: #fff`). It registers each colour role once (`--color-<role>`), which generates `bg-*`, `text-*`,
   `border-*` and `ring-*`, the radii derived from `--radius`, and the raised surface shadow. A host with another colour
   encoding provides the same utility names its own way instead of importing this file. Import it after `tailwindcss`.
+
+  Status text and soft surfaces: `text-success`, `text-warning`, `text-destructive` and `text-info` read the optional
+  text roles (`--success-text`, …) and fall back to the status colour; the 15 % badge tints (`bg-success/15`, …) read
+  the optional soft surfaces (`--success-soft`, …) and fall back to the status colour at 15 %. A host that sets none of
+  them renders as before; a host whose status colours are fill colours sets the text roles.
 */
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -29,6 +34,11 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-info: var(--info);
+  /* status text: the text role, else the status colour (Tailwind reads --text-color-* before --color-* for text-*) */
+  --text-color-success: var(--success-text, var(--success));
+  --text-color-warning: var(--warning-text, var(--warning));
+  --text-color-destructive: var(--destructive-text, var(--destructive));
+  --text-color-info: var(--info-text, var(--info));
   --color-brand: var(--brand);
   --color-brand-emphasis: var(--brand-emphasis);
   --color-brand-light: var(--brand-light);
@@ -45,4 +55,24 @@
   /* The raised surface shadow as a theme shadow (`shadow-surface-raised`), so it composes with a `ring-*` (the list
      surface: raised shadow + a faint ink ring) instead of one box-shadow replacing the other. */
   --shadow-surface-raised: var(--surface-shadow-raised);
+}
+
+/* The soft status surfaces behind the badge tints: the host's --<status>-soft, else exactly the tint Tailwind draws
+   for `bg-<status>/15` (same layer, later in the source, so it takes over the generated rule; browsers without
+   color-mix() keep Tailwind's own fallback). */
+@layer utilities {
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-success\/15 {
+      background-color: var(--success-soft, color-mix(in oklab, var(--success) 15%, transparent));
+    }
+    .bg-warning\/15 {
+      background-color: var(--warning-soft, color-mix(in oklab, var(--warning) 15%, transparent));
+    }
+    .bg-destructive\/15 {
+      background-color: var(--destructive-soft, color-mix(in oklab, var(--destructive) 15%, transparent));
+    }
+    .bg-info\/15 {
+      background-color: var(--info-soft, color-mix(in oklab, var(--info) 15%, transparent));
+    }
+  }
 }

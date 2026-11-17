@@ -1,4 +1,5 @@
-// T2, T3, T7, the sized list table, SegmentedControl, Combobox and the showcase in a headless browser against `next start`.
+// T2, T3, T7, the sized list table, SegmentedControl, Combobox, the status text roles and the showcase in a headless
+// browser against `next start`.
 // Browser: CHROME_PATH, else the installed Google Chrome (playwright channel "chrome"); no browser download.
 import { chromium } from 'playwright-core';
 
@@ -493,6 +494,49 @@ try {
     await page.close();
   }
 
+  // Status text roles (app/status-tokens): with the host's text roles StatusBadge's text is --<status>-text; in a scope
+  // where they are unset, badge text, badge tint and the callout icon compute exactly what 0.2.1 drew (the status colour
+  // as text on its 15 % tint), so a host that sets nothing renders as before
+  {
+    const page = await browser.newPage();
+    await page.goto(`${baseUrl}/status-tokens`, { waitUntil: 'networkidle' });
+    const tokens = await page.evaluate(() => {
+      const style = (selector, inner = '[data-slot="badge"]') => {
+        const element = document.querySelector(selector)?.querySelector(inner) ?? document.querySelector(selector);
+        const computed = element ? getComputedStyle(element) : null;
+        return computed ? { color: computed.color, background: computed.backgroundColor } : null;
+      };
+      const rows = {};
+      for (const status of ['success', 'warning', 'destructive', 'info']) {
+        rows[status] = {
+          hostBadge: style(`[data-token-badge="host-${status}"]`),
+          hostText: style(`[data-token-host-text="host-${status}"]`, ':scope'),
+          unsetBadge: style(`[data-token-badge="unset-${status}"]`),
+          reference: style(`[data-token-reference="unset-${status}"]`, ':scope'),
+        };
+      }
+      const icon = (scope) => getComputedStyle(document.querySelector(`[data-token-callout="${scope}"] svg`)).color;
+      return { rows, unsetIcon: icon('unset'), hostIcon: icon('host'), unsetReference: rows.success.reference?.color };
+    });
+    const statuses = Object.entries(tokens.rows);
+    report(
+      'status text roles: StatusBadge text is the host\'s --<status>-text',
+      statuses.every(([, row]) => row.hostBadge && row.hostBadge.color === row.hostText.color && row.hostBadge.color !== row.reference.color),
+      JSON.stringify(tokens.rows),
+    );
+    report(
+      'status text roles unset: badge text and 15 % tint compute exactly as before (fallbacks)',
+      statuses.every(([, row]) => row.unsetBadge && row.unsetBadge.color === row.reference.color && row.unsetBadge.background === row.reference.background),
+      JSON.stringify(tokens.rows),
+    );
+    report(
+      'status text roles: the callout icon follows the text role, and the status colour when unset',
+      tokens.unsetIcon === tokens.unsetReference && tokens.hostIcon === tokens.rows.success.hostText.color,
+      JSON.stringify({ unset: tokens.unsetIcon, reference: tokens.unsetReference, host: tokens.hostIcon }),
+    );
+    await page.close();
+  }
+
   // Showcase (app/showcase): renders light and dark, loads ./notify-sonner through the host's loader, host section last
   {
     const consoleProblems = [];
@@ -518,10 +562,14 @@ try {
     report('showcase: the host section renders in both panes', state.host === 2);
     const frames = await page.evaluate(() => document.querySelectorAll('[data-showcase] [data-page-frame]').length);
     report('showcase: page specimens emit no data-page-frame', frames === 0, String(frames));
+    // a slow phone: the CPU throttled 6x while the viewport shrinks to 390 px (the class of failure 0.2.1 fixed: the
+    // layout must be right from the frame of the resize, not after React's next render)
+    const cpu = await page.context().newCDPSession(page);
+    await cpu.send('Emulation.setCPUThrottlingRate', { rate: 6 });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForTimeout(300);
     const phone = await page.evaluate(() => ({ pageScroll: document.documentElement.scrollWidth, viewport: window.innerWidth }));
-    report('showcase: at 390 px the page does not scroll sideways', phone.pageScroll <= phone.viewport, JSON.stringify(phone));
+    report('showcase: at 390 px (CPU 6x, after a resize) the page does not scroll sideways', phone.pageScroll <= phone.viewport, JSON.stringify(phone));
     if (phone.pageScroll > phone.viewport) {
       // the widest elements past the viewport that no ancestor clips, with their section and sample
       const offenders = await page.evaluate(() => {
@@ -568,6 +616,15 @@ try {
     }
     report('showcase: no hydration warning or console error', consoleProblems.length === 0, consoleProblems.join(' | '));
     await page.close();
+    // and loaded at 390 px on the throttled CPU from the first frame
+    const slowPhone = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const slowCpu = await slowPhone.context().newCDPSession(slowPhone);
+    await slowCpu.send('Emulation.setCPUThrottlingRate', { rate: 6 });
+    await slowPhone.goto(`${baseUrl}/showcase`, { waitUntil: 'networkidle', timeout: 120_000 });
+    await slowPhone.waitForTimeout(500);
+    const loaded = await slowPhone.evaluate(() => ({ pageScroll: document.documentElement.scrollWidth, viewport: window.innerWidth }));
+    report('showcase: loaded at 390 px with the CPU 6x, the page does not scroll sideways', loaded.pageScroll <= loaded.viewport, JSON.stringify(loaded));
+    await slowPhone.close();
   }
 
   // T7: select inside dialog inside sheet

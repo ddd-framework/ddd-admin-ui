@@ -126,4 +126,34 @@ describe('check-contrast', () => {
     const { status, output } = checkContrast(css, tokens);
     assert.equal(status, 0, output);
   });
+
+  it('evaluates undeclared optional roles by their fallback and declared ones by their value (status text roles)', () => {
+    const tokens = {
+      colors: {
+        'success-text': { required: false, fallback: 'success', utilities: [] },
+        'success-soft': { required: false, fallback: 'success/15', utilities: [] },
+      },
+      contrast: {
+        pairs: [
+          { foreground: 'success-text', background: 'card', minimum: 4.5 },
+          { foreground: 'success-text', background: 'success-soft', base: 'card', minimum: 4.5 },
+        ],
+        exceptions: [],
+      },
+    };
+    // a fill green: too light as text without a text role
+    const fill = ':root{--background:#fff;--card:#fff;--success:#16a34a}';
+    const withoutText = checkContrast(fill, tokens);
+    assert.equal(withoutText.status, 1);
+    assert.match(withoutText.output, /FAILED success-text on card \(not declared: success-text = success\): 3\.30:1/);
+    assert.match(withoutText.output, /success-soft = success\/15/);
+    // the host's text role passes on the card and on the 15 % fallback surface
+    const withText = checkContrast(`${fill}:root{--success-text:#166534}`, tokens);
+    assert.equal(withText.status, 0, withText.output);
+    assert.match(withText.output, /ok {5}success-text on success-soft over card \(not declared: success-soft = success\/15\): 6\.03:1/);
+    // a declared soft surface as color-mix with transparent: the colour at that alpha over the base
+    const mixed = checkContrast(`${fill}:root{--success-text:#166534;--success-soft:color-mix(in oklab, var(--success) 15%, transparent)}`, tokens);
+    assert.equal(mixed.status, 0, mixed.output);
+    assert.match(mixed.output, /ok {5}success-text on success-soft over card: 6\.03:1/);
+  });
 });

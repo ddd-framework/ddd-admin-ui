@@ -251,6 +251,12 @@ Tones: `neutral` not started / inactive · `info` finished / informational · `s
 `warning` paused / pending / needs action · `danger` failed / cancelled · `highlight` featured flag · `brand` identity.
 Always with an icon.
 
+Status text never uses a hand-picked darker shade: the badges, callouts, deltas and field errors read the host's text
+roles (`--success-text`, `--warning-text`, `--destructive-text`, `--info-text`; unset = the status colour) and the badge
+tints its soft surfaces (`--<status>-soft`; unset = the status colour at 15 %). A host whose status colours are fill
+colours sets the text roles once, light and dark (README › Host setup › Status text); a screen keeps
+`text-success` / `StatusBadge`.
+
 ## 7. Multi-select inputs
 
 - Filters: `FilterMultiSelect` (above).
@@ -645,7 +651,8 @@ focusFirstOverLimitTranslation(formElement);
   Arrow, sign and a hidden word carry the direction, never the colour alone.
 - The sparkline is the host's chart in the `sparkline` slot; the package ships no chart library.
 - Notes qualify the figures (sampling, a missing source); a state of the page is a `StatusCallout`.
-- After a palette change run `ddd-admin-ui-check-contrast <built css>`: the declared pairs must reach AA in both themes.
+- After a palette change run `ddd-admin-ui-check-contrast <built css>`: the declared pairs must reach AA in both themes
+  (status text on the card, the page and its soft surface; set the text roles where the status colours are fills).
 
 ## 19. Markdown, route states, image crop, colour values, the drawer beside the page
 

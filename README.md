@@ -122,8 +122,9 @@ It reads the host's `node_modules` (npm and pnpm layouts) and the folders above 
    specificity, loaded after `components.css`.
 
 2. **Tokens.** Declare on `:root` (and under `.dark` where themed) every property of
-   [`tokens.json`](./tokens.json): the 31 colour roles, `--nav-h`, `--content-max`, `--radius`, the surface and glass
-   alphas and shadows, `--glass-control-shadow`. Dark mode is a `.dark` class on an ancestor; the default border
+   [`tokens.json`](./tokens.json): the 31 required colour roles (the eight optional status text and soft roles below
+   need nothing), `--nav-h`, `--content-max`, `--radius`, the surface and glass alphas and shadows,
+   `--glass-control-shadow`. Dark mode is a `.dark` class on an ancestor; the default border
    colour is the `border` role. `components.css` sets the five `--layer-*` defaults (`raised` 10, `sticky` 20, `chrome`
    30, `overlay` 50, `popover` 50), the two optional properties of `SegmentedControl` (`--segmented-control-radius`
    9999px, `--segmented-control-duration` 200ms) and the two of `AppShell` (`--sidebar-w` 16rem, `--sidebar-rail-w`
@@ -164,8 +165,25 @@ It reads the host's `node_modules` (npm and pnpm layouts) and the folders above 
    ]
    ```
 
-   The package lists the light status pairs (`success` on `card`, and `success`, `warning`, `destructive`, `info` on
-   their 15 % tints): status colours used as text or on their tint, themed by each host, until an emphasis role exists.
+   **Status text and soft surfaces.** Status text (`StatusBadge`, `StatusCallout`, tone rows, `DeltaText`, field
+   errors: every `text-success`, `text-warning`, `text-destructive`, `text-info`) reads the optional text roles
+   `--success-text`, `--warning-text`, `--destructive-text`, `--info-text`; the badge tints (`bg-<status>/15`) read the
+   optional soft surfaces `--success-soft`, `--warning-soft`, `--destructive-soft`, `--info-soft`. Unset, a text role is
+   the status colour and a soft surface the status colour at 15 % (`color-mix(in oklab, var(--success) 15%,
+   transparent)`): a host that sets none of them renders exactly as before. A host whose status colours are fill
+   colours (a mid green that reads well as a dot, not as text) sets the text roles, light and dark:
+
+   ```css
+   :root { --success-text: #166534; --warning-text: #92400e; --destructive-text: #b91c1c; --info-text: #0369a1; }
+   .dark { --success-text: var(--success); --warning-text: var(--warning); --destructive-text: var(--destructive); --info-text: var(--info); }
+   ```
+
+   `theme.css` binds them (`--text-color-<status>` for the text utilities, the four 15 % tints for the soft surfaces); a
+   host with its own binding points the same utilities at `var(--<status>-text, var(--<status>))` and
+   `var(--<status>-soft, …)`. `ddd-admin-ui-check-tokens` names a text or soft role that is declared but read by no rule.
+   The contrast check tests every text role on `card`, on `background` and on its soft surface over a card (an unset
+   role by its fallback, named in the output); the package lists no exceptions, so a host whose status colours fail
+   as text sets the text roles or writes its own exceptions.
 
    **Layers checklist.** The package's dialogs, sheets and drawers open at layer 50 (`--layer-overlay`), its popovers,
    selects, menus and tooltips at 50 too (`--layer-popover`). A host whose own overlay scale is higher (a dialog at
@@ -502,7 +520,7 @@ project's `.claude/skills/`. Idempotent; repoints an existing symlink, never tou
 
 ## Versioning
 
-0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.2.1"`,
+0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.0"`,
 `pnpm add -E` / `npm install -E`); modules peer on the version they were tested with. Stable releases are published
 under the `latest` dist-tag, pre-releases (`x.y.z-…`) under `next`. Changes per release: [CHANGELOG.md](CHANGELOG.md).
 

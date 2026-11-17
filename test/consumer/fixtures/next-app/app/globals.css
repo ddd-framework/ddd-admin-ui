@@ -27,6 +27,12 @@
   --success: #16a34a;
   --warning: #d97706;
   --info: #0284c7;
+  /* the status colours above are fill colours; their text roles are darker, so status text reaches 4.5:1 on the card,
+     the page and the soft badge surface (the soft surfaces stay unset: the 15 % tint of theme.css) */
+  --success-text: #166534;
+  --warning-text: #92400e;
+  --destructive-text: #b91c1c;
+  --info-text: #0369a1;
   --brand: #7c3aed;
   --brand-emphasis: #6d28d9;
   --brand-light: #ede9fe;
@@ -73,6 +79,11 @@
   --success: #4ade80;
   --warning: #fbbf24;
   --info: #38bdf8;
+  /* dark: the status colours are light enough to be their own text */
+  --success-text: var(--success);
+  --warning-text: var(--warning);
+  --destructive-text: var(--destructive);
+  --info-text: var(--info);
   --brand: #a78bfa;
   --brand-emphasis: #c4b5fd;
   --brand-light: #2e1065;

@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 const CHECK_TOKENS = fileURLToPath(new URL('../../scripts/check-tokens.mjs', import.meta.url));
 
 const TOKENS = {
-  colors: { card: { utilities: ['bg-card'] } },
+  colors: { card: { utilities: ['bg-card'] }, 'success-text': { required: false, fallback: 'success', utilities: [] } },
   properties: { '--nav-h': { themed: false }, '--surface-alpha': { themed: true } },
   layers: { '--layer-popover': { default: 50 } },
   dataAttributes: { 'data-form-actions': { readBy: 'components.css' } },
@@ -76,5 +76,14 @@ describe('check-tokens', () => {
     assert.equal(status, 1);
     assert.match(output, /layer --layer-popover: default 50 not declared/);
     assert.match(output, /data attribute data-form-actions: no rule reads it/);
+  });
+
+  it('accepts an optional role that is not declared, or declared and read; names one declared but read by no rule', () => {
+    const bound = '.text-success{color:var(--success-text,var(--success))}';
+    assert.equal(checkTokens(COMPLETE_HOST_CSS).status, 0);
+    assert.equal(checkTokens(`${COMPLETE_HOST_CSS}:root{--success-text:#166534}${bound}`).status, 0);
+    const unread = checkTokens(`${COMPLETE_HOST_CSS}:root{--success-text:#166534}`);
+    assert.equal(unread.status, 1);
+    assert.match(unread.output, /colour role "success-text": --success-text is declared but no rule reads it/);
   });
 });
