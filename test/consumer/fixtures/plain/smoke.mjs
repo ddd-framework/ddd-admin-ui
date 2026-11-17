@@ -7,7 +7,7 @@ const expectations = {
   list: ['EntityListCard', 'EntityListToolbar', 'EntityListBody', 'EntityListTable', 'EntityListEmpty', 'DateCell', 'StatusBadge', 'FilterPanel'],
   page: ['PageFrame', 'PageHeader', 'EntityListPage', 'EntityDetailShell', 'StatusCallout'],
   form: ['Form', 'FormField', 'FormActions', 'FormDrawer', 'FormErrors', 'FormSubmitButton', 'useConfirmDialog', 'FormDialog'],
-  translations: ['FormTranslatableInput', 'FormTranslatableMarkdown', 'TranslatableInput', 'TranslationControls'],
+  translations: ['FormTranslatableInput', 'FormTranslatableMarkdown', 'TranslatableInput', 'TranslationControls', 'createTranslationsApi', 'AppTranslationsScreen', 'LocalesScreen', 'useEntityTranslator'],
   media: ['FormMediaItemField', 'MediaItemField', 'MediaItemPickerDialog', 'MediaPreview'],
   glass: ['GlassPill', 'QuickFilterPills', 'CollapsibleCard', 'GlassGroup', 'ActionRow'],
   provider: ['AdminUiProvider', 'useAdminUi', 'defaultStorageKey'],
@@ -15,6 +15,7 @@ const expectations = {
   data: ['MetricTile', 'MetricGrid', 'DeltaText', 'NoteList', 'relativeChange'],
   // its optional peers are imported only after hydration, so the entry loads without them
   markdown: ['MarkdownEditor', 'MarkdownPreview', 'renderMarkdownEditor'],
+  workers: ['createWorkersApi', 'createStaticWorkersApi', 'WorkersOverviewScreen', 'WorkerTransportScreen', 'WORKER_TRANSPORT_STATE'],
 };
 
 let failed = false;

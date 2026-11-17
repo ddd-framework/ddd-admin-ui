@@ -46,3 +46,7 @@ export { RouteError } from './RouteError.tsx';
 export type { RouteErrorProps } from './RouteError.tsx';
 export { RouteLoading } from './RouteLoading.tsx';
 export type { RouteLoadingProps } from './RouteLoading.tsx';
+
+// One maintenance action: run button and the outcome of the last run.
+export { MaintenanceActionCard } from './MaintenanceActionCard.tsx';
+export type { MaintenanceActionCardProps, MaintenanceActionOutcome } from './MaintenanceActionCard.tsx';

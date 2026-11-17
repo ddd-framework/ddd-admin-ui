@@ -6,3 +6,4 @@ export type { NotifySonnerLoader, NotifySonnerModule } from './sections/Optional
 export type { MarkdownLoader, MarkdownModule } from './sections/MarkdownShowcase.tsx';
 export { SHOWCASE_COVERAGE } from './coverage.ts';
 export type { ShowcaseEntryCoverage } from './coverage.ts';
+export { SHOWCASE_NOW_MS, showcaseTranslationsData, showcaseWorkersData } from './fixtures.ts';

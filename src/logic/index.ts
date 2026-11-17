@@ -92,6 +92,26 @@ export {
   TRANSLATION_INFOS_OBJECT_TYPE,
 } from './pure/translationState.ts';
 export type { FieldTranslations, HydratedTranslations } from './pure/translationState.ts';
+export {
+  injectEndpointsOnce,
+  injectedHookName,
+  staticMutationHook,
+  staticQueryHook,
+  toQueryString,
+  trimApiPrefix,
+} from './pure/injectedApi.ts';
+export type {
+  ApiMutationCall,
+  ApiMutationHook,
+  ApiMutationState,
+  ApiQueryHook,
+  ApiQueryOptions,
+  ApiQueryResult,
+  InjectableBaseApi,
+  InjectedEndpointDefinition,
+  InjectedRequest,
+  InjectedTag,
+} from './pure/injectedApi.ts';
 export { LIST_STATE_DEBOUNCE_MS } from './pure/urlListState.ts';
 export type { UrlStateAdapter } from './pure/urlListState.ts';
 
@@ -129,6 +149,9 @@ export { UnsavedChangesContext, useUnsavedChangesBoundary, useUnsavedChangesGuar
 export type { ConfirmFn, UnsavedChangesRegistry } from './react/useUnsavedChangesGuard.ts';
 export { useWriteAccess, WriteAccessContext, WriteAccessProvider } from './react/writeAccess.ts';
 export type { WriteAccessProviderProps } from './react/writeAccess.ts';
+export { useMemoryUrlState } from './react/useMemoryUrlState.ts';
+export { useOptimisticRowPatches } from './react/useOptimisticRowPatches.ts';
+export type { OptimisticRowPatches } from './react/useOptimisticRowPatches.ts';
 export { useUrlListState } from './react/useUrlListState.ts';
 export type { UrlListState, UseUrlListStateOptions } from './react/useUrlListState.ts';
 

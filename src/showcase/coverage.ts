@@ -54,8 +54,8 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
     shown: [
       'AddEntityButton', 'AnchorLink', 'CardGrid', 'DefinitionList', 'DetailHeader', 'EditableCard', 'EntityDetailShell',
       'EntityListPage', 'EntityMetadata', 'EntityTabs', 'ExportButton', 'IconValue', 'IconValueRow', 'MoreActionsMenu',
-      'PageFrame', 'PageHeader', 'PageSections', 'PageToolbar', 'SectionHeader', 'StatusCallout', 'StatusCalloutAction',
-      'RouteError', 'RouteLoading',
+      'MaintenanceActionCard', 'PageFrame', 'PageHeader', 'PageSections', 'PageToolbar', 'SectionHeader', 'StatusCallout',
+      'StatusCalloutAction', 'RouteError', 'RouteLoading',
     ],
     notShown: {},
   },
@@ -69,10 +69,21 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
   },
   translations: {
     shown: [
-      'FormTranslatableInput', 'FormTranslatableMarkdown', 'TranslatableField', 'TranslatableInput', 'TranslatableMarkdown',
+      'AppTranslationsScreen', 'ConfigImportCard', 'FormTranslatableInput', 'FormTranslatableMarkdown', 'LanguagesScreen',
+      'LocalesScreen', 'TranslatableField', 'TranslatableInput', 'TranslatableMarkdown', 'TranslationCompleteness',
       'TranslationControls',
     ],
-    notShown: {},
+    notShown: { AppTranslationKeyDrawer: 'drawn by AppTranslationsScreen when a row or Add opens it' },
+  },
+  workers: {
+    shown: [
+      'ChartBody', 'ChartLegend', 'WorkerChartCard', 'WorkerKpiTiles', 'WorkerLoopsCard', 'WorkerMessageClassesTable',
+      'WorkerMessageRunsTab', 'WorkerProcessRange', 'WorkerProcessTimeline', 'WorkerProcessesTab', 'WorkerProcessesTable',
+      'WorkerRestartButton', 'WorkerSparkline', 'WorkerTimeChart', 'WorkerTransportCharts', 'WorkerTransportScreen',
+      'WorkerTransportsTable', 'WorkersHistoryCharts', 'WorkersLivePanel', 'WorkersOverviewScreen', 'WorkersThroughputTable',
+      'WorkersWindowSwitch',
+    ],
+    notShown: { WorkerKpiTilesSkeleton: 'drawn by WorkersOverviewScreen while the overview loads' },
   },
   media: {
     shown: ['FormMediaItemField', 'MediaItemField', 'MediaItemPickerDialog', 'MediaPreview', 'ImageCropDialog'],

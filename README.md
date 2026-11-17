@@ -21,19 +21,20 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 
 | Entry | What it holds | May import (besides React and its peers) |
 |---|---|---|
-| `./logic` | pure helpers (`formatDate`, `defineStatusMap`, conditions, schemas, `notify`, `runSequential`), React hooks without markup (`useUrlListState`, `useEntityDrawer`, `useRowSelection`, `useEntityTranslations`, …), browser helpers (`prepareImageFile`, `readStored` / `writeStored`, `buildStorageKey`), date input values (`toDateInputValue`, `fromDateTimeInputValue`, …), `withStickyParams`, `useLatestSearch`, `useConfirm` (the provider's confirmation), `WriteAccessProvider` / `useWriteAccess`, date range presets, bulk summaries with skipped rows (`skipSequential`, `bulkSummaryText`), text limits (`countCodePoints`, `overLimitKeys`), colour values, `useMediaQuery`, the image normaliser (`normalizeImage`) and crop geometry | `./i18n` |
+| `./logic` | pure helpers (`formatDate`, `defineStatusMap`, conditions, schemas, `notify`, `runSequential`), React hooks without markup (`useUrlListState`, `useEntityDrawer`, `useRowSelection`, `useEntityTranslations`, …), browser helpers (`prepareImageFile`, `readStored` / `writeStored`, `buildStorageKey`), date input values (`toDateInputValue`, `fromDateTimeInputValue`, …), `withStickyParams`, `useLatestSearch`, `useConfirm` (the provider's confirmation), `WriteAccessProvider` / `useWriteAccess`, date range presets, bulk summaries with skipped rows (`skipSequential`, `bulkSummaryText`), text limits (`countCodePoints`, `overLimitKeys`), colour values, `useMediaQuery`, the image normaliser (`normalizeImage`) and crop geometry, the api injection of the screen entries (`InjectableBaseApi`, `ApiQueryHook`, `staticQueryHook`, …), `useMemoryUrlState`, `useOptimisticRowPatches` | `./i18n` |
 | `./i18n` | the UI text store (`m`, `translateText`, `setTranslations`), `useTranslate`, `<Translate>`, number / date formats of the UI locale, server-message translation | — |
 | `./primitives` | buttons, inputs, selects, dialogs, sheets, popovers, menus, tooltips, tables, badges, `SegmentedControl`, `cn`, the portal container, the header slot of form actions (`FormActionsSlotProvider`, `FormActionsSlot`) | `./i18n` |
 | `./list` | entity list card, toolbar, search, filters, table, grid, load-more, status badge, cells, multi-select, combobox, bulk bar, column factories (`textColumn`, `moneyColumn`, `actionsColumn`, …), the toolbar's filter toggle, count and clear as blocks | logic, i18n, primitives |
-| `./page` | page header and frame, `EntityListPage`, detail shell and header, tabs, section header, definition list, page toolbar, editable card, status callout, entity metadata, route states (`RouteError`, `RouteLoading`) | logic, i18n, primitives; from list only `EmptyValue`, `EntityListEmpty`, `EntityListCard` |
+| `./page` | page header and frame, `EntityListPage`, detail shell and header, tabs, section header, definition list, page toolbar, editable card, status callout, entity metadata, route states (`RouteError`, `RouteLoading`), `MaintenanceActionCard` | logic, i18n, primitives; from list only `EmptyValue`, `EntityListEmpty`, `EntityListCard` |
 | `./form` | `Form`, `FormField`, `FormSection`, `FormActions`, `FormDrawer`, `FormDialog`, `FormHeader`, `FormWrapper`, `FormJumpBar`, `FormErrors`, `FormSubmitButton`, `useConfirmDialog`, `ColorValueField` | logic, i18n, primitives; from page only `DetailHeader`, `EntityMetadata` |
-| `./translations` | `TranslatableInput`, `TranslatableMarkdown` (editor injected), their form-bound variants, `TranslationControls` | logic, i18n, primitives; from form only `fieldLabels`, `useConfirmDialog` |
+| `./translations` | `TranslatableInput`, `TranslatableMarkdown` (editor injected), their form-bound variants, `TranslationControls`, `focusFirstOverLimitTranslation`; the admin screens on the host's api (`createTranslationsApi`): `AppTranslationsScreen` with `AppTranslationKeyDrawer` and `TranslationCompleteness`, `LanguagesScreen`, `LocalesScreen`, `ConfigImportCard`, `useEntityTranslator`, `useContentLocales` | logic, i18n, primitives, list, page; from form only `fieldLabels`, `useConfirmDialog`, `Form`, `FormActions`, `FormDrawer`, `FormField`, `FormSubmitButton` |
+| `./workers` | the screens of the worker monitoring on the host's api (`createWorkersApi`): `WorkersOverviewScreen`, `WorkerTransportScreen` and their parts (tiles, live panel, throughput and transport tables, history charts as SVG, message runs, processes, restart request), the status maps, the payload types | logic, i18n, primitives, list, page |
 | `./media` | `MediaItemField`, `FormMediaItemField`, `MediaItemPickerDialog`, `MediaPreview`, `ImageCropDialog` (crop surface: file and aspect options in; cropped blob, skip or cancel out) | logic, i18n, primitives, list, form |
 | `./glass` | `GlassPill`, `QuickFilterPills`, `CollapsibleCard`, `GlassGroup`, `ActionRow` | logic, i18n, primitives |
 | `./provider` | `AdminUiProvider` (also the dialog behind `useConfirm`), `useAdminUi`, `defaultStorageKey` | logic, i18n, primitives; types only from media and translations |
 | `./next` | Next.js adapters: `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useListViewParam`, the one URL writer (`queueSearchParamsWrite`) | logic, provider; the only entry importing `next/*` |
 | `./notify-sonner` | `sonnerNotifications` (the notification adapter on `sonner`) and its `Toaster` | logic; the only entry importing `sonner` |
-| `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE` | logic, i18n, primitives, list, page, form, translations, media, glass, data; never `./next`, `./notify-sonner` or `./markdown` (its section loads through `loadMarkdown`) |
+| `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE`; the sample payloads of the screens (`showcaseWorkersData`, `showcaseTranslationsData`) | logic, i18n, primitives, list, page, form, translations, media, glass, data, workers; never `./next`, `./notify-sonner` or `./markdown` (its section loads through `loadMarkdown`) |
 | `./data` | key figures: `MetricTile` (label, value, delta, hint, sparkline slot, skeleton), `MetricTileSkeleton`, `MetricGrid`, `DeltaText`, `NoteList`, the delta helpers `resolveDelta`, `relativeChange`, `deltaDirectionOf`, `deltaToneOf` | logic, i18n, primitives |
 | `./markdown` | `MarkdownEditor`, `MarkdownPreview` (sanitised), `renderMarkdownEditor` (the `renderEditor` slot of `./translations` and `AdminUiProvider.renderMarkdownEditor`); loads `@uiw/react-md-editor` and `rehype-sanitize` after hydration | logic, i18n, primitives; translations type-only; the only entry reaching its optional peers |
 | `./theme.css`, `./components.css` | the Tailwind theme binding and the structural CSS of the blocks | — |
@@ -249,6 +250,114 @@ function props there.
 `toDateTimeInputValue` / `fromDateTimeInputValue` (`./logic`). Empty or invalid gives `''` / `null`; no arithmetic. A
 local time skipped when the clocks go forward resolves an hour later, a repeated one to its first occurrence.
 
+## Screens on the host's API
+
+`./workers` and `./translations` bring whole admin screens for endpoints of the framework. They never import a host
+SDK and never reach RTK at run time: the host passes the RTK Query api it already has (`createApi` from
+`@reduxjs/toolkit/query/react`, its base query carrying origin, session and refresh, e.g. `createDddBaseQuery` of
+`@mgamadeus/ddd-web/api`), the entry injects its operations once and returns the hooks; every screen takes them as
+`api`.
+
+```ts
+// adminApi.ts — module scope, once
+import { createTranslationsApi } from '@mgamadeus/ddd-admin-ui/translations';
+import { createWorkersApi } from '@mgamadeus/ddd-admin-ui/workers';
+
+export const workersApi = createWorkersApi({ baseApi: adminApi, apiPrefix: '/api/admin/maintenance/workers' });
+export const translationsApi = createTranslationsApi({ baseApi: adminApi, apiPrefix: '/api/admin/common' });
+```
+
+A second call with the same api and prefix returns the first result. The cache tags are the entry's own
+(`AdminUiWorkers`, `AdminUiAppTranslations`, `AdminUiLanguages`, `AdminUiLocales`); a write invalidates what it
+changes. The screens follow the host's setup: links through `AdminUiProvider.linkComponent`, writes (restart,
+generation, toggles, imports, saves) disabled under `WriteAccessProvider` with its reason, confirmations through
+`useConfirm`, toasts through `notify`. Filters, tabs, windows and the drawer live in the URL when the host passes its
+adapters (`urlStateAdapter`, `drawerUrlAdapter`), in component state otherwise. `createStaticWorkersApi` /
+`createStaticTranslationsApi` answer fixed payloads (the showcase's `showcaseWorkersData` /
+`showcaseTranslationsData`) for design reviews and tests.
+
+### `./workers`
+
+The screens of the worker monitoring, on Core's `WorkersControllerTrait` (mgamadeus/ddd **3.23.1** or later: the
+endpoints since 3.18.0, throughput windows since 3.20.0, the recent window of a transport since 3.23.1). Since 3.35.1
+the trait calls `throwForbiddenUnlessWorkersAccessAllowed()` first in every action: an application whose access rule is
+not a role overrides it on its controller; the screens need nothing for it (a 403 shows as the screen's error).
+
+| Hook | Endpoint (below `apiPrefix`) |
+|---|---|
+| `useOverviewQuery` | `GET /overview` |
+| `useHistoryQuery` | `GET /history?from&to&stepSeconds` |
+| `useTransportDetailQuery` | `GET /transports/{transport}?from&to&stepSeconds` |
+| `useMessageRunsQuery`, `useProcessesQuery` | `GET /transports/{transport}/messageRuns`, `/processes` (QueryOptions) |
+| `useRestartMutation` | `POST /restart` with `{}` or `{ transport }` (invalidates the live reads) |
+
+```tsx
+'use client';
+// app/maintenance/workers/page.tsx and app/maintenance/workers/[transport]/page.tsx
+import { useNextUrlStateAdapter } from '@mgamadeus/ddd-admin-ui/next';
+import { WorkersOverviewScreen, WorkerTransportScreen } from '@mgamadeus/ddd-admin-ui/workers';
+
+const transportHref = (transport: string, tab?: string) =>
+  `/maintenance/workers/${encodeURIComponent(transport)}${tab ? `?tab=${tab}` : ''}`;
+
+export const WorkersPage = () => (
+  <WorkersOverviewScreen api={workersApi} transportHref={transportHref} urlStateAdapter={useNextUrlStateAdapter({ listId: 'workers' })} />
+);
+export const TransportPage = ({ transport }: { transport: string }) => (
+  <WorkerTransportScreen
+    api={workersApi}
+    transport={transport}
+    backHref="/maintenance/workers"
+    urlStateAdapter={useNextUrlStateAdapter({ listId: `workers.${transport}` })}
+  />
+);
+```
+
+The overview refreshes every 10 s and the history every minute while the tab is visible; the only action is the
+restart request (no scaling control). The charts are SVG drawn by the entry (no chart library, no optional peer), in
+the colour roles of `tokens.json`; a step without a reading is a gap, never a 0.
+
+### `./translations` (admin screens)
+
+The app translation keys and values with their completeness, the languages and locales, and the entity translation,
+on the application's admin controllers: the modules ship the entities and services, not controller traits
+(**mgamadeus/ddd-common-translations** 1.0.7 or later for the completeness and the generation, checked with 1.1.1;
+**mgamadeus/ddd-common-political** 1.0.0 or later for `Language` / `Locale`, checked with 1.0.19). The paths below
+`apiPrefix` are those of these controllers; `paths` renames a segment
+(`createTranslationsApi({ …, paths: { appTranslations: 'appTranslations' } })`).
+
+| Hook | Endpoint (below `apiPrefix`, default segments) |
+|---|---|
+| `useAppTranslationKeysQuery`, `useAppTranslationKeyQuery` | `GET app-translations/keys/list`, `GET app-translations/keys/{id}?expand=appTranslationValues` |
+| `useUpdateAppTranslationKeyMutation`, `useDeleteAppTranslationKeyMutation` | `PATCH app-translations/keys` (`{ appTranslationKey }`), `DELETE app-translations/keys/{id}` |
+| `useUpdateAppTranslationValueMutation`, `useDeleteAppTranslationValueMutation` | `PATCH app-translations/values` (`{ appTranslationValue }`), `DELETE app-translations/values/{id}` |
+| `useAppTranslationCompletenessQuery` | `GET app-translations/keys/completeness` |
+| `useGenerateAppTranslationsMutation`, `useGenerateAllAppTranslationsMutation` | `GET app-translations/keys/generate/{localeId}?writingStyle=`, `GET app-translations/keys/generate-all` |
+| `useLanguagesQuery`, `useUpdateLanguageMutation`, `useImportLanguagesFromConfigMutation` | `GET languages/list`, `PATCH languages` (`{ language }`), `GET languages/importFromConfig` |
+| `useLocalesQuery`, `useUpdateLocaleMutation`, `useImportLocalesFromConfigMutation` | `GET locales/list`, `PATCH locales` (`{ locale }`), `GET locales/importFromConfig` |
+| `useTranslateEntitiesMutation` | `POST translations/translateEntities` (`{ entitiesToTranslate, localesToTranslate }`) |
+
+```tsx
+'use client';
+import { useNextDrawerUrlAdapter, useNextUrlStateAdapter } from '@mgamadeus/ddd-admin-ui/next';
+import { AppTranslationsScreen, ConfigImportCard, LocalesScreen } from '@mgamadeus/ddd-admin-ui/translations';
+
+export const AppTranslationsPage = () => (
+  <AppTranslationsScreen
+    api={translationsApi}
+    urlStateAdapter={useNextUrlStateAdapter({ listId: 'appTranslations' })}
+    drawerUrlAdapter={useNextDrawerUrlAdapter()}
+  />
+);
+export const LocalesPage = () => <LocalesScreen api={translationsApi} urlStateAdapter={useNextUrlStateAdapter({ listId: 'locales' })} />;
+export const ImportsPage = () => <ConfigImportCard api={translationsApi} kind="languages" />;
+```
+
+`useEntityTranslator(translationsApi)` translates an entity draft into one locale per request and feeds
+`useTranslationRunner` (`./logic`); `useContentLocales(translationsApi, { fallback })` gives the content locale keys of
+the active locales. `ConfigImportCard` is a `MaintenanceActionCard` (`./page`): title, description, run, the outcome of
+the last run.
+
 ## Showcase
 
 `./showcase` is a development page, not a screen block: mount it on a route of the host, below `AdminUiProvider`, to
@@ -330,7 +439,7 @@ pnpm pack --pack-destination "$TMPDIR" && test/consumer/run.sh "$TMPDIR"/mgamade
 | `node scripts/build.mjs` (`pnpm build`) | removes `dist`, `tsc -p tsconfig.build.json` (one JS and declaration file per source file, directives kept, `.js` specifiers), rewrites the declarations' specifiers to `.js`, copies CSS, JSON and the shipped scripts into `dist` |
 | `node scripts/check-package.mjs --dir <package root or extracted tarball>` | the 13 package rules: exports and bins, directives, specifiers, no app alias, deny list (`--deny a,b` or `CHECK_PACKAGE_DENY`; `--require-deny-list` on release), declared dependencies, entry edges and reach, module state once, `files` and `sideEffects`, declarations in a strict consumer, no tests, fresh text manifest, tokens |
 | `node scripts/tokens-utilities.mjs [--write]` | checks (or regenerates) the `utilities` lists of `tokens.json` from the source |
-| `pnpm test:render` | server-renders list tables, bodies and badges from the build: without the optional table props the markup equals `test/consumer/fixtures/plain/list-snapshot.html` (taken from 0.1.0-rc.2); `FormActions`, `FormSubmitButton`, `AddEntityButton`, `EntityListBulkBar` and the headers without the props of 0.1.0-rc.6 equal `form-actions-snapshot.html` (taken from 0.1.0-rc.5); `WriteAccessProvider` disables the write controls; a status map's translation context reaches `StatusBadge`; the showcase renders (light, dark, every section) and its coverage list matches the exports |
+| `pnpm test:render` | server-renders list tables, bodies and badges from the build: without the optional table props the markup equals `test/consumer/fixtures/plain/list-snapshot.html` (taken from 0.1.0-rc.2); `FormActions`, `FormSubmitButton`, `AddEntityButton`, `EntityListBulkBar` and the headers without the props of 0.1.0-rc.6 equal `form-actions-snapshot.html` (taken from 0.1.0-rc.5); `WriteAccessProvider` disables the write controls; a status map's translation context reaches `StatusBadge`; the showcase renders (light, dark, every section) and its coverage list matches the exports; the `./workers` and `./translations` screens render on the sample payloads and write access disables their writes |
 | `node scripts/build-i18n-manifest.mjs [--check]` (`pnpm i18n:manifest`) | regenerates `i18n-keys.json` from the source and `i18n/hints.json`; run it after changing a text or the version |
 | `node scripts/check-tokens.mjs <css> [tokens.json]` | the host check above (shipped as `ddd-admin-ui-check-tokens`) |
 | `node scripts/check-radix.mjs [host folder]` | the Radix copy check above (shipped as `ddd-admin-ui-check-radix`) |

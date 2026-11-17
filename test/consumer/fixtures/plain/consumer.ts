@@ -34,6 +34,8 @@ import { FormTranslatableInput, TranslatableInput } from '@mgamadeus/ddd-admin-u
 import { FormMediaItemField, MediaItemPickerDialog, type MediaUploadAdapter } from '@mgamadeus/ddd-admin-ui/media';
 import { GlassPill, QuickFilterPills } from '@mgamadeus/ddd-admin-ui/glass';
 import { AdminUiProvider, useAdminUi, type AdminUiProviderProps, type StorageKeyFn } from '@mgamadeus/ddd-admin-ui/provider';
+import { type CreateTranslationsApiOptions, type TranslationsApi, createStaticTranslationsApi, LocalesScreen } from '@mgamadeus/ddd-admin-ui/translations';
+import { type WorkersApi, type WorkersOverviewScreenProps, createStaticWorkersApi, WorkersOverviewScreen } from '@mgamadeus/ddd-admin-ui/workers';
 
 const writingStyle: WritingStyle = 'FORMAL';
 setTranslations('de', writingStyle, { Users: 'Benutzer' });
@@ -107,3 +109,12 @@ export const plainDialogProps: FormDialogProps = {
 export const headerActionsProps: FormActionsProps = { placement: 'header', primary: null };
 export const providerConfirm: AdminUiProviderProps['confirm'] = async () => true;
 export const dialogComponents = [FormDialog, FormActions, FormActionsSlot, FormActionsSlotProvider, WriteAccessProvider];
+export const workersApi: WorkersApi = createStaticWorkersApi({});
+export const translationsApi: TranslationsApi = createStaticTranslationsApi({});
+export const workersScreenProps: WorkersOverviewScreenProps = { api: workersApi, transportHref: transport => `/workers/${transport}` };
+export const translationsApiOptions: CreateTranslationsApiOptions = {
+  baseApi: { reducerPath: 'api', enhanceEndpoints: () => ({}), injectEndpoints: () => ({}) },
+  apiPrefix: '/api/admin/common',
+  paths: { appTranslations: 'appTranslations' },
+};
+export const screenComponents = [WorkersOverviewScreen, LocalesScreen];
