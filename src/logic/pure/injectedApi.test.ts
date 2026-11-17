@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { injectedHookName, staticMutationHook, staticQueryHook, toQueryString, trimApiPrefix } from './injectedApi.ts';
+import { injectedHookName, staticMutationHook, staticQueryFailure, staticQueryHook, toQueryString, trimApiPrefix } from './injectedApi.ts';
 
 describe('injected api helpers', () => {
   it('writes the defined parameters in order, encoded', () => {
@@ -27,5 +27,21 @@ describe('injected api helpers', () => {
     assert.equal(state.isLoading, false);
     assert.deepEqual(await save({ fail: false }).unwrap(), { saved: true });
     await assert.rejects(save({ fail: true }).unwrap(), /refused/);
+  });
+
+  it('answers a failed request and nothing while skipped', () => {
+    const useDiff = staticQueryHook((arg: { denied: boolean }) =>
+      arg.denied ? staticQueryFailure({ status: 403, data: { error: 'Schema writes are disabled' } }) : { diffs: { elements: [] } }
+    );
+    const denied = useDiff({ denied: true });
+    assert.equal(denied.isError, true);
+    assert.equal(denied.isLoading, false);
+    assert.equal(denied.data, undefined);
+    assert.deepEqual(denied.error, { status: 403, data: { error: 'Schema writes are disabled' } });
+    assert.deepEqual(useDiff({ denied: false }).data, { diffs: { elements: [] } });
+    const skipped = useDiff({ denied: false }, { skip: true });
+    assert.equal(skipped.data, undefined);
+    assert.equal(skipped.isLoading, false);
+    assert.equal(skipped.isSuccess, false);
   });
 });

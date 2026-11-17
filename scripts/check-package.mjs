@@ -267,11 +267,18 @@ export function checkPackage(packageDirectory, options = {}) {
       // the animated background: no other entry (a host that does not import it pays nothing)
       'shell-background': [],
       // the development page: every block entry, never an entry with an optional peer (./next, ./notify-sonner)
-      showcase: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'translations', 'media', 'glass', 'data', 'workers', 'shell', 'shell-background'],
+      showcase: [
+        'logic', 'i18n', 'primitives', 'list', 'page', 'form', 'translations', 'media', 'glass', 'data', 'workers', 'issues',
+        'database', 'crons', 'shell', 'shell-background',
+      ],
       // the inputs (form only through fieldLabels and useConfirmDialog) and the admin screens (lists, pages, the key drawer)
       translations: ['logic', 'i18n', 'primitives', 'form', 'list', 'page'],
       // the screens of the worker monitoring; charts are SVG, no chart library
       workers: ['logic', 'i18n', 'primitives', 'list', 'page'],
+      // the operations screens on Core's admin traits (issues, schema diff, crons); charts are SVG, no chart library
+      issues: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'data'],
+      database: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'data'],
+      crons: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'data'],
       data: ['logic', 'i18n', 'primitives'],
       markdown: ['logic', 'i18n', 'primitives'],
       // the design studio's components map: blocks only

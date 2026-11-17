@@ -121,6 +121,7 @@ export {
   injectEndpointsOnce,
   injectedHookName,
   staticMutationHook,
+  staticQueryFailure,
   staticQueryHook,
   toQueryString,
   trimApiPrefix,
@@ -136,6 +137,7 @@ export type {
   InjectedEndpointDefinition,
   InjectedRequest,
   InjectedTag,
+  StaticQueryFailure,
 } from './pure/injectedApi.ts';
 export { LIST_STATE_DEBOUNCE_MS } from './pure/urlListState.ts';
 export type { UrlStateAdapter } from './pure/urlListState.ts';

@@ -22,6 +22,11 @@ export interface InjectedRequest {
   url: string;
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
   body?: unknown;
+  /**
+   * How the response body becomes `data` (RTK Query's `fetchBaseQuery` option, passed on by `createDddBaseQuery`):
+   * `'text'` for a `text/plain` answer; absent = the base query's default (JSON).
+   */
+  responseHandler?: 'json' | 'text' | 'content-type';
 }
 
 /** A cache tag: a tag type, or a tag type with an id. */
@@ -149,14 +154,39 @@ export const injectEndpointsOnce = <THooks>(
   return hooks;
 };
 
+const STATIC_QUERY_FAILURE = Symbol.for('ddd-admin-ui.staticQueryFailure');
+
+/** A failed answer of a `staticQueryHook` (`staticQueryFailure(error)`): the hook reports `isError` with `error`. */
+export interface StaticQueryFailure {
+  readonly [STATIC_QUERY_FAILURE]: true;
+  readonly error: unknown;
+}
+
+/**
+ * A failed answer for `staticQueryHook`, in the shape RTK Query reports a failed request
+ * (`staticQueryFailure({ status: 403, data: { error: 'Schema writes are disabled' } })`).
+ */
+export const staticQueryFailure = (error: unknown): StaticQueryFailure => ({ [STATIC_QUERY_FAILURE]: true, error });
+
+const isStaticQueryFailure = (value: unknown): value is StaticQueryFailure =>
+  typeof value === 'object' && value !== null && STATIC_QUERY_FAILURE in value;
+
 /**
  * A query hook answering fixed data, for showcases, tests and design reviews (no store, no request): `answer(arg)`
- * gives the data of the arguments, `undefined` = still loading.
+ * gives the data of the arguments, `undefined` = still loading, `staticQueryFailure(error)` = a failed request. With
+ * `skip` the hook answers nothing, as RTK Query does.
  */
 export const staticQueryHook =
-  <TArg, TData>(answer: (arg: TArg) => TData | undefined): ApiQueryHook<TArg, TData> =>
-  arg => {
-    const data = answer(arg);
+  <TArg, TData>(answer: (arg: TArg) => TData | StaticQueryFailure | undefined): ApiQueryHook<TArg, TData> =>
+  (arg, options) => {
+    if (options?.skip) {
+      return { isLoading: false, isFetching: false, isSuccess: false, isError: false, refetch: () => undefined };
+    }
+    const answered = answer(arg);
+    if (isStaticQueryFailure(answered)) {
+      return { isLoading: false, isFetching: false, isSuccess: false, isError: true, error: answered.error, refetch: () => undefined };
+    }
+    const data = answered;
     return {
       data,
       currentData: data,

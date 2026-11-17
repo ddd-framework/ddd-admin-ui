@@ -87,6 +87,18 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
     ],
     notShown: { WorkerKpiTilesSkeleton: 'drawn by WorkersOverviewScreen while the overview loads' },
   },
+  issues: {
+    shown: [],
+    notShown: {},
+  },
+  database: {
+    shown: [],
+    notShown: {},
+  },
+  crons: {
+    shown: [],
+    notShown: {},
+  },
   media: {
     shown: ['FormMediaItemField', 'MediaItemField', 'MediaItemPickerDialog', 'MediaPreview', 'ImageCropDialog'],
     notShown: {},

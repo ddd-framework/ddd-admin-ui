@@ -7,3 +7,6 @@ export type { MarkdownLoader, MarkdownModule } from './sections/MarkdownShowcase
 export { SHOWCASE_COVERAGE } from './coverage.ts';
 export type { ShowcaseEntryCoverage } from './coverage.ts';
 export { SHOWCASE_NOW_MS, showcaseTranslationsData, showcaseWorkersData } from './fixtures.ts';
+export { showcaseIssuesData } from './issuesFixtures.ts';
+export { showcaseDatabaseData } from './databaseFixtures.ts';
+export { showcaseCronsData } from './cronsFixtures.ts';

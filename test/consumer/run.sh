@@ -17,6 +17,8 @@
 #         a status map's translation context reaches StatusBadge
 #         the ./workers and ./translations screens render on the showcase's sample payloads (static apis); write access
 #         disables restart, generation, toggles and imports; the entity translator and the content locales
+#         the ./issues, ./database and ./crons screens render on their sample payloads; write access disables their
+#         writes; the 403 of disabled schema writes and the 409 of a busy cron are shown
 #     the shipped i18n manifest matches the installed package (ddd-admin-ui-i18n-manifest --check)
 #   next      a Next 16 app router project with Tailwind 4:
 #     T1  `next build`; the server page's metadata title is m('Users'), pure helpers render on the server
@@ -41,6 +43,8 @@
 #         (browser) the ./workers and ./translations screens on RTK Query (app/screens, @reduxjs/toolkit and react-redux
 #         added to the app): window switch, restart and its refetch, chart tooltip, tabs, the isActive toggle and its
 #         refetches, the key drawer, the import from configuration, 390 px
+#         (browser) the ./issues, ./database and ./crons screens on RTK Query (app/operations): filters, the drawer, a
+#         typed-phrase confirmation, the 403 and 409 states, 390 px with a throttled CPU, no hydration warning
 #         (browser) the shell: one navigation for sidebar, breadcrumbs and title, active entry, rights predicate,
 #         collapse (button, `[`, stored and restored after hydration), rail flyout, mobile menu, folding breadcrumbs, RTL
 #     T7  (browser) a select inside a dialog inside a sheet, and inside a host overlay at z-index 10000 with
@@ -133,6 +137,10 @@ echo "── links through the provider's link component keep sticky parameters"
 node sticky-links.mjs
 echo "── ./workers and ./translations screens on the static apis (server render, write access)"
 node screens-render.mjs
+echo "── ./issues, ./database and ./crons screens on the static apis (server render, write access, error states)"
+node issues-render.mjs
+node database-render.mjs
+node crons-render.mjs
 echo "── the shell on the server: one navigation for sidebar, breadcrumbs and title; rights predicate; no background reach"
 node shell-render.mjs
 echo "── shipped i18n manifest"
@@ -178,6 +186,8 @@ else
   node browser-blocks.mjs "http://127.0.0.1:$PORT"
   echo "── ./workers and ./translations screens on RTK Query (headless browser)"
   node browser-screens.mjs "http://127.0.0.1:$PORT"
+  echo "── ./issues, ./database and ./crons screens on RTK Query (headless browser)"
+  node browser-operations.mjs "http://127.0.0.1:$PORT"
   echo "── shell: sidebar, rail, shortcut, mobile menu, breadcrumbs, title, RTL (headless browser)"
   node browser-shell.mjs "http://127.0.0.1:$PORT"
   kill $SERVER_PID 2>/dev/null || true
