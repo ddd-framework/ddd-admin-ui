@@ -236,6 +236,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tooltip when more processes run than configured."
     },
     {
+      "key": "Account menu of %name%",
+      "text": "Account menu of %name%",
+      "files": [
+        "shell/AccountMenu.tsx"
+      ],
+      "hint": "Accessible name of the round account button at the right end of the top bar; it opens the account menu. %name% is the signed-in person's name."
+    },
+    {
       "key": "Account not found or current Auth Account is not authorized to access it",
       "text": "Account not found or current Auth Account is not authorized to access it",
       "files": [
@@ -703,12 +711,28 @@
       "hint": "Languages admin screen: column header and filter label: the two-letter language code (ISO 639-1, e.g. de)."
     },
     {
+      "key": "Collapse %label%",
+      "text": "Collapse %label%",
+      "files": [
+        "shell/ShellNavList.tsx"
+      ],
+      "hint": "Accessible name of the small arrow button next to a navigation group in the sidebar while the group is open: it hides the group's entries. %label% is the group's name."
+    },
+    {
       "key": "Collapse %title%",
       "text": "Collapse %title%",
       "files": [
         "glass/GlassGroup.tsx"
       ],
       "hint": "Accessible label (screen reader and tooltip) of the round chevron button that collapses a group panel on a dashboard. %title% is the group name, for example 'Running'."
+    },
+    {
+      "key": "Collapse sidebar",
+      "text": "Collapse sidebar",
+      "files": [
+        "shell/ShellSidebar.tsx"
+      ],
+      "hint": "Button at the foot of the left navigation column: shrinks the column to a narrow strip of icons."
     },
     {
       "key": "Colour",
@@ -1082,6 +1106,22 @@
         "workers/WorkersOverviewScreen.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): description of the history charts section."
+    },
+    {
+      "key": "Expand %label%",
+      "text": "Expand %label%",
+      "files": [
+        "shell/ShellNavList.tsx"
+      ],
+      "hint": "Accessible name of the small arrow button next to a navigation group in the sidebar while the group is closed: it shows the group's entries. %label% is the group's name."
+    },
+    {
+      "key": "Expand sidebar",
+      "text": "Expand sidebar",
+      "files": [
+        "shell/ShellSidebar.tsx"
+      ],
+      "hint": "Button at the foot of the narrow icon strip: widens it back to the full navigation column with labels."
     },
     {
       "key": "Export to Excel",
@@ -1684,9 +1724,10 @@
       "key": "Language",
       "text": "Language",
       "files": [
+        "shell/LanguageMenu.tsx",
         "translations/LocalesScreen.tsx"
       ],
-      "hint": "Locales admin screen (language + country combinations): column header and filter label: the language code of the locale (e.g. de)."
+      "hint": "The word \"language\" in two places: column header and filter label of the locales admin screen (the language code of a locale, e.g. de), and the heading above the list of languages in the language menu of the top bar."
     },
     {
       "key": "Language of the new translation",
@@ -1703,6 +1744,14 @@
         "translations/LanguagesScreen.tsx"
       ],
       "hint": "Languages admin screen: success toast after a language was changed."
+    },
+    {
+      "key": "Language: %language%",
+      "text": "Language: %language%",
+      "files": [
+        "shell/LanguageMenu.tsx"
+      ],
+      "hint": "The language menu's button in the top bar, and its entry in the account menu: names the current interface language. %language% is the language's own name (Deutsch, Français)."
     },
     {
       "key": "Languages",
@@ -1998,6 +2047,16 @@
       "hint": "Status badge of a worker process: vanished without reporting a stop."
     },
     {
+      "key": "Main__navigation",
+      "text": "Main",
+      "context": "navigation",
+      "files": [
+        "shell/ShellMobileMenu.tsx",
+        "shell/ShellSidebar.tsx"
+      ],
+      "hint": "Accessible name of the main navigation (the sidebar and the mobile menu), read by screen readers as a landmark: 'Main navigation'."
+    },
+    {
       "key": "Maximum__chart-series",
       "text": "Maximum",
       "context": "chart-series",
@@ -2197,6 +2256,14 @@
         "translations/LanguagesScreen.tsx"
       ],
       "hint": "Languages admin screen: column header and filter label: the language's name in itself (e.g. Deutsch)."
+    },
+    {
+      "key": "Navigation",
+      "text": "Navigation",
+      "files": [
+        "shell/ShellMobileMenu.tsx"
+      ],
+      "hint": "Accessible title of the panel that slides in with the navigation on phones and small windows."
     },
     {
       "key": "Need attention",
@@ -2608,12 +2675,28 @@
       "hint": "Slider label in a colour picker: how opaque the colour is (0 to 100 %)."
     },
     {
+      "key": "Open navigation",
+      "text": "Open navigation",
+      "files": [
+        "shell/ShellMobileMenu.tsx"
+      ],
+      "hint": "Accessible name of the round menu button at the left of the top bar on phones: opens the navigation panel."
+    },
+    {
       "key": "Open original of %title%",
       "text": "Open original of %title%",
       "files": [
         "media/MediaItemPickerDialog.tsx"
       ],
       "hint": "Screen-reader label of the small link on a media tile that opens the full-size original in a new tab; %title% is the item's title, e.g. 'Logo'."
+    },
+    {
+      "key": "Opens outside this app",
+      "text": "Opens outside this app",
+      "files": [
+        "shell/NavItemMarks.tsx"
+      ],
+      "hint": "Read by screen readers after a navigation entry that leads to another application or an older screen (a full page load)."
     },
     {
       "key": "Other (%count%)",
@@ -3261,6 +3344,14 @@
       "hint": "Small floating pill button at the bottom edge of a group panel; clicking it reveals all rows. %count% is the total number of rows, for example 12."
     },
     {
+      "key": "Show full path",
+      "text": "Show full path",
+      "files": [
+        "shell/ShellBreadcrumbs.tsx"
+      ],
+      "hint": "Accessible name of the '…' button in the breadcrumb trail when it is shortened on narrow screens: lists the hidden levels."
+    },
+    {
       "key": "Show less",
       "text": "Show less",
       "files": [
@@ -3284,6 +3375,14 @@
         "translations/adminFormat.ts"
       ],
       "hint": "App translations admin, drawer of one translation key: context option of a value: the singular form."
+    },
+    {
+      "key": "Skip to content",
+      "text": "Skip to content",
+      "files": [
+        "shell/AppShell.tsx"
+      ],
+      "hint": "A link that appears only when it gets keyboard focus, as the first stop on every page: jumps past the navigation to the page content."
     },
     {
       "key": "Something went wrong",

@@ -10,6 +10,7 @@ import { ConfirmContext } from '../logic/react/useConfirm.ts';
 import { FormatLocaleContext } from '../i18n/formatLocale.ts';
 import { TextLimitsContext } from '../logic/react/textLimits.ts';
 import { LinkComponentProvider } from '../primitives/link.tsx';
+import { PathnameProvider } from '../primitives/pathname.tsx';
 import { PortalContainerProvider } from '../primitives/portal.tsx';
 import { TooltipProvider } from '../primitives/tooltip.tsx';
 import { AdminUiContext } from './adminUiContext.ts';
@@ -34,7 +35,7 @@ const TranslationBridge = ({ adapter }: { adapter: TranslationAdapter }) => {
  * The one provider of the package: registers the host's notification adapter, feeds the translation store from a
  * host store, renders the tooltip provider and the portal container, and hands the host adapters (storage keys,
  * router hooks, upload, markdown editor, AI translation) to packaged screens through `useAdminUi()`, sets the link
- * component of every block (`linkComponent`), and answers `useConfirm()` (the package dialog, or the host's `confirm`).
+ * component of every block (`linkComponent`) and the pathname hook of the shell (`usePathname`), and answers `useConfirm()` (the package dialog, or the host's `confirm`).
  * Blocks never read `useAdminUi()`: they take adapters as props.
  */
 export const AdminUiProvider = ({
@@ -51,6 +52,7 @@ export const AdminUiProvider = ({
   aiTranslation,
   preserveSearchParams,
   linkComponent,
+  usePathname,
   confirm: hostConfirm,
   formatLocale,
   textLimits,
@@ -80,6 +82,7 @@ export const AdminUiProvider = ({
 
   // optional contexts: mounted only when the host sets them (the default value stands otherwise)
   let content = linkComponent ? <LinkComponentProvider linkComponent={linkComponent}>{children}</LinkComponentProvider> : children;
+  if (usePathname) content = <PathnameProvider usePathname={usePathname}>{content}</PathnameProvider>;
   if (formatLocale) content = <FormatLocaleContext.Provider value={formatLocale}>{content}</FormatLocaleContext.Provider>;
   if (textLimits) content = <TextLimitsContext.Provider value={textLimits}>{content}</TextLimitsContext.Provider>;
 

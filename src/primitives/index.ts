@@ -26,5 +26,6 @@ export * from './fieldSurface.ts';
 export * from './textarea.tsx';
 export * from './segmented-control.tsx';
 export * from './link.tsx';
+export * from './pathname.tsx';
 export { FormActionsSlot, FormActionsSlotProvider } from './formActionsSlot.tsx';
 export type { FormActionsSlotProps, FormActionsSlotProviderProps } from './formActionsSlot.tsx';

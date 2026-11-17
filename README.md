@@ -21,9 +21,9 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 
 | Entry | What it holds | May import (besides React and its peers) |
 |---|---|---|
-| `./logic` | pure helpers (`formatDate`, `defineStatusMap`, conditions, schemas, `notify`, `runSequential`), React hooks without markup (`useUrlListState`, `useEntityDrawer`, `useRowSelection`, `useEntityTranslations`, …), browser helpers (`prepareImageFile`, `readStored` / `writeStored`, `buildStorageKey`), date input values (`toDateInputValue`, `fromDateTimeInputValue`, …), `withStickyParams`, `useLatestSearch`, `useConfirm` (the provider's confirmation), `WriteAccessProvider` / `useWriteAccess`, date range presets, bulk summaries with skipped rows (`skipSequential`, `bulkSummaryText`), text limits (`countCodePoints`, `overLimitKeys`), colour values, `useMediaQuery`, the image normaliser (`normalizeImage`) and crop geometry, the api injection of the screen entries (`InjectableBaseApi`, `ApiQueryHook`, `staticQueryHook`, …), `useMemoryUrlState`, `useOptimisticRowPatches` | `./i18n` |
+| `./logic` | pure helpers (`formatDate`, `defineStatusMap`, conditions, schemas, `notify`, `runSequential`, the navigation model with `resolveCrumbs`, `resolveDocumentTitle`, `filterNavigation`, `findActiveNavigation`), React hooks without markup (`useUrlListState`, `useEntityDrawer`, `useRowSelection`, `useEntityTranslations`, …), browser helpers (`prepareImageFile`, `readStored` / `writeStored`, `buildStorageKey`), date input values (`toDateInputValue`, `fromDateTimeInputValue`, …), `withStickyParams`, `useLatestSearch`, `useConfirm` (the provider's confirmation), `WriteAccessProvider` / `useWriteAccess`, date range presets, bulk summaries with skipped rows (`skipSequential`, `bulkSummaryText`), text limits (`countCodePoints`, `overLimitKeys`), colour values, `useMediaQuery`, the image normaliser (`normalizeImage`) and crop geometry, the api injection of the screen entries (`InjectableBaseApi`, `ApiQueryHook`, `staticQueryHook`, …), `useMemoryUrlState`, `useOptimisticRowPatches` | `./i18n` |
 | `./i18n` | the UI text store (`m`, `translateText`, `setTranslations`), `useTranslate`, `<Translate>`, number / date formats of the UI locale, server-message translation | — |
-| `./primitives` | buttons, inputs, selects, dialogs, sheets, popovers, menus, tooltips, tables, badges, `SegmentedControl`, `cn`, the portal container, the header slot of form actions (`FormActionsSlotProvider`, `FormActionsSlot`) | `./i18n` |
+| `./primitives` | buttons, inputs, selects, dialogs, sheets, popovers, menus, tooltips, tables, badges, `SegmentedControl`, `cn`, the portal container, the link component and pathname hook contexts, the header slot of form actions (`FormActionsSlotProvider`, `FormActionsSlot`) | `./i18n` |
 | `./list` | entity list card, toolbar, search, filters, table, grid, load-more, status badge, cells, multi-select, combobox, bulk bar, column factories (`textColumn`, `moneyColumn`, `actionsColumn`, …), the toolbar's filter toggle, count and clear as blocks | logic, i18n, primitives |
 | `./page` | page header and frame, `EntityListPage`, detail shell and header, tabs, section header, definition list, page toolbar, editable card, status callout, entity metadata, route states (`RouteError`, `RouteLoading`), `MaintenanceActionCard` | logic, i18n, primitives; from list only `EmptyValue`, `EntityListEmpty`, `EntityListCard` |
 | `./form` | `Form`, `FormField`, `FormSection`, `FormActions`, `FormDrawer`, `FormDialog`, `FormHeader`, `FormWrapper`, `FormJumpBar`, `FormErrors`, `FormSubmitButton`, `useConfirmDialog`, `ColorValueField` | logic, i18n, primitives; from page only `DetailHeader`, `EntityMetadata` |
@@ -31,10 +31,12 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./workers` | the screens of the worker monitoring on the host's api (`createWorkersApi`): `WorkersOverviewScreen`, `WorkerTransportScreen` and their parts (tiles, live panel, throughput and transport tables, history charts as SVG, message runs, processes, restart request), the status maps, the payload types | logic, i18n, primitives, list, page |
 | `./media` | `MediaItemField`, `FormMediaItemField`, `MediaItemPickerDialog`, `MediaPreview`, `ImageCropDialog` (crop surface: file and aspect options in; cropped blob, skip or cancel out) | logic, i18n, primitives, list, form |
 | `./glass` | `GlassPill`, `QuickFilterPills`, `CollapsibleCard`, `GlassGroup`, `ActionRow` | logic, i18n, primitives |
+| `./shell` | the application frame `AppShell` (top bar with slots, sidebar with groups, badges and locks, the icon rail and its `[` shortcut, the mobile menu, the content frame), `ShellBreadcrumbs`, `ShellDocumentTitle`, `AccountMenu`, `LanguageMenu`, their parts and hooks (`useSidebarCollapsed`, `useShellShortcut`) | logic, i18n, primitives |
+| `./shell-background` | `ShaderBackground`: the animated WebGL background (loaded lazily; a host that does not import the entry pays nothing) | — |
 | `./provider` | `AdminUiProvider` (also the dialog behind `useConfirm`), `useAdminUi`, `defaultStorageKey` | logic, i18n, primitives; types only from media and translations |
-| `./next` | Next.js adapters: `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useListViewParam`, the one URL writer (`queueSearchParamsWrite`) | logic, provider; the only entry importing `next/*` |
+| `./next` | Next.js adapters: `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useNextPathname`, `useListViewParam`, the one URL writer (`queueSearchParamsWrite`) | logic, provider; the only entry importing `next/*` |
 | `./notify-sonner` | `sonnerNotifications` (the notification adapter on `sonner`) and its `Toaster` | logic; the only entry importing `sonner` |
-| `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE`; the sample payloads of the screens (`showcaseWorkersData`, `showcaseTranslationsData`) | logic, i18n, primitives, list, page, form, translations, media, glass, data, workers; never `./next`, `./notify-sonner` or `./markdown` (its section loads through `loadMarkdown`) |
+| `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE`; the sample payloads of the screens (`showcaseWorkersData`, `showcaseTranslationsData`) | logic, i18n, primitives, list, page, form, translations, media, glass, data, workers, shell, shell-background; never `./next`, `./notify-sonner` or `./markdown` (its section loads through `loadMarkdown`) |
 | `./data` | key figures: `MetricTile` (label, value, delta, hint, sparkline slot, skeleton), `MetricTileSkeleton`, `MetricGrid`, `DeltaText`, `NoteList`, the delta helpers `resolveDelta`, `relativeChange`, `deltaDirectionOf`, `deltaToneOf` | logic, i18n, primitives |
 | `./markdown` | `MarkdownEditor`, `MarkdownPreview` (sanitised), `renderMarkdownEditor` (the `renderEditor` slot of `./translations` and `AdminUiProvider.renderMarkdownEditor`); loads `@uiw/react-md-editor` and `rehype-sanitize` after hydration | logic, i18n, primitives; translations type-only; the only entry reaching its optional peers |
 | `./theme.css`, `./components.css` | the Tailwind theme binding and the structural CSS of the blocks | — |
@@ -121,10 +123,12 @@ It reads the host's `node_modules` (npm and pnpm layouts) and the folders above 
 2. **Tokens.** Declare on `:root` (and under `.dark` where themed) every property of
    [`tokens.json`](./tokens.json): the 31 colour roles, `--nav-h`, `--content-max`, `--radius`, the surface and glass
    alphas and shadows, `--glass-control-shadow`. Dark mode is a `.dark` class on an ancestor; the default border
-   colour is the `border` role. `components.css` sets the four `--layer-*` defaults (`raised` 10, `sticky` 20,
-   `overlay` 50, `popover` 50) and the two optional properties of `SegmentedControl` (`--segmented-control-radius`
-   9999px, `--segmented-control-duration` 200ms) with zero specificity in the lowest cascade layer, so any host value
-   wins. Check a built
+   colour is the `border` role. `components.css` sets the five `--layer-*` defaults (`raised` 10, `sticky` 20, `chrome`
+   30, `overlay` 50, `popover` 50), the two optional properties of `SegmentedControl` (`--segmented-control-radius`
+   9999px, `--segmented-control-duration` 200ms) and the two of `AppShell` (`--sidebar-w` 16rem, `--sidebar-rail-w`
+   5rem) with zero specificity in the lowest cascade layer, so any host value wins. `ShaderBackground` reads
+   `--shell-background-base`, `--shell-background-blob-1` and `--shell-background-blob-2` (optional; fallbacks
+   `--background`, `--brand-light`, `--accent`). Check a built
    stylesheet against the contract:
 
    ```sh
@@ -172,7 +176,7 @@ It reads the host's `node_modules` (npm and pnpm layouts) and the folders above 
 
    ```tsx
    'use client';
-   import { useNextDrawerUrlAdapter, useNextUrlStateAdapter } from '@mgamadeus/ddd-admin-ui/next';
+   import { useNextDrawerUrlAdapter, useNextPathname, useNextUrlStateAdapter } from '@mgamadeus/ddd-admin-ui/next';
    import { sonnerNotifications, Toaster } from '@mgamadeus/ddd-admin-ui/notify-sonner';
    import { AdminUiProvider } from '@mgamadeus/ddd-admin-ui/provider';
 
@@ -182,6 +186,7 @@ It reads the host's `node_modules` (npm and pnpm layouts) and the folders above 
        tooltipDelayMs={150}
        useUrlStateAdapter={useNextUrlStateAdapter}
        useDrawerUrlAdapter={useNextDrawerUrlAdapter}
+       usePathname={useNextPathname}
      >
        {children}
        <Toaster />
@@ -194,11 +199,12 @@ It reads the host's `node_modules` (npm and pnpm layouts) and the folders above 
    default `document.body`), `tooltipDelayMs`, `translations` (a `TranslationAdapter` that feeds the text store from a
    host store), `useUrlStateAdapter`, `useDrawerUrlAdapter`, `upload`, `renderMarkdownEditor`, `aiTranslation`,
    `preserveSearchParams` (search parameters the URL writer never removes), `linkComponent` (the router link of every
-   block that renders a link; wrap it with `withStickyParams` to keep sticky search parameters), `confirm` (the
-   host's confirmation service behind `useConfirm()`), `formatLocale` (the `Intl` locale date cells format in, when it
-differs from the UI language's), `textLimits` (`{ singleLine, multiline }`: default length limits of translatable text
-fields, in code points). Without a notification adapter `notify.*` does nothing and
-   warns once outside production.
+   block that renders a link; wrap it with `withStickyParams` to keep sticky search parameters), `usePathname` (the
+   router's pathname hook for the shell's active entry, breadcrumbs and title: `useNextPathname` from `./next`; without
+   it `location.pathname` after hydration), `confirm` (the host's confirmation service behind `useConfirm()`),
+   `formatLocale` (the `Intl` locale date cells format in, when it differs from the UI language's), `textLimits`
+   (`{ singleLine, multiline }`: default length limits of translatable text fields, in code points). Without a
+   notification adapter `notify.*` does nothing and warns once outside production.
 
    ```tsx
    const StickyLink: PageLinkComponent = ({ href, ...props }) => {
@@ -388,6 +394,63 @@ hydration, and applied in the render right after it. A list that mounts on the c
 its first render, so it never renders or requests twice. `useHydrated()` (`./logic`) gives the same switch to host
 code.
 
+## Shell and navigation
+
+`./shell` is the application frame; its content comes from the host. ONE navigation tree (types in `./logic`) feeds
+the sidebar, the mobile menu, the breadcrumbs and the document title:
+
+```tsx
+'use client';
+import { m } from '@mgamadeus/ddd-admin-ui/i18n';
+import type { NavigationItem } from '@mgamadeus/ddd-admin-ui/logic';
+import { AccountMenu, AppShell, LanguageMenu, type UseEntityLabel } from '@mgamadeus/ddd-admin-ui/shell';
+
+const NAVIGATION: NavigationItem<'item'>[] = [
+  { key: 'home', label: m('Home'), href: '/', exact: true, icon: House },
+  {
+    key: 'catalog', label: m('Catalog'), icon: Boxes, children: [
+      { key: 'items', label: m('Items'), href: '/items', icon: Shapes, badge: waiting, crumbs: [
+        { segment: 'create', label: m('Create item') },
+        { segment: ':itemId', entity: 'item', children: [{ segment: 'details', label: m('Details') }] },
+      ] },
+      { key: 'reports', label: m('Reports'), href: '/reports', lockedReason: m('Not in your plan') },
+    ],
+  },
+  { key: 'old', label: m('Old screen'), href: 'https://old.example/screen', external: true },
+];
+// the page's own query, so the crumb sends no request of its own
+const useEntityLabel: UseEntityLabel<'item'> = ({ id }) => { const query = useItemQuery(id); return { text: query.data?.name, isLoading: query.isLoading }; };
+
+<AppShell navigation={NAVIGATION} canAccess={item => rights.allows(item.key)} useEntityLabel={useEntityLabel}
+  brand={<Link href="/" aria-label="Home"><Logo /></Link>} documentTitle={{ appName: 'Admin' }}
+  topBarEnd={<><LanguageMenu languages={languages} current={code} onChange={setCode} /><AccountMenu name={user.name} entries={accountEntries} /></>}>
+  {children}
+</AppShell>
+```
+
+- **Entries**: a leaf has `href` (`exact` for an overview whose siblings live below it), optional `badge` (work
+  waiting), `lockedReason` (a commercial lock: still a link, marked), `external` (a plain `<a>`, marked "Opens outside
+  this app"); a group has `children` (groups nest) and optionally its own `href` (its label links, the caret toggles).
+  Labels are UI texts, translated when rendered.
+- **Breadcrumbs** (`resolveCrumbs`): the groups as text (a link when a group has its own page), the entry as a link,
+  then per leaf `crumbs` — child segments as literals or `:params` (a literal wins), each with a fixed `label`, a
+  `label(segment, t, params)`, or an `entity` key named by the host's `useEntityLabel` hook (the id while it loads). A
+  route without label adds no crumb; `link: false` keeps a crumb as text. Narrow trails fold into an ellipsis menu
+  (container queries, no measurement).
+- **Rights**: `canAccess(item)` hides refused items from the sidebar (a group left empty disappears); the breadcrumbs
+  resolve against the whole tree and show a refused crumb as text. Presentation only: the server still checks.
+- **Pathname and links**: the provider's `usePathname` (`useNextPathname`) and `linkComponent` (sticky parameters with
+  `withStickyParams`); no router import in the blocks. `AppShell.pathname` overrides.
+- **Collapse**: the foot row and `[` toggle the icon rail (not while typing or in a dialog or menu, not below `lg`),
+  remembered in localStorage per `collapsedStorageKey`, applied right after hydration (the server renders the full
+  column). The rail shows groups as flyout menus.
+- **Document title**: `documentTitle={{ appName }}` keeps `document.title` on the page (`Details · Blue widget · Admin`);
+  `resolveDocumentTitle(pathname, navigation, { appName })` gives the same text on the server.
+- **Background**: `background={<ShaderBackground />}` from `./shell-background` (lazy WebGL, nothing with reduced
+  motion or without WebGL). The page background then sits on `<html>`.
+- **RTL**: logical sides throughout; with Radix's `Direction.Provider dir="rtl"` the menus and the mobile sheet open
+  from the right.
+
 ## Texts
 
 The UI language lives in one store: `setTranslations(languageCode, writingStyle, bundle)` (or the provider's
@@ -429,7 +492,7 @@ pnpm install
 pnpm typecheck
 pnpm test                       # unit tests beside the sources, script tests and a failing fixture per check-package rule
 pnpm build                      # tsc → dist, declaration specifiers, stylesheets, manifests and shipped scripts
-pnpm test:render                # after the build: list snapshot (as in 0.1.0-rc.2), form actions snapshot (as in 0.1.0-rc.5), write access, status contexts, the showcase
+pnpm test:render                # after the build: list snapshot (as in 0.1.0-rc.2), form actions snapshot (as in 0.1.0-rc.5), write access, status contexts, the showcase, the shell
 node scripts/check-package.mjs --dir .
 pnpm pack --pack-destination "$TMPDIR" && test/consumer/run.sh "$TMPDIR"/mgamadeus-ddd-admin-ui-*.tgz pnpm "$TMPDIR/consumer-pnpm"
 ```
@@ -439,7 +502,7 @@ pnpm pack --pack-destination "$TMPDIR" && test/consumer/run.sh "$TMPDIR"/mgamade
 | `node scripts/build.mjs` (`pnpm build`) | removes `dist`, `tsc -p tsconfig.build.json` (one JS and declaration file per source file, directives kept, `.js` specifiers), rewrites the declarations' specifiers to `.js`, copies CSS, JSON and the shipped scripts into `dist` |
 | `node scripts/check-package.mjs --dir <package root or extracted tarball>` | the 13 package rules: exports and bins, directives, specifiers, no app alias, deny list (`--deny a,b` or `CHECK_PACKAGE_DENY`; `--require-deny-list` on release), declared dependencies, entry edges and reach, module state once, `files` and `sideEffects`, declarations in a strict consumer, no tests, fresh text manifest, tokens |
 | `node scripts/tokens-utilities.mjs [--write]` | checks (or regenerates) the `utilities` lists of `tokens.json` from the source |
-| `pnpm test:render` | server-renders list tables, bodies and badges from the build: without the optional table props the markup equals `test/consumer/fixtures/plain/list-snapshot.html` (taken from 0.1.0-rc.2); `FormActions`, `FormSubmitButton`, `AddEntityButton`, `EntityListBulkBar` and the headers without the props of 0.1.0-rc.6 equal `form-actions-snapshot.html` (taken from 0.1.0-rc.5); `WriteAccessProvider` disables the write controls; a status map's translation context reaches `StatusBadge`; the showcase renders (light, dark, every section) and its coverage list matches the exports; the `./workers` and `./translations` screens render on the sample payloads and write access disables their writes |
+| `pnpm test:render` | server-renders list tables, bodies and badges from the build: without the optional table props the markup equals `test/consumer/fixtures/plain/list-snapshot.html` (taken from 0.1.0-rc.2); `FormActions`, `FormSubmitButton`, `AddEntityButton`, `EntityListBulkBar` and the headers without the props of 0.1.0-rc.6 equal `form-actions-snapshot.html` (taken from 0.1.0-rc.5); `WriteAccessProvider` disables the write controls; a status map's translation context reaches `StatusBadge`; the showcase renders (light, dark, every section) and its coverage list matches the exports; the `./workers` and `./translations` screens render on the sample payloads and write access disables their writes; the shell renders from one navigation (sidebar, breadcrumbs, title, rights predicate) |
 | `node scripts/build-i18n-manifest.mjs [--check]` (`pnpm i18n:manifest`) | regenerates `i18n-keys.json` from the source and `i18n/hints.json`; run it after changing a text or the version |
 | `node scripts/check-tokens.mjs <css> [tokens.json]` | the host check above (shipped as `ddd-admin-ui-check-tokens`) |
 | `node scripts/check-radix.mjs [host folder]` | the Radix copy check above (shipped as `ddd-admin-ui-check-radix`) |
@@ -448,8 +511,8 @@ pnpm pack --pack-destination "$TMPDIR" && test/consumer/run.sh "$TMPDIR"/mgamade
 Source files import each other with explicit `.ts` / `.tsx` extensions and never through a directory. The consumer
 tests (`test/consumer/run.sh <tarball> <npm|pnpm> <workDir>`) install the packed tarball into a project without the
 optional peers and into a Next 16 app, and check imports, strict type checks, the production build and CSS, hydration,
-form labels across entries, nested overlays, form dialogs, the save shortcut, header slots and confirmations in
-headless Chrome.
+form labels across entries, nested overlays, form dialogs, the save shortcut, header slots, confirmations and the
+shell (collapse, shortcut, mobile menu, breadcrumbs, title, RTL) in headless Chrome.
 
 ## License
 

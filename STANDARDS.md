@@ -14,9 +14,11 @@ Where the names below come from (setup and the entry list: [`README.md`](./READM
 | `@mgamadeus/ddd-admin-ui/form` | `FormDrawer`, `FormDialog`, `FormActions`, `FormField`, `FormSection`, `FormHeader`, `useConfirmDialog` |
 | `@mgamadeus/ddd-admin-ui/glass` | `QuickFilterPills`, `CollapsibleCard`, `GlassGroup`, `ActionRow` |
 | `@mgamadeus/ddd-admin-ui/primitives` | `Button`, `Card`, `CardContent`, `SegmentedControl`, `FormActionsSlotProvider`, `FormActionsSlot` |
-| `@mgamadeus/ddd-admin-ui/next` | `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useListViewParam` |
 | `@mgamadeus/ddd-admin-ui/workers` | `createWorkersApi`, `WorkersOverviewScreen`, `WorkerTransportScreen` |
 | `@mgamadeus/ddd-admin-ui/translations` | `createTranslationsApi`, `AppTranslationsScreen`, `LanguagesScreen`, `LocalesScreen` |
+| `@mgamadeus/ddd-admin-ui/next` | `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useListViewParam`, `useNextPathname` |
+| `@mgamadeus/ddd-admin-ui/shell` | `AppShell`, `ShellBreadcrumbs`, `ShellDocumentTitle`, `AccountMenu`, `LanguageMenu`, `LanguageMenuSub`, `UseEntityLabel` |
+| `@mgamadeus/ddd-admin-ui/shell-background` | `ShaderBackground` |
 
 Every screen renders below `AdminUiProvider`. A screen that may not write sets that once with `WriteAccessProvider`
 (§ 15).
@@ -661,6 +663,7 @@ focusFirstOverLimitTranslation(formElement);
   Below that width it is the modal drawer.
 - **Server texts in pickers**: `translate={false}` on `Combobox`, `QuickFilterPills` or `SegmentedControl` (and per
   option) for names from the server; UI texts stay translated.
+
 ## 20. Framework screens — `./workers`, `./translations`
 
 The worker monitoring and the translation admin are package screens: mount them, do not rebuild them.
@@ -682,3 +685,40 @@ export const translationsApi = createTranslationsApi({ baseApi: adminApi, apiPre
   request and the confirmation (`useConfirm`), the card shows run, pending and the last outcome.
 - Charts of the workers screens are the entry's SVG charts (`WorkerTimeChart`, `WorkerSparkline`): a `null` reading
   is a gap, never a 0; no chart library is added for them.
+## 21. Application frame — `AppShell` and one navigation
+
+One module of the host owns the navigation tree (`NavigationItem[]`, a module constant with `m()`-marked labels); the
+area layout renders `AppShell` with it once, so route changes keep the frame mounted. Never a second list for the
+breadcrumbs, the mobile menu or the tab title: they all resolve the same tree.
+
+```tsx
+// area layout (client): the frame, its slots, the rights predicate, the entity names
+<AppShell
+  navigation={ADMIN_NAVIGATION}
+  canAccess={canSee}                               // stable: useCallback over the session's rights
+  useEntityLabel={useAdminEntityLabel}             // module-level hook: the page's own query per entity kind
+  collapsedStorageKey="admin.sidebar.collapsed"    // one per area
+  brand={<HomeLink />}
+  topBarEnd={<><LanguageMenu … /><AccountMenu … /></>}
+  mobileMenuFooter={<AccountSummary name={user.name} />}
+  documentTitle={{ appName: t('Admin') }}
+>
+  {children}
+</AppShell>
+```
+
+- **Crumbs live on the leaf** (`crumbs`): every page below an entry adds its segment there — `create`, `:itemId` with
+  `entity: 'item'`, the tabs as literal children. A page that is only a redirect gets `link: false`. A new entry or
+  segment in the tree gets its crumb and its title for free.
+- **Entity names** come from the host hook with the same arguments as the page's own query (one cache entry, no extra
+  request); while it loads the crumb shows a skeleton, without a name the id.
+- **Rights**: `canAccess` removes what the viewer may not open from the sidebar; the crumb of such a page stays as
+  text. Hiding is presentation — the server refuses the request.
+- **Locks and badges**: `lockedReason` for a commercial lock (the entry stays a link, its page explains), `badge` only
+  for work with a deadline (a zero renders nothing).
+- **Links and pathname** come from the provider (`linkComponent` with `withStickyParams`, `usePathname={useNextPathname}`);
+  the frame imports no router.
+- **Background**: `ShaderBackground` from `./shell-background`, passed as `background`; a host without it never loads
+  it.
+- **Page widths and insets** stay the page's (`PageFrame`, `EntityListPage`): `<main>` has no padding of its own.
+

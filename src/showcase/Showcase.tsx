@@ -11,6 +11,7 @@ import { MediaShowcase } from './sections/MediaShowcase.tsx';
 import { NextShowcase, NotifySonnerShowcase, type NotifySonnerLoader } from './sections/OptionalShowcase.tsx';
 import { PageShowcase } from './sections/PageShowcase.tsx';
 import { PrimitivesShowcase } from './sections/PrimitivesShowcase.tsx';
+import { ShellShowcase } from './sections/ShellShowcase.tsx';
 import { DataShowcase } from './sections/DataShowcase.tsx';
 import { type MarkdownLoader, MarkdownShowcase } from './sections/MarkdownShowcase.tsx';
 import { TranslationAdminShowcase, TranslationsShowcase } from './sections/TranslationsShowcase.tsx';
@@ -46,7 +47,7 @@ export interface ShowcaseProps {
   loadMarkdown?: MarkdownLoader;
   /**
    * Leave out package sections by id (`primitives`, `list`, `page`, `form`, `translations`, `markdown`, `media`,
-   * `workers`, `glass`, `data`, `notify-sonner`, `next`).
+   * `workers`, `glass`, `data`, `shell`, `notify-sonner`, `next`).
    */
   omit?: readonly string[];
   className?: string;
@@ -82,6 +83,7 @@ const packageSections = (
   { id: 'workers', title: './workers', description: 'The worker monitoring screens: overview, transport, runs, processes (SVG charts).', content: <WorkersShowcase /> },
   { id: 'glass', title: './glass', description: 'Glass pills, quick filters, collapsible cards, groups and rows.', content: <GlassShowcase /> },
   { id: 'data', title: './data', description: 'Key figures: metric tiles with a change and a sparkline slot, their grid, notes.', content: <DataShowcase /> },
+  { id: 'shell', title: './shell', description: 'Application frame, breadcrumbs, account and language menus; the animated background of ./shell-background.', content: <ShellShowcase /> },
   {
     id: 'notify-sonner',
     title: './notify-sonner',

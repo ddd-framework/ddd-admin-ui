@@ -7,9 +7,9 @@
 @source './';
 
 /* Layer scale and component defaults. The blocks and primitives stack with `z-(--layer-<name>)`; these are only
-   defaults: zero specificity (`:where`) in the lowest cascade layer (`theme`), so any host declaration of a `--layer-*`
-   or `--segmented-control-*` variable wins, layered or not. Equal overlay / popover values: a later portal paints on
-   top. */
+   defaults: zero specificity (`:where`) in the lowest cascade layer (`theme`), so any host declaration of a `--layer-*`,
+   `--segmented-control-*` or `--sidebar-*` variable wins, layered or not. Equal overlay / popover values: a later
+   portal paints on top. */
 @layer theme {
   :where(:root) {
     --layer-raised: 10;
@@ -20,6 +20,11 @@
        slide of the indicator (no slide with reduced motion). */
     --segmented-control-radius: 9999px;
     --segmented-control-duration: 200ms;
+    /* AppShell: the fixed top bar and sidebar stack under overlays and over sticky page bars; the sidebar column and
+       its icon rail. */
+    --layer-chrome: 30;
+    --sidebar-w: 16rem;
+    --sidebar-rail-w: 5rem;
   }
 }
 
@@ -244,4 +249,23 @@
   margin-inline: -2rem;
   padding-bottom: 2.5rem;
   margin-bottom: -2.5rem;
+}
+
+/* AppShell: from `lg` the content frame reserves the sidebar's width (the icon rail's while `data-shell-collapsed`),
+   on the inline-start side, and follows the column's width animation. */
+@layer components {
+  @media (width >= 64rem) {
+    [data-shell-content] {
+      margin-inline-start: var(--sidebar-w);
+      transition: margin-inline-start 300ms ease-out;
+    }
+    [data-shell-collapsed] [data-shell-content] {
+      margin-inline-start: var(--sidebar-rail-w);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-shell-content] {
+      transition: none;
+    }
+  }
 }

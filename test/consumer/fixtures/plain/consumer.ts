@@ -118,3 +118,27 @@ export const translationsApiOptions: CreateTranslationsApiOptions = {
   paths: { appTranslations: 'appTranslations' },
 };
 export const screenComponents = [WorkersOverviewScreen, LocalesScreen];
+
+// the shell: one navigation tree for sidebar, breadcrumbs and title (types from ./logic), the frame from ./shell
+import { resolveCrumbs, resolveDocumentTitle, type NavigationItem, type ResolvedCrumb } from '@mgamadeus/ddd-admin-ui/logic';
+import { AccountMenu, AppShell, LanguageMenu, ShellBreadcrumbs, type AppShellProps, type UseEntityLabel } from '@mgamadeus/ddd-admin-ui/shell';
+import { ShaderBackground, type ShaderBackgroundProps } from '@mgamadeus/ddd-admin-ui/shell-background';
+import type { UsePathname } from '@mgamadeus/ddd-admin-ui/provider';
+
+export const navigation: NavigationItem<'item'>[] = [
+  { key: 'items', label: 'Items', href: '/items', badge: 2, crumbs: [{ segment: ':itemId', entity: 'item', children: [{ segment: 'details', label: 'Details' }] }] },
+  { key: 'settings', label: 'Settings', children: [{ key: 'users', label: 'Users', href: '/settings/users', lockedReason: 'Upgrade' }] },
+];
+export const useItemLabel: UseEntityLabel<'item'> = ({ entity, id }) => ({ text: `${entity} ${id}`, isLoading: false });
+export const shellProps: Omit<AppShellProps<'item'>, 'children'> = {
+  navigation,
+  useEntityLabel: useItemLabel,
+  canAccess: item => item.key !== 'settings',
+  documentTitle: { appName: 'Admin', depth: 2 },
+  collapseShortcut: null,
+};
+export const crumbs: ResolvedCrumb<'item'>[] = resolveCrumbs('/items/4/details', navigation);
+export const documentTitle: string | null = resolveDocumentTitle('/items/4', navigation, { appName: 'Admin' });
+export const usePathname: UsePathname = () => '/items';
+export const backgroundProps: ShaderBackgroundProps = { tint: { primary: [10, 20, 30] }, idleAfterMs: 30_000 };
+export const shellComponents = [AppShell, ShellBreadcrumbs, AccountMenu, LanguageMenu, ShaderBackground];

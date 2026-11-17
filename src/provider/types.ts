@@ -9,9 +9,11 @@ import type { UrlStateAdapter } from '../logic/pure/urlListState.ts';
 import type { TextLimits } from '../logic/pure/textLimits.ts';
 import type { MediaUploadAdapter } from '../media/types.ts';
 import type { PageLinkComponent } from '../primitives/link.tsx';
+import type { UsePathname } from '../primitives/pathname.tsx';
 import type { MarkdownEditorRenderArgs } from '../translations/TranslatableMarkdown.tsx';
 
 export type { NotificationAdapter, NotifyAction, NotifyOptions } from '../logic/pure/notify.ts';
+export type { UsePathname } from '../primitives/pathname.tsx';
 
 /** Feeds the package's one translation store from a host-owned store. Absent: the host calls `setTranslations`. */
 export interface TranslationAdapter {
@@ -66,6 +68,12 @@ export interface AdminUiProviderProps {
    * `linkComponent` prop still wins. Wrap the router link with `withStickyParams` to keep sticky search parameters.
    */
   linkComponent?: PageLinkComponent;
+  /**
+   * The router's pathname hook for every block that marks the current page (the shell's sidebar, breadcrumbs and
+   * document title): `useNextPathname` from `./next`, or the host's own (a module-level function). Absent:
+   * `location.pathname` after hydration, updated on back / forward only.
+   */
+  usePathname?: UsePathname;
   /**
    * The host's confirmation service behind `useConfirm()` (`(options) => Promise<boolean>`, a stable function); the
    * package dialog does not render then. Absent: the package dialog, one confirmation after the other.

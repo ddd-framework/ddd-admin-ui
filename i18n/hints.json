@@ -285,7 +285,7 @@
   "Default for the country": "Locales admin screen (language + country combinations): column header and switch: the locale is the default one of its country.",
   "Default for the language": "Locales admin screen (language + country combinations): column header and switch: the locale is the default one of its language.",
   "Failed to update the locale": "Locales admin screen (language + country combinations): error toast when saving a change of a locale failed.",
-  "Language": "Locales admin screen (language + country combinations): column header and filter label: the language code of the locale (e.g. de).",
+  "Language": "The word \"language\" in two places: column header and filter label of the locales admin screen (the language code of a locale, e.g. de), and the heading above the list of languages in the language menu of the top bar.",
   "Loading locales": "Locales admin screen (language + country combinations): accessible name of the loading placeholder.",
   "Locale updated": "Locales admin screen (language + country combinations): success toast after a locale was changed.",
   "Locales": "Locales admin screen (language + country combinations): page title.",
@@ -618,5 +618,17 @@
   "{count, plural, one {The # process listed below, from its start to its stop (or now).} other {The # processes listed below, from their start to their stop (or now).}}": "Workers admin, page of one transport (one queue of background jobs): description of the process timeline.",
   "No translation returned for %locale%": "Error of the AI translation of a form: the server returned no translation for %locale% (a content locale key like de::FORMAL).",
   "{count, plural, one {# day} other {# days}}": "Workers admin chart: option of the time window switch: a number of days.",
-  "{count, plural, one {# hour} other {# hours}}": "Workers admin chart: option of the time window switch: a number of hours."
+  "{count, plural, one {# hour} other {# hours}}": "Workers admin chart: option of the time window switch: a number of hours.",
+  "Account menu of %name%": "Accessible name of the round account button at the right end of the top bar; it opens the account menu. %name% is the signed-in person's name.",
+  "Collapse %label%": "Accessible name of the small arrow button next to a navigation group in the sidebar while the group is open: it hides the group's entries. %label% is the group's name.",
+  "Collapse sidebar": "Button at the foot of the left navigation column: shrinks the column to a narrow strip of icons.",
+  "Expand %label%": "Accessible name of the small arrow button next to a navigation group in the sidebar while the group is closed: it shows the group's entries. %label% is the group's name.",
+  "Expand sidebar": "Button at the foot of the narrow icon strip: widens it back to the full navigation column with labels.",
+  "Language: %language%": "The language menu's button in the top bar, and its entry in the account menu: names the current interface language. %language% is the language's own name (Deutsch, Français).",
+  "Main__navigation": "Accessible name of the main navigation (the sidebar and the mobile menu), read by screen readers as a landmark: 'Main navigation'.",
+  "Navigation": "Accessible title of the panel that slides in with the navigation on phones and small windows.",
+  "Open navigation": "Accessible name of the round menu button at the left of the top bar on phones: opens the navigation panel.",
+  "Opens outside this app": "Read by screen readers after a navigation entry that leads to another application or an older screen (a full page load).",
+  "Show full path": "Accessible name of the '…' button in the breadcrumb trail when it is shortened on narrow screens: lists the hidden levels.",
+  "Skip to content": "A link that appears only when it gets keyboard focus, as the first stop on every page: jumps past the navigation to the page content."
 }

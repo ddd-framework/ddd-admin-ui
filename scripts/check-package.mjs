@@ -263,8 +263,11 @@ export function checkPackage(packageDirectory, options = {}) {
       page: ['logic', 'i18n', 'primitives', 'list'],
       primitives: ['i18n'],
       provider: ['logic', 'i18n', 'primitives'],
+      shell: ['logic', 'i18n', 'primitives'],
+      // the animated background: no other entry (a host that does not import it pays nothing)
+      'shell-background': [],
       // the development page: every block entry, never an entry with an optional peer (./next, ./notify-sonner)
-      showcase: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'translations', 'media', 'glass', 'data', 'workers'],
+      showcase: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'translations', 'media', 'glass', 'data', 'workers', 'shell', 'shell-background'],
       // the inputs (form only through fieldLabels and useConfirmDialog) and the admin screens (lists, pages, the key drawer)
       translations: ['logic', 'i18n', 'primitives', 'form', 'list', 'page'],
       // the screens of the worker monitoring; charts are SVG, no chart library

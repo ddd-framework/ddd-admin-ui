@@ -16,6 +16,8 @@ const expectations = {
   // its optional peers are imported only after hydration, so the entry loads without them
   markdown: ['MarkdownEditor', 'MarkdownPreview', 'renderMarkdownEditor'],
   workers: ['createWorkersApi', 'createStaticWorkersApi', 'WorkersOverviewScreen', 'WorkerTransportScreen', 'WORKER_TRANSPORT_STATE'],
+  shell: ['AppShell', 'ShellBreadcrumbs', 'ShellDocumentTitle', 'AccountMenu', 'LanguageMenu', 'useSidebarCollapsed', 'useShellShortcut'],
+  'shell-background': ['ShaderBackground', 'tintShaderPalette'],
 };
 
 let failed = false;

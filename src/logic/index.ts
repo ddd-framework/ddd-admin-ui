@@ -80,6 +80,31 @@ export type {
   ListTrack,
   ListTrackLayout,
 } from './pure/listTracks.ts';
+export {
+  documentTitleParts,
+  filterNavigation,
+  findActiveNavigation,
+  isNavigationGroup,
+  isNavigationGroupActive,
+  isNavigationLeafActive,
+  normalisePathname,
+  resolveCrumbs,
+  resolveDocumentTitle,
+} from './pure/navigation.ts';
+export type {
+  ActiveNavigation,
+  CrumbLabel,
+  CrumbParams,
+  CrumbRoute,
+  DocumentTitleOptions,
+  NavigationAccess,
+  NavigationGroup,
+  NavigationIcon,
+  NavigationItem,
+  NavigationLeaf,
+  ResolveCrumbsOptions,
+  ResolvedCrumb,
+} from './pure/navigation.ts';
 export { narrowWriteAccess, WRITE_ACCESS_ALLOWED } from './pure/writeAccess.ts';
 export type { WriteAccess } from './pure/writeAccess.ts';
 export { toFormSubmitError } from './pure/submitError.ts';
