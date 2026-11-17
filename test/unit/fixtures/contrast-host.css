@@ -1,0 +1,18 @@
+/* A host theme that meets every declared pair in both themes (fixture of test/unit/check-contrast.test.ts). */
+:root {
+  --background: #f6f7f9; --foreground: #14161f; --card: #ffffff; --card-foreground: #14161f;
+  --popover: #ffffff; --popover-foreground: #14161f; --muted-foreground: #555a6e;
+  --primary: #1f4fd1; --primary-foreground: #ffffff; --primary-emphasis: #1f4fd1;
+  --secondary: #e8eaf0; --secondary-foreground: #14161f; --accent: #eef2fd; --accent-foreground: #14161f;
+  --brand: #0f766e; --brand-emphasis: #0f766e; --brand-ink: #0b5a54;
+  --destructive: #b42318; --success: #166534; --warning: #8a4b00; --info: #075985;
+}
+.dark {
+  --background: oklch(18% 0.01 260); --foreground: oklch(97% 0 0); --card: oklch(22% 0.01 260);
+  --card-foreground: oklch(97% 0 0); --popover: oklch(24% 0.01 260); --popover-foreground: oklch(97% 0 0);
+  --muted-foreground: oklch(75% 0.01 260); --primary: #8fb0ff; --primary-foreground: #0b1530;
+  --primary-emphasis: #a9c1ff; --secondary: oklch(30% 0.01 260); --secondary-foreground: oklch(97% 0 0);
+  --accent: oklch(32% 0.03 260); --accent-foreground: oklch(97% 0 0);
+  --brand: #5eead4; --brand-emphasis: #5eead4; --brand-ink: #99f6e4;
+  --destructive: #ff8a80; --success: #86efac; --warning: #fcd34d; --info: #7dd3fc;
+}

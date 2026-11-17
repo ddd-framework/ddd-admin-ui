@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { Button, Label } from '../primitives/index.ts';
 import { useTranslate } from '../i18n/index.ts';
 import { MediaPreview } from './MediaPreview.tsx';
+import { isInlineDescription } from '../primitives/descriptionContent.ts';
 
 export interface MediaItemFieldProps {
   label: ReactNode;
@@ -40,7 +41,12 @@ export const MediaItemField = ({
   <div className="grid gap-2">
     <Label>{label}</Label>
     <MediaPreview src={previewUrl} alt={alt} emptyLabel={emptyLabel} />
-    {description && <p className="text-xs text-muted-foreground">{description}</p>}
+    {description &&
+          (isInlineDescription(description) ? (
+            <p className="text-xs text-muted-foreground">{description}</p>
+          ) : (
+            <div className="text-xs text-muted-foreground">{description}</div>
+          ))}
     <div className="flex gap-2">
       <Button type="button" variant="outline" size="sm" onClick={onOpenPicker} disabled={disabled}>
         {previewUrl ? <RefreshCw aria-hidden /> : <ImagePlus aria-hidden />}

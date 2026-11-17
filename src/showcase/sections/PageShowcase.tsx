@@ -30,6 +30,7 @@ import {
 import { Button, Card, CardContent } from '../../primitives/index.ts';
 import { SHOWCASE_ROWS, SHOWCASE_STATUS, type ShowcaseRow } from './ListShowcase.tsx';
 import { Sample, Samples } from './PrimitivesShowcase.tsx';
+import { PageAdditionsShowcase } from './PageAdditionsShowcase.tsx';
 
 const CHANGE_HISTORY = { createdTime: '2026-01-10 08:30:00', modifiedTime: '2026-03-04 16:45:00' };
 const TABS = [
@@ -187,6 +188,7 @@ export const PageShowcase = () => {
           </PageSections>
         </Sample>
       </Samples>
+      <PageAdditionsShowcase />
     </div>
   );
 };

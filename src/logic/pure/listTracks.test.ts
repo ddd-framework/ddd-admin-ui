@@ -10,6 +10,7 @@ import {
   minimumListWidth,
   resolveListPins,
   shouldHonourStartPins,
+  listTrackLayoutTemplate,
 } from './listTracks.ts';
 
 describe('hasListTracks', () => {
@@ -155,5 +156,30 @@ describe('resolveListPins', () => {
   it('pins nothing on a table without pins', () => {
     const layout = resolveListPins([{}, {}], { widths: [100, 100], visibleWidth: 100, scrollWidth: 400 });
     assert.deepEqual(layout, { placements: [null, null], startPinsHonoured: false });
+  });
+});
+
+describe('content tracks', () => {
+  it('opts into tracks and renders max-content before the measurement', () => {
+    const tracks = [{ width: '1fr' }, { width: 'content' }];
+    assert.equal(hasListTracks(tracks), true);
+    assert.equal(listTrackTemplate(tracks), 'minmax(120px, 1fr) max-content');
+    assert.equal(minimumListWidth(tracks), 120);
+  });
+
+  it('takes the measured width out of the free width and keeps max-content in the template', () => {
+    const tracks = [{ width: '1fr' }, { width: '2fr' }, { width: 'content', contentWidth: 96 }];
+    const layout = computeListTracks(tracks, 696);
+    assert.deepEqual(layout.widths, [200, 400, 96]);
+    assert.equal(layout.overflows, false);
+    assert.equal(listTrackLayoutTemplate(tracks, layout.widths), '200px 400px max-content');
+    assert.equal(minimumListWidth(tracks), 120 + 120 + 96);
+  });
+
+  it('places an end pin with the measured content width', () => {
+    const tracks = [{ width: '1fr' }, { width: 'content', contentWidth: 80 }];
+    const layout = computeListTracks(tracks, 500);
+    const pins = resolveListPins([{}, { pin: 'end' }], { widths: layout.widths, visibleWidth: 500, scrollWidth: layout.scrollWidth });
+    assert.deepEqual(pins.placements[1], { side: 'end', offset: 0, edge: true });
   });
 });

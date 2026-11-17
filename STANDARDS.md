@@ -555,3 +555,107 @@ read `useWriteAccess()` (`disabled={!writeAccess.allowed}`).
 
 It replaces no guard: every write handler keeps its own check (`if (!writeAccess.allowed) return;`), and the server
 checks every request. Without a provider writes are allowed.
+
+## 16. Date presets, bulk menus, column factories, table breakpoint
+
+```tsx
+// A date filter with presets: all time, today, last 7 / 30 days, custom (or the host's list). One write per pick.
+<FilterDateRange label="Created" presets from={list.values.createdFrom} to={list.values.createdTo}
+  onFromChange={value => list.setValue('createdFrom', value)} onToChange={value => list.setValue('createdTo', value)}
+  onRangeChange={range => { list.setValue('createdFrom', range.from); list.setValue('createdTo', range.to); }} />
+
+// Columns from factories: id, sort key and filter are separate inputs; formats are explicit.
+const columns = [
+  idColumn<Order>({ id: 'id', header: 'ID', value: o => o.id, width: '88px' }),
+  textColumn<Order>({ id: 'customer', header: 'Customer', value: o => o.customer?.name, sortKey: 'customer.name', width: '2fr' }),
+  moneyColumn<Order>({ id: 'total', header: 'Total', value: o => o.total, currency: o => o.currency, width: '120px' }),
+  dateColumn<Order>({ id: 'created', header: 'Created', value: o => o.changeHistory?.createdTime, sortKey: 'created', sortStart: 'desc' }),
+  actionsColumn<Order>({ cell: o => <RowActions order={o} /> }),   // width 'content', pinned to the end
+];
+
+// Bulk actions with sub-choices, a confirmation with the count, a hint on a disabled action.
+<EntityListBulkBar selection={selection} moreOnServer={list.hasMore} actions={[
+  { id: 'move', label: 'Move', choices: sections, choicesLabel: 'Move to', onChoose: choice => moveSelected(choice.id),
+    confirm: { title: m('Move %count% rows?'), confirmLabel: m('Move') } },
+  { id: 'activate', label: 'Activate', disabled: allActive, hint: m('Every selected row is active already'), onClick: activate },
+]} />
+```
+
+- **Date presets** write the same `YYYY-MM-DD` bounds as typed dates, so "Clear filters" (both bounds `''`) is "All time"
+  and the URL keeps two keys. The filter derives the preset from the bounds (a range that matches no preset is custom);
+  a host that wants "Last 7 days" to roll forward keeps `preset` / `onPresetChange` itself. "Today" is the viewer's
+  local day (`today` overrides it).
+- **Bulk summaries**: a run returns `skipSequential(reason)` for a row it leaves alone; the toast says
+  `Deleted 3 of 5 tracks · 2 skipped` (or the host's clauses per reason through `skipReasons`). A bulk endpoint's
+  answer uses `bulkSummaryText({ succeeded, failed, skipped }, labels)`.
+- **Factories** return plain `EntityListColumn`s; mix them with hand-written columns. `moneyColumn` requires a currency,
+  `numberColumn` takes explicit `Intl.NumberFormatOptions` or the host's formatter; nothing falls back to a locale
+  default. A column with `width: 'content'` is as wide as its widest cell (a row's actions).
+- **Breakpoint**: a list with cards shows the table from `md`; `tableBreakpoint="lg"` (many columns) or `"always"` on
+  `EntityListBody`, and the same value on `EntityListViewToggle`.
+- **Outside the package toolbar** (a host filter sheet, a custom row): `FilterToggleButton`, `FilterCountBadge`,
+  `ClearFiltersButton` are the toolbar's own controls.
+- `EntityListEmpty`: the built-in "Clear search" is an outline `sm` button (`xs` when compact); give a host `action` the
+  same size, or set `clearSearchSize`.
+- `DateCell` formats in the provider's `formatLocale` when set (a cell's `locale` wins); `ImageCell` takes `bordered`
+  and `objectFit`.
+
+## 17. Translatable texts: language tabs and limits
+
+```tsx
+const tabs = useEntityTranslations({ fields: ['name', 'description'], locales, defaultLocale: 'en::FORMAL',
+  tabModel: 'language', initialLocale: uiLanguageCode });
+
+<FormTranslatableInput<Values> name="translations.name" label="Name" tabs={tabs} maxLength={80} />
+// on submit: refuse when overLimitKeys(values.translations.name, 80).length > 0, then
+focusFirstOverLimitTranslation(formElement);
+```
+
+- **Keys stay full** (`locale::style`, the backend's `#[Translatable]` keys). With `tabModel: 'language'` each tab edits
+  one key, chosen the same way every time (the default locale for its language, else a stored key before an offered
+  one, in `styleOrder`) and named on the tab when it is not FORMAL (`DE · Informal`); the language's other keys stay in
+  the value and go back unchanged. Every loaded key is sent back; a cleared text removes only its key.
+- **Limits** count code points (`countCodePoints`; `countText` for another count). The counter sits under the field, an
+  over-limit tab is marked, the field is `aria-invalid`; nothing is cut and a stored value over the limit stays. The
+  host sets defaults once (`AdminUiProvider textLimits={{ singleLine: 120, multiline: 2000 }}`); a field's
+  `maxLength` wins. The helper searches only the container it gets (the form or dialog that was submitted).
+
+## 18. Key figures — `MetricTile`, `MetricGrid`, `DeltaText`, `NoteList`
+
+```tsx
+<MetricGrid columns={4} isLoading={query.isLoading}>
+  <MetricTile label="Visitors" icon={<Users aria-hidden />} value={formatUiNumber(stats.visitors)}
+    delta={<DeltaText value={relativeChange(stats.visitors, stats.previousVisitors)} format="percent"
+      title="Against the previous 30 days" />}
+    hint={`Previous: ${formatUiNumber(stats.previousVisitors)}`} sparkline={<HostSparkline points={stats.series} />} />
+  <MetricTile label="Errors" value={formatUiNumber(stats.errors)} delta={<DeltaText value={stats.errorChange} preference="lower" />} />
+</MetricGrid>
+<NoteList notes={[{ id: 'sampled', text: 'Figures are sampled every 15 minutes.' }]} />
+```
+
+- Values come formatted (`formatUiNumber`, the host's money formatter); a tile never formats or loads.
+- `DeltaText`: `preference="lower"` where down is good (costs, errors, durations), `"none"` where neither side is;
+  zero is neutral; `format="percent"` takes a fraction (`relativeChange`), a currency passes its code explicitly.
+  Arrow, sign and a hidden word carry the direction, never the colour alone.
+- The sparkline is the host's chart in the `sparkline` slot; the package ships no chart library.
+- Notes qualify the figures (sampling, a missing source); a state of the page is a `StatusCallout`.
+- After a palette change run `ddd-admin-ui-check-contrast <built css>`: the declared pairs must reach AA in both themes.
+
+## 19. Markdown, route states, image crop, colour values, the drawer beside the page
+
+- **Markdown fields**: `renderEditor={renderMarkdownEditor({ rows: 12 })}` from `./markdown` (or once as
+  `AdminUiProvider.renderMarkdownEditor`); read-only text: `MarkdownPreview`, the same sanitising (raw HTML parsed, then
+  GitHub's rules plus images; a single newline is a line break). Never `dangerouslySetInnerHTML` for user markdown.
+- **Route states**: Next `error.tsx` renders `<RouteError onRetry={reset} onReport={host report} />` inside the shell;
+  `loading.tsx` renders `<RouteLoading variant="list" | "detail" | "form" />`. Layouts above them stay mounted.
+- **Image crop**: a picked image goes through `ImageCropDialog` (aspect options from the host, `allowSkip` for "Use
+  original"); `onResult` gives a blob for the host's upload adapter. Minimum sizes and per-use presets are checked by the
+  host on the result; heavy normalisation can run in a host worker through `output.runInWorker`, whose worker calls
+  `renderNormalizedImage`.
+- **Colour values**: `ColorValueField` with an explicit `format` (`hex`, or `hex-alpha` when the backend stores an
+  alpha); it writes normalised values only (`#rrggbb` / `#rrggbbaa`), `null` for none with `clearable`.
+- **Master-detail drawer**: `FormDrawer modal={false}` from `md` up (`nonModalFrom`) sits beside the page without an
+  overlay; the page stays clickable, picking another row swaps the drawer's content, a click outside never closes it.
+  Below that width it is the modal drawer.
+- **Server texts in pickers**: `translate={false}` on `Combobox`, `QuickFilterPills` or `SegmentedControl` (and per
+  option) for names from the server; UI texts stay translated.

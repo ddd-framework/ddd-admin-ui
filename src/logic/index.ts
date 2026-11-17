@@ -34,8 +34,22 @@ export type { TranslatableLocale } from './pure/locales.ts';
 export { INTERACTIVE_SELECTOR } from './pure/rowActivation.ts';
 export { notify, setNotificationAdapter } from './pure/notify.ts';
 export type { NotificationAdapter, NotifyAction, NotifyOptions } from './pure/notify.ts';
-export { runSequential, runSequentialWithSummary } from './pure/runSequential.ts';
-export type { SequentialFailure, SequentialOutcome, SequentialSummaryLabels } from './pure/runSequential.ts';
+export {
+  bulkOutcomeCounts,
+  bulkSummaryText,
+  runSequential,
+  runSequentialWithSummary,
+  skipSequential,
+  summarizeSkipReasons,
+} from './pure/runSequential.ts';
+export type {
+  BulkOutcomeCounts,
+  SequentialFailure,
+  SequentialOutcome,
+  SequentialSkip,
+  SequentialSkipMark,
+  SequentialSummaryLabels,
+} from './pure/runSequential.ts';
 export { mediaItemValueSchema, propertyTranslationsSchema } from './pure/schemas.ts';
 export type { MediaItemValue } from './pure/schemas.ts';
 export { parseValidationErrors } from './pure/serverViolations.ts';
@@ -123,3 +137,54 @@ export { prepareImageFile } from './browser/prepareImageFile.ts';
 export type { PreparedImage } from './browser/prepareImageFile.ts';
 export { buildStorageKey, readStored, writeStored } from './browser/storage.ts';
 export type { StorageArea } from './browser/storage.ts';
+
+// Lists, bulk runs, date ranges, translatable limits, images (0.2.0)
+export {
+  addCalendarDays,
+  CUSTOM_DATE_RANGE_PRESET,
+  DEFAULT_DATE_RANGE_PRESETS,
+  dateRangePresetOf,
+  localToday,
+  resolveDateRangePreset,
+} from './pure/dateRangePresets.ts';
+export type { DateRange, DateRangePreset } from './pure/dateRangePresets.ts';
+export { isContentTrack, listTrackLayoutTemplate } from './pure/listTracks.ts';
+export { mergeLanguageTabs, translationLanguageOf } from './pure/locales.ts';
+export type { LanguageTabsOptions } from './pure/locales.ts';
+export { countCodePoints, overLimitKeys } from './pure/textLimits.ts';
+export type { TextCounter, TextLimits } from './pure/textLimits.ts';
+export { TextLimitsContext, useTextLimits } from './react/textLimits.ts';
+export { BREAKPOINT_QUERIES, useMediaQuery } from './react/useMediaQuery.ts';
+export type { BreakpointName } from './react/useMediaQuery.ts';
+export {
+  chooseImageOutputType,
+  cropHandleAt,
+  cropRatioOf,
+  fitImageSize,
+  initialCrop,
+  moveCrop,
+  planImageNormalization,
+  resizeCrop,
+  roundCrop,
+  zoomCrop,
+} from './pure/imageCrop.ts';
+export type {
+  CropAspectOption,
+  CropHandle,
+  CropRect,
+  ImageNormalizationPlan,
+  ImageOutputType,
+  ImageSizeLimits,
+  PlanImageNormalizationOptions,
+  ResizeCropOptions,
+} from './pure/imageCrop.ts';
+export { decodeImage, ImageNormalizeError, isImageNormalizeError, normalizeImage, renderNormalizedImage } from './browser/normalizeImage.ts';
+export type {
+  DecodedImage,
+  ImageNormalizeErrorCode,
+  NormalizedImage,
+  NormalizeImageOptions,
+  NormalizeImageWorkerRunner,
+} from './browser/normalizeImage.ts';
+export { formatHexColor, normalizeColorValue, parseHexColor } from './pure/colorValue.ts';
+export type { ColorValueFormat, RgbaValue } from './pure/colorValue.ts';

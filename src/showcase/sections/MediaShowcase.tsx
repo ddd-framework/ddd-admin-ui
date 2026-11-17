@@ -8,6 +8,7 @@ import type { MediaItemValue } from '../../logic/index.ts';
 import { FormMediaItemField, MediaItemField, MediaItemPickerDialog, type MediaPickerTile, MediaPreview } from '../../media/index.ts';
 import { Button } from '../../primitives/index.ts';
 import { Sample, Samples } from './PrimitivesShowcase.tsx';
+import { MediaCropShowcase } from './MediaCropShowcase.tsx';
 
 /** A neutral placeholder image (inline SVG), so the showcase loads nothing from the network. */
 const PLACEHOLDER = `data:image/svg+xml;utf8,${encodeURIComponent(
@@ -71,6 +72,9 @@ export const MediaShowcase = () => {
           hasMore={false}
           onLoadMore={() => {}}
         />
+      </Sample>
+      <Sample title="ImageCropDialog">
+        <MediaCropShowcase />
       </Sample>
     </Samples>
   );

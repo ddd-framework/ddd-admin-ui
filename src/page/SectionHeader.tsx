@@ -6,6 +6,7 @@ import { useTranslate } from '../i18n/index.ts';
 import { cn } from '../primitives/cn.ts';
 import { type EntityTab, EntityTabs } from './EntityTabs.tsx';
 import type { PageLinkComponent } from '../primitives/link.tsx';
+import { isInlineDescription } from '../primitives/descriptionContent.ts';
 
 export interface SectionHeaderProps {
   /** The section title; a two-tone title wraps its brand part in `<em>` (`Top <em>riders</em>`). */
@@ -53,7 +54,12 @@ export const SectionHeader = ({
         >
           {title}
         </Heading>
-        {description && <p className="mt-0.5 text-[13px] text-muted-foreground">{description}</p>}
+        {description &&
+          (isInlineDescription(description) ? (
+            <p className="mt-0.5 text-[13px] text-muted-foreground">{description}</p>
+          ) : (
+            <div className="mt-0.5 text-[13px] text-muted-foreground">{description}</div>
+          ))}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>

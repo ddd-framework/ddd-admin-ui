@@ -6,6 +6,7 @@ import type { NotificationAdapter } from '../logic/pure/notify.ts';
 import type { ConfirmOptions } from '../logic/pure/confirm.ts';
 import type { EntityDrawerUrlAdapter } from '../logic/pure/entityDrawer.ts';
 import type { UrlStateAdapter } from '../logic/pure/urlListState.ts';
+import type { TextLimits } from '../logic/pure/textLimits.ts';
 import type { MediaUploadAdapter } from '../media/types.ts';
 import type { PageLinkComponent } from '../primitives/link.tsx';
 import type { MarkdownEditorRenderArgs } from '../translations/TranslatableMarkdown.tsx';
@@ -70,6 +71,16 @@ export interface AdminUiProviderProps {
    * package dialog does not render then. Absent: the package dialog, one confirmation after the other.
    */
   confirm?: (options: ConfirmOptions) => Promise<boolean>;
+  /**
+   * The `Intl` locale date cells format in (`de-CH`, `en-US`) when it differs from the UI language's; a cell's own
+   * `locale` wins. Absent: the UI language.
+   */
+  formatLocale?: string;
+  /**
+   * Default length limits (code points) of translatable text fields by kind: `singleLine` for inputs, `multiline` for
+   * text areas and markdown; a field's `maxLength` wins. Absent: no limit.
+   */
+  textLimits?: TextLimits;
 }
 
 export interface AdminUiContextValue extends Required<Pick<AdminUiProviderProps, 'storageKey'>> {

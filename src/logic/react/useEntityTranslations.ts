@@ -3,7 +3,9 @@
 import type { TranslationInfos, TranslationsStore } from '@mgamadeus/ddd-web/contract';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
-import { mergeLocaleKeys, type TranslatableLocale } from '../pure/locales.ts';
+import type { WritingStyle } from '@mgamadeus/ddd-web/contract';
+
+import { mergeLanguageTabs, mergeLocaleKeys, type TranslatableLocale, translationLanguageOf } from '../pure/locales.ts';
 import {
   blankTranslations,
   buildTranslationInfos,
@@ -22,6 +24,20 @@ export interface UseEntityTranslationsOptions<F extends string> {
    * `en::FORMAL`). Also written as `default/currentLanguageCode` + `…WritingStyle` into the payload.
    */
   defaultLocale: string;
+  /**
+   * `key` (default): one tab per full `locale::style` key. `language`: one tab per language, each editing one key
+   * chosen deterministically (`mergeLanguageTabs`: the default locale for its language, else a stored key before an
+   * offered one, in `styleOrder`) and named on the tab when it is not FORMAL; the language's other keys stay in the
+   * value and go back in the payload. Either way every loaded key is sent back and a cleared text removes only its key.
+   */
+  tabModel?: 'key' | 'language';
+  /** Tab model `language`: the writing style a language tab edits first (default: the default locale's, then FORMAL). */
+  styleOrder?: readonly WritingStyle[];
+  /**
+   * The tab the form opens on when it is offered: a full key or a language (`de`, the editor's UI language); else the
+   * default locale.
+   */
+  initialLocale?: string;
 }
 
 /** The tab state every translatable field of one form shares (pass it to `FormTranslatableInput`). */
@@ -71,18 +87,33 @@ export const useEntityTranslations = <F extends string>({
   fields,
   locales: offeredLocales,
   defaultLocale,
+  tabModel = 'key',
+  styleOrder,
+  initialLocale,
 }: UseEntityTranslationsOptions<F>): UseEntityTranslationsReturn<F> => {
   /** Store entries of translatable properties this form does not edit: sent back unchanged. */
   const passthroughRef = useRef<TranslationsStore>({});
   const [storedKeys, setStoredKeys] = useState<string[]>([]);
   const [selectedLocale, setActiveLocale] = useState<string | null>(null);
 
+  const styleSignature = styleOrder?.join('|') ?? '';
+  // biome-ignore lint/correctness/useExhaustiveDependencies: styleSignature stands for styleOrder (an inline array)
   const locales = useMemo(
-    () => mergeLocaleKeys(defaultLocale, offeredLocales, storedKeys),
-    [defaultLocale, offeredLocales, storedKeys]
+    () =>
+      tabModel === 'language'
+        ? mergeLanguageTabs(defaultLocale, offeredLocales, storedKeys, { styleOrder })
+        : mergeLocaleKeys(defaultLocale, offeredLocales, storedKeys),
+    [tabModel, defaultLocale, offeredLocales, storedKeys, styleSignature]
   );
-  const activeLocale =
-    selectedLocale && locales.some(locale => locale.key === selectedLocale) ? selectedLocale : defaultLocale;
+  /** The tab of a key or a language: the exact key, else (tab model `language`) the tab of its language. */
+  const tabOf = (wanted: string | null | undefined) => {
+    if (!wanted) return undefined;
+    const exact = locales.find(locale => locale.key === wanted);
+    if (exact) return exact.key;
+    const language = wanted.includes(':') ? translationLanguageOf(wanted) : wanted;
+    return tabModel === 'language' ? locales.find(locale => translationLanguageOf(locale.key) === language)?.key : undefined;
+  };
+  const activeLocale = tabOf(selectedLocale) ?? tabOf(initialLocale) ?? tabOf(defaultLocale) ?? defaultLocale;
 
   const empty = useCallback(() => blankTranslations(fields), [fields]);
 

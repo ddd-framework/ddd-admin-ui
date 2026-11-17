@@ -13,12 +13,14 @@ import { type EntityListSort, type ListSortDirection, nextListSort } from '../lo
 import {
   computeListTracks,
   hasListTracks,
+  isContentTrack,
   type ListColumnAlign,
   type ListColumnPin,
   type ListColumnWidth,
   type ListPinPlacement,
   type ListPinRequest,
   type ListTrack,
+  listTrackLayoutTemplate,
   listTrackTemplate,
   minimumListWidth,
   resolveListPins,
@@ -35,8 +37,9 @@ export interface EntityListColumn<TItem> {
   /** Classes of the column's header and body cells. In a table with tracks a width class does not size the column. */
   className?: string;
   /**
-   * Track of the column: a share of the free width (`'1fr'`, `'2fr'`) or a fixed length (`'120px'`). One column with a
-   * width gives every column a track (default `'1fr'`); without any width the table sizes its columns by content.
+   * Track of the column: a share of the free width (`'1fr'`, `'2fr'`), a fixed length (`'120px'`) or `'content'` (as
+   * wide as its widest cell: a row's actions, pinned or not). One column with a width gives every column a track
+   * (default `'1fr'`); without any width the table sizes its columns by content.
    */
   width?: ListColumnWidth;
   /** Lower bound in px of a share column (default 120). The table scrolls sideways inside its card instead of squeezing. */
@@ -329,6 +332,8 @@ export const EntityListTable = <TItem,>({
   const sized = hasListTracks(columns);
   const usesLayout = sized || showRowIndex || columns.some(column => column.pin !== undefined);
   const trackSignature = tracks.map(track => `${track.width ?? ''}/${track.minWidth ?? ''}`).join(' ');
+  // `'content'` tracks: their header cells are measured like the cells of a content-sized table
+  const measuresCells = !sized || tracks.some(isContentTrack);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const headerRowRef = useRef<HTMLTableRowElement>(null);
@@ -354,9 +359,9 @@ export const EntityListTable = <TItem,>({
         setMeasure(previous => (previous === null ? previous : null));
         return;
       }
-      const cellWidths = sized
-        ? []
-        : Array.from(headerRowRef.current?.children ?? [], cell => cell.getBoundingClientRect().width);
+      const cellWidths = measuresCells
+        ? Array.from(headerRowRef.current?.children ?? [], cell => cell.getBoundingClientRect().width)
+        : [];
       const next = { visibleWidth, scrollWidth: scroller.scrollWidth, cellWidths };
       setMeasure(previous => (sameMeasure(previous, next) ? previous : next));
       syncScrollEdges();
@@ -365,7 +370,7 @@ export const EntityListTable = <TItem,>({
     observer.observe(scroller);
     const table = scroller.querySelector('table');
     if (table) observer.observe(table);
-    if (!sized) for (const cell of Array.from(headerRowRef.current?.children ?? [])) observer.observe(cell);
+    if (measuresCells) for (const cell of Array.from(headerRowRef.current?.children ?? [])) observer.observe(cell);
     scroller.addEventListener('scroll', syncScrollEdges, { passive: true });
     read();
     return () => {
@@ -374,7 +379,7 @@ export const EntityListTable = <TItem,>({
       scroller.removeAttribute('data-list-overflow-start');
       scroller.removeAttribute('data-list-overflow-end');
     };
-  }, [usesLayout, sized, trackSignature]);
+  }, [usesLayout, sized, measuresCells, trackSignature]);
 
   let gridStyle: CSSProperties | undefined;
   let placements: (ListPinPlacement | null)[] | null = null;
@@ -384,7 +389,11 @@ export const EntityListTable = <TItem,>({
       ...columns.map(column => ({ pin: column.pin })),
     ];
     if (sized) {
-      const computed = measure ? computeListTracks(tracks, measure.visibleWidth) : null;
+      const measuredTracks = tracks.map((track, index) =>
+        isContentTrack(track) ? { ...track, contentWidth: measure?.cellWidths[index] } : track
+      );
+      const contentKnown = measure !== null && (measure.cellWidths.length === tracks.length || !tracks.some(isContentTrack));
+      const computed = measure && contentKnown ? computeListTracks(measuredTracks, measure.visibleWidth) : null;
       const fixedWidths = tracks.map(track => (track.width?.endsWith('px') ? Number.parseFloat(track.width) : null));
       placements = resolveListPins(pinRequests, {
         widths: computed?.widths ?? fixedWidths,
@@ -392,7 +401,7 @@ export const EntityListTable = <TItem,>({
         scrollWidth: computed?.scrollWidth ?? null,
       }).placements;
       gridStyle = computed
-        ? { gridTemplateColumns: computed.widths.map(width => `${width}px`).join(' '), minWidth: computed.scrollWidth }
+        ? { gridTemplateColumns: listTrackLayoutTemplate(measuredTracks, computed.widths), minWidth: computed.scrollWidth }
         : { gridTemplateColumns: listTrackTemplate(tracks), minWidth: minimumListWidth(tracks) };
     } else {
       const measured = measure && measure.cellWidths.length === tracks.length ? measure : null;

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { cn } from '../primitives/cn.ts';
+import { isInlineDescription } from '../primitives/descriptionContent.ts';
 
 /**
  * The one page inset: 16 px on a phone, 24 px from `sm`, 32 px from `lg`; 16 / 24 / 32 px top
@@ -40,7 +41,12 @@ export const PageHeader = ({ title, description, actions, leading, align = 'star
       {leading}
       <div className="min-w-0">
         <h1 className="text-title-page font-semibold tracking-tight break-words">{title}</h1>
-        {description && <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>}
+        {description &&
+          (isInlineDescription(description) ? (
+            <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>
+          ) : (
+            <div className="mt-1.5 text-sm text-muted-foreground">{description}</div>
+          ))}
       </div>
     </div>
     {actions && (

@@ -32,7 +32,19 @@ export interface EntityListBodyProps<TItem, TExtra extends string = never>
    * search, filters and clear button out when they do not act on it.
    */
   renderOwnView?: (mode: TExtra) => ReactNode | undefined;
+  /**
+   * From which width the table view shows a table (a list with `renderCard`): `md` (default), `lg` (a table with many
+   * columns that is cramped at `md`), or `always` (the table at every width, no cards for it). Pass the same value to
+   * `EntityListViewToggle`.
+   */
+  tableBreakpoint?: ListTableBreakpoint;
 }
+
+/** Where the table view of a list with cards switches between cards (below) and the table (from it on). */
+export type ListTableBreakpoint = 'md' | 'lg' | 'always';
+
+const TABLE_FROM_CLASS = { md: 'hidden md:block', lg: 'hidden lg:block' } as const;
+const CARDS_BELOW_CLASS = { md: 'md:hidden', lg: 'lg:hidden' } as const;
 
 const isExtraMode = <TExtra extends string>(mode: ListDisplayMode | TExtra): mode is TExtra =>
   mode !== 'table' && mode !== 'grid';
@@ -57,6 +69,7 @@ export const EntityListBody = <TItem, TExtra extends string = never>({
   showRowIndex,
   rowClassName,
   className,
+  tableBreakpoint = 'md',
   ...data
 }: EntityListBodyProps<TItem, TExtra>) => {
   if (isExtraMode(displayMode) && renderOwnView) {
@@ -75,7 +88,7 @@ export const EntityListBody = <TItem, TExtra extends string = never>({
       />
     );
   }
-  if (!renderCard) {
+  if (!renderCard || (tableBreakpoint === 'always' && displayMode !== 'grid')) {
     return (
       <EntityListTable
         {...data}
@@ -98,9 +111,15 @@ export const EntityListBody = <TItem, TExtra extends string = never>({
         columns={columns}
         skeletonRows={skeletonRows}
         selection={selection}
-        className={cn('hidden md:block', className)}
+        className={cn(TABLE_FROM_CLASS[tableBreakpoint as 'md' | 'lg'], className)}
       />
-      <EntityListGrid {...data} renderCard={renderCard} skeletonCards={skeletonCards} isGridView={false} className={cn('md:hidden', className)} />
+      <EntityListGrid
+        {...data}
+        renderCard={renderCard}
+        skeletonCards={skeletonCards}
+        isGridView={false}
+        className={cn(CARDS_BELOW_CLASS[tableBreakpoint as 'md' | 'lg'], className)}
+      />
     </>
   );
 };

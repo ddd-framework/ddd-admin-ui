@@ -39,3 +39,4 @@ export type {
   TranslationTaskProgress,
   TranslationTaskStatus,
 } from '../logic/react/useTranslationRunner.ts';
+export { focusFirstOverLimitTranslation } from './focusOverLimit.ts';

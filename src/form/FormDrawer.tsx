@@ -12,6 +12,7 @@ import { EntityMetadata } from '../page/EntityMetadata.tsx';
 import { type DrawerFooterSlot, DrawerFooterSlotContext, DrawerSurfaceContext } from './drawerSlots.ts';
 import { useConfirmDialog } from './useConfirmDialog.tsx';
 import { type ConfirmFn, UnsavedChangesContext, useUnsavedChangesBoundary } from '../logic/react/useUnsavedChangesGuard.ts';
+import { BREAKPOINT_QUERIES, useMediaQuery } from '../logic/react/useMediaQuery.ts';
 
 export interface FormDrawerProps {
   open: boolean;
@@ -34,6 +35,16 @@ export interface FormDrawerProps {
    * (`useConfirmDialog`). Pass a stable function; its dialog must use the same Radix copy as the drawer.
    */
   confirm?: ConfirmFn;
+  /**
+   * `false`: side by side with the page from `nonModalFrom` up (master-detail: picking another row swaps the drawer's
+   * content): no overlay, the page stays clickable and scrollable, a click outside never closes it; Esc and the ✕ still
+   * ask before discarding. Below that width (and before hydration) it is the modal drawer. Default `true`.
+   */
+  modal?: boolean;
+  /** From which width `modal={false}` applies (default `md`; `always` at every width). */
+  nonModalFrom?: 'md' | 'lg' | 'always';
+  /** Classes of the panel while it is side by side (default width: up to 460 px from `sm`). */
+  nonModalClassName?: string;
   children: ReactNode;
 }
 
@@ -51,9 +62,14 @@ export const FormDrawer = ({
   metadata,
   headerActions,
   confirm: hostConfirm,
+  modal = true,
+  nonModalFrom = 'md',
+  nonModalClassName,
   children,
 }: FormDrawerProps) => {
   const { t } = useTranslate();
+  const wideEnough = useMediaQuery(nonModalFrom === 'always' ? 'all' : BREAKPOINT_QUERIES[nonModalFrom]);
+  const sideBySide = !modal && wideEnough;
   const hasMetadata = metadata !== undefined && metadata.id !== null && metadata.id !== undefined && metadata.id !== '';
   const packageConfirm = useConfirmDialog();
   const { registry, guardClose } = useUnsavedChangesBoundary(hostConfirm ?? packageConfirm.confirm);
@@ -71,13 +87,20 @@ export const FormDrawer = ({
         onOpenChange={isOpen => {
           if (!isOpen) void guardClose(onClose);
         }}
+        {...(sideBySide ? { modal: false } : {})}
       >
         <SheetContent
           side="right"
           showCloseButton={false}
-          className="flex w-full flex-col gap-0 overflow-hidden bg-card p-0 sm:max-w-[760px]"
+          className={
+            sideBySide
+              ? cn('flex w-full flex-col gap-0 overflow-hidden bg-card p-0 sm:max-w-[460px]', nonModalClassName)
+              : 'flex w-full flex-col gap-0 overflow-hidden bg-card p-0 sm:max-w-[760px]'
+          }
           // Radix warns about a missing description; the title alone names the drawer.
           {...(description ? {} : { 'aria-describedby': undefined })}
+          // side by side: the page beside it stays usable, so neither a click nor the focus outside closes it
+          {...(sideBySide ? { onInteractOutside: (event: Event) => event.preventDefault(), 'data-drawer-mode': 'side-by-side' } : {})}
         >
           <SheetHeader className="flex shrink-0 flex-row items-start gap-3 space-y-0 border-b p-6 text-left">
             <SheetClose asChild>

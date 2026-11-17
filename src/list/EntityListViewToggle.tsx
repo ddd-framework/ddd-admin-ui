@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../primitives/index.ts';
 import { m, useTranslate } from '../i18n/index.ts';
 import { cn } from '../primitives/cn.ts';
+import type { ListTableBreakpoint } from './EntityListBody.tsx';
 import type { ListDisplayMode, ListExtraView } from './types.ts';
 
 export interface EntityListViewToggleProps<TExtra extends string = never> {
@@ -16,6 +17,8 @@ export interface EntityListViewToggleProps<TExtra extends string = never> {
   /** The list's own views after Grid / Table (`ListExtraView`); with them the switch shows on a phone too. */
   extraViews?: readonly ListExtraView<TExtra>[];
   className?: string;
+  /** The body's `tableBreakpoint`: below it the list shows cards, so the switch hides there (`always`: never hides). */
+  tableBreakpoint?: ListTableBreakpoint;
 }
 
 interface ToggleOption<TMode extends string> {
@@ -35,6 +38,16 @@ const TABLE_OPTION = { value: 'table', label: m('Table view'), icon: <List /> } 
 const SELECTED_CLASS = 'bg-segment-active text-foreground shadow-[var(--surface-shadow)]';
 /** The same pill, phone only: Grid stands for Table there, because a list with a card shows cards below `md`. */
 const SELECTED_ON_PHONE_CLASS = 'max-md:bg-segment-active max-md:text-foreground max-md:shadow-[var(--surface-shadow)]';
+/** Per `tableBreakpoint`: the switch's own visibility, the Table button's, and Grid marked for Table below it. */
+const BREAKPOINT_CLASSES = {
+  md: { toggle: 'hidden md:inline-flex', table: 'max-md:hidden', selectedBelow: SELECTED_ON_PHONE_CLASS },
+  lg: {
+    toggle: 'hidden lg:inline-flex',
+    table: 'max-lg:hidden',
+    selectedBelow: 'max-lg:bg-segment-active max-lg:text-foreground max-lg:shadow-[var(--surface-shadow)]',
+  },
+  always: { toggle: 'inline-flex', table: undefined, selectedBelow: undefined },
+} as const;
 
 /**
  * The Grid / Table switch at the end of the toolbar row (a segmented control, icon-only, 32 px). Desktop only: below `md` the list always shows cards, so the switch would change nothing. With
@@ -47,16 +60,18 @@ export const EntityListViewToggle = <TExtra extends string = never>({
   showGridToggle = true,
   extraViews = [],
   className,
+  tableBreakpoint = 'md',
 }: EntityListViewToggleProps<TExtra>) => {
   const { t } = useTranslate();
+  const breakpoint = BREAKPOINT_CLASSES[tableBreakpoint];
   const hasExtraViews = extraViews.length > 0;
   if (!showGridToggle && !hasExtraViews) return null;
 
   const options: ToggleOption<ListDisplayMode | TExtra>[] = [
     ...(showGridToggle
       ? [
-          { ...GRID_OPTION, selectedClassName: hasExtraViews ? SELECTED_ON_PHONE_CLASS : undefined },
-          { ...TABLE_OPTION, className: hasExtraViews ? 'max-md:hidden' : undefined },
+          { ...GRID_OPTION, selectedClassName: hasExtraViews ? breakpoint.selectedBelow : undefined },
+          { ...TABLE_OPTION, className: hasExtraViews ? breakpoint.table : undefined },
         ]
       : [TABLE_OPTION]),
     ...extraViews,
@@ -67,7 +82,7 @@ export const EntityListViewToggle = <TExtra extends string = never>({
       <fieldset
         className={cn(
           'h-8 shrink-0 items-center gap-0.5 rounded-full bg-tint p-0.5',
-          hasExtraViews ? 'inline-flex' : 'hidden md:inline-flex',
+          hasExtraViews ? 'inline-flex' : breakpoint.toggle,
           className
         )}
       >

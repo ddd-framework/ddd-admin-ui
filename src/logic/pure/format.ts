@@ -9,10 +9,11 @@ export const EMPTY_MARKER = '—';
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 // Formatters in the UI language, fetched at format time so a language switch takes effect (cached per locale).
-const dateTimeFormat = () => uiDateTimeFormat({ dateStyle: 'medium', timeStyle: 'short' });
-const dateFormat = () => uiDateTimeFormat({ dateStyle: 'medium' });
-const calendarDayFormat = () => uiDateTimeFormat({ dateStyle: 'medium', timeZone: 'UTC' });
-const relativeFormat = () => uiRelativeTimeFormat({ numeric: 'auto' });
+// `locale`: an explicit `Intl` locale (a cell's `locale`, the provider's `formatLocale`); absent = the UI language.
+const dateTimeFormat = (locale?: string) => uiDateTimeFormat({ dateStyle: 'medium', timeStyle: 'short' }, locale);
+const dateFormat = (locale?: string) => uiDateTimeFormat({ dateStyle: 'medium' }, locale);
+const calendarDayFormat = (locale?: string) => uiDateTimeFormat({ dateStyle: 'medium', timeZone: 'UTC' }, locale);
+const relativeFormat = (locale?: string) => uiRelativeTimeFormat({ numeric: 'auto' }, locale);
 
 const RELATIVE_STEPS: [Intl.RelativeTimeFormatUnit, number][] = [
   ['year', 365 * 24 * 3600],
@@ -31,26 +32,26 @@ export const isDddDateOnly = (value: string | null | undefined): boolean => !!va
  * `EntityMetadata` format, used by every date column. A plain date (`Y-m-d`) prints without a time. Empty → the
  * fallback (`—`); an unparsable value is shown as stored, never hidden.
  */
-export const formatDateTime = (value: string | null | undefined, fallback: string = EMPTY_MARKER): string => {
+export const formatDateTime = (value: string | null | undefined, fallback: string = EMPTY_MARKER, locale?: string): string => {
   if (!value) return fallback;
-  if (isDddDateOnly(value)) return formatDate(value, fallback);
+  if (isDddDateOnly(value)) return formatDate(value, fallback, locale);
   const date = parseDddDateTime(value);
-  return date ? dateTimeFormat().format(date) : value;
+  return date ? dateTimeFormat(locale).format(date) : value;
 };
 
 /** The day of a backend date or date-time (`Nov 1, 2026`); a plain `Y-m-d` is the calendar day as stored. */
-export const formatDate = (value: string | null | undefined, fallback: string = EMPTY_MARKER): string => {
+export const formatDate = (value: string | null | undefined, fallback: string = EMPTY_MARKER, locale?: string): string => {
   if (!value) return fallback;
   const date = parseDddDateTime(value);
   if (!date) return value;
-  return isDddDateOnly(value) ? calendarDayFormat().format(date) : dateFormat().format(date);
+  return isDddDateOnly(value) ? calendarDayFormat(locale).format(date) : dateFormat(locale).format(date);
 };
 
 /** `in 3 days`, `2 hours ago`, `now` (the hover text of date cells and `EntityMetadata`). */
-export const formatRelativeTime = (date: Date, now: number = Date.now()): string => {
+export const formatRelativeTime = (date: Date, now: number = Date.now(), locale?: string): string => {
   const seconds = Math.round((date.getTime() - now) / 1000);
   for (const [unit, size] of RELATIVE_STEPS) {
-    if (Math.abs(seconds) >= size) return relativeFormat().format(Math.round(seconds / size), unit);
+    if (Math.abs(seconds) >= size) return relativeFormat(locale).format(Math.round(seconds / size), unit);
   }
-  return relativeFormat().format(0, 'minute');
+  return relativeFormat(locale).format(0, 'minute');
 };

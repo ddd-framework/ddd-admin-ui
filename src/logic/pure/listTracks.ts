@@ -3,8 +3,11 @@
  * applies what these return. Nothing here reads the DOM.
  */
 
-/** Width of a column track: a share of the free width (`'1fr'`, `'2fr'`) or a fixed length (`'120px'`). */
-export type ListColumnWidth = `${number}fr` | `${number}px`;
+/**
+ * Width of a column track: a share of the free width (`'1fr'`, `'2fr'`), a fixed length (`'120px'`) or `'content'`
+ * (as wide as its widest cell, e.g. a row's action buttons: CSS `max-content`, measured after hydration).
+ */
+export type ListColumnWidth = `${number}fr` | `${number}px` | 'content';
 
 /** Edge a column stays at while the table scrolls sideways. */
 export type ListColumnPin = 'start' | 'end';
@@ -30,14 +33,23 @@ export interface ListTrack {
   width?: string;
   /** Lower bound in px of a share track (default `LIST_COLUMN_MIN_WIDTH`); a fixed track keeps its length. */
   minWidth?: number;
+  /** The measured width (px) of a `'content'` track; unknown counts as 0. */
+  contentWidth?: number;
 }
 
-type ParsedTrack = { kind: 'fixed'; length: number } | { kind: 'share'; factor: number; minimum: number };
+type ParsedTrack =
+  | { kind: 'fixed'; length: number }
+  | { kind: 'content'; length: number }
+  | { kind: 'share'; factor: number; minimum: number };
+
+/** A `'content'` track: sized by its widest cell. */
+export const isContentTrack = (track: ListTrack): boolean => track.width?.trim() === 'content';
 
 const FIXED = /^(\d+(?:\.\d+)?|\.\d+)px$/;
 const SHARE = /^(\d+(?:\.\d+)?|\.\d+)fr$/;
 
-const parseTrack = ({ width, minWidth }: ListTrack): ParsedTrack => {
+const parseTrack = ({ width, minWidth, contentWidth }: ListTrack): ParsedTrack => {
+  if (width?.trim() === 'content') return { kind: 'content', length: Math.max(0, contentWidth ?? 0) };
   const fixed = width ? FIXED.exec(width.trim()) : null;
   if (fixed) return { kind: 'fixed', length: Number(fixed[1]) };
   const share = width ? SHARE.exec(width.trim()) : null;
@@ -56,7 +68,7 @@ export const hasListTracks = (tracks: readonly ListTrack[]): boolean => tracks.s
 export const minimumListWidth = (tracks: readonly ListTrack[]): number =>
   tracks.reduce((sum, track) => {
     const parsed = parseTrack(track);
-    return sum + (parsed.kind === 'fixed' ? parsed.length : parsed.minimum);
+    return sum + (parsed.kind === 'share' ? parsed.minimum : parsed.length);
   }, 0);
 
 /**
@@ -67,6 +79,7 @@ export const listTrackTemplate = (tracks: readonly ListTrack[]): string =>
   tracks
     .map(track => {
       const parsed = parseTrack(track);
+      if (parsed.kind === 'content') return 'max-content';
       return parsed.kind === 'fixed' ? `${parsed.length}px` : `minmax(${parsed.minimum}px, ${parsed.factor}fr)`;
     })
     .join(' ');
@@ -91,8 +104,8 @@ export interface ListTrackLayout {
 export const computeListTracks = (tracks: readonly ListTrack[], availableWidth: number): ListTrackLayout => {
   const available = Math.max(0, Math.floor(availableWidth));
   const parsed = tracks.map(parseTrack);
-  const widths = parsed.map(track => (track.kind === 'fixed' ? track.length : track.minimum));
-  const fixedTotal = parsed.reduce((sum, track) => sum + (track.kind === 'fixed' ? track.length : 0), 0);
+  const widths = parsed.map(track => (track.kind === 'share' ? track.minimum : track.length));
+  const fixedTotal = parsed.reduce((sum, track) => sum + (track.kind === 'share' ? 0 : track.length), 0);
 
   let free = available - fixedTotal;
   let open = parsed.flatMap((track, index) => (track.kind === 'share' ? [index] : []));
@@ -121,6 +134,13 @@ export const computeListTracks = (tracks: readonly ListTrack[], availableWidth: 
   const scrollWidth = widths.reduce((sum, width) => sum + width, 0);
   return { widths, scrollWidth, overflows: scrollWidth > available };
 };
+
+/**
+ * The `grid-template-columns` of a computed layout: px per track, `max-content` for a `'content'` track (its cells
+ * keep sizing it, so wider content after a new page of rows widens it until the next measurement).
+ */
+export const listTrackLayoutTemplate = (tracks: readonly ListTrack[], widths: readonly number[]): string =>
+  tracks.map((track, index) => (isContentTrack(track) ? 'max-content' : `${widths[index] ?? 0}px`)).join(' ');
 
 /** One column as the pin layout sees it. */
 export interface ListPinRequest {

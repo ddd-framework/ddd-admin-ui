@@ -1,9 +1,27 @@
 'use client';
 
 import { X } from 'lucide-react';
-import { type ReactNode, useId } from 'react';
+import { type ReactNode, useId, useState } from 'react';
 
-import { Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../primitives/index.ts';
+import {
+  Input,
+  Label,
+  SegmentedControl,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../primitives/index.ts';
+import { formatDate } from '../logic/pure/format.ts';
+import {
+  CUSTOM_DATE_RANGE_PRESET,
+  DEFAULT_DATE_RANGE_PRESETS,
+  type DateRange,
+  type DateRangePreset,
+  dateRangePresetOf,
+  localToday,
+} from '../logic/pure/dateRangePresets.ts';
 import { useTranslate } from '../i18n/index.ts';
 import { cn } from '../primitives/cn.ts';
 import { Combobox, type ComboboxOption } from './Combobox.tsx';
@@ -231,6 +249,23 @@ export interface FilterDateRangeProps {
   /** Accessible name of the second field (default "<label> to"). */
   toLabel?: string;
   className?: string;
+  /**
+   * Presets above the fields (`true`: all time, today, last 7 days, last 30 days, custom; or the host's list): a
+   * segmented control; a preset writes its bounds through `onRangeChange` (or the two callbacks), the same
+   * `YYYY-MM-DD` values typed dates give, so "Clear filters" (both bounds `''`) is "All time" again. The resolved range
+   * shows next to the label; the custom preset reveals the two date fields (no second visible label).
+   */
+  presets?: boolean | readonly DateRangePreset[];
+  /**
+   * The picked preset, when the host keeps it (e.g. in the URL, so "Last 7 days" rolls forward). Without it the filter
+   * derives the preset from the bounds (a range equal to no preset is custom).
+   */
+  preset?: string;
+  onPresetChange?: (preset: string) => void;
+  /** Both bounds at once (one URL write); without it a preset calls `onFromChange` and `onToChange`. */
+  onRangeChange?: (range: DateRange) => void;
+  /** The local day presets resolve from (default: the viewer's clock). */
+  today?: string;
 }
 
 /** Two calendar-day bounds (`YYYY-MM-DD`); each bound limits the other. Build the filter with `ge` / `le`. */
@@ -244,9 +279,33 @@ export const FilterDateRange = ({
   fromLabel,
   toLabel,
   className,
+  presets,
+  preset,
+  onPresetChange,
+  onRangeChange,
+  today,
 }: FilterDateRangeProps) => {
   const id = useId();
   const { t } = useTranslate();
+  if (presets) {
+    return (
+      <FilterDateRangePresets
+        label={label}
+        from={from}
+        to={to}
+        onFromChange={onFromChange}
+        onToChange={onToChange}
+        fromLabel={fromLabel}
+        toLabel={toLabel}
+        className={className}
+        presets={presets === true ? DEFAULT_DATE_RANGE_PRESETS : presets}
+        preset={preset}
+        onPresetChange={onPresetChange}
+        onRangeChange={onRangeChange}
+        today={today}
+      />
+    );
+  }
   const fields = (
     <div className={cn('flex items-center gap-1.5', hideLabel && className)} role={hideLabel ? 'group' : undefined} aria-label={hideLabel ? t(label) : undefined}>
       <Input
@@ -276,5 +335,88 @@ export const FilterDateRange = ({
     <FilterField label={label} htmlFor={id} className={className}>
       {fields}
     </FilterField>
+  );
+};
+
+type FilterDateRangePresetsProps = Omit<FilterDateRangeProps, 'presets' | 'hideLabel'> & { presets: readonly DateRangePreset[] };
+
+/** The preset form of `FilterDateRange`: label with the resolved range, a segmented control, the fields under custom. */
+const FilterDateRangePresets = ({
+  label,
+  from,
+  to,
+  onFromChange,
+  onToChange,
+  fromLabel,
+  toLabel,
+  className,
+  presets,
+  preset: hostPreset,
+  onPresetChange,
+  onRangeChange,
+  today: fixedToday,
+}: FilterDateRangePresetsProps) => {
+  const { t } = useTranslate();
+  const labelId = useId();
+  const today = fixedToday ?? localToday();
+  const customId = presets.find(item => !item.resolve)?.id ?? CUSTOM_DATE_RANGE_PRESET;
+  // "Custom" picked while the bounds still equal a preset: kept until the bounds change from outside
+  const [customPickedFor, setCustomPickedFor] = useState<string | null>(null);
+  const derived = dateRangePresetOf({ from, to }, presets, today);
+  const rangeKey = `${from}|${to}`;
+  const active = hostPreset ?? (customPickedFor === rangeKey ? customId : derived);
+  const isCustom = !presets.find(item => item.id === active)?.resolve;
+
+  const writeRange = (range: DateRange) => {
+    if (onRangeChange) onRangeChange(range);
+    else {
+      if (range.from !== from) onFromChange(range.from);
+      if (range.to !== to) onToChange(range.to);
+    }
+  };
+  const pick = (next: string) => {
+    onPresetChange?.(next);
+    const resolved = presets.find(item => item.id === next)?.resolve?.(today);
+    if (resolved) {
+      setCustomPickedFor(null);
+      writeRange(resolved);
+    } else setCustomPickedFor(rangeKey);
+  };
+
+  const rangeText =
+    isCustom || (from === '' && to === '')
+      ? null
+      : from === to
+        ? formatDate(from)
+        : `${from ? formatDate(from) : '…'} – ${to ? formatDate(to) : '…'}`;
+
+  return (
+    <div className={cn('grid min-w-0 grid-cols-[minmax(0,1fr)] gap-1.5', className)} role="group" aria-labelledby={labelId}>
+      <div className="flex min-w-0 items-baseline gap-2">
+        <span id={labelId} className="text-[12.5px] font-bold text-muted-foreground">
+          {label}
+        </span>
+        {rangeText && <span className="truncate text-[12px] text-muted-foreground tabular-nums">{rangeText}</span>}
+      </div>
+      <SegmentedControl
+        aria-label={label}
+        value={active}
+        onValueChange={pick}
+        options={presets.map(item => ({ value: item.id, label: item.label, context: item.context }))}
+        className="max-w-full"
+      />
+      {isCustom && (
+        <FilterDateRange
+          label={label}
+          from={from}
+          to={to}
+          onFromChange={onFromChange}
+          onToChange={onToChange}
+          hideLabel
+          fromLabel={fromLabel}
+          toLabel={toLabel}
+        />
+      )}
+    </div>
   );
 };

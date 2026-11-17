@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  type CSSProperties,
   Fragment,
   type KeyboardEvent,
   type PointerEvent,
@@ -44,8 +45,13 @@ export interface SegmentedControlOption<TValue extends string = string> {
    * `{ context }` written as string literals).
    */
   translate?: boolean;
+  /** Overrides the control's `badgeStyle` for this option. */
+  badgeStyle?: SegmentedControlBadgeStyle;
   className?: string;
 }
+
+/** `pill` (default): the badge sits in a small pill of the current colour. `unstyled`: rendered as given (a host pill). */
+export type SegmentedControlBadgeStyle = 'pill' | 'unstyled';
 
 export interface SegmentedControlProps<TValue extends string = string> {
   /** The selected option's value; exactly one option is selected, so it must be one of `options`. */
@@ -57,6 +63,29 @@ export interface SegmentedControlProps<TValue extends string = string> {
   'aria-label': string;
   /** Control height in px (default 32). Touch targets are at least 44 px on a coarse pointer whatever the height. */
   height?: 32 | 36 | 40 | 48;
+  /**
+   * What `height` measures. `control` (default): the whole control, the options are the height minus the track's
+   * padding. `option`: each option; the track grows by its padding (a host track with `p-1` is 8 px taller).
+   */
+  heightOf?: 'control' | 'option';
+  /**
+   * On a coarse pointer (touch). `hit-area` (default): the look stays, each option gets an invisible hit area of at
+   * least 44 × 44 px. `grow`: the options grow to at least `--segmented-control-coarse-option-height` (default 44 px,
+   * also their minimum width) and the gap to `--segmented-control-coarse-gap` (default 8 px).
+   */
+  coarsePointer?: 'hit-area' | 'grow';
+  /** Default look of the options' badges (see `SegmentedControlBadgeStyle`). */
+  badgeStyle?: SegmentedControlBadgeStyle;
+  /**
+   * `false`: `aria-label` and the option texts are already translated and shown as they are (an option's own
+   * `translate` still wins). Default: English UI texts, translated by the control.
+   */
+  translate?: boolean;
+  /**
+   * The indicator swells while the pointer holds the selected option or drags (`--segmented-control-held-scale`,
+   * default 1.06). Off by default.
+   */
+  pressFeedback?: boolean;
   /** Icons only; the label stays the accessible name and shows as a tooltip. */
   iconOnly?: boolean;
   /** Stretch over the container's width, options sharing it equally. */
@@ -71,9 +100,14 @@ export interface SegmentedControlProps<TValue extends string = string> {
    */
   activation?: 'automatic' | 'manual';
   className?: string;
+  /** Inline style of the root, e.g. `--segmented-control-*` variables for this control only. */
+  style?: CSSProperties;
 }
 
 const HEIGHT_CLASS = { 32: 'h-8 text-[13px]', 36: 'h-9 text-[13px]', 40: 'h-10 text-sm', 48: 'h-12 text-sm' } as const;
+/** `heightOf="option"`: the options carry the height, the track follows (its padding added). */
+const OPTION_HEIGHT_CLASS = { 32: 'h-8', 36: 'h-9', 40: 'h-10', 48: 'h-12' } as const;
+const OPTION_TEXT_CLASS = { 32: 'text-[13px]', 36: 'text-[13px]', 40: 'text-sm', 48: 'text-sm' } as const;
 const ICON_ONLY_WIDTH_CLASS = { 32: 'w-7', 36: 'w-8', 40: 'w-9', 48: 'w-11' } as const;
 
 const TRACK_CLASS = { default: 'bg-tint text-muted-foreground', onBrand: 'bg-brand-ink/25 text-brand-light' } as const;
@@ -93,6 +127,17 @@ const HOVER_TEXT_CLASS = { default: 'hover:text-foreground', onBrand: 'hover:tex
  */
 const COARSE_TARGET_CLASS =
   "pointer-coarse:before:absolute pointer-coarse:before:inset-x-[min(0px,calc((100%_-_44px)/2))] pointer-coarse:before:inset-y-[min(0px,calc((100%_-_44px)/2))] pointer-coarse:before:content-['']";
+
+/** `coarsePointer="grow"`: real 44 px options (or the host's size) and a wider gap on a coarse pointer. */
+const COARSE_GROW_TRACK_CLASS = 'pointer-coarse:h-auto pointer-coarse:gap-[var(--segmented-control-coarse-gap,0.5rem)]';
+const COARSE_GROW_OPTION_CLASS =
+  'pointer-coarse:min-h-[var(--segmented-control-coarse-option-height,44px)] pointer-coarse:min-w-[var(--segmented-control-coarse-option-height,44px)]';
+
+/** Transitions read optional variables; without them the values of 0.1.0 apply. */
+const TRACK_TRANSITION_CLASS =
+  'transition-[background-color] duration-[var(--segmented-control-track-duration,0ms)] ease-[var(--segmented-control-track-easing,cubic-bezier(0.4,0,0.2,1))]';
+const OPTION_TRANSITION_CLASS =
+  'duration-[var(--segmented-control-option-duration,var(--segmented-control-duration))] ease-[var(--segmented-control-option-easing,cubic-bezier(0.4,0,0.2,1))]';
 
 interface DragState {
   pointerId: number;
@@ -115,7 +160,12 @@ interface DragState {
  * movement, so a vertical swipe keeps scrolling the page.
  *
  * Tooltips (an `iconOnly` option's label, a disabled option's reason) need the tooltip provider of `AdminUiProvider`.
- * Duration and corner come from `--segmented-control-duration` and `--segmented-control-radius`.
+ * Duration and corner come from `--segmented-control-duration` and `--segmented-control-radius`. Optional, unset by
+ * default: `--segmented-control-easing` (indicator slide, default ease-out), `--segmented-control-option-duration` /
+ * `--segmented-control-option-easing` (option colour; default the slide's duration), `--segmented-control-track-duration`
+ * / `--segmented-control-track-easing` (track background; default none), `--segmented-control-coarse-option-height` and
+ * `--segmented-control-coarse-gap` (`coarsePointer="grow"`), `--segmented-control-held-scale` (`pressFeedback`). The
+ * indicator takes the selected option's box, so a host track padding (`p-1`) insets it as much as the options.
  */
 export const SegmentedControl = <TValue extends string = string>({
   value,
@@ -129,13 +179,20 @@ export const SegmentedControl = <TValue extends string = string>({
   tone = 'default',
   activation = 'automatic',
   className,
+  heightOf = 'control',
+  coarsePointer = 'hit-area',
+  badgeStyle = 'pill',
+  translate = true,
+  pressFeedback = false,
+  style,
 }: SegmentedControlProps<TValue>) => {
   const { t } = useTranslate();
   const baseId = useId();
   const groupRef = useRef<HTMLDivElement>(null);
   const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [preview, setPreview] = useState<TValue | null>(null);
-  const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
+  const [indicator, setIndicator] = useState<{ left: number; width: number; top: number; height: number } | null>(null);
+  const [held, setHeld] = useState(false);
   // wider than its container (five options in a phone column): it scrolls inside itself, never the page
   const [overflowing, setOverflowing] = useState(false);
   const drag = useRef<DragState | null>(null);
@@ -146,7 +203,7 @@ export const SegmentedControl = <TValue extends string = string>({
   const tabStop = selectedIndex !== -1 ? selectedIndex : disabled.indexOf(false);
   const target = preview ?? value;
   const targetIndex = options.findIndex(option => option.value === target);
-  const layoutKey = `${options.map(option => option.value).join('|')}:${height}:${iconOnly}:${fullWidth}`;
+  const layoutKey = `${options.map(option => option.value).join('|')}:${height}:${iconOnly}:${fullWidth}:${heightOf}:${coarsePointer}`;
 
   // After layout only: place the indicator under the selected (or previewed) option, again on every resize.
   // biome-ignore lint/correctness/useExhaustiveDependencies: layoutKey re-measures when the options' boxes may change
@@ -160,8 +217,17 @@ export const SegmentedControl = <TValue extends string = string>({
         setIndicator(previous => (previous === null ? previous : null));
         return;
       }
-      const next = { left: option.offsetLeft, width: option.offsetWidth };
-      setIndicator(previous => (previous && previous.left === next.left && previous.width === next.width ? previous : next));
+      // the option's own box: the indicator follows the track's padding (a host `p-1` track included)
+      const next = { left: option.offsetLeft, width: option.offsetWidth, top: option.offsetTop, height: option.offsetHeight };
+      setIndicator(previous =>
+        previous &&
+        previous.left === next.left &&
+        previous.width === next.width &&
+        previous.top === next.top &&
+        previous.height === next.height
+          ? previous
+          : next
+      );
     };
     place();
     if (typeof ResizeObserver === 'undefined') return;
@@ -196,6 +262,7 @@ export const SegmentedControl = <TValue extends string = string>({
     if (group && state && group.hasPointerCapture?.(state.pointerId)) group.releasePointerCapture(state.pointerId);
     drag.current = null;
     setPreview(null);
+    setHeld(false);
   }, []);
 
   // Escape during a drag restores the value; the release that follows changes nothing.
@@ -235,6 +302,7 @@ export const SegmentedControl = <TValue extends string = string>({
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (event.button !== 0 || !event.isPrimary) return;
+    if (pressFeedback && selectedIndex !== -1 && optionRefs.current[selectedIndex]?.contains(event.target as Node)) setHeld(true);
     drag.current = {
       pointerId: event.pointerId,
       pointerType: event.pointerType,
@@ -254,9 +322,11 @@ export const SegmentedControl = <TValue extends string = string>({
       // a scrolling control keeps touch swipes for scrolling
       if (decision === 'abandon' || (overflowing && state.pointerType === 'touch')) {
         drag.current = null;
+        setHeld(false);
         return;
       }
       state.active = true;
+      if (pressFeedback) setHeld(true);
       groupRef.current?.setPointerCapture?.(event.pointerId);
     }
     const index = indexAt(event.clientX);
@@ -270,6 +340,7 @@ export const SegmentedControl = <TValue extends string = string>({
     if (!state.active) {
       // a press without a drag: the option's click selects it
       drag.current = null;
+      setHeld(false);
       return;
     }
     suppressClick.current = true;
@@ -299,7 +370,9 @@ export const SegmentedControl = <TValue extends string = string>({
     <div
       ref={groupRef}
       role="radiogroup"
-      aria-label={t(ariaLabel)}
+      aria-label={translate ? t(ariaLabel) : ariaLabel}
+      data-held={held || undefined}
+      style={style}
       data-slot="segmented-control"
       onKeyDown={onKeyDown}
       onPointerDown={onPointerDown}
@@ -310,7 +383,9 @@ export const SegmentedControl = <TValue extends string = string>({
         'relative isolate max-w-full shrink-0 items-stretch gap-0.5 rounded-(--segmented-control-radius) p-0.5 select-none',
         overflowing ? 'touch-auto overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden' : 'touch-pan-y',
         fullWidth ? 'flex w-full' : 'inline-flex',
-        HEIGHT_CLASS[height],
+        heightOf === 'option' ? OPTION_TEXT_CLASS[height] : HEIGHT_CLASS[height],
+        coarsePointer === 'grow' && COARSE_GROW_TRACK_CLASS,
+        TRACK_TRANSITION_CLASS,
         TRACK_CLASS[tone],
         className
       )}
@@ -320,10 +395,11 @@ export const SegmentedControl = <TValue extends string = string>({
           aria-hidden
           data-slot="segmented-control-indicator"
           className={cn(
-            'pointer-events-none absolute inset-y-0.5 left-0 -z-10 rounded-(--segmented-control-radius) transition-[translate,width] duration-(--segmented-control-duration) ease-out motion-reduce:transition-none',
+            'pointer-events-none absolute inset-y-0.5 left-0 -z-10 rounded-(--segmented-control-radius) transition-[translate,width,height,top,scale] duration-(--segmented-control-duration) ease-[var(--segmented-control-easing,cubic-bezier(0,0,0.2,1))] motion-reduce:transition-none',
+            held && 'scale-[var(--segmented-control-held-scale,1.06)]',
             INDICATOR_CLASS[selection][tone]
           )}
-          style={{ translate: `${indicator.left}px 0`, width: indicator.width }}
+          style={{ translate: `${indicator.left}px 0`, width: indicator.width, top: indicator.top, height: indicator.height }}
         />
       )}
       {options.map((option, index) => {
@@ -333,7 +409,8 @@ export const SegmentedControl = <TValue extends string = string>({
         const reasonId = option.disabled && option.disabledReason ? `${baseId}-reason-${index}` : undefined;
         const describedBy = [descriptionId, reasonId].filter(Boolean).join(' ') || undefined;
         const text = (raw: string) =>
-          option.translate === false ? raw : t(raw, option.context ? { context: option.context } : undefined);
+          (option.translate ?? translate) === false ? raw : t(raw, option.context ? { context: option.context } : undefined);
+        const unstyledBadge = (option.badgeStyle ?? badgeStyle) === 'unstyled';
         const label = text(option.label);
         const button = (
           <button
@@ -349,8 +426,10 @@ export const SegmentedControl = <TValue extends string = string>({
             data-state={checked ? 'checked' : 'unchecked'}
             onClick={() => onOptionClick(index)}
             className={cn(
-              'relative inline-flex min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-(--segmented-control-radius) px-3 font-bold whitespace-nowrap outline-none transition-colors duration-(--segmented-control-duration) focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-4',
-              COARSE_TARGET_CLASS,
+              'relative inline-flex min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-(--segmented-control-radius) px-3 font-bold whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-4',
+              OPTION_TRANSITION_CLASS,
+              coarsePointer === 'grow' ? COARSE_GROW_OPTION_CLASS : COARSE_TARGET_CLASS,
+              heightOf === 'option' && OPTION_HEIGHT_CLASS[height],
               fullWidth ? 'flex-1' : 'shrink-0',
               iconOnly && cn('px-0', ICON_ONLY_WIDTH_CLASS[height]),
               highlighted ? HIGHLIGHT_TEXT_CLASS[selection][tone] : !option.disabled && HOVER_TEXT_CLASS[tone],
@@ -362,14 +441,21 @@ export const SegmentedControl = <TValue extends string = string>({
           >
             {option.icon}
             <span className={iconOnly ? 'sr-only' : 'truncate'}>{label}</span>
-            {option.badge !== undefined && (
-              <span
-                aria-hidden
-                className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-current/15 px-1 text-[11px] leading-none tabular-nums"
-              >
-                {option.badge}
-              </span>
-            )}
+            {option.badge !== undefined &&
+              (unstyledBadge ? (
+                option.badge !== null && option.badge !== false && option.badge !== '' && (
+                  <span aria-hidden className="inline-flex shrink-0 items-center">
+                    {option.badge}
+                  </span>
+                )
+              ) : (
+                <span
+                  aria-hidden
+                  className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-current/15 px-1 text-[11px] leading-none tabular-nums"
+                >
+                  {option.badge}
+                </span>
+              ))}
           </button>
         );
         const reason = reasonId ? text(option.disabledReason as string) : undefined;

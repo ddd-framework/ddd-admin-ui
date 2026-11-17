@@ -31,6 +31,9 @@
 #         FormActions (focus nowhere, in another form, a disabled primary, a drawer footer, nested dialogs), header slots
 #         (closest slot, form attribute, floating pill) and useConfirm (Escape, focus, queue, phrase, drawer, two
 #         providers, Strict Mode, unmount)
+#         (browser) date presets, bulk menus with a counted confirmation, a content-sized pinned actions column, the
+#         segmented control's option height, translatable limits, the colour field, the route error, the side-by-side
+#         drawer, ./markdown after hydration (sanitised, absent from pages that do not import it)
 #     T7  (browser) a select inside a dialog inside a sheet, and inside a host overlay at z-index 10000 with
 #         --layer-popover: 10001, is clickable (with a negative control at the default layer)
 #   link-skills  `ddd-admin-ui link-skills` links the shipped skill
@@ -83,7 +86,7 @@ PLAIN="$WORK/plain"
 install_into "$PLAIN" "${PEERS[@]}" "${TYPES[@]}" esbuild
 cp "$HERE/fixtures/plain/"* "$PLAIN/"
 cd "$PLAIN"
-node -e "for (const name of ['next','sonner','tailwindcss','recharts']) { try { require.resolve(name); console.error(name + ' is installed'); process.exit(1); } catch {} }"
+node -e "for (const name of ['next','sonner','tailwindcss','recharts','@uiw/react-md-editor','rehype-sanitize']) { try { require.resolve(name); console.error(name + ' is installed'); process.exit(1); } catch {} }"
 node -p "'installed: ddd-web ' + require('@mgamadeus/ddd-web/package.json').version + ', lucide-react ' + require('lucide-react/package.json').version"
 echo "── T4 Node imports"
 node smoke.mjs
@@ -124,7 +127,8 @@ if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-i18n-manifest --check; el
 
 echo "── Next project ($PM)"
 APP="$WORK/next-app"
-install_into "$APP" "${PEERS[@]}" "${TYPES[@]}" "next@^16" sonner "tailwindcss@^4" "@tailwindcss/postcss@^4" tw-animate-css playwright-core
+install_into "$APP" "${PEERS[@]}" "${TYPES[@]}" "next@^16" sonner "tailwindcss@^4" "@tailwindcss/postcss@^4" tw-animate-css playwright-core \
+  "@uiw/react-md-editor@^4.1.0" "rehype-sanitize@^6.0.0"
 cp -R "$HERE/fixtures/next-app/." "$APP/"
 cd "$APP"
 echo "── T1 next build"
@@ -153,6 +157,8 @@ else
   node browser.mjs "http://127.0.0.1:$PORT"
   echo "── form dialog, save shortcut, header slot, confirmations (headless browser)"
   node browser-dialogs.mjs "http://127.0.0.1:$PORT"
+  echo "── date presets, bulk menus, sized actions, segmented options, limits, colour, route error, side-by-side drawer, ./markdown (headless browser)"
+  node browser-blocks.mjs "http://127.0.0.1:$PORT"
   kill $SERVER_PID 2>/dev/null || true
 fi
 
