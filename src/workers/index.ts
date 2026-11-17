@@ -8,9 +8,9 @@ export type * from './types.ts';
 
 // Screens
 export { WorkersOverviewScreen } from './WorkersOverviewScreen.tsx';
-export type { WorkersOverviewScreenProps } from './WorkersOverviewScreen.tsx';
-export { WorkerTransportScreen } from './WorkerTransportScreen.tsx';
-export type { WorkerTransportScreenProps } from './WorkerTransportScreen.tsx';
+export type { WorkersOverviewScreenProps, WorkersOverviewSectionId, WorkersSectionRenderer } from './WorkersOverviewScreen.tsx';
+export { WORKER_TRANSPORT_TABS, WorkerTransportFacts, WorkerTransportScreen, workerTransportDefinitionText } from './WorkerTransportScreen.tsx';
+export type { WorkerTransportFactsProps, WorkerTransportScreenProps, WorkerTransportSectionId } from './WorkerTransportScreen.tsx';
 
 // Parts
 export {
@@ -56,9 +56,14 @@ export type {
 } from './transport.tsx';
 export { WorkerRestartButton } from './WorkerRestartButton.tsx';
 export type { WorkerRestartButtonProps } from './WorkerRestartButton.tsx';
-export { ChartBody, ChartLegend, niceTicks, WorkerChartCard, WorkerSparkline, WorkerTimeChart } from './charts.tsx';
+export { ChartBody, ChartLegend, niceTicks, WorkerChartCard, WorkerChartSyncGroup, WorkerSparkline, WorkerTimeChart } from './charts.tsx';
+export { countTicks, DURATION_TICK_STEPS_MS, durationTicks } from './ticks.ts';
+export type { NiceTicksOptions, WorkerTickGenerator } from './ticks.ts';
+export { WorkerHint } from './hint.tsx';
+export type { WorkerHintProps } from './hint.tsx';
 export type {
   ChartBodyProps,
+  WorkerChartSyncGroupProps,
   ChartLegendItem,
   WorkerChartCardProps,
   WorkerChartReferenceLine,
@@ -69,6 +74,7 @@ export type {
 
 // Status maps and helpers
 export {
+  rawStatusValue,
   toWorkerMessageOutcome,
   toWorkerProcessState,
   toWorkerTransportState,
@@ -77,6 +83,7 @@ export {
   WORKER_TRANSPORT_STATE,
 } from './status.ts';
 export {
+  axisNeedsDate,
   dispatchOrigin,
   drainMs,
   formatBytes,
@@ -84,18 +91,29 @@ export {
   formatCount,
   formatDurationMs,
   formatDurationTick,
+  formatPercentNumber,
+  formatRate,
+  formatTimelineTick,
+  formatWindowLength,
+  inWindowText,
   isAttentionState,
+  isProcessStillLive,
   parseWorkersTime,
   perWorkerMinute,
   rankTransports,
   sequencePoints,
   shortClassName,
   shortHost,
+  sortMessageClasses,
   sortTransports,
   stopReasonLabel,
   succeededPoints,
+  sumPoints,
   throughputWindowOf,
+  throughputWindowSeconds,
   TRANSPORT_STATE_ORDER,
+  windowHeaderText,
+  workerLastErrorText,
   zipSeries,
 } from './format.ts';
 export type { ChartRow, RankedTransport, WorkersWindowCount } from './format.ts';

@@ -12,10 +12,12 @@ import {
   ConfigImportCard,
   createStaticTranslationsApi,
   LocalesScreen,
+  LanguagesScreen,
   useContentLocales,
+  useEntitiesTranslator,
   useEntityTranslator,
 } from '@mgamadeus/ddd-admin-ui/translations';
-import { createStaticWorkersApi, WorkersOverviewScreen, WorkerTransportScreen } from '@mgamadeus/ddd-admin-ui/workers';
+import { createStaticWorkersApi, WorkerMessageClassesTable, WorkersOverviewScreen, WorkerTransportScreen } from '@mgamadeus/ddd-admin-ui/workers';
 
 const workersApi = createStaticWorkersApi(showcaseWorkersData);
 const translationsApi = createStaticTranslationsApi(showcaseTranslationsData);
@@ -45,6 +47,49 @@ const monitoringOff = render(
   }),
 );
 const transport = render(h(WorkerTransportScreen, { api: workersApi, transport: 'import_orders', backHref: '/workers', historyAnchorMs: SHOWCASE_NOW_MS, pollingIntervalMs: 0 }));
+const transportMonitoringOff = render(
+  h(WorkerTransportScreen, { api: workersApi, transport: 'import_orders', backHref: '/workers', historyAnchorMs: SHOWCASE_NOW_MS, pollingIntervalMs: 0, monitoringEnabled: false }),
+);
+// a host section, a hidden section, header actions and an own link component (no provider link)
+const OwnLink = ({ href, children, ...props }) => h('a', { href, 'data-own-link': '', ...props }, children);
+const overviewSlots = renderToStaticMarkup(
+  h(AdminUiProvider, null,
+    h(WorkersOverviewScreen, {
+      ...overviewProps,
+      linkComponent: OwnLink,
+      headerActions: h('button', { type: 'button', 'data-host-action': '' }, 'Host action'),
+      renderSection: (id, section) => (id === 'loops' ? null : id === 'throughput' ? h('section', { 'data-host-section': '' }, 'Own throughput') : section),
+    }),
+  ),
+);
+const transportSlots = renderToStaticMarkup(
+  h(AdminUiProvider, null,
+    h(WorkerTransportScreen, {
+      api: workersApi, transport: 'import_orders', backHref: '/workers', historyAnchorMs: SHOWCASE_NOW_MS, pollingIntervalMs: 0,
+      linkComponent: OwnLink,
+      renderSection: (id, section) => (id === 'facts' ? h('div', { 'data-host-facts': '' }, 'Own facts') : section),
+    }),
+  ),
+);
+const unknownStateApi = createStaticWorkersApi({
+  ...showcaseWorkersData,
+  overview: {
+    workersOverview: {
+      ...showcaseWorkersData.overview.workersOverview,
+      transports: { elements: showcaseWorkersData.overview.workersOverview.transports.elements.map((entry, index) => (index === 0 ? { ...entry, state: 'PAUSED_BY_OPERATOR' } : entry)) },
+    },
+  },
+});
+const unknownState = render(h(WorkersOverviewScreen, { ...overviewProps, api: unknownStateApi }));
+const rowCount = showcaseWorkersData.overview.workersOverview.transports.elements.length;
+const classesTable = render(
+  h(WorkerMessageClassesTable, {
+    messageClasses: [
+      { messageClass: 'App\\Few', handledCount: 2 },
+      { messageClass: 'App\\Many', handledCount: 40 },
+    ],
+  }),
+);
 
 const keys = render(h(AppTranslationsScreen, { api: translationsApi, asSpecimen: true }));
 const keysReadOnly = render(h(AppTranslationsScreen, { api: translationsApi, asSpecimen: true }), READ_ONLY);
@@ -54,14 +99,64 @@ const importCard = render(h(ConfigImportCard, { api: translationsApi, kind: 'loc
 const importCardReadOnly = render(h(ConfigImportCard, { api: translationsApi, kind: 'locales' }), READ_ONLY);
 
 let translator;
+let entitiesTranslator;
 let contentLocales;
 const Probe = () => {
   translator = useEntityTranslator(translationsApi, { defaultLocale: 'en::FORMAL' });
+  entitiesTranslator = useEntitiesTranslator(translationsApi, { defaultLocale: 'en::FORMAL' });
   contentLocales = useContentLocales(translationsApi);
   return null;
 };
 render(h(Probe));
 const store = await translator({ entity: { objectType: 'App\\Domain\\Item', id: 1, title: 'Hello' }, locale: 'de::FORMAL', signal: new AbortController().signal });
+const stores = await entitiesTranslator({
+  entities: [{ objectType: 'App\\Domain\\Item', id: 1, title: 'Hello' }, { objectType: null, id: 2, title: 'World' }],
+  locale: 'de::FORMAL',
+  signal: new AbortController().signal,
+});
+const keysWithHref = render(h(AppTranslationsScreen, { api: translationsApi, asSpecimen: true, keyHref: key => `/app-translations/${key.id}` }));
+const countriesCard = render(
+  h(ConfigImportCard, { api: translationsApi, kind: 'countries', operation: async () => 3, texts: { title: 'Import countries from the configuration' } }),
+);
+const languages = render(h(LanguagesScreen, { api: translationsApi, asSpecimen: true }));
+// 0.2.3: host slots, sort, row index, cards, single delete, empty state with Add, compact values, parameter names
+const manyValues = Array.from({ length: 6 }, (_, index) => ({ id: 100 + index, appTranslationKeyId: 9, languageId: 2, translation: `Wert ${index}`, context: 'ONE', writingStyle: index % 2 ? 'FORMAL' : 'INFORMAL' }));
+const slotApi = createStaticTranslationsApi({ ...showcaseTranslationsData, appTranslationKeys: () => ({ appTranslationKeys: { elements: [{ id: 9, key: 'Many values', appTranslationValues: { elements: manyValues } }] } }) });
+const keysSlots = render(
+  h(AppTranslationsScreen, {
+    api: slotApi,
+    asSpecimen: true,
+    headerActions: h('button', { type: 'button', 'data-host-header': '' }, 'Untracked keys'),
+    moreActions: [{ id: 'sync', label: 'Key sync', onSelect: () => undefined }],
+    toolbarTrailing: h('span', { 'data-host-trailing': '' }, 'Compact'),
+    columns: columns => [...columns, { id: 'usage', header: 'Usage', cell: () => h('span', { 'data-host-usage': '' }, '3') }],
+    drawerEditKey: 'key-edit',
+  }),
+);
+const styleApi = createStaticTranslationsApi({
+  ...showcaseTranslationsData,
+  completeness: {
+    appTranslationCompletenesses: {
+      elements: showcaseTranslationsData.completeness.appTranslationCompletenesses.elements.map((entry, index) =>
+        index === 0 ? { ...entry, informalTranslatedCount: 1, formalTranslatedCount: 1 } : entry,
+      ),
+    },
+  },
+});
+const keysStyles = render(h(AppTranslationsScreen, { api: styleApi, asSpecimen: true }));
+const emptyApi = createStaticTranslationsApi({ ...showcaseTranslationsData, appTranslationKeys: () => ({ appTranslationKeys: { elements: [] } }) });
+const keysEmpty = render(h(AppTranslationsScreen, { api: emptyApi, asSpecimen: true }));
+let wrappedArgs;
+const keysWrapped = render(
+  h(AppTranslationsScreen, {
+    api: translationsApi,
+    asSpecimen: true,
+    useListQuery: (args, options) => {
+      wrappedArgs = args;
+      return translationsApi.useAppTranslationKeysQuery(args, options);
+    },
+  }),
+);
 
 const switches = (html) => [...html.matchAll(/<button[^>]*role="switch"[^>]*>/g)].map(match => match[0]);
 const checks = [
@@ -73,11 +168,23 @@ const checks = [
   ['workers overview: history and sparklines drawn as SVG', count(overview, /data-slot="worker-time-chart"/g) >= 6 && count(overview, /<svg role="img"/g) >= 12],
   ['workers overview: loops listed', overview.includes('app:search:reindex --changed')],
   ['workers overview: restart enabled with write access', noneDisabled(buttonsNamed(overview, 'Restart all workers'))],
-  ['workers overview: restart disabled without write access, with the reason', allDisabled(buttonsNamed(overviewReadOnly, 'Restart all workers')) && overviewReadOnly.includes('title="Read-only workspace"')],
+  ['workers overview: restart disabled without write access, with the reason', allDisabled(buttonsNamed(overviewReadOnly, 'Restart all workers')) && overviewReadOnly.includes('<span class="sr-only">Read-only workspace</span>')],
+  ['workers overview: a manual refresh in the header', overview.includes('data-slot="workers-refresh"') && overview.includes('aria-label="Refresh now"')],
+  ['workers overview: transport rows are tab stops (keyboard activation)', count(overview, /<tr[^>]*tabindex="0"/g) === rowCount],
+  ['workers overview: truncated errors and uncounted queues as tooltips, not titles', overview.includes('data-slot="worker-hint"') && !overview.includes('title="Last error') && !overview.includes('title="The queue could not be counted.')],
+  ['workers overview: the live description names the refresh interval only while polling', !overview.includes('Refreshed every') && render(h(WorkersOverviewScreen, { ...overviewProps, pollingIntervalMs: 10_000 })).includes('Refreshed every 10 s.')],
+  ['workers overview: an unknown state shows as itself, not as a dash', unknownState.includes('PAUSED_BY_OPERATOR')],
+  ['workers overview: host actions, sections and link component', overviewSlots.includes('data-host-action') && overviewSlots.includes('data-host-section') && !overviewSlots.includes('app:search:reindex --changed') && overviewSlots.includes('data-own-link')],
   ['workers overview: row restarts disabled without write access', allDisabled(buttonsNamed(overviewReadOnly, 'aria-label="Restart workers of'))],
   ['workers overview: monitoring off banner, no measured zeros', monitoringOff.includes('The worker monitoring is off') && monitoringOff.includes('not measured') && !monitoringOff.includes('Throughput, all transports')],
+  ['workers overview: monitoring off names the setting, the live counts are unknown and the range is the configured one',
+    monitoringOff.includes('WORKERS_ENABLED=1') && monitoringOff.includes('monitoring is off') && monitoringOff.includes('configured 0–') && !monitoringOff.includes('workers running')
+      && !/data-slot="worker-process-range"[^>]*data-above-maximum/.test(monitoringOff)],
   ['transport screen: facts, five charts, message classes, live processes', transport.includes('Avg duration (15 min)') && count(transport, /data-slot="worker-time-chart"/g) === 5 && transport.includes('RefreshOrderStatusMessage') && transport.includes('Live processes')],
   ['transport screen: back link and range reference lines', transport.includes('href="/workers"') && transport.includes('max 2')],
+  ['transport screen: restart disabled while the monitoring is off', noneDisabled(buttonsNamed(transport, 'Restart workers')) && allDisabled(buttonsNamed(transportMonitoringOff, 'Restart workers'))],
+  ['transport screen: message classes, the most finished first', classesTable.indexOf('>Many<') !== -1 && classesTable.indexOf('>Many<') < classesTable.indexOf('>Few<')],
+  ['transport screen: own sections and link component', transportSlots.includes('data-host-facts') && !transportSlots.includes('Avg duration (15 min)') && transportSlots.includes('href="/workers" data-own-link=""')],
   ['app translations: keys with values per locale::style', keys.includes('Save changes') && keys.includes('>de::FORMAL<') && keys.includes('>en::INFORMAL<')],
   ['app translations: completeness per active locale', keys.includes('data-slot="translation-completeness"') && keys.includes('de-DE')],
   ['app translations: generation enabled with write access', noneDisabled(buttonsNamed(keys, 'Generate all missing'))],
@@ -88,6 +195,22 @@ const checks = [
   ['locales: import from configuration disabled without write access', noneDisabled(buttonsNamed(locales, 'Import from configuration')) && allDisabled(buttonsNamed(localesReadOnly, 'Import from configuration'))],
   ['config import card: run disabled without write access', noneDisabled(buttonsNamed(importCard, 'Import')) && allDisabled(buttonsNamed(importCardReadOnly, 'Import'))],
   ['entity translator: one locale, the translated store back', JSON.stringify(store) === JSON.stringify({ title: { 'de::FORMAL': 'Übersetzt' } })],
+  ['entities translator: several entities in one request, one store each', stores.length === 2 && JSON.stringify(stores[1]) === JSON.stringify({ title: { 'de::FORMAL': 'Übersetzt' } })],
+  ['app translations: the key is a link to its drawer, rows are tab stops',
+    keys.includes('data-slot="app-translation-key-link"') && /href="\?edit=\d+"/.test(keys) && count(keys, /<tr[^>]*tabindex="0"/g) > 0
+      && keysWithHref.includes('href="/app-translations/')],
+  ['app translations: row index, sortable id and key, a delete per row, cards for narrow screens',
+    keys.includes('aria-sort="descending"') && count(keys, /aria-label="Delete the key /g) >= 6 && keys.includes('data-slot="app-translation-key-card"') && />1<\/td>/.test(keys)],
+  ['app translations: host header actions, overflow menu, toolbar content and columns', keysSlots.includes('data-host-header') && keysSlots.includes('data-host-trailing') && keysSlots.includes('data-host-usage') && keysSlots.includes('aria-haspopup')],
+  ['app translations: the first values with "+N", the drawer parameter renamed', keysSlots.includes('+2 more') && !keysSlots.includes('Wert 5') && keysSlots.includes('href="?key-edit=9"')],
+  ['app translations: the empty state has its own sentence and an Add action', keysEmpty.includes('No translation keys found') && keysEmpty.includes('>Add key<')],
+  ['app translations: a wrapped list query gets the package arguments', keysWrapped.includes('Save changes') && wrappedArgs?.orderBy === 'id DESC' && wrappedArgs?.expand === 'appTranslationValues'],
+  ['completeness: generation offered only for the styles of the language',
+    keysStyles.includes('Generate missing informal translations for en-GB') && !keysStyles.includes('Generate missing formal translations for en-GB') && keysStyles.includes('Generate missing formal translations for de-DE')],
+  ['config import card: a host kind with its own operation and texts', countriesCard.includes('Import countries from the configuration') && noneDisabled(buttonsNamed(countriesCard, 'Import'))],
+  ['languages: the import button says what it does; the writing-styles select carries the write-access reason',
+    languages.includes('title="Creates or updates every language of the configuration, matched by language code."')
+      && [...render(h(LanguagesScreen, { api: translationsApi, asSpecimen: true }), READ_ONLY).matchAll(/<button[^>]*role="combobox"[^>]*>/g)].some(match => match[0].includes('title="Read-only workspace"'))],
   ['content locales: one key per active language', JSON.stringify(contentLocales) === JSON.stringify(['en::FORMAL', 'de::FORMAL'])],
 ];
 

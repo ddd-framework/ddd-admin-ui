@@ -2,10 +2,13 @@ import { parseDddDateTimeMs } from '@mgamadeus/ddd-web/contract';
 
 import { m, translateText } from '../i18n/store.ts';
 import { uiDateTimeFormat, uiNumberFormat } from '../i18n/format.ts';
+import type { TranslateFn } from '../i18n/useTranslate.ts';
 import type {
   DateTimeValue,
   DateTimeValueSequences,
+  WorkerMessageClassStat,
   WorkerSequenceName,
+  WorkerThroughputWindow,
   WorkerThroughputWindows,
   WorkerTransportHistory,
   WorkerTransportOverview,
@@ -63,12 +66,16 @@ export const succeededPoints = (handled: readonly DateTimeValue[], failed: reado
 export const formatCount = (value: number | null | undefined): string =>
   value === null || value === undefined ? '—' : uiNumberFormat().format(value);
 
-/** `850 ms`, `4.2 s`, `1 min 46 s`, `2 h 5 min`; `—` without a value. */
+/** A number with at most one decimal in the UI locale (`4.2` / `4,2`); `digits` fixes the decimals. */
+const decimal = (value: number, digits?: number): string =>
+  uiNumberFormat(digits === undefined ? { maximumFractionDigits: 1 } : { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
+
+/** `850 ms`, `4.2 s`, `1 min 46 s`, `2 h 5 min` (numbers in the UI locale: `4,2 s`); `—` without a value. */
 export const formatDurationMs = (value: number | null | undefined): string => {
   if (value === null || value === undefined) return '—';
-  if (value < 1000) return `${Math.round(value)} ms`;
+  if (value < 1000) return `${formatCount(Math.round(value))} ms`;
   const seconds = value / 1000;
-  if (seconds < 60) return `${seconds < 10 ? seconds.toFixed(1) : Math.round(seconds)} s`;
+  if (seconds < 60) return `${seconds < 10 ? decimal(seconds, 1) : formatCount(Math.round(seconds))} s`;
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) {
     const rest = Math.round(seconds - minutes * 60);
@@ -76,24 +83,59 @@ export const formatDurationMs = (value: number | null | undefined): string => {
   }
   const hours = Math.floor(minutes / 60);
   const restMinutes = minutes - hours * 60;
-  return restMinutes > 0 ? `${hours} h ${restMinutes} min` : `${hours} h`;
+  return restMinutes > 0 ? `${formatCount(hours)} h ${restMinutes} min` : `${formatCount(hours)} h`;
 };
 
-/** A compact axis label for milliseconds (`850ms`, `4s`, `1.5m`, `2h`). */
+/** A compact axis label for milliseconds (`850ms`, `4s`, `1.5m`, `2h`; `1,5m` in German). */
 export const formatDurationTick = (value: number): string => {
-  const compact = (amount: number) => (amount < 10 && !Number.isInteger(amount) ? amount.toFixed(1) : String(Math.round(amount)));
-  if (value < 1000) return `${Math.round(value)}ms`;
+  const compact = (amount: number) => (amount < 10 && !Number.isInteger(amount) ? decimal(amount, 1) : formatCount(Math.round(amount)));
+  if (value < 1000) return `${formatCount(Math.round(value))}ms`;
   if (value < 60_000 || (value < 120_000 && value % 60_000 !== 0)) return `${compact(value / 1000)}s`;
   if (value < 3_600_000) return `${compact(Math.round(value / 6000) / 10)}m`;
   return `${compact(Math.round(value / 360_000) / 10)}h`;
 };
 
-/** `63 MB` (binary megabytes, as PHP reports memory); `—` without a value. */
+/** `63 MB` (binary megabytes, as PHP reports memory; `6,5 MB` in German); `—` without a value. */
 export const formatBytes = (value: number | null | undefined): string => {
   if (value === null || value === undefined) return '—';
   const megabytes = value / (1024 * 1024);
-  return `${megabytes < 10 ? megabytes.toFixed(1) : Math.round(megabytes)} MB`;
+  return `${megabytes < 10 ? decimal(megabytes, 1) : formatCount(Math.round(megabytes))} MB`;
 };
+
+/** A share as a number in the UI locale with one decimal below 10 % (`2.5`, `12`); the caller adds the sign. */
+export const formatPercentNumber = (share: number): string => {
+  const percent = share * 100;
+  return percent < 10 && percent > 0 ? decimal(percent, 1) : formatCount(Math.round(percent));
+};
+
+/** `24.0 /min`, `0.4 /min` as `24 /h` below one a minute, numbers in the UI locale. */
+export const formatRate = (perMinute: number, t: TranslateFn): string => {
+  if (perMinute >= 100) return t('%value% /min', { replacements: { value: formatCount(Math.round(perMinute)) } });
+  if (perMinute >= 1) return t('%value% /min', { replacements: { value: decimal(perMinute, 1) } });
+  const perHour = perMinute * 60;
+  return t('%value% /h', { replacements: { value: perHour >= 10 ? formatCount(Math.round(perHour)) : decimal(perHour, 1) } });
+};
+
+/** The length of a window in words (`5 min`, `1 hour`, `24 hours`, `14 days`). */
+export const formatWindowLength = (seconds: number, t: TranslateFn): string => {
+  if (seconds < 3600 || seconds % 3600 !== 0) return t('%minutes% min', { replacements: { minutes: formatCount(Math.round(seconds / 60)) } });
+  const hours = seconds / 3600;
+  if (hours <= 48 || hours % 24 !== 0) return t('{count, plural, one {# hour} other {# hours}}', { count: hours });
+  return t('{count, plural, one {# day} other {# days}}', { count: hours / 24 });
+};
+
+/** A column header of a window (`Last 5 min`, `Last hour`, `Last 24 h`; others `Last %window%`). */
+export const windowHeaderText = (seconds: number, t: TranslateFn): string => {
+  if (seconds === 300) return t('Last 5 min');
+  if (seconds === 900) return t('Last 15 min');
+  if (seconds === 3600) return t('Last hour');
+  if (seconds === 86400) return t('Last 24 h');
+  return t('Last %window%', { replacements: { window: formatWindowLength(seconds, t) } });
+};
+
+/** A window inside a sentence (`in the last hour`, `in the last 30 min`). */
+export const inWindowText = (seconds: number, t: TranslateFn): string =>
+  seconds === 3600 ? t('in the last hour') : t('in the last %window%', { replacements: { window: formatWindowLength(seconds, t) } });
 
 /** The pod part that tells replicas apart (`worker-x-769459868d-dg82v` → `769459868d-dg82v`). */
 export const shortHost = (hostName: string | null | undefined): string =>
@@ -115,6 +157,17 @@ export const formatBucketTick = (ms: number, windowMs: number): string =>
 /** A step in a tooltip: its start and end (`Nov 10, 16:35 – 16:40`). */
 export const formatBucketRange = (ms: number, stepSeconds: number): string =>
   `${tickDayTimeFormat().format(new Date(ms))} – ${tickTimeFormat().format(new Date(ms + stepSeconds * 1000))}`;
+
+/** Whether an axis from `startMs` to `endMs` needs the date: longer than a day, or across midnight (UI time zone). */
+export const axisNeedsDate = (startMs: number, endMs: number): boolean => {
+  if (endMs - startMs > ONE_DAY_MS) return true;
+  const day = uiDateTimeFormat({ year: 'numeric', month: '2-digit', day: '2-digit' });
+  return day.format(new Date(startMs)) !== day.format(new Date(endMs));
+};
+
+/** A label of the process timeline's axis: the clock time with seconds, with the date when `withDate`. */
+export const formatTimelineTick = (ms: number, withDate: boolean): string =>
+  (withDate ? tickDayTimeFormat() : uiDateTimeFormat({ timeStyle: 'medium' })).format(new Date(ms));
 
 /** A date-time of the backend (entity `Y-m-d H:i:s` UTC or ISO 8601) in ms; null when absent or unreadable. */
 export const parseWorkersTime = (value: string | null | undefined): number | null =>
@@ -202,6 +255,12 @@ export const throughputWindowOf = (windows: WorkerThroughputWindows | undefined,
   };
 };
 
+/** The windows of a payload, shortest first, without duplicates or a window without a length. */
+export const throughputWindowSeconds = (windows: WorkerThroughputWindows | undefined): number[] =>
+  [...new Set((windows?.elements ?? []).map((entry: WorkerThroughputWindow) => entry.windowSeconds ?? 0).filter(seconds => seconds > 0))].sort(
+    (left, right) => left - right
+  );
+
 /** Messages one worker finished per minute it ran; null when no worker ran in the window. */
 export const perWorkerMinute = (count: WorkersWindowCount): number | null =>
   count.workerMinutes > 0 ? count.handled / count.workerMinutes : null;
@@ -241,11 +300,12 @@ export interface RankedTransport {
   handled: DateTimeValue[];
 }
 
-const sumPoints = (pointLists: readonly (readonly DateTimeValue[])[]): DateTimeValue[] =>
-  (pointLists[0] ?? []).map((point, index) => ({
-    x: point.x,
-    y: pointLists.reduce((total, points) => total + (points[index]?.y ?? 0), 0),
-  }));
+/** The sum per step; a step where no list has a reading stays a gap (null), never a 0. */
+export const sumPoints = (pointLists: readonly (readonly DateTimeValue[])[]): DateTimeValue[] =>
+  (pointLists[0] ?? []).map((point, index) => {
+    const readings = pointLists.map(points => points[index]?.y).filter((value): value is number => value !== null && value !== undefined);
+    return { x: point.x, y: readings.length === 0 ? null : readings.reduce((total, value) => total + value, 0) };
+  });
 
 /**
  * The transports with any activity in the window, the busiest first (peak processes), the first seven by name and
@@ -304,3 +364,31 @@ export const wantsLogScale = (rows: readonly ChartRow[], averageKey: string, max
   const highest = rows.reduce((top, row) => Math.max(top, row[maximumKey] ?? 0), 0);
   return highest > median * 20;
 };
+
+/** Message classes, the most finished first, then by name. */
+export const sortMessageClasses = (messageClasses: readonly WorkerMessageClassStat[]): WorkerMessageClassStat[] =>
+  [...messageClasses].sort(
+    (left, right) => (right.handledCount ?? 0) - (left.handledCount ?? 0) || (left.messageClass ?? '').localeCompare(right.messageClass ?? '')
+  );
+
+/** Whether a restarted process is still live: its key (else host and pid) is in the live list. */
+export const isProcessStillLive = (
+  process: { processKey?: string | null; hostName?: string | null; processId?: number | null },
+  liveProcesses: readonly { processKey?: string | null; hostName?: string | null; processId?: number | null }[]
+): boolean =>
+  liveProcesses.some(live =>
+    process.processKey ? live.processKey === process.processKey : live.hostName === process.hostName && live.processId === process.processId
+  );
+
+/** The last error of a transport or a message class: when, the class and the message on lines of their own. */
+export const workerLastErrorText = (
+  error: { lastErrorClass?: string | null; lastErrorMessage?: string | null; lastErrorAt?: string | null },
+  t: TranslateFn
+): string =>
+  [
+    t('Last error %time%', { replacements: { time: formatClockTime(error.lastErrorAt) ?? '' } }),
+    error.lastErrorClass ?? '',
+    error.lastErrorMessage ?? '',
+  ]
+    .filter(Boolean)
+    .join('\n');

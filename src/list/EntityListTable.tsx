@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
-import { type CSSProperties, type ReactNode, useLayoutEffect, useRef, useState } from 'react';
+import { type CSSProperties, type KeyboardEvent, type ReactNode, useLayoutEffect, useRef, useState } from 'react';
 
 import { Checkbox, Skeleton, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../primitives/index.ts';
 import { useTranslate } from '../i18n/index.ts';
@@ -88,6 +88,12 @@ export interface EntityListTableProps<TItem> extends EntityListDataProps<TItem> 
   showRowIndex?: boolean;
   /** Extra classes of a body row (`index`: 0-based among the loaded rows), e.g. a muted archived row. */
   rowClassName?: (item: TItem, index: number) => string | undefined;
+  /**
+   * Rows with a `rowAction` become a tab stop: Enter or Space on the focused row runs the action (a focus ring marks
+   * it). Off by default (the row's own labelled controls keep the action reachable); for lists whose rows have no
+   * such control.
+   */
+  rowKeyboardActivation?: boolean;
 }
 
 /**
@@ -204,6 +210,7 @@ interface EntityListTableRowProps<TItem> {
   rowNumber?: number;
   layout: CellLayout;
   className?: string;
+  keyboardActivation?: boolean;
 }
 
 const EntityListTableRow = <TItem,>({
@@ -215,17 +222,36 @@ const EntityListTableRow = <TItem,>({
   rowNumber,
   layout,
   className,
+  keyboardActivation = false,
 }: EntityListTableRowProps<TItem>) => {
   const { t } = useTranslate();
   const activation = useRowActivation(action);
+  const keyboard =
+    keyboardActivation && action
+      ? {
+          tabIndex: 0,
+          onKeyDown: (event: KeyboardEvent<HTMLTableRowElement>) => {
+            // only the row itself: a focused control inside it keeps its own keys
+            if (event.target !== event.currentTarget || (event.key !== 'Enter' && event.key !== ' ')) return;
+            event.preventDefault();
+            action();
+          },
+        }
+      : undefined;
   const selected = selection?.isItemSelected(item) ?? false;
   const leading = (selection ? 1 : 0) + (rowNumber !== undefined ? 1 : 0);
   return (
     <TableRow
-      className={cn('group/row', action && 'cursor-pointer', className)}
+      className={cn(
+        'group/row',
+        action && 'cursor-pointer',
+        keyboard && 'focus-visible:bg-muted/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring',
+        className
+      )}
       data-state={selected ? 'selected' : undefined}
       role={roleIn(layout, 'row')}
       {...activation}
+      {...keyboard}
     >
       {selection && (
         <TableCell className={cn(BODY_CELL_CLASS, SELECT_CELL_CLASS)} data-row-action-ignore role={roleIn(layout, 'cell')} {...pinProps(layout, 0, false)}>
@@ -306,6 +332,7 @@ export const EntityListTable = <TItem,>({
   onClearSearch,
   loadingMessage,
   error,
+  emptyAction,
   rowAction,
   skeletonRows = 8,
   selection,
@@ -316,6 +343,7 @@ export const EntityListTable = <TItem,>({
   sortRequired = false,
   showRowIndex = false,
   rowClassName,
+  rowKeyboardActivation = false,
 }: EntityListTableProps<TItem>) => {
   const { t } = useTranslate();
   const headerTopStyle = stickyHeaderTop ? { top: stickyHeaderTop } : undefined;
@@ -542,6 +570,7 @@ export const EntityListTable = <TItem,>({
                   rowNumber={showRowIndex ? index + 1 : undefined}
                   layout={layout}
                   className={rowClassName?.(item, index)}
+                  keyboardActivation={rowKeyboardActivation}
                 />
               ))}
         </TableBody>
@@ -556,6 +585,7 @@ export const EntityListTable = <TItem,>({
         onClearSearch={onClearSearch}
         loadingMessage={loadingMessage}
         error={error}
+        emptyAction={emptyAction}
       />
       <EntityListLoadMore hasMore={showRows && hasMore} isFetchingMore={isFetchingMore} onLoadMore={onLoadMore} />
     </div>

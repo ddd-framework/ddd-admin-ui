@@ -227,6 +227,11 @@ const columns: EntityListColumn<Project>[] = [
   keep it in the URL list state as one value (`formatListSort` / `parseListSort`, `key:asc`; `nextListSort` takes the
   same cycle).
 - **Row index.** `showRowIndex`: a leading `#` column, 1-based among the loaded rows.
+- **Empty state action.** `emptyAction` on the body: one outlined button (size `sm`) under the empty and the no-results
+  state, e.g. Add next to "Clear search".
+- **Keyboard rows.** `rowKeyboardActivation` (opt-in): a row with a `rowAction` is a tab stop and Enter or Space on the
+  focused row runs it. For lists whose rows have no labelled control of their own that opens them; a row with a link
+  or an open button needs none.
 - `align: 'center' | 'end'` aligns header and cells (numbers and actions `end`).
 
 ## 6. Status badges
@@ -562,7 +567,8 @@ not happen by accident names the entity: `requirePhrase: entity.name` (the confi
 </WriteAccessProvider>
 ```
 
-A presentation aid, set once per screen (or per section; a nested provider can only narrow, never allow again):
+A presentation aid, set once per screen (or per section; a nested provider can only narrow, never allow again; an
+outer denial without a reason takes the reason of a nested denial, so a section can explain a lock set above it):
 `FormSubmitButton`, `FormDialog`'s submit, the actions and Delete of `EntityListBulkBar` and `AddEntityButton` as a
 button are disabled while `allowed` is `false`, with `reason` as their title. A link never is (`AddEntityButton href`).
 A control that only reads (a search submit, an export bulk action) passes `ignoreWriteAccess`. Other write controls
@@ -697,7 +703,10 @@ export const translationsApi = createTranslationsApi({ baseApi: adminApi, apiPre
 - A maintenance action of the host (a backfill, an import) is a `MaintenanceActionCard` (`./page`): the screen owns the
   request and the confirmation (`useConfirm`), the card shows run, pending and the last outcome.
 - Charts of the workers screens are the entry's SVG charts (`WorkerTimeChart`, `WorkerSparkline`): a `null` reading
-  is a gap, never a 0; no chart library is added for them.
+  is a gap, never a 0; no chart library is added for them. Charts of one window go into one `WorkerChartSyncGroup`
+  (shared hover); counts take `countTicks`, durations `durationTicks`.
+- A section the host needs in its own code goes through the screen's `renderSection` (keep, replace, leave out), its
+  buttons through `headerActions`; never fork the screen for one section.
 - The issues screen is `IssuesScreen` on `createIssuesApi({ baseApi, apiPrefix: '/api/admin/common/issues' })`: pass the
   URL adapters (filters, window, page and the open group become links); status changes follow the screen's
   `WriteAccessProvider`. Mount it for trusted admins only (payloads carry stack traces and account ids); a host rule that

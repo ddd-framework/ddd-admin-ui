@@ -1,16 +1,10 @@
 'use client';
 
-import { buildFieldFilter } from '@mgamadeus/ddd-web/query';
 import { useMemo } from 'react';
 
-import type { AdminLocale, TranslationsListArg } from './adminTypes.ts';
+import type { AdminLocale } from './adminTypes.ts';
 import type { TranslationsApi } from './api.ts';
-
-const ACTIVE_LOCALES_ARG: TranslationsListArg = {
-  select: 'id,languageCode,countryShortCode,isActive',
-  filters: buildFieldFilter('isActive', '1'),
-  top: 500,
-};
+import { CONTENT_LOCALES_ARG } from './appTranslationsList.ts';
 
 /** The content locale keys of active locales: one `<languageCode>::<style>` per language, in the order given. */
 export const toContentLocaleKeys = (locales: readonly AdminLocale[], writingStyle: 'FORMAL' | 'INFORMAL'): string[] => {
@@ -37,10 +31,18 @@ const NO_LOCALES: readonly string[] = [];
  * loaded entity.
  */
 export const useContentLocales = (api: TranslationsApi, { fallback = NO_LOCALES, writingStyle = 'FORMAL' }: UseContentLocalesOptions = {}): readonly string[] => {
-  const { data } = api.useLocalesQuery(ACTIVE_LOCALES_ARG);
+  const { data } = api.useLocalesQuery(CONTENT_LOCALES_ARG);
   const elements = data?.locales.elements;
   return useMemo(() => {
     const keys = toContentLocaleKeys(elements ?? [], writingStyle);
     return keys.length > 0 ? keys : fallback;
   }, [elements, writingStyle, fallback]);
 };
+
+const NO_LOCALE_ROWS: readonly AdminLocale[] = [];
+
+/**
+ * The active locales as rows (`id`, `languageCode`, `countryShortCode`), from the same request and cache entry as
+ * `useContentLocales`: a form that needs both asks once. Empty while loading or after a failure.
+ */
+export const useActiveLocales = (api: TranslationsApi): readonly AdminLocale[] => api.useLocalesQuery(CONTENT_LOCALES_ARG).data?.locales.elements ?? NO_LOCALE_ROWS;

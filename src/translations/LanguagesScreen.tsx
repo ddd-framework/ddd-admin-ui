@@ -128,7 +128,12 @@ export const LanguagesScreen = ({ api, urlStateAdapter, title, description, asSp
           onValueChange={value => isOneOf(value, LANGUAGE_WRITING_STYLES_OPTIONS) && void save(language, { supportedWritingStyles: value })}
           disabled={writeDisabled}
         >
-          <SelectTrigger size="sm" className="w-44 text-xs" aria-label={t('Writing styles of %name%', { replacements: { name: language.name ?? String(language.id) } })}>
+          <SelectTrigger
+            size="sm"
+            className="w-44 text-xs"
+            title={writeAccess.allowed ? undefined : writeAccess.reason}
+            aria-label={t('Writing styles of %name%', { replacements: { name: language.name ?? String(language.id) } })}
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -165,7 +170,13 @@ export const LanguagesScreen = ({ api, urlStateAdapter, title, description, asSp
       description={description ?? t('The languages of the platform. Active languages take part in the app translation generation, in the styles they support.')}
       headerActions={
         <PageToolbar>
-          <Button type="button" variant="outline" onClick={() => void configImport.run()} disabled={!writeAccess.allowed || configImport.isRunning} title={writeAccess.allowed ? undefined : writeAccess.reason}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void configImport.run()}
+            disabled={!writeAccess.allowed || configImport.isRunning}
+            title={writeAccess.allowed ? t('Creates or updates every language of the configuration, matched by language code.') : writeAccess.reason}
+          >
             <Download aria-hidden />
             {configImport.isRunning ? t('Importing…') : t('Import from configuration')}
           </Button>

@@ -1,17 +1,19 @@
 'use client';
 
 import { normalizeDddError } from '@mgamadeus/ddd-web/contract';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useTranslate } from '../i18n/useTranslate.ts';
 import { notify } from '../logic/pure/notify.ts';
+import { useConfirm } from '../logic/react/useConfirm.ts';
 import { useWriteAccess } from '../logic/react/writeAccess.ts';
 import { Button } from '../primitives/button.tsx';
 import { cn } from '../primitives/cn.ts';
 import { Skeleton } from '../primitives/skeleton.tsx';
 import type { AppTranslationCompleteness, AppTranslationWritingStyle } from './adminTypes.ts';
-import { completenessPercent } from './adminFormat.ts';
+import { completenessPercent, supportedWritingStylesOf, writingStyleLabel } from './adminFormat.ts';
 import type { TranslationsApi } from './api.ts';
+import { APP_TRANSLATIONS_LANGUAGES_ARG } from './appTranslationsList.ts';
 
 const barClass = (percent: number) => (percent >= 90 ? 'bg-success' : percent >= 50 ? 'bg-warning' : 'bg-destructive');
 
@@ -42,27 +44,57 @@ const localeCode = (completeness: AppTranslationCompleteness): string =>
 
 export interface TranslationCompletenessProps {
   api: TranslationsApi;
+  /**
+   * Asks the cost estimate first (`previewOnly`: the missing keys and the AI requests) and generates only after a
+   * confirmation (default true); false generates on the click, as before.
+   */
+  confirmGeneration?: boolean;
 }
 
 /**
  * Translation completeness per active locale: informal and formal bars with translated / total counts, and a button
- * per missing style that AI-generates the missing values of that locale and style (asynchronous on the backend). One
- * generation at a time; the buttons follow `WriteAccessProvider`. Nothing without an active locale.
+ * per missing style the locale's language supports that AI-generates the missing values of that locale and style
+ * (asynchronous on the backend), after a cost estimate and a confirmation. One generation at a time; the buttons follow
+ * `WriteAccessProvider`. Nothing without an active locale.
  */
-export const TranslationCompleteness = ({ api }: TranslationCompletenessProps) => {
+export const TranslationCompleteness = ({ api, confirmGeneration = true }: TranslationCompletenessProps) => {
   const { t } = useTranslate();
   const writeAccess = useWriteAccess();
+  const confirm = useConfirm();
   const query = api.useAppTranslationCompletenessQuery(undefined);
+  const languagesQuery = api.useLanguagesQuery(APP_TRANSLATIONS_LANGUAGES_ARG);
+  const languageByCode = useMemo(
+    () => new Map((languagesQuery.data?.languages.elements ?? []).map(language => [language.languageCode ?? '', language])),
+    [languagesQuery.data]
+  );
   const [generate] = api.useGenerateAppTranslationsMutation();
   const [generatingKey, setGeneratingKey] = useState<string | null>(null);
 
-  const handleGenerate = async (completeness: AppTranslationCompleteness, style: AppTranslationWritingStyle) => {
+  const handleGenerate = async (completeness: AppTranslationCompleteness, writingStyle: AppTranslationWritingStyle) => {
     const localeId = completeness.locale?.id;
     if (!writeAccess.allowed || generatingKey !== null || localeId === null || localeId === undefined) return;
-    setGeneratingKey(`${localeId}-${style}`);
+    setGeneratingKey(`${localeId}-${writingStyle}`);
     const locale = localeCode(completeness);
+    const style = t(writingStyleLabel(writingStyle));
     try {
-      const data = await generate({ localeId, writingStyle: style }).unwrap();
+      if (confirmGeneration) {
+        const preview = (await generate({ localeId, writingStyle, previewOnly: true }).unwrap()).appTranslationsResult;
+        const keys = preview?.translatedKeysCount ?? null;
+        const apiCalls = preview?.apiCalls ?? null;
+        const confirmed = await confirm({
+          title: t('Generate the missing %style% values for %locale%?', { replacements: { style, locale } }),
+          description: [
+            keys === null ? t('The number of missing keys is not known.') : t('{count, plural, one {# key is missing.} other {# keys are missing.}}', { count: keys }),
+            apiCalls === null ? null : t('{count, plural, one {About # AI request.} other {About # AI requests.}}', { count: apiCalls }),
+            t('The generation runs in the background.'),
+          ]
+            .filter(Boolean)
+            .join(' '),
+          confirmLabel: t('Generate', { context: 'action' }),
+        });
+        if (!confirmed) return;
+      }
+      const data = await generate({ localeId, writingStyle }).unwrap();
       const count = data.appTranslationsResult?.translatedKeysCount;
       notify.success(
         count !== null && count !== undefined
@@ -101,7 +133,11 @@ export const TranslationCompleteness = ({ api }: TranslationCompletenessProps) =
           const formal = completeness.formalTranslatedCount ?? 0;
           const localeId = completeness.locale?.id;
           const code = localeCode(completeness);
-          const missing: AppTranslationWritingStyle[] = [...(informal < total ? (['INFORMAL'] as const) : []), ...(formal < total ? (['FORMAL'] as const) : [])];
+          const supported = supportedWritingStylesOf(languageByCode.get(completeness.locale?.languageCode ?? ''));
+          const missing: AppTranslationWritingStyle[] = [
+            ...(informal < total ? (['INFORMAL'] as const) : []),
+            ...(formal < total ? (['FORMAL'] as const) : []),
+          ].filter(style => supported.includes(style));
           return (
             <li key={code || String(localeId)} className="surface w-44 rounded-xl px-2.5 py-2">
               <div className="mb-1.5 text-[11px] font-semibold uppercase">{code}</div>

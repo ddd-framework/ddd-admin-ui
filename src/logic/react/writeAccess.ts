@@ -8,7 +8,10 @@ import { narrowWriteAccess, WRITE_ACCESS_ALLOWED, type WriteAccess } from '../pu
 export const WriteAccessContext = createContext<WriteAccess>(WRITE_ACCESS_ALLOWED);
 
 export interface WriteAccessProviderProps {
-  /** `{ allowed, reason? }`; nested providers can only narrow (an outer `allowed: false` stays). */
+  /**
+   * `{ allowed, reason? }`; nested providers can only narrow (an outer `allowed: false` stays, and takes this reason
+   * when it has none and this one denies too).
+   */
   value: WriteAccess;
   children?: ReactNode;
 }

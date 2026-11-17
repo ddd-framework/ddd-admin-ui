@@ -88,6 +88,150 @@ Checks: server renders of the three entries (`test:render`), a browser run on RT
 (`browser-operations.mjs`: filters, drawers, typed-phrase confirmations, the 403 and 409 states, 390 px on a 6x
 throttled CPU), and the showcase 390 px check on a throttled CPU (after a resize and on a fresh load).
 
+## 0.2.3
+
+The app translations screen gains the host slots and list features hosts kept their own list for, and the key drawer
+the value handling. Additive: hosts that pass nothing new get the screen with the new features below (a row number,
+sortable id and key, cards below `md`, a delete per row, compact values, the generation confirmation); the list
+snapshot (0.1.0-rc.2) and the form actions snapshot (0.1.0-rc.5) are unchanged.
+
+`./translations`:
+
+- `AppTranslationsScreen` host slots: `headerActions`, `moreActions` (the overflow menu), `toolbarTrailing`, `columns`
+  (add, reorder or replace the package's), `extraFilters` with `extraActiveFilterCount` and `onClearExtraFilters`,
+  `renderCard`, `displayMode` / `onDisplayModeChange` (a view toggle now sits in the toolbar), `useListQuery` (wrap or
+  replace the list query).
+- List: sorting by id (default newest first) and key (`sort` in the URL), the row number (`showRowIndex`, default
+  true), the package's card below `md` and in the card view, a delete per row (asks first), the first four values with
+  "+N" (`valuesPreviewCount`), a country code next to a value with a country; "Clear filters" keeps the toolbar
+  search; the empty state ("No translation keys found") and the no-results state ("No keys match your search") each
+  have their own sentence and an "Add key" action.
+- Bulk delete continues past a failure and summarises deleted / failed / skipped keys (`runSequentialWithSummary`), or
+  makes one request through the application's endpoint: `createTranslationsApi({ …, bulkDelete: true | { path,
+  method, body } })` adds `useBulkDeleteAppTranslationKeysMutation` (`buildAppTranslationKeysBulkDeleteRequest`;
+  the static api with `bulkDeleteAppTranslationKeys`).
+- Drawer: the key is required (marker and message; Save is no longer disabled while it is empty); an empty template or
+  hint is sent as `null`, the hint trimmed (`toAppTranslationKeyBody`); a "Delete key" button; values show and take a
+  country (the language's active locales; "Every country" = none), offer only the language's writing styles, cannot be
+  saved with an empty text, count for the unsaved-changes question (Cancel, ✕, Esc), and get a search, style and
+  context filter and an order from two values on; the add form offers only languages and combinations the key lacks.
+- `TranslationCompleteness`: the generation per locale and style asks the cost estimate first (`previewOnly`) and runs
+  after a confirmation (`confirmGeneration`, default true), and is offered only for the styles the locale's language
+  supports; the toast names the style ("Formal"), not the enum.
+- URL names: `drawerEditKey`, `drawerCreateKey`, `urlParamNames` (e.g. `{ id: 'keyId' }`; `renameUrlStateKeys`).
+- Shared cache entries: `buildAppTranslationKeysListArgs`, `buildAppTranslationKeysFilter`, `appTranslationKeysOrderBy`,
+  `APP_TRANSLATION_KEYS_PAGE_SIZE`, `APP_TRANSLATION_KEY_FILTER_KEYS`, `APP_TRANSLATION_KEY_SORT_KEYS`,
+  `DEFAULT_APP_TRANSLATION_KEY_SORT`, `CONTENT_LOCALES_ARG`, `ACTIVE_LANGUAGES_ARG`, `ACTIVE_LOCALES_WITH_COUNTRIES_ARG`,
+  `APP_TRANSLATIONS_LANGUAGES_ARG`, `useActiveLocales` (the rows of `useContentLocales`' request). The cache tags stay
+  exported (`APP_TRANSLATIONS_TAG`, `LANGUAGES_TAG`, `LOCALES_TAG`).
+- Value helpers: `supportedWritingStylesOf`, `appTranslationValueCombination`, `toCountryCodeMap`,
+  `appTranslationValueCountryCode`, `filterAppTranslationValues`, `sortAppTranslationValuesBy`, `writingStyleLabel`.
+- The static api answers `generateAppTranslations` when given (the preview).
+
+`./list`: `emptyAction` on `EntityListBody`, `EntityListTable` and `EntityListGrid`: one action under the empty and the
+no-results state.
+
+Texts: new keys `+%count% more`, `Show fewer`, `A value needs a text; delete it instead.`, `Add key`, `Delete key`,
+`Delete the key %key%`, `Delete the key “%key%”?`, `The key and all its values are deleted. This cannot be undone.`,
+`Key deleted`, `Failed to delete key`, `Deleting` (context `bulk-progress`), `Deleted` (context `bulk-done`), `key` /
+`keys` (context `translation-key-noun`), `Enter the key.`, `Country of the new translation`, `Every country`,
+`Every style`, `Singular and plural`, `Writing style`, `Context` (context `translation-value`), `Order` (context
+`translation-values`), `Language A–Z`, `Language Z–A`, `Oldest first`, `Newest first`, `Search values…`,
+`Search the values of this key`, `No value matches.`, `No keys match your search`,
+`The key already has a value for this language, country, style and context.`,
+`Generate the missing %style% values for %locale%?`, `Generate` (context `action`), `# key(s) is/are missing.`,
+`About # AI request(s).`, `The number of missing keys is not known.`, `The generation runs in the background.`.
+Removed: `# key(s) deleted` (the bulk delete's summary is the standard bulk summary now).
+
+## 0.2.2
+
+The workers screens gain what hosts kept their own screens for (synced charts, readouts, keyboard rows, tooltips,
+slots, payload windows), the app translations list gets a keyboard path to a key, and the translation helpers cover
+several entities and host import kinds. Everything is additive: a caller that passes none of the new props keeps its
+behaviour, except where a point below says the screen now shows something else. The list snapshot (0.1.0-rc.2) and the
+form actions snapshot (0.1.0-rc.5) are unchanged.
+
+`./workers`:
+
+- Charts: `WorkerChartSyncGroup` shares the hovered step between the time charts below it (the history charts of the
+  overview and the five charts of a transport are each one group; `WorkerTimeChart sync={false}` leaves a group).
+  `WorkerTimeChart.ticks` takes a tick generator: `countTicks` (whole-number steps, the new default: no 0.25 / 0.5 /
+  2.5 on count axes), `durationTicks` (round time units; the duration and wait charts use it), or the host's own;
+  `niceTicks(maximum, count, { integer })`, `DURATION_TICK_STEPS_MS`, `WorkerTickGenerator`.
+- `WorkerSparkline` reads one step on pointing (value, what it counts, the step's start and end) in the package
+  tooltip; `stepSeconds`, `formatValue`, `readout` (default true). The sparkline is wrapped in a
+  `data-slot="worker-sparkline"` element.
+- Transports table: a row opens its transport by pointer or keyboard (rows are tab stops, Enter / Space), following the
+  row's link through the link component; `onOpenTransport` replaces that. The sparkline column header follows
+  `sequenceWindowSeconds`; `stepSeconds`, `liveProcesses` (the restart follow-up per row).
+- Tooltips instead of native titles (hover, keyboard focus, tap; line breaks kept), through the new `WorkerHint`: the
+  last error of a transport and of a message class (time, class and message on lines of their own), the error of a
+  message run, the uncounted queue (with its state code), "above range", the process range, the inferred stop reason,
+  the timeline lanes and the restart button's disabled reason (also as screen-reader text).
+- Process timeline: every lane is a tab stop with its details (state word, full host and pid, start and end, "(last
+  heartbeat)" for a lost process, counts, the current message, the stop reason); the axis has three labels (the middle
+  one from `sm`) and the date when the span crosses a day.
+- Monitoring off: the live panel shows "?" and "monitoring is off" for workers and messages in work, the "In work now"
+  tile says "not measured", the process range shows the configured range (`WorkerProcessRange.monitoringEnabled`,
+  `WorkersLivePanel.monitoringEnabled`), the banner names the setting (`Common.Workers enabled (WORKERS_ENABLED=1)`),
+  and the transport page disables its restart (`WorkerTransportScreen.monitoringEnabled`; by default read from the
+  overview query, one request shared with the overview's cache entry).
+- `WorkersLivePanel.totals`: the header line uses the backend's totals (the overview screen passes them), "waiting
+  messages unknown" when not every queue was counted; the worker counts are left out while the monitoring is off.
+- Window labels from the payload: the throughput columns are the payload's windows (Core's four by default, their ids
+  unchanged), the per-worker rate uses `recentWindowSeconds` (`WorkersThroughputTable.recentWindowSeconds`), the drain
+  estimate the shortest window (its window in a tooltip), the tile hints `sequenceWindowSeconds`.
+- Numbers in the UI language: durations, memory, rates and the failed share use its decimal separator
+  (`4,2 s` in German); the unit symbols stay. `formatRate`, `formatPercentNumber`, `formatWindowLength`,
+  `windowHeaderText`, `inWindowText`, `throughputWindowSeconds`.
+- `WorkerRestartButton.liveProcesses`: the result follows each asked process against the live list ("stopped" /
+  "waiting to stop", "n of m stopped"); the screens pass it (header, table rows, transport page). The toast is sent
+  only when a process was asked; a restart of one transport without a process names it. The restart request now also
+  invalidates the history and the message runs (`HISTORY`, `RUNS`), not only `LIVE`.
+- `WorkersOverviewScreen`: a refresh button in the header (`showRefreshButton`, default true), `headerActions`, a
+  warning with the time of the shown data when a refresh fails, `renderSection(id, section)` (`status`, `live`,
+  `throughput`, `history`, `transports`, `loops`), `linkComponent`, `onOpenTransport`. The live description names the
+  refresh interval; the history texts name the transports that had a worker and the messages finished in the window.
+- `WorkerTransportScreen`: `headerActions`, `renderSection` (`facts`, `history`, `messageClasses`, `liveProcesses`,
+  `runs`, `processes`), `linkComponent`, `monitoringEnabled`. New exports: `WorkerTransportFacts`,
+  `workerTransportDefinitionText`, `WORKER_TRANSPORT_TABS`, the section id and renderer types.
+- Message classes are sorted by finished count (`sortMessageClasses`); the outcome and process filters have an explicit
+  "All" chip; a runs or processes list that reached its 500-row cap says so; an unknown state, outcome or display state
+  shows as itself in a neutral badge instead of a dash (`rawStatusValue`); the "Other" series keeps a step without any
+  reading as a gap (`sumPoints`); the process range turns to the warning colour above the maximum; the throughput
+  chart is empty only without finished and redelivered messages; a loop interval that is no whole minute is exact.
+
+`./list`: `EntityListTable` / `EntityListBody` `rowKeyboardActivation` (opt-in): rows with a `rowAction` are tab stops,
+Enter or Space runs the action.
+
+`./logic`: a nested `WriteAccessProvider` that denies with a `reason` adds it to an outer denial without one (it still
+never widens).
+
+`./translations`:
+
+- `AppTranslationsScreen`: the key is a link to its drawer (`?edit=<id>`, or `keyHref(key)`): a plain click opens the
+  drawer in place, a modified click a new tab; rows are tab stops (Enter / Space opens the key).
+- `useEntitiesTranslator`: several drafts in one `translateEntities` request per locale, one translations store per
+  draft (`EntitiesTranslator`, `EntitiesTranslationRequest`). `TranslatableEntityPayload.objectType` accepts `null`.
+- `ConfigImportCard` / `useConfigImport`: any `kind` with the host's `operation` (answers the imported count) and
+  translated `texts` (`ConfigImportTexts`, `ConfigImportOptions`), e.g. countries.
+- Languages / Locales: the header import button describes what it imports (its title); the writing-styles select
+  carries the write-access reason.
+
+Texts: new keys `%minutes% min`, `%percent% % of the last %window%`, `%stopped% of %asked% stopped`,
+`(last heartbeat)`, `All`, `At the rate of the last %window%`, `Last %window%`, `Last error %time%`,
+`No message finished in the last %window% and every queue is empty.`,
+`No worker process of %transport% is running right now: nothing to restart.`, `Now: %messageClass%`, `Refresh now`,
+`Refreshed every %seconds% s.`, `Setting: %setting%.`, `Showing the data of %time%.`, `Showing the last data that
+loaded.`, `Showing the newest %count%. Narrow the filter to reach older ones.`, `The worker overview could not be
+refreshed.`, `every %duration%`, `in the last %window%`, `last %window%`, `monitoring is off`,
+`nothing finished in %window%`, `pid %pid%`, `stopped` (context `worker-restart`), `waiting messages unknown`,
+`waiting to stop`, the plurals `# transport(s) had a worker in this window` and `# message(s) finished in this window`,
+and for the import of a host kind `Import from the configuration`, `Import from the configuration?`,
+`Creates or updates every configured row, matched by its key.`, `No import operation for “%kind%”.`,
+`Imported # row(s) from the configuration`. Changed: `Last error %time%: %message%` became `Last error %time%` (the
+class and the message follow on their own lines).
+
 ## 0.2.1
 
 The showcase no longer widens the page at phone width; 0.2.0 was tagged but not published, so 0.2.1 is the first

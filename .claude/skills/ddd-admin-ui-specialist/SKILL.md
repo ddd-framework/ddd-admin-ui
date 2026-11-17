@@ -58,14 +58,20 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | a crashed or loading route (`error.tsx`, `loading.tsx`) | `RouteError` (`onRetry`, `onReport`), `RouteLoading` | page |
 | crop or normalise a picked image | `ImageCropDialog` (`aspectOptions`, `allowSkip`, `output`) + `normalizeImage` | media, logic |
 | a colour value | `ColorValueField` with an explicit `format` (`hex` / `hex-alpha`) | form |
-| the workers monitoring (overview, transport, runs, processes, restart) | `createWorkersApi({ baseApi, apiPrefix })` + `WorkersOverviewScreen` / `WorkerTransportScreen` | workers |
-| app translations, languages, locales, import from configuration | `createTranslationsApi({ baseApi, apiPrefix })` + `AppTranslationsScreen` / `LanguagesScreen` / `LocalesScreen` / `ConfigImportCard` | translations |
+| the workers monitoring (overview, transport, runs, processes, restart) | `createWorkersApi({ baseApi, apiPrefix })` + `WorkersOverviewScreen` / `WorkerTransportScreen` (`headerActions`, `renderSection`, `linkComponent`) | workers |
+| one section of a package screen as host code | `renderSection(id, section)` (keep / `null` / own node); the exported parts (`WorkerTransportFacts`, `WORKER_TRANSPORT_TABS`) | workers |
+| charts of one window with a shared hover, round axis ticks | `WorkerChartSyncGroup` + `WorkerTimeChart ticks={countTicks \| durationTicks}` | workers |
+| a list row that opens by keyboard (no own button) | `EntityListBody` / `EntityListTable` `rowKeyboardActivation` with `rowAction` | list |
+| app translations, languages, locales, import from configuration | `createTranslationsApi({ baseApi, apiPrefix, bulkDelete? })` + `AppTranslationsScreen` (slots: `headerActions`, `moreActions`, `toolbarTrailing`, `columns`, `extraFilters`, `renderCard`, `useListQuery`) / `LanguagesScreen` / `LocalesScreen` / `ConfigImportCard` | translations |
+| a host hook on the same cache entry as a package screen | `buildAppTranslationKeysListArgs`, `CONTENT_LOCALES_ARG` / `useActiveLocales`, the exported tags | translations |
+| an Add button in a list's empty state | `EntityListBody emptyAction` | list |
+| AI translation of an entity form, content locales from the active locales | `useEntityTranslator(api)` (several drafts per request: `useEntitiesTranslator`) + `useTranslationRunner`, `useContentLocales(api)` | translations, logic |
+| an import from configuration of a host kind (countries) | `ConfigImportCard kind="countries" operation={…} texts={…}` | translations |
 | the error groups of the issues registry (environments, status tabs, trend, occurrences, resolve / ignore / reopen) | `createIssuesApi({ baseApi, apiPrefix })` + `IssuesScreen` (`urlStateAdapter`, `drawerUrlAdapter`) | issues |
 | one error occurrence (frames with code, causes, request, job, client) in a host's own view | `IssueEventDetails` (+ `IssueFrameList`, `IssueCauses`) | issues |
 | the schema diff (apply per table or in bulk, blocked tables, the signature gate, generated SQL and model code) | `createDatabaseApi({ baseApi, apiPrefix })` + `SchemaDiffScreen` (`GeneratedCodePanel` alone for the previews) | database |
 | scheduled commands: list with health, run now, on / off, runs and output, timeline, create / edit with schedule preview | `createCronsApi({ baseApi, apiPrefix })` + `CronsScreen` (`urlStateAdapter`, `drawerUrlAdapter`) | crons |
 | status text legible on a host whose status colours are fills | set `--success-text`, `--warning-text`, `--destructive-text`, `--info-text` (light and dark); badges keep `StatusBadge` | theme.css, tokens.json |
-| AI translation of an entity form, content locales from the active locales | `useEntityTranslator(api)` + `useTranslationRunner`, `useContentLocales(api)` | translations, logic |
 | a maintenance action (run, pending, last outcome) | `MaintenanceActionCard` | page |
 
 ## Rules that fail silently
@@ -126,8 +132,8 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 - **Confirmations** ask through `useConfirm()`: no dialog to render; without `AdminUiProvider` every call answers
   `false` (one warning outside production). A host service goes into the provider's `confirm`.
 - **Write access is a presentation aid.** `WriteAccessProvider` disables `FormSubmitButton`, `FormDialog`'s submit, the
-  bulk bar's actions and `AddEntityButton` as a button (never a link); a nested provider only narrows. Handlers keep
-  their guard and the server its check.
+  bulk bar's actions and `AddEntityButton` as a button (never a link); a nested provider only narrows (it may add the
+  reason an outer denial lacks). Handlers keep their guard and the server its check.
 - **Showcase** needs no optional peer: pass `loadNotifySonner={() => import('@mgamadeus/ddd-admin-ui/notify-sonner')}`
   only when sonner is installed. A new block gets a showcase sample and a `SHOWCASE_COVERAGE` entry, or the checks fail.
 - **Text contexts are literals.** `m('Failed', { context: 'import-status' })`: extractors (the package manifest and

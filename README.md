@@ -323,7 +323,7 @@ not a role overrides it on its controller; the screens need nothing for it (a 40
 | `useHistoryQuery` | `GET /history?from&to&stepSeconds` |
 | `useTransportDetailQuery` | `GET /transports/{transport}?from&to&stepSeconds` |
 | `useMessageRunsQuery`, `useProcessesQuery` | `GET /transports/{transport}/messageRuns`, `/processes` (QueryOptions) |
-| `useRestartMutation` | `POST /restart` with `{}` or `{ transport }` (invalidates the live reads) |
+| `useRestartMutation` | `POST /restart` with `{}` or `{ transport }` (invalidates the live reads, the history and the runs) |
 
 ```tsx
 'use client';
@@ -347,9 +347,45 @@ export const TransportPage = ({ transport }: { transport: string }) => (
 );
 ```
 
-The overview refreshes every 10 s and the history every minute while the tab is visible; the only action is the
-restart request (no scaling control). The charts are SVG drawn by the entry (no chart library, no optional peer), in
-the colour roles of `tokens.json`; a step without a reading is a gap, never a 0.
+The overview refreshes every 10 s (and on its refresh button) and the history every minute while the tab is visible;
+a failed refresh keeps the last data under a warning with its time. The only action is the restart request (no scaling
+control); its result follows each asked process against the live list until it stopped. The charts are SVG drawn by
+the entry (no chart library, no optional peer), in the colour roles of `tokens.json`; a step without a reading is a gap,
+never a 0. Pointing at a chart reads the same step in every chart of its section (`WorkerChartSyncGroup`), a sparkline
+reads one step, count axes use whole-number ticks and duration axes round time units (`WorkerTimeChart.ticks`:
+`countTicks`, `durationTicks` or the host's own). Window labels (throughput columns, the per-worker and drain-estimate
+windows, the tile hints, the sparkline column) follow the window lengths of the payload; numbers follow the UI
+language. Truncated errors, uncounted queues, the process range and the timeline lanes open their details in the
+package tooltip (hover, keyboard focus, tap). A transport row opens the transport by pointer or keyboard (Enter /
+Space on the focused row; `onOpenTransport` replaces following its link).
+
+Links come from `AdminUiProvider.linkComponent`; a host without one passes the router link to the screen
+(`linkComponent={Link}`), else the links are plain anchors (a full page load, and no `basePath`). Both screens take
+`headerActions` (the host's buttons before the restart) and `renderSection(id, section)`: return `section` to keep it,
+`null` to leave it out, or the host's own node in its place.
+
+```tsx
+<WorkersOverviewScreen
+  api={workersApi}
+  transportHref={transportHref}
+  linkComponent={Link}
+  headerActions={<ExportButton onExport={exportWorkers} />}
+  renderSection={(id, section) => (id === 'loops' ? <HostLoops /> : section)}   // status, live, throughput, history, transports, loops
+/>
+<WorkerTransportScreen
+  api={workersApi}
+  transport={transport}
+  backHref="/maintenance/workers"
+  monitoringEnabled={overview?.monitoringEnabled}   // default: read from the overview query (one shared request)
+  renderSection={(id, section) => section}          // facts, history, messageClasses, liveProcesses, runs, processes
+/>
+```
+
+The parts stay exported for a screen of the host's own: `WorkerTransportFacts`, `workerTransportDefinitionText` (the
+definition line), `WORKER_TRANSPORT_TABS` (the tabs, e.g. for a breadcrumb), `WorkerRestartButton` (`liveProcesses`
+for the follow-up), `WorkersLivePanel` (`totals` for the header line, `monitoringEnabled`), `WorkerProcessRange`
+(`monitoringEnabled`; above the maximum it turns to the warning colour), the charts, `WorkerHint`, and the cache tag
+`WORKERS_TAG`.
 
 ### `./translations` (admin screens)
 
@@ -370,6 +406,7 @@ on the application's admin controllers: the modules ship the entities and servic
 | `useLanguagesQuery`, `useUpdateLanguageMutation`, `useImportLanguagesFromConfigMutation` | `GET languages/list`, `PATCH languages` (`{ language }`), `GET languages/importFromConfig` |
 | `useLocalesQuery`, `useUpdateLocaleMutation`, `useImportLocalesFromConfigMutation` | `GET locales/list`, `PATCH locales` (`{ locale }`), `GET locales/importFromConfig` |
 | `useTranslateEntitiesMutation` | `POST translations/translateEntities` (`{ entitiesToTranslate, localesToTranslate }`) |
+| `useBulkDeleteAppTranslationKeysMutation` (with `bulkDelete`) | the application's bulk delete, default `POST app-translations/keys/bulk/delete` (`{ appTranslationKeyIds }`; `path`, `method`, `body` configurable) |
 
 ```tsx
 'use client';
@@ -388,9 +425,58 @@ export const ImportsPage = () => <ConfigImportCard api={translationsApi} kind="l
 ```
 
 `useEntityTranslator(translationsApi)` translates an entity draft into one locale per request and feeds
-`useTranslationRunner` (`./logic`); `useContentLocales(translationsApi, { fallback })` gives the content locale keys of
-the active locales. `ConfigImportCard` is a `MaintenanceActionCard` (`./page`): title, description, run, the outcome of
-the last run.
+`useTranslationRunner` (`./logic`); `useEntitiesTranslator` sends several drafts in one request per locale and answers
+one translations store per draft. `TranslatableEntityPayload.objectType` takes `string | null` (generated entity
+types). `useContentLocales(translationsApi, { fallback })` gives the content locale keys of the active locales.
+`ConfigImportCard` is a `MaintenanceActionCard` (`./page`): title, description, run, the outcome of the last run; a
+kind of the host (countries) brings its `operation` (answers the imported rows' count) and its translated `texts`:
+
+```tsx
+<ConfigImportCard
+  api={translationsApi}
+  kind="countries"
+  operation={async () => (await importCountries().unwrap()).countries.elements?.length ?? 0}
+  texts={{ title: countriesTitle, description: countriesDescription, confirmTitle: countriesConfirmTitle, result: countriesResult }}
+/>
+```
+
+In `AppTranslationsScreen` the key is a link to its drawer (`?edit=<id>`, or the host's `keyHref(key)`): a plain click
+opens the drawer in place, a modified click a new tab; a row opens by pointer or keyboard (Enter / Space on the
+focused row).
+
+The keys list sorts by id (default, newest first) or key (`sort` in the URL), numbers its rows, shows cards below `md`
+and in the card view, the first four values of a key with "+N" (`valuesPreviewCount`), a delete per row and in the
+drawer; "Clear filters" keeps the search; the empty state offers Add. A bulk delete uses the application's endpoint when
+the api has it (`createTranslationsApi({ …, bulkDelete: true })`), else one request per key, and summarises deleted and
+skipped keys. The generation per locale and style asks the cost estimate first (`previewOnly`) and runs after a
+confirmation (`TranslationCompleteness confirmGeneration`), only for the styles the language supports. In the drawer
+the key is required, an empty template or hint is sent as `null`; values carry a country, keep the language's styles,
+cannot be saved empty, count for the discard question, and are searched, filtered and ordered from two values on; the
+new-value form offers only combinations the key lacks.
+
+Host slots of `AppTranslationsScreen`:
+
+```tsx
+<AppTranslationsScreen
+  api={translationsApi}
+  headerActions={<Button variant="outline" onClick={openUntracked}>Untracked keys</Button>}
+  moreActions={[{ id: 'sync', label: 'Key sync', onSelect: syncKeys }]}
+  toolbarTrailing={<CompactToggle />}
+  columns={columns => [...columns.slice(0, 3), usageColumn, ...columns.slice(3)]}
+  extraFilters={<FilterText label="Folder" value={folder} onChange={setFolder} />}
+  extraActiveFilterCount={folder ? 1 : 0}
+  onClearExtraFilters={() => setFolder('')}
+  renderCard={({ item, onActivate }) => <HostKeyCard item={item} onActivate={onActivate} />}
+  displayMode={view} onDisplayModeChange={setView}                // e.g. useListViewParam('appTranslations')
+  useListQuery={useKeysWithUsage}                                  // wraps api.useAppTranslationKeysQuery
+  drawerEditKey="key" drawerCreateKey="newKey" urlParamNames={{ id: 'keyId' }}
+/>
+```
+
+A host hook that asks what a package screen asks shares its cache entry: `buildAppTranslationKeysListArgs(filters,
+sort)` (plus `top` / `skip`), `CONTENT_LOCALES_ARG` (or `useActiveLocales(api)` for the rows of `useContentLocales`),
+`ACTIVE_LANGUAGES_ARG`, `ACTIVE_LOCALES_WITH_COUNTRIES_ARG`, `APP_TRANSLATIONS_LANGUAGES_ARG`; the host's own writes
+invalidate the exported tags (`APP_TRANSLATIONS_TAG`, `LANGUAGES_TAG`, `LOCALES_TAG`) to refresh the package screens.
 
 ### `./issues`
 

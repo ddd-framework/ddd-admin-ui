@@ -1,13 +1,40 @@
 'use client';
 
 import { LineChart } from 'lucide-react';
-import { type PointerEvent, type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { createContext, type PointerEvent, type ReactNode, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { useTranslate } from '../i18n/useTranslate.ts';
 import { Card, CardContent } from '../primitives/card.tsx';
 import { cn } from '../primitives/cn.ts';
 import { Skeleton } from '../primitives/skeleton.tsx';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../primitives/tooltip.tsx';
 import { type ChartRow, formatBucketRange, formatBucketTick, formatCount } from './format.ts';
+import { countTicks, niceTicks, type WorkerTickGenerator } from './ticks.ts';
+
+export { niceTicks };
+
+/** The hovered step shared by the charts of one `WorkerChartSyncGroup` (its start in ms; null: none). */
+interface WorkerChartSyncValue {
+  hoveredMs: number | null;
+  setHoveredMs: (ms: number | null) => void;
+}
+
+const WorkerChartSyncContext = createContext<WorkerChartSyncValue | null>(null);
+
+export interface WorkerChartSyncGroupProps {
+  children: ReactNode;
+}
+
+/**
+ * Synced hover for the time charts below it: pointing at one chart marks the same step in every chart of the group
+ * and shows each one's readout (the charts of one window share their steps). A chart leaves the group with
+ * `sync={false}`; groups nest (a chart follows the nearest).
+ */
+export const WorkerChartSyncGroup = ({ children }: WorkerChartSyncGroupProps) => {
+  const [hoveredMs, setHoveredMs] = useState<number | null>(null);
+  const value = useMemo(() => ({ hoveredMs, setHoveredMs }), [hoveredMs]);
+  return <WorkerChartSyncContext.Provider value={value}>{children}</WorkerChartSyncContext.Provider>;
+};
 
 /**
  * The workers charts, drawn as SVG without a chart library (no optional peer, server-rendered at a default width and
@@ -130,6 +157,13 @@ export interface WorkerTimeChartProps {
   formatTick?: (value: number) => string;
   /** Tooltip value text (default: counts). */
   formatValue?: (value: number) => string;
+  /**
+   * The value-axis ticks for the highest value drawn (default: whole-number steps, `countTicks`; `durationTicks` for
+   * milliseconds on round time units). Ignored on a logarithmic axis (decades).
+   */
+  ticks?: WorkerTickGenerator;
+  /** Inside a `WorkerChartSyncGroup`: follow the group's hovered step (default true). */
+  sync?: boolean;
   /** Logarithmic value axis, for maxima that dwarf the averages (a value ≤ 0 is a gap there). */
   logScale?: boolean;
   /** Dashed horizontal lines (a configured minimum and maximum). */
@@ -161,18 +195,6 @@ const useMeasuredWidth = (fallback: number) => {
     return () => observer.disconnect();
   }, []);
   return { ref, width };
-};
-
-/** Round ticks from 0 to at least `maximum` (about four steps). */
-export const niceTicks = (maximum: number, count = 4): number[] => {
-  if (!(maximum > 0)) return [0, 1];
-  const raw = maximum / count;
-  const magnitude = 10 ** Math.floor(Math.log10(raw));
-  const step = ([1, 2, 2.5, 5, 10].map(factor => factor * magnitude).find(candidate => candidate >= raw) ?? raw);
-  const ticks: number[] = [];
-  for (let tick = 0; tick < maximum + step * 0.999; tick += step) ticks.push(Number(tick.toFixed(10)));
-  if ((ticks[ticks.length - 1] ?? 0) < maximum) ticks.push(Number((ticks.length * step).toFixed(10)));
-  return ticks;
 };
 
 /** Decade ticks of a logarithmic axis between `floor` and `maximum`. */
@@ -245,12 +267,31 @@ export const WorkerTimeChart = ({
   logScale = false,
   referenceLines = [],
   showTotal = false,
+  ticks: tickGenerator = countTicks,
+  sync = true,
   ariaLabel,
 }: WorkerTimeChartProps) => {
   const { t } = useTranslate();
   const gradientPrefix = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const { ref, width } = useMeasuredWidth(DEFAULT_WIDTH);
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [ownHoverIndex, setOwnHoverIndex] = useState<number | null>(null);
+  const syncGroup = useContext(WorkerChartSyncContext);
+  const group = sync ? syncGroup : null;
+  const groupHoveredMs = group?.hoveredMs ?? null;
+  const stepMsOfRows = stepSeconds * 1000;
+  // in a group the hovered step is the group's: the row whose step contains it
+  const hoverIndex = group
+    ? groupHoveredMs === null
+      ? null
+      : (() => {
+          const index = rows.findIndex(row => groupHoveredMs >= row.ms && groupHoveredMs < row.ms + stepMsOfRows);
+          return index === -1 ? null : index;
+        })()
+    : ownHoverIndex;
+  const setHoverIndex = (index: number | null) => {
+    if (group) group.setHoveredMs(index === null ? null : (rows[index]?.ms ?? null));
+    else setOwnHoverIndex(index);
+  };
 
   const plot = useMemo(() => {
     const stepMs = stepSeconds * 1000;
@@ -291,7 +332,7 @@ export const WorkerTimeChart = ({
       }
     }
     for (const line of referenceLines) maximum = Math.max(maximum, line.y);
-    const ticks = logScale ? logTicks(Number.isFinite(floor) ? floor : 1, Math.max(maximum, 1)) : niceTicks(maximum);
+    const ticks = logScale ? logTicks(Number.isFinite(floor) ? floor : 1, Math.max(maximum, 1)) : tickGenerator(maximum);
     const top = ticks[ticks.length - 1] ?? 1;
     const bottom = logScale ? (ticks[0] ?? 1) : 0;
     const yOf = (value: number) => {
@@ -307,7 +348,7 @@ export const WorkerTimeChart = ({
     const timeTickCount = Math.max(Math.floor(innerWidth / 90), 2);
     const timeTicks = rows.length === 0 ? [] : Array.from({ length: timeTickCount + 1 }, (_, index) => startMs + (span * index) / timeTickCount);
     return { innerHeight, xOf, yOf, centre, ticks, barGroups, barWidth, slot, timeTicks, lowerByKey, upperByKey, stepMs };
-  }, [rows, series, width, height, stepSeconds, logScale, referenceLines]);
+  }, [rows, series, width, height, stepSeconds, logScale, referenceLines, tickGenerator]);
 
   const onPointerMove = (event: PointerEvent<SVGSVGElement>) => {
     if (rows.length === 0) return;
@@ -504,14 +545,34 @@ export interface WorkerSparklineProps {
   rows: readonly ChartRow[];
   valueKey: string;
   color: string;
-  /** Accessible description (`handled in the last hour`). */
+  /** Accessible description (`handled in the last hour`); also what the readout says the value counts. */
   label: string;
   height?: number;
+  /** Seconds per step of the readout's step range (default: the distance of the first two rows). */
+  stepSeconds?: number;
+  /** Readout value text (default: counts). */
+  formatValue?: (value: number) => string;
+  /** The readout on pointing (value, what it counts, the step's range; default true). */
+  readout?: boolean;
 }
 
-/** The last hour of one value in a tile or a table row: a thin line over a soft wash, no axes; gaps stay gaps. */
-export const WorkerSparkline = ({ rows, valueKey, color, label, height = 36 }: WorkerSparklineProps) => {
+/**
+ * The last hour of one value in a tile or a table row: a thin line over a soft wash, no axes; gaps stay gaps.
+ * Pointing at it reads one step (value, what it counts, the step's start and end) in the package tooltip.
+ */
+export const WorkerSparkline = ({
+  rows,
+  valueKey,
+  color,
+  label,
+  height = 36,
+  stepSeconds,
+  formatValue = formatCount,
+  readout = true,
+}: WorkerSparklineProps) => {
+  const { t } = useTranslate();
   const gradientId = `${useId().replace(/[^a-zA-Z0-9_-]/g, '')}-spark`;
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const values = rows.map(row => row[valueKey] ?? null);
   const maximum = Math.max(1, ...values.map(value => value ?? 0));
   const count = Math.max(values.length - 1, 1);
@@ -519,8 +580,29 @@ export const WorkerSparkline = ({ rows, valueKey, color, label, height = 36 }: W
     value === null ? null : { x: (index / count) * 100, y: height - 1 - (value / maximum) * (height - 4) }
   );
   const baseline = points.map(point => (point ? { x: point.x, y: height - 1 } : null));
-  return (
-    <svg role="img" aria-label={label} viewBox={`0 0 100 ${height}`} preserveAspectRatio="none" width="100%" height={height} className="block">
+  const step = stepSeconds ?? (rows.length > 1 ? Math.max(((rows[1]?.ms ?? 0) - (rows[0]?.ms ?? 0)) / 1000, 1) : 60);
+  const hovered = hoverIndex === null ? undefined : rows[hoverIndex];
+  const hoveredValue = hoverIndex === null ? null : (values[hoverIndex] ?? null);
+
+  const onPointerMove = (event: PointerEvent<SVGSVGElement>) => {
+    if (rows.length === 0) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const ratio = bounds.width > 0 ? (event.clientX - bounds.left) / bounds.width : 0;
+    setHoverIndex(Math.min(Math.max(Math.round(ratio * count), 0), rows.length - 1));
+  };
+
+  const svg = (
+    <svg
+      role="img"
+      aria-label={label}
+      viewBox={`0 0 100 ${height}`}
+      preserveAspectRatio="none"
+      width="100%"
+      height={height}
+      className={cn('block', readout && 'touch-pan-y')}
+      onPointerMove={readout ? onPointerMove : undefined}
+      onPointerLeave={readout ? () => setHoverIndex(null) : undefined}
+    >
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={color} stopOpacity={0.25} />
@@ -531,6 +613,40 @@ export const WorkerSparkline = ({ rows, valueKey, color, label, height = 36 }: W
         <path key={path} d={path} fill={`url(#${gradientId})`} />
       ))}
       <path d={linePath(points, false)} fill="none" stroke={color} strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
+      {hoverIndex !== null && (
+        <line
+          x1={(hoverIndex / count) * 100}
+          x2={(hoverIndex / count) * 100}
+          y1={0}
+          y2={height}
+          stroke="var(--muted-foreground)"
+          strokeWidth={1}
+          vectorEffect="non-scaling-stroke"
+        />
+      )}
     </svg>
+  );
+  if (!readout) return svg;
+
+  // the readout is a controlled tooltip: its own provider, so the sparkline renders without AdminUiProvider too
+  return (
+    <TooltipProvider delayDuration={0}>
+      <Tooltip open={hovered !== undefined}>
+        <TooltipTrigger asChild>
+          <div className="relative" data-slot="worker-sparkline">
+            {svg}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="text-left">
+          {hovered && (
+            <span className="block tabular-nums">
+              <span className="block font-semibold">{hoveredValue === null ? t('No data') : formatValue(hoveredValue)}</span>
+              <span className="block">{label}</span>
+              <span className="block opacity-80">{formatBucketRange(hovered.ms, step)}</span>
+            </span>
+          )}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };

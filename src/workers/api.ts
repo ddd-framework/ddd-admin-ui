@@ -85,8 +85,9 @@ const RUNS = { type: WORKERS_TAG, id: 'RUNS' } as const;
 
 /**
  * The operations as injected (endpoint name → definition). Cache: the overview, the transport detail and the process
- * lists provide `LIVE`, the history `HISTORY`, the message runs `RUNS`; the restart request invalidates `LIVE` (it
- * changes `restartPending` and the processes' `restartRequestedAt`).
+ * lists provide `LIVE`, the history `HISTORY`, the message runs `RUNS`; the restart request invalidates all three (it
+ * changes `restartPending` and the processes' `restartRequestedAt`, and the stops and new starts reach the history and
+ * the runs).
  */
 export const workersEndpointDefinitions = (apiPrefix: string) => {
   const requests = buildWorkersRequests(apiPrefix);
@@ -96,7 +97,7 @@ export const workersEndpointDefinitions = (apiPrefix: string) => {
     adminUiWorkerTransportDetail: { kind: 'query', request: requests.transportDetail, providesTags: [LIVE, HISTORY] },
     adminUiWorkerMessageRuns: { kind: 'query', request: requests.messageRuns, providesTags: [RUNS] },
     adminUiWorkerProcesses: { kind: 'query', request: requests.processes, providesTags: [LIVE] },
-    adminUiWorkersRestart: { kind: 'mutation', request: requests.restart, invalidatesTags: [LIVE] },
+    adminUiWorkersRestart: { kind: 'mutation', request: requests.restart, invalidatesTags: [LIVE, HISTORY, RUNS] },
   } as const satisfies Record<string, InjectedEndpointDefinition<never>>;
 };
 

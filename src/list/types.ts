@@ -52,6 +52,11 @@ export interface EntityListDataProps<TItem> {
   emptyMessage?: ReactNode;
   /** Shown when the list is empty because of an active search/filter. */
   noResultsMessage?: ReactNode;
+  /**
+   * One call to action under the empty and the no-results state (e.g. the list's Add button), next to "Clear search";
+   * size it like that button (`sm`).
+   */
+  emptyAction?: ReactNode;
   /** True while a search or filter narrows the list (switches the empty state to "no results" + clear). */
   isSearchActive?: boolean;
   onClearSearch?: () => void;
