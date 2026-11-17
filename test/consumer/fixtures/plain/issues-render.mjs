@@ -69,7 +69,8 @@ const checks = [
   ['event: the job block without a maximum of attempts', jobEvent.includes('data-slot="issue-worker"') && jobEvent.includes('SendPushMessage') && jobEvent.includes('Dropped')],
   ['event: a resolved client frame, the client and its breadcrumbs', clientEvent.includes('src/orders/OrderSummary.tsx:42:31') && clientEvent.includes('minified:') && clientEvent.includes('data-slot="issue-breadcrumbs"') && clientEvent.includes('Safari')],
   ['actions: resolve and ignore enabled with write access', noneDisabled(buttonsNamed(actions, 'Resolve')) && noneDisabled(buttonsNamed(actions, 'Ignore'))],
-  ['actions: disabled without write access, with the reason', allDisabled(buttonsNamed(actionsReadOnly, 'Resolve')) && allDisabled(buttonsNamed(actionsReadOnly, 'Ignore')) && allDisabled(buttonsNamed(reopenReadOnly, 'Reopen')) && actionsReadOnly.includes('title="Read-only workspace"')],
+  ['actions: disabled without write access, with the reason', allDisabled(buttonsNamed(actionsReadOnly, 'Resolve')) && allDisabled(buttonsNamed(actionsReadOnly, 'Ignore')) && allDisabled(buttonsNamed(reopenReadOnly, 'Reopen')) && actionsReadOnly.includes('<span class="sr-only">Read-only workspace</span>') && actionsReadOnly.includes('data-slot="control-hint"') && !actionsReadOnly.includes('title="Read-only workspace"')],
+  ['screen: rows open by keyboard, the approximate count as a header tooltip', /<tr[^>]*tabindex="0"/.test(screen) && screen.includes('data-slot="hint"') && !screen.includes('title="Approximate"')],
   ['actions: what resolve and ignore mean', actions.includes('a later event reopens it as a regression')],
 ];
 

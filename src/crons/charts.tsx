@@ -2,6 +2,7 @@
 
 import { useTranslate } from '../i18n/useTranslate.ts';
 import { cn } from '../primitives/cn.ts';
+import { HoverReadout } from '../primitives/hint.tsx';
 import { formatCronClock, formatCronDateTime, formatCronDuration, parseCronTime } from './format.ts';
 import { cronRunResultOf } from './status.ts';
 import type { CronExecutionOverview, CronsTimelineResponse, CronTimelineBucket } from './types.ts';
@@ -118,7 +119,7 @@ export const CronTimeline = ({ timeline, className }: CronTimelineProps) => {
   const starts = Array.from({ length: count }, (_, index) => firstBucket + index * stepMs);
   const tickEvery = Math.max(1, Math.round(count / 6));
   return (
-    <div data-slot="cron-timeline" className={cn('min-w-0 overflow-x-auto', className)}>
+    <HoverReadout slot="cron-timeline" className={cn('min-w-0 overflow-x-auto', className)}>
       <table className="w-max border-separate border-spacing-y-1 text-xs">
         <caption className="sr-only">{t('Runs per Cron and time bucket')}</caption>
         <tbody>
@@ -150,7 +151,7 @@ export const CronTimeline = ({ timeline, className }: CronTimelineProps) => {
                     : t('%time%: no run', { replacements: { time: formatCronDateTime(start) } });
                   return (
                     <td key={start} className="p-0">
-                      <span title={label} aria-label={label} role="img" className={cn('block h-5 w-2.5 rounded-[2px] sm:w-3', cellClass(bucket))} />
+                      <span data-readout={label} aria-label={label} role="img" className={cn('block h-5 w-2.5 rounded-[2px] sm:w-3', cellClass(bucket))} />
                     </td>
                   );
                 })}
@@ -169,6 +170,6 @@ export const CronTimeline = ({ timeline, className }: CronTimelineProps) => {
           </tr>
         </tfoot>
       </table>
-    </div>
+    </HoverReadout>
   );
 };

@@ -717,6 +717,9 @@ export const translationsApi = createTranslationsApi({ baseApi: adminApi, apiPre
   the 403 and stays read-only.
 - Crons: `createCronsApi` + `CronsScreen` (`urlStateAdapter`, `drawerUrlAdapter`). Times are the server's clock; never
   compare them with the browser's. Run now is a queue request, not a run: never show it as a result.
+- On the framework screens, the details of a truncated value and the reason an action is disabled are the package
+  tooltip (hover, keyboard focus, tap; the reason also as screen-reader text), never a native `title`; a list whose
+  rows open by `rowAction` sets `rowKeyboardActivation`.
 
 ## 21. Application frame — `AppShell` and one navigation
 

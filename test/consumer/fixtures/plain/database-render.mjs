@@ -51,7 +51,7 @@ const checks = [
   ['apply all and the generated-code panels', buttonsNamed(screen, 'Apply all').length === 1 && count(screen, /data-slot="generated-code-panel"/g) === 3],
   ['nothing generated before it is asked for', !screen.includes('data-slot="generated-code"')],
   ['the empty state', empty.includes('Schema matches') && !empty.includes('data-slot="schema-diff-card"')],
-  ['write access disables every apply with the reason', allDisabled(buttonsNamed(readOnly, 'aria-label="Apply the diff of')) && allDisabled(buttonsNamed(readOnly, 'Apply all')) && readOnly.includes('title="Read-only workspace"')],
+  ['write access disables every apply with the reason', allDisabled(buttonsNamed(readOnly, 'aria-label="Apply the diff of')) && allDisabled(buttonsNamed(readOnly, 'Apply all')) && readOnly.includes('<span class="sr-only">Read-only workspace</span>') && !readOnly.includes('title="Read-only workspace"')],
   ['write access disables the selection checkboxes', allDisabled(buttonsNamed(readOnly, 'aria-label="Select '))],
   ['a 403 of the diff is shown with its message', forbidden.includes('The schema diff could not be loaded.') && forbidden.includes('Schema writes are disabled on this process')],
 ];

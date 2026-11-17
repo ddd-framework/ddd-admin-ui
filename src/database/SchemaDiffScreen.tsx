@@ -17,6 +17,7 @@ import { StatusCallout, StatusCalloutAction } from '../page/StatusCallout.tsx';
 import { Button } from '../primitives/button.tsx';
 import { Card, CardContent } from '../primitives/card.tsx';
 import { cn } from '../primitives/cn.ts';
+import { ControlHint } from '../primitives/hint.tsx';
 import { Label } from '../primitives/label.tsx';
 import { Skeleton } from '../primitives/skeleton.tsx';
 import { Switch } from '../primitives/switch.tsx';
@@ -218,7 +219,7 @@ export const SchemaDiffScreen = ({ api, title, description, showGeneratedCode = 
                 <RefreshCw aria-hidden className={cn(diffQuery.isFetching && 'animate-spin motion-reduce:animate-none')} />
                 {t('Reload')}
               </Button>
-              <span className="inline-flex" title={writeReason}>
+              <ControlHint disabledReason={writeReason}>
                 <Button
                   type="button"
                   variant="outline"
@@ -228,13 +229,13 @@ export const SchemaDiffScreen = ({ api, title, description, showGeneratedCode = 
                   <ListChecks aria-hidden />
                   {t('Apply selected (%count%)', { replacements: { count: selection.count } })}
                 </Button>
-              </span>
-              <span className="inline-flex" title={writeReason}>
+              </ControlHint>
+              <ControlHint disabledReason={writeReason}>
                 <Button type="button" disabled={!writesAllowed || busy || applicable.length === 0} onClick={() => void handleApplyMany('all')}>
                   <Play aria-hidden />
                   {applyDiffsState.isLoading ? t('Applying…') : t('Apply all')}
                 </Button>
-              </span>
+              </ControlHint>
             </div>
           }
         />

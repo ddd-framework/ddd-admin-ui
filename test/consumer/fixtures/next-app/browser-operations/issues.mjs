@@ -70,8 +70,17 @@ export const run = async ({ openPage, report, requests, waitForRequest, checkPho
     await page.locator('tr', { hasText: 'LogicException' }).first().click({ timeout: 15_000 });
     const resolve = page.getByRole('dialog').getByRole('button', { name: 'Resolve' });
     await resolve.waitFor({ timeout: 10_000 });
+    // the reason is the wrapper's tooltip (a disabled button takes no pointer events) and screen-reader text
+    const resolveHint = resolve.locator('xpath=ancestor::*[@data-slot="control-hint"][1]');
+    await resolveHint.hover();
+    const tooltip = page.getByRole('tooltip').filter({ hasText: 'Read-only workspace' });
+    const tooltipShown = await tooltip.first().waitFor({ timeout: 5_000 }).then(() => true, () => false);
     report('issues (read-only): Resolve and Ignore are disabled with the reason',
-      (await resolve.isDisabled()) && (await page.getByRole('dialog').getByRole('button', { name: 'Ignore' }).isDisabled()) && (await resolve.getAttribute('title')) === 'Read-only workspace');
+      (await resolve.isDisabled()) &&
+        (await page.getByRole('dialog').getByRole('button', { name: 'Ignore' }).isDisabled()) &&
+        (await resolve.getAttribute('title')) === null &&
+        (await resolveHint.locator('.sr-only').textContent()) === 'Read-only workspace' &&
+        tooltipShown);
     report('issues (read-only): no console error', problems.length === 0, problems.join(' | '));
     await page.close();
   }

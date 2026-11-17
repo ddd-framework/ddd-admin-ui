@@ -12,6 +12,7 @@ import { Button } from '../primitives/button.tsx';
 import { Card, CardContent } from '../primitives/card.tsx';
 import { Checkbox } from '../primitives/checkbox.tsx';
 import { cn } from '../primitives/cn.ts';
+import { ControlHint, Hint } from '../primitives/hint.tsx';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../primitives/collapsible.tsx';
 import { CodeBlock } from './GeneratedCode.tsx';
 import {
@@ -148,14 +149,14 @@ export const SchemaDiffCard = ({
               {blocked && <StatusBadge tone="danger" icon={DB_APPLY_BLOCKED_ICON} label={t('Apply blocked')} />}
             </div>
             {entityClass && (
-              <p className="truncate font-mono text-xs text-muted-foreground" title={entityClass}>
+              <Hint content={entityClass} className="block max-w-full truncate font-mono text-xs text-muted-foreground">
                 {entityClass}
-              </p>
+              </Hint>
             )}
             <p className="text-sm text-muted-foreground">{diffSummary(diff)}</p>
           </div>
           {!blocked && onApply && (
-            <span className="inline-flex shrink-0 self-start" title={applyDisabledReason}>
+            <ControlHint className="shrink-0 self-start" disabledReason={applyDisabledReason}>
               <Button
                 type="button"
                 variant={isRiskyDiff(diff) ? 'outline' : 'default'}
@@ -170,7 +171,7 @@ export const SchemaDiffCard = ({
                 <Play aria-hidden />
                 {isApplying ? t('Applying…') : t('Apply', { context: 'schema-diff' })}
               </Button>
-            </span>
+            </ControlHint>
           )}
         </div>
 

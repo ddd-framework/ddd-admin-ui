@@ -53,12 +53,13 @@ const checks = [
       allDisabled(buttonsNamed(readOnly, 'aria-label="Delete ')) &&
       switches(readOnly).length === 6 &&
       switches(readOnly).every(button => / disabled=""/.test(button)) &&
-      readOnly.includes('title="Read-only workspace"'),
+      readOnly.includes('<span class="sr-only">Read-only workspace</span>'),
   ],
+  ['crons screen: tooltips instead of native titles, rows open by keyboard', screen.includes('data-slot="control-hint"') && !/<(?:span|code)(?![^>]*data-slot="badge")[^>]* title="/.test(screen) && /<tr[^>]*tabindex="0"/.test(screen)],
   ['runner banner: every active Cron overdue', stalled.includes('The runner is not running') && healthy === ''],
   ['runs view: result tabs, rows, the pager by total', runs.includes('role="radiogroup"') && runs.includes('data-slot="cron-runs-pager"') && runs.includes('of 154')],
   ['runs view: the failed tab lists failed runs only', failedRuns.includes('>Failed<') && !failedRuns.includes('>Successful</span></span></td>')],
-  ['timeline: one lane per Cron, cells with counts', count(timeline, /data-cron-lane=/g) === 6 && timeline.includes('runs, ') && timeline.includes('no run')],
+  ['timeline: one lane per Cron, cells with counts', count(timeline, /data-cron-lane=/g) === 6 && timeline.includes('runs, ') && timeline.includes('no run') && timeline.includes('data-readout=') && !timeline.includes(' title="')],
 ];
 
 let failed = false;

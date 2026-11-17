@@ -14,6 +14,7 @@ import { EntityListToolbar } from '../list/EntityListToolbar.tsx';
 import { StatusBadge } from '../list/StatusBadge.tsx';
 import { Button } from '../primitives/button.tsx';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../primitives/dialog.tsx';
+import { Hint } from '../primitives/hint.tsx';
 import { SegmentedControl } from '../primitives/segmented-control.tsx';
 import { Skeleton } from '../primitives/skeleton.tsx';
 import type { CronsApi } from './api.ts';
@@ -127,9 +128,9 @@ export const CronRunsView = ({ api, cronId, result, onResultChange, pageSize = C
       header: m('Output'),
       cell: run =>
         run.outputPreview ? (
-          <span className="block max-w-96 truncate font-mono text-xs text-muted-foreground" title={run.outputPreview}>
+          <Hint content={run.outputPreview} className="block max-w-96 truncate font-mono text-xs text-muted-foreground">
             {run.outputPreview}
-          </span>
+          </Hint>
         ) : (
           <span className="text-xs text-muted-foreground">{t('no output')}</span>
         ),
@@ -163,6 +164,7 @@ export const CronRunsView = ({ api, cronId, result, onResultChange, pageSize = C
           isLoading={query.isLoading}
           error={query.isError && !query.data ? normalizeDddError(query.error, t('The runs could not be loaded.')).message : undefined}
           rowAction={run => () => setOpenExecutionId(run.id)}
+          rowKeyboardActivation
           emptyMessage={t('No run in the retention period (14 days).')}
           noResultsMessage={t('No run with this result.')}
           isSearchActive={result !== 'ALL'}

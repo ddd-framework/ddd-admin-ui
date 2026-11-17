@@ -15,6 +15,7 @@ import { useWriteAccess } from '../logic/react/writeAccess.ts';
 import { StatusCallout } from '../page/StatusCallout.tsx';
 import { Button } from '../primitives/button.tsx';
 import { cn } from '../primitives/cn.ts';
+import { ControlHint, Hint, HoverReadout } from '../primitives/hint.tsx';
 import { Switch } from '../primitives/switch.tsx';
 import {
   cronNextRunState,
@@ -143,12 +144,14 @@ export const CronNextRun = ({ cron, serverNow, tick = true, queued = false }: { 
   }
   if (state.kind === 'unknown') return <EmptyValue />;
   return (
-    <span data-slot="cron-next-run" data-cron-next="due" className="flex flex-col gap-0.5" title={formatCronDateTime(state.atMs, { seconds: true })}>
-      <span className={cn('text-sm tabular-nums', state.inMs < -120_000 && 'text-warning')}>
-        {state.inMs < 0 ? t('due %relative%', { replacements: { relative: formatCronRelative(state.atMs, state.atMs - state.inMs) } }) : formatCronRelative(state.atMs, state.atMs - state.inMs)}
+    <Hint content={formatCronDateTime(state.atMs, { seconds: true })} className="inline-flex">
+      <span data-slot="cron-next-run" data-cron-next="due" className="flex flex-col gap-0.5">
+        <span className={cn('text-sm tabular-nums', state.inMs < -120_000 && 'text-warning')}>
+          {state.inMs < 0 ? t('due %relative%', { replacements: { relative: formatCronRelative(state.atMs, state.atMs - state.inMs) } }) : formatCronRelative(state.atMs, state.atMs - state.inMs)}
+        </span>
+        <span className="text-xs text-muted-foreground tabular-nums">{formatCronClock(state.atMs)}</span>
       </span>
-      <span className="text-xs text-muted-foreground tabular-nums">{formatCronClock(state.atMs)}</span>
-    </span>
+    </Hint>
   );
 };
 
@@ -166,9 +169,9 @@ export const CronLastRun = ({ execution }: { execution?: CronExecutionOverview |
         </span>
       </span>
       {execution.outputPreview && (
-        <span className="truncate font-mono text-xs text-muted-foreground" title={execution.outputPreview}>
+        <Hint content={execution.outputPreview} className="block truncate font-mono text-xs text-muted-foreground">
           {execution.outputPreview}
-        </span>
+        </Hint>
       )}
     </span>
   );
@@ -187,8 +190,9 @@ export const CronRunStrip = ({ runs, slots = 30 }: { runs: readonly CronExecutio
   const ordered = [...runs.slice(0, slots)].reverse();
   const failed = runs.filter(run => cronRunResultOf(run) === 'FAILED').length;
   return (
-    <span
-      data-slot="cron-run-strip"
+    <HoverReadout
+      as="span"
+      slot="cron-run-strip"
       role="img"
       aria-label={t('%runs% newest runs, %failed% failed', { replacements: { runs: String(Math.min(runs.length, slots)), failed: String(failed) } })}
       className="flex h-6 w-36 items-end justify-end gap-px"
@@ -199,13 +203,13 @@ export const CronRunStrip = ({ runs, slots = 30 }: { runs: readonly CronExecutio
         return (
           <span
             key={run.id}
-            title={`${formatCronDateTime(run.startedAt)} · ${t(CRON_EXECUTION_RESULT[result].label, { context: 'cron-run-result' })} · ${formatCronDuration(run.durationMs)}`}
+            data-readout={`${formatCronDateTime(run.startedAt)} · ${t(CRON_EXECUTION_RESULT[result].label, { context: 'cron-run-result' })} · ${formatCronDuration(run.durationMs)}`}
             className={cn('w-1 shrink-0 rounded-[1px]', RUN_BAR_CLASS[result])}
             style={{ height: `${Math.round(share * 100)}%` }}
           />
         );
       })}
-    </span>
+    </HoverReadout>
   );
 };
 
@@ -233,7 +237,7 @@ export const CronRowActions = ({ cron, actions, onEdit, showManage = true }: Cro
     // biome-ignore lint/a11y/useKeyWithClickEvents: no interaction of its own, only a bubbling boundary
     <span className="flex items-center justify-end gap-1" data-row-action-ignore onClick={event => event.stopPropagation()}>
       {showRunNow && (
-        <span className="inline-flex" title={runReason ?? t('Run now: the runner starts it within a minute')}>
+        <ControlHint label={t('Run now: the runner starts it within a minute')} disabledReason={runReason}>
           <Button
             type="button"
             variant="ghost"
@@ -244,9 +248,9 @@ export const CronRowActions = ({ cron, actions, onEdit, showManage = true }: Cro
           >
             <Play />
           </Button>
-        </span>
+        </ControlHint>
       )}
-      <span className="inline-flex px-1" title={writeReason ?? (cron.isActive ? t('Switch off') : t('Switch on'))}>
+      <ControlHint className="px-1" label={cron.isActive ? t('Switch off') : t('Switch on')} disabledReason={writeReason}>
         <Switch
           size="sm"
           checked={cron.isActive}
@@ -254,10 +258,10 @@ export const CronRowActions = ({ cron, actions, onEdit, showManage = true }: Cro
           disabled={Boolean(writeReason) || pending}
           onCheckedChange={checked => void actions.setActive(cron, checked)}
         />
-      </span>
+      </ControlHint>
       {showManage && (
         <>
-          <span className="inline-flex" title={writeReason ?? t('Edit', { context: 'action' })}>
+          <ControlHint label={t('Edit', { context: 'action' })} disabledReason={writeReason}>
             <Button
               type="button"
               variant="ghost"
@@ -268,8 +272,8 @@ export const CronRowActions = ({ cron, actions, onEdit, showManage = true }: Cro
             >
               <Pencil />
             </Button>
-          </span>
-          <span className="inline-flex" title={deleteReason ?? t('Delete', { context: 'action' })}>
+          </ControlHint>
+          <ControlHint label={t('Delete', { context: 'action' })} disabledReason={deleteReason}>
             <Button
               type="button"
               variant="ghost"
@@ -281,7 +285,7 @@ export const CronRowActions = ({ cron, actions, onEdit, showManage = true }: Cro
             >
               <Trash2 />
             </Button>
-          </span>
+          </ControlHint>
         </>
       )}
     </span>
@@ -344,9 +348,9 @@ export const CronsTable = ({ crons, runner, actions, isLoading, error, onOpen, o
         <span className="flex max-w-72 min-w-40 flex-col gap-0.5">
           <span className="font-medium">{cron.name}</span>
           {cron.description && (
-            <span className="line-clamp-2 text-xs text-muted-foreground" title={cron.description}>
+            <Hint content={cron.description} className="line-clamp-2 text-xs text-muted-foreground">
               {cron.description}
-            </span>
+            </Hint>
           )}
         </span>
       ),
@@ -356,9 +360,13 @@ export const CronsTable = ({ crons, runner, actions, isLoading, error, onOpen, o
       id: 'command',
       header: m('Command'),
       cell: cron => (
-        <code className="block max-w-56 truncate font-mono text-xs" title={cron.command ?? cron.commandName}>
-          {cron.command || cron.commandName || '—'}
-        </code>
+        cron.command || cron.commandName ? (
+          <Hint content={cron.command || cron.commandName} className="block max-w-56 truncate">
+            <code className="font-mono text-xs">{cron.command || cron.commandName}</code>
+          </Hint>
+        ) : (
+          <code className="block font-mono text-xs">—</code>
+        )
       ),
     },
     {
@@ -371,10 +379,10 @@ export const CronsTable = ({ crons, runner, actions, isLoading, error, onOpen, o
     { id: 'runs', header: m('Recent runs'), cell: cron => <CronRunStrip runs={recentRunsOf(cron)} />, className: 'w-40' },
     {
       id: 'rate',
-      header: m('24 h'),
+      header: <Hint content={t('Success rate of the runs that ended in the last 24 hours')}>{t('24 h')}</Hint>,
       align: 'end',
       cell: cron => (
-        <span className="flex flex-col items-end gap-0.5 tabular-nums" title={t('Success rate of the runs that ended in the last 24 hours')}>
+        <span className="flex flex-col items-end gap-0.5 tabular-nums">
           <span className="text-sm">{formatCronRate(cron.stats24h?.successRate)}</span>
           <span className="text-xs text-muted-foreground">
             {t('{count, plural, one {# run} other {# runs}}', { count: cron.stats24h?.runCount ?? 0 })}
@@ -400,6 +408,7 @@ export const CronsTable = ({ crons, runner, actions, isLoading, error, onOpen, o
         isLoading={isLoading}
         error={error}
         rowAction={onOpen ? cron => () => onOpen(cron) : undefined}
+        rowKeyboardActivation
         emptyMessage={t('No Cron yet. Schedule a command with Add Cron.')}
         noResultsMessage={t('No Cron matches the search.')}
         isSearchActive={isSearchActive}

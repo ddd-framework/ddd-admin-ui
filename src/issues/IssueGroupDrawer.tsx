@@ -18,6 +18,7 @@ import { useWriteAccess } from '../logic/react/writeAccess.ts';
 import { DefinitionList } from '../page/DefinitionList.tsx';
 import { StatusCallout } from '../page/StatusCallout.tsx';
 import { Button } from '../primitives/button.tsx';
+import { ControlHint, Hint } from '../primitives/hint.tsx';
 import { Skeleton } from '../primitives/skeleton.tsx';
 import type { IssuesApi } from './api.ts';
 import { issueShowCommand, parseIssueGroupKey, sortIssueEventsNewestFirst, trendBarsOf } from './format.ts';
@@ -29,8 +30,20 @@ import type { IssueGroupArg, IssueGroupDetailResponse, IssueGroupStatus, IssueGr
 /** The flags of a group: new in its first release window, or back after a resolve (a regression). */
 export const IssueGroupFlags = ({ group }: { group: Pick<IssueGroupSummary, 'isNew' | 'isRegression'> }) => {
   const { t } = useTranslate();
-  if (group.isRegression) return <StatusBadge tone="warning" icon={RotateCcw} label={t('Regression', { context: 'issue-flag' })} title={t('It came back after it was resolved')} />;
-  if (group.isNew) return <StatusBadge tone="highlight" icon={Sparkles} label={t('New', { context: 'issue-flag' })} title={t('First seen recently')} />;
+  if (group.isRegression) {
+    return (
+      <Hint content={t('It came back after it was resolved')} className="inline-flex">
+        <StatusBadge tone="warning" icon={RotateCcw} label={t('Regression', { context: 'issue-flag' })} />
+      </Hint>
+    );
+  }
+  if (group.isNew) {
+    return (
+      <Hint content={t('First seen recently')} className="inline-flex">
+        <StatusBadge tone="highlight" icon={Sparkles} label={t('New', { context: 'issue-flag' })} />
+      </Hint>
+    );
+  }
   return null;
 };
 
@@ -77,20 +90,26 @@ export const IssueGroupStatusActions = ({ api, group, onChanged }: IssueGroupSta
       <div className="flex flex-wrap gap-2">
         {isOpen ? (
           <>
-            <Button type="button" size="sm" disabled={!writeAccess.allowed || busy} title={title} onClick={() => void run(resolve, t('Marked resolved'))}>
-              <CircleCheck aria-hidden />
-              {t('Resolve', { context: 'issue-action' })}
-            </Button>
-            <Button type="button" size="sm" variant="outline" disabled={!writeAccess.allowed || busy} title={title} onClick={() => void run(ignore, t('Ignored for good'))}>
-              <BellOff aria-hidden />
-              {t('Ignore', { context: 'issue-action' })}
-            </Button>
+            <ControlHint disabledReason={title}>
+              <Button type="button" size="sm" disabled={!writeAccess.allowed || busy} onClick={() => void run(resolve, t('Marked resolved'))}>
+                <CircleCheck aria-hidden />
+                {t('Resolve', { context: 'issue-action' })}
+              </Button>
+            </ControlHint>
+            <ControlHint disabledReason={title}>
+              <Button type="button" size="sm" variant="outline" disabled={!writeAccess.allowed || busy} onClick={() => void run(ignore, t('Ignored for good'))}>
+                <BellOff aria-hidden />
+                {t('Ignore', { context: 'issue-action' })}
+              </Button>
+            </ControlHint>
           </>
         ) : (
-          <Button type="button" size="sm" variant="outline" disabled={!writeAccess.allowed || busy} title={title} onClick={() => void run(reopen, t('Reopened'))}>
-            <RotateCw aria-hidden />
-            {t('Reopen', { context: 'issue-action' })}
-          </Button>
+          <ControlHint disabledReason={title}>
+            <Button type="button" size="sm" variant="outline" disabled={!writeAccess.allowed || busy} onClick={() => void run(reopen, t('Reopened'))}>
+              <RotateCw aria-hidden />
+              {t('Reopen', { context: 'issue-action' })}
+            </Button>
+          </ControlHint>
         )}
       </div>
       <p className="text-xs text-muted-foreground">
@@ -238,9 +257,13 @@ const IssueGroupDetailBody = ({
           <ul data-slot="issue-entry-points" className="divide-y rounded-lg border">
             {issues.map(issue => (
               <li key={issue.issueHash} className="flex min-w-0 items-center justify-between gap-3 px-3 py-2 text-sm">
-                <span className="min-w-0 truncate font-mono text-xs" title={issue.entryPoint ?? undefined}>
-                  {issue.entryPoint || '—'}
-                </span>
+                {issue.entryPoint ? (
+                  <Hint content={issue.entryPoint} className="min-w-0 truncate font-mono text-xs">
+                    {issue.entryPoint}
+                  </Hint>
+                ) : (
+                  <span className="min-w-0 truncate font-mono text-xs">—</span>
+                )}
                 <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
                   {t('{count, plural, one {# event} other {# events}}', { count: issue.eventCount })}
                 </span>

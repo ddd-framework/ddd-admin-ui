@@ -3,6 +3,27 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.3.1
+
+Carries the 0.2.2 and 0.2.3 changes (workers screens, app translations, `rowKeyboardActivation`, the translation
+helpers; see their sections below) into the 0.3 line, and applies their defaults to the screens new in 0.3.0. The list
+snapshot (0.1.0-rc.2) and the form actions snapshot (0.1.0-rc.5) are unchanged.
+
+`./issues`, `./crons`, `./database`:
+
+- Tooltips instead of native titles, as on the workers screens: truncated values (an entry point, an entity class, a
+  command, an output line, a description) and the exact time of a next run open the package tooltip on hover,
+  keyboard focus and tap; a disabled action (resolve, ignore, reopen, apply, apply selected, apply all, run now, the
+  on / off switch, edit, delete) shows its reason as a tooltip on a wrapper that is a tab stop while disabled, and as
+  screen-reader text. The issue flags (regression, new) explain themselves in a tooltip; "Approximate" and the 24-hour
+  success rate moved from every cell to the column header. The bars of a Cron's run strip and the cells of the
+  timeline share one tooltip per strip or timeline (pointer and tap; their accessible names stay). Status badges and
+  `AddEntityButton` keep their titles.
+- Rows open by keyboard: the issues list, the Crons table and the runs table pass `rowKeyboardActivation` (rows are
+  tab stops, Enter / Space opens the drawer).
+
+`./workers`: `WorkerHint` is drawn by an internal shared hint; its markup is unchanged.
+
 ## 0.3.0
 
 Three new screen entries on Core's admin traits, and status text roles. A host that sets none of the new roles renders

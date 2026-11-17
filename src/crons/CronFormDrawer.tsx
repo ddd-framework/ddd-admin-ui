@@ -23,6 +23,7 @@ import { StatusCallout } from '../page/StatusCallout.tsx';
 import { Button } from '../primitives/button.tsx';
 import { Card, CardContent } from '../primitives/card.tsx';
 import { cn } from '../primitives/cn.ts';
+import { ControlHint } from '../primitives/hint.tsx';
 import { Input } from '../primitives/input.tsx';
 import { Switch } from '../primitives/switch.tsx';
 import { Textarea } from '../primitives/textarea.tsx';
@@ -237,16 +238,16 @@ const CronForm = ({ api, cron, onClose, onSaved }: CronFormProps) => {
             </FormField>
             <div className="flex flex-wrap gap-1.5" data-slot="cron-schedule-presets">
               {CRON_SCHEDULE_PRESETS.map(preset => (
-                <Button
-                  key={preset.expression}
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  title={preset.expression}
-                  onClick={() => form.setValue('schedule', preset.expression, { shouldDirty: true, shouldValidate: false })}
-                >
-                  {t(preset.label)}
-                </Button>
+                <ControlHint key={preset.expression} label={<code className="font-mono">{preset.expression}</code>}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    onClick={() => form.setValue('schedule', preset.expression, { shouldDirty: true, shouldValidate: false })}
+                  >
+                    {t(preset.label)}
+                  </Button>
+                </ControlHint>
               ))}
             </div>
             <CronSchedulePreview api={api} schedule={values.schedule ?? ''} />

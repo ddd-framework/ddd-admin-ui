@@ -23,6 +23,7 @@ import { useUrlListState } from '../logic/react/useUrlListState.ts';
 import { EntityListPage } from '../page/EntityListPage.tsx';
 import { StatusCallout } from '../page/StatusCallout.tsx';
 import { Button } from '../primitives/button.tsx';
+import { Hint } from '../primitives/hint.tsx';
 import { SegmentedControl } from '../primitives/segmented-control.tsx';
 import type { IssuesApi } from './api.ts';
 import {
@@ -189,14 +190,10 @@ export const IssuesScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, de
       : []),
     {
       id: 'events',
-      header: m('Events'),
+      header: <Hint content={t('Approximate')}>{t('Events')}</Hint>,
       width: '96px',
       align: 'end',
-      cell: group => (
-        <span className="tabular-nums" title={t('Approximate')}>
-          {formatUiNumber(group.eventCount)}
-        </span>
-      ),
+      cell: group => <span className="tabular-nums">{formatUiNumber(group.eventCount)}</span>,
     },
     { id: 'lastSeen', header: m('Last seen'), width: '170px', cell: group => <DateCell value={group.lastSeenAt} /> },
     {
@@ -334,6 +331,7 @@ export const IssuesScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, de
         items={groups}
         getRowKey={issueGroupKey}
         rowAction={rowAction}
+        rowKeyboardActivation
         isLoading={!listQuery.currentData && !listQuery.isError}
         emptyMessage={emptyMessage}
         noResultsMessage={t('No errors match the filters.')}
