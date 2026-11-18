@@ -245,7 +245,7 @@ export const IssuesTrendRangeControl = ({
   const toIso = (input: string) => fromDateTimeInputValue(input, 'local')?.toISOString().replace(/\.\d{3}Z$/, 'Z') ?? '';
   const invalid = isCustom && Boolean(customFrom || customTo) && resolveIssuesCustomRange(customFrom, customTo) === null;
   return (
-    <div data-slot="issues-trend-range" className={cn('flex flex-wrap items-center gap-2', className)}>
+    <div data-slot="issues-trend-range" className={cn('flex min-w-0 max-w-full flex-wrap items-center gap-2', className)}>
       <SegmentedControl<IssuesWindowValue>
         aria-label={t('Time window')}
         value={value}

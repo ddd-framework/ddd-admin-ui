@@ -239,8 +239,9 @@ export const IssuesScreen = ({
       : []),
     {
       id: 'events',
-      header: <Hint content={t('Approximate')}>{t('Events')}</Hint>,
-      width: '96px',
+      // one word in every language: kept on one line (a translated label is wider than the English one)
+      header: <Hint content={t('Approximate')} className="whitespace-nowrap">{t('Events')}</Hint>,
+      width: '128px',
       align: 'end',
       cell: group => <span className="tabular-nums">{formatUiNumber(group.eventCount)}</span>,
     },

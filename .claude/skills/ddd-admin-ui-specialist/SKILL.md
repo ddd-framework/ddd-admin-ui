@@ -3,7 +3,7 @@ name: ddd-admin-ui-specialist
 description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries, import matrix, host setup (AdminUiProvider, theme.css, components.css, tokens.json, ddd-admin-ui-check-tokens, -radix, -contrast), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title from one navigation; ./shell-background), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route states, form drawers and dialogs, the save shortcut, useConfirm, write access, locale::style translations, media with image crop, colour fields, key figures (./data), markdown, the admin screens ./workers, ./translations, ./issues, ./database (schema diff), ./crons, status text roles, ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form or admin screen, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast fails or status text is too light, or URL filters get lost."
 metadata:
   author: mgamadeus
-  version: 0.3.4
+  version: 0.3.5
 ---
 
 # ddd-admin-ui specialist

@@ -845,7 +845,7 @@ project's `.claude/skills/`. Idempotent; repoints an existing symlink, never tou
 
 ## Versioning
 
-0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.4"`,
+0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.5"`,
 `pnpm add -E` / `npm install -E`); modules peer on the version they were tested with. Stable releases are published
 under the `latest` dist-tag, pre-releases (`x.y.z-…`) under `next`. Changes per release: [CHANGELOG.md](CHANGELOG.md).
 

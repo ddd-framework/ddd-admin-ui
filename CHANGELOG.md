@@ -3,6 +3,18 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.3.5
+
+Layout fixes; no API change. The list and form actions snapshots are unchanged.
+
+- `./issues`: with `customTrendRange`, the trend range wrapper (`data-slot="issues-trend-range"`) no longer widens the
+  page on a phone: it is held to its container, so the window switch scrolls inside itself like the environment and
+  status switches (with German labels the page scrolled about 200 px sideways at 390 px).
+- `./issues`: the events column of the groups table is 128 px wide and its header stays on one line (a translated
+  label wrapped inside the word).
+- `./crons`: the description under a Cron's name wraps to two lines and ends in an ellipsis instead of being cut at the
+  cell edge.
+
 ## 0.3.4
 
 Optional props for hosts moving their workers and app translations screens onto the package, URL list state that

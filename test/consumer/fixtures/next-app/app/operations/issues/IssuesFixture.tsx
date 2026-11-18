@@ -9,8 +9,9 @@ import { SHOWCASE_NOW_MS } from '@mgamadeus/ddd-admin-ui/showcase';
 
 import { issuesApi, makeIssuesStore } from './issuesFixtureApi';
 
-const Screen = () => (
+const Screen = ({ customTrendRange = false }: { customTrendRange?: boolean }) => (
   <IssuesScreen
+    customTrendRange={customTrendRange}
     api={issuesApi}
     urlStateAdapter={useNextUrlStateAdapter({ listId: 'operations.issues' })}
     drawerUrlAdapter={useNextDrawerUrlAdapter()}
@@ -18,12 +19,12 @@ const Screen = () => (
   />
 );
 
-export function IssuesFixture({ readOnly = false }: { readOnly?: boolean }) {
+export function IssuesFixture({ readOnly = false, customTrendRange = false }: { readOnly?: boolean; customTrendRange?: boolean }) {
   const [store] = useState(makeIssuesStore);
   return (
     <Provider store={store}>
       <main className="p-4 md:p-6">
-        <Suspense>{readOnly ? <WriteAccessProvider value={{ allowed: false, reason: 'Read-only workspace' }}><Screen /></WriteAccessProvider> : <Screen />}</Suspense>
+        <Suspense>{readOnly ? <WriteAccessProvider value={{ allowed: false, reason: 'Read-only workspace' }}><Screen customTrendRange={customTrendRange} /></WriteAccessProvider> : <Screen customTrendRange={customTrendRange} />}</Suspense>
       </main>
     </Provider>
   );

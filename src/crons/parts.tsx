@@ -354,7 +354,7 @@ export const CronsTable = ({ crons, runner, actions, isLoading, error, onOpen, o
             {cron.name}
           </span>
           {cron.description && (
-            <Hint content={cron.description} className="line-clamp-2 text-xs text-muted-foreground">
+            <Hint content={cron.description} className="line-clamp-2 text-xs whitespace-normal break-words text-muted-foreground">
               {cron.description}
             </Hint>
           )}

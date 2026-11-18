@@ -86,4 +86,6 @@ export const run = async ({ openPage, report, requests, waitForRequest, checkPho
   }
 
   await checkPhoneWidth('issues', '/operations/issues', '[data-slot="issues-trend-chart"]');
+  // the custom range wraps the window switch: the switch scrolls inside itself, the page does not
+  await checkPhoneWidth('issues (custom trend range)', '/operations/issues/custom-range', '[data-slot="issues-trend-range"]');
 };
