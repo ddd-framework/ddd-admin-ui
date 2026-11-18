@@ -98,7 +98,10 @@ export const buildTranslationInfos = <F extends string>(
   };
 };
 
-/** Merges translated texts into the state, filling only blank entries (never what the user typed meanwhile). */
+/**
+ * Merges translated texts into the state, filling only blank entries (never what the user typed meanwhile). A blank
+ * incoming text is skipped (it adds no empty key to the state).
+ */
 export const mergeTranslatedStore = <F extends string>(
   previous: FieldTranslations<F>,
   store: TranslationsStore,
@@ -110,9 +113,26 @@ export const mergeTranslatedStore = <F extends string>(
     if (!incoming) continue;
     const merged: PropertyTranslations = { ...(previous[field] ?? {}) };
     for (const [key, text] of Object.entries(incoming)) {
+      if (typeof text !== 'string' || text.trim() === '') continue;
       if (!(merged[key] ?? '').trim()) merged[key] = text;
     }
     next[field] = merged;
   }
   return next;
 };
+
+/**
+ * Whether the non-blank texts of `fields` differ between two states (blank entries count as absent, key order is
+ * ignored): `false` = nothing to save for the translations.
+ */
+export const translationsChanged = <F extends string>(
+  current: FieldTranslations<F>,
+  baseline: FieldTranslations<F>,
+  fields: readonly F[]
+): boolean =>
+  fields.some(field => {
+    const now = nonBlankEntries(current[field] ?? {});
+    const before = nonBlankEntries(baseline[field] ?? {});
+    const keys = Object.keys(now);
+    return keys.length !== Object.keys(before).length || keys.some(key => now[key] !== before[key]);
+  });

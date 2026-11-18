@@ -7,6 +7,8 @@ import {
   findActiveNavigation,
   isNavigationGroupActive,
   isNavigationLeafActive,
+  menuNavigation,
+  menuNavigationOf,
   type NavigationItem,
   resolveCrumbs,
   resolveDocumentTitle,
@@ -181,5 +183,98 @@ describe('document title', () => {
   it('takes entity names and the depth', () => {
     const crumbs = resolveCrumbs('/items/42/details', NAVIGATION);
     assert.deepEqual(documentTitleParts(crumbs, { depth: 3, entityText: crumb => `Item ${crumb.id}` }), ['Details', 'Item 42', 'Items']);
+  });
+});
+
+const TABBED: NavigationItem<Entity>[] = [
+  { key: 'home', label: 'Home', href: '/', exact: true, crumbHidden: true },
+  {
+    key: 'catalog',
+    label: 'Catalog',
+    crumbHidden: true,
+    children: [
+      {
+        key: 'items',
+        label: 'Items',
+        href: '/items',
+        crumbLink: false,
+        queryCrumbs: [{ param: 'view', label: { grid: 'Grid', table: 'Table' } }],
+        crumbs: [
+          {
+            segment: ':itemId',
+            entity: 'item',
+            queryCrumbs: [
+              { param: 'tab', label: (value, t) => t('Tab %tab%', { replacements: { tab: value } }) },
+              { param: 'panel', label: 'Panel', link: false },
+            ],
+          },
+        ],
+      },
+      { key: 'item-history', label: 'Item history', href: '/items/history', crumbOnly: true },
+    ],
+  },
+  { key: 'only-hidden', label: 'Only hidden', children: [{ key: 'ghost', label: 'Ghost', href: '/ghost', crumbOnly: true }] },
+];
+
+describe('resolveCrumbs: scope, query, rights and silent crumbs', () => {
+  it('puts leading scope crumbs first and leaves them out of the document title', () => {
+    const leadingCrumbs = [
+      { key: 'workspace', label: 'Workspace 7', href: '/workspaces/7', translate: false },
+      { key: 'area', label: 'Area' },
+    ];
+    const crumbs = resolveCrumbs('/items', NAVIGATION, { leadingCrumbs });
+    assert.deepEqual(
+      crumbs.slice(0, 2).map(crumb => [crumb.kind, crumb.kind === 'text' && crumb.scope, crumb.href, crumb.link]),
+      [
+        ['text', true, '/workspaces/7', true],
+        ['text', true, '', false],
+      ]
+    );
+    assert.equal(resolveDocumentTitle('/items', NAVIGATION, { leadingCrumbs, depth: 5, appName: 'Admin' }), 'Items · Admin');
+  });
+  it('hides silent items, keeps a redirect entry as text', () => {
+    assert.deepEqual(
+      resolveCrumbs('/items', TABBED).map(crumb => [crumb.key, crumb.link]),
+      [['nav:items', false]]
+    );
+    assert.deepEqual(resolveCrumbs('/', TABBED), []);
+  });
+  it('adds query crumbs of the deepest matched node, with the earlier parameters kept', () => {
+    const crumbs = resolveCrumbs('/items/42', TABBED, { search: '?tab=members&panel=x&view=grid' });
+    assert.deepEqual(
+      crumbs.map(crumb => (crumb.kind === 'text' ? [crumb.label, crumb.href, crumb.link, crumb.query] : [crumb.kind, crumb.href])),
+      [
+        ['leaf', '/items'],
+        ['entity', '/items/42'],
+        ['Tab members', '/items/42?tab=members', true, 'tab'],
+        ['Panel', '/items/42?tab=members&panel=x', false, 'panel'],
+      ]
+    );
+    // a value missing from the map adds no crumb; the pathname's own query string is read too
+    assert.deepEqual(resolveCrumbs('/items?view=list', TABBED).map(crumb => crumb.key), ['nav:items']);
+    assert.deepEqual(resolveCrumbs('/items?view=grid', TABBED).at(-1), {
+      kind: 'text',
+      key: 'query:/items?view=grid',
+      label: 'Grid',
+      href: '/items?view=grid',
+      link: true,
+      query: 'view',
+    });
+  });
+  it('turns crumbs refused by canAccessCrumb into text', () => {
+    const crumbs = resolveCrumbs('/items/42/members/7', NAVIGATION, {
+      canAccessCrumb: crumb => crumb.kind !== 'entity' || crumb.id !== '42',
+    });
+    assert.deepEqual(crumbs.map(crumb => crumb.link), [false, true, false, true, true]);
+  });
+  it('resolves a crumb-only leaf for crumbs and title; the menus leave it out', () => {
+    assert.deepEqual(resolveCrumbs('/items/history', TABBED).map(crumb => crumb.key), ['nav:item-history']);
+    assert.equal(resolveDocumentTitle('/items/history', TABBED), 'Item history');
+    const menu = menuNavigation(TABBED);
+    assert.deepEqual(menu.map(item => item.key), ['home', 'catalog']);
+    const catalog = menu[1];
+    assert.ok(catalog && 'children' in catalog);
+    assert.deepEqual(catalog.children.map(item => item.key), ['items']);
+    assert.equal(menuNavigationOf(NAVIGATION), NAVIGATION);
   });
 });

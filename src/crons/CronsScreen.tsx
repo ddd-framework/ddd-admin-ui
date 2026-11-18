@@ -8,6 +8,7 @@ import { m } from '../i18n/store.ts';
 import { useTranslate } from '../i18n/useTranslate.ts';
 import { EntityListCard } from '../list/EntityListCard.tsx';
 import { EntityListToolbar } from '../list/EntityListToolbar.tsx';
+import { FilterPanel, FilterSelect } from '../list/filters.tsx';
 import { drawerKey, type EntityDrawerUrlAdapter } from '../logic/pure/entityDrawer.ts';
 import type { UrlStateAdapter } from '../logic/pure/urlListState.ts';
 import { useEntityDrawer } from '../logic/react/useEntityDrawer.ts';
@@ -25,14 +26,23 @@ import type { CronsApi } from './api.ts';
 import { CronTimeline } from './charts.tsx';
 import { CronDetailsDrawer } from './CronDetailsDrawer.tsx';
 import { CronFormDrawer } from './CronFormDrawer.tsx';
-import { formatCronDateTime } from './format.ts';
+import {
+  type CronListSort,
+  type CronStatusFilter,
+  formatCronDateTime,
+  matchesCronStatusFilter,
+  normalizeCronName,
+  sortCrons,
+  toCronStatusFilter,
+} from './format.ts';
 import { CronActionErrorCallout, CronRunnerBanner, CronsTable, CronSummaryTiles } from './parts.tsx';
 import { CRONS_POLL_MS, CronRunsView } from './runs.tsx';
-import { toCronRunResultFilter } from './status.ts';
+import { CRON_STATUS, toCronRunResultFilter } from './status.ts';
+import { type CronTimeZoneMode, CronTimeDisplayProvider } from './timeDisplay.ts';
 import { useCronActions } from './useCronActions.ts';
 import { useCronsPageVisible } from './useServerClock.ts';
 
-const LIST_KEYS = ['view', 'q', 'result', 'hours'] as const;
+const LIST_KEYS = ['view', 'q', 'result', 'hours', 'status', 'runsCron'] as const;
 
 /** The windows of the timeline in hours (the API takes 1 to 168). */
 export const CRON_TIMELINE_WINDOWS = [
@@ -49,12 +59,15 @@ export interface CronTimelineCardProps {
   api: CronsApi;
   hours: CronTimelineWindow;
   onHoursChange: (hours: CronTimelineWindow) => void;
+  /** Refresh of the timeline in ms while the tab is visible (default 0 = off). */
+  pollingIntervalMs?: number;
 }
 
 /** The timeline (`GET /timeline?hours`) with its window switch. */
-export const CronTimelineCard = ({ api, hours, onHoursChange }: CronTimelineCardProps) => {
+export const CronTimelineCard = ({ api, hours, onHoursChange, pollingIntervalMs = 0 }: CronTimelineCardProps) => {
   const { t } = useTranslate();
-  const query = api.useCronsTimelineQuery({ hours: Number(hours) });
+  const visible = useCronsPageVisible();
+  const query = api.useCronsTimelineQuery({ hours: Number(hours) }, pollingIntervalMs > 0 && visible ? { pollingInterval: pollingIntervalMs } : undefined);
   return (
     <section>
       <SectionHeader
@@ -98,6 +111,25 @@ export interface CronsScreenProps {
   pollingIntervalMs?: number;
   /** `false` stops the countdowns (a showcase, a test). */
   tick?: boolean;
+  /** The order of the Crons list: `name` (default, as the API sends them) or `severity` (the worst status first). */
+  sort?: CronListSort;
+  /** A status filter in the toolbar's Filters panel (URL key `status`; default `true`). */
+  statusFilter?: boolean;
+  /** A "Cron" filter on the runs of all Crons (URL key `runsCron`; default `true`). */
+  runsCronFilter?: boolean;
+  /** Refresh of the open details drawer in ms while it is open (default 0 = off). */
+  detailsPollingIntervalMs?: number;
+  /** Refresh of the timeline in ms while the tab is visible (default 0 = off). */
+  timelinePollingIntervalMs?: number;
+  /** Refresh of an open run's output while the run is still running, in ms (default 0 = off). */
+  outputPollingIntervalMs?: number;
+  /**
+   * Where times show: `server` (default) the server's wall clock, the zone the schedules run in; `viewer` the viewer's
+   * own time zone (converted by `serverUtcOffsetMinutes`, else by the offset estimated from the server's clock).
+   */
+  timeZone?: CronTimeZoneMode;
+  /** The server's offset from UTC in minutes (`60` for UTC+1), when the host knows it (`timeZone="viewer"`). */
+  serverUtcOffsetMinutes?: number;
 }
 
 /**
@@ -106,7 +138,23 @@ export interface CronsScreenProps {
  * on / off, edit and delete; the details drawer; the runs with their output and the timeline; the create and edit form.
  * The list refreshes every 30 s while the tab is visible and after every write. Writes follow `WriteAccessProvider`.
  */
-export const CronsScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, description, pollingIntervalMs = CRONS_POLL_MS, tick = true }: CronsScreenProps) => {
+export const CronsScreen = ({
+  api,
+  urlStateAdapter,
+  drawerUrlAdapter,
+  title,
+  description,
+  pollingIntervalMs = CRONS_POLL_MS,
+  tick = true,
+  sort = 'name',
+  statusFilter: showStatusFilter = true,
+  runsCronFilter = true,
+  detailsPollingIntervalMs = 0,
+  timelinePollingIntervalMs = 0,
+  outputPollingIntervalMs = 0,
+  timeZone = 'server',
+  serverUtcOffsetMinutes,
+}: CronsScreenProps) => {
   const { t } = useTranslate();
   const visible = useCronsPageVisible();
   const memory = useMemoryUrlState();
@@ -123,19 +171,32 @@ export const CronsScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, des
   const actions = useCronActions(api);
 
   const search = debounced.q.trim().toLowerCase();
-  const shown = useMemo(
-    () =>
-      search
-        ? crons.filter(cron => [cron.name, cron.description, cron.command, cron.commandName].some(text => (text ?? '').toLowerCase().includes(search)))
-        : crons,
-    [crons, search]
-  );
+  const normalizedSearch = normalizeCronName(search);
+  const statusFilter: CronStatusFilter = showStatusFilter ? toCronStatusFilter(values.status) : 'ALL';
+  const shown = useMemo(() => {
+    const matching = crons.filter(
+      cron =>
+        matchesCronStatusFilter(cron, statusFilter) &&
+        (!search ||
+          [cron.name, cron.description, cron.command, cron.commandName].some(text => (text ?? '').toLowerCase().includes(search)) ||
+          // a stored name of another spelling (`Nightly_Cleanup`) is found by its kebab-case form and the other way round
+          (normalizedSearch !== '' && normalizeCronName(cron.name).includes(normalizedSearch)))
+    );
+    return sortCrons(matching, sort);
+  }, [crons, search, normalizedSearch, statusFilter, sort]);
+  const statusOptions = [
+    { value: 'ATTENTION', label: t('Need attention') },
+    ...Object.entries(CRON_STATUS).map(([value, definition]) => ({ value, label: t(definition.label, { context: definition.context }) })),
+  ];
+  const runsCronId = Number.parseInt(values.runsCron, 10);
+  const cronOptions = useMemo(() => crons.map(cron => ({ id: cron.id, name: cron.name })), [crons]);
   const editId = formDrawer.shown?.mode === 'edit' ? Number(formDrawer.shown.id) : undefined;
   const editedCron = editId === undefined ? undefined : crons.find(cron => cron.id === editId);
   const detailsId = details.shown?.mode === 'edit' ? Number(details.shown.id) : null;
   const listError = listQuery.isError ? normalizeDddError(listQuery.error, t('The Crons could not be loaded.')).message : undefined;
 
   return (
+    <CronTimeDisplayProvider mode={timeZone} serverUtcOffsetMinutes={serverUtcOffsetMinutes} serverNow={runner?.serverNow}>
     <div data-slot="crons-screen">
       <PageHeader
         title={title ?? t('Crons')}
@@ -196,6 +257,23 @@ export const CronsScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, des
                     placeholder: t('Search name, description or command…'),
                     'aria-label': t('Search Crons'),
                   }}
+                  {...(showStatusFilter
+                    ? {
+                        filters: (
+                          <FilterPanel>
+                            <FilterSelect
+                              label={t('Status')}
+                              value={statusFilter === 'ALL' ? '' : statusFilter}
+                              onChange={value => setValue('status', value)}
+                              options={statusOptions}
+                              allLabel={t('All statuses')}
+                            />
+                          </FilterPanel>
+                        ),
+                        activeFilterCount: statusFilter === 'ALL' ? 0 : 1,
+                        onClearFilters: () => setValue('status', ''),
+                      }
+                    : {})}
                 />
               }
             >
@@ -208,18 +286,34 @@ export const CronsScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, des
                 error={listQuery.data ? undefined : listError}
                 onOpen={cron => details.openEdit(cron.id)}
                 onEdit={cron => formDrawer.openEdit(cron.id)}
-                isSearchActive={Boolean(search)}
-                onClearSearch={() => setValue('q', '')}
+                isSearchActive={Boolean(search) || statusFilter !== 'ALL'}
+                onClearSearch={() => {
+                  setValue('q', '');
+                  setValue('status', '');
+                }}
               />
             </EntityListCard>
           ) : (
             <div className="space-y-8">
-              <CronTimelineCard api={api} hours={toTimelineWindow(values.hours)} onHoursChange={hours => setValue('hours', hours === '24' ? '' : hours)} />
+              <CronTimelineCard
+                api={api}
+                hours={toTimelineWindow(values.hours)}
+                onHoursChange={hours => setValue('hours', hours === '24' ? '' : hours)}
+                pollingIntervalMs={timelinePollingIntervalMs}
+              />
               <CronRunsView
                 api={api}
                 result={toCronRunResultFilter(values.result)}
                 onResultChange={result => setValue('result', result === 'ALL' ? '' : result)}
                 pollingIntervalMs={pollingIntervalMs}
+                outputPollingIntervalMs={outputPollingIntervalMs}
+                {...(runsCronFilter
+                  ? {
+                      cronOptions,
+                      cronFilterId: Number.isNaN(runsCronId) ? null : runsCronId,
+                      onCronFilterChange: (cronId: number | null) => setValue('runsCron', cronId === null ? '' : String(cronId)),
+                    }
+                  : {})}
               />
             </div>
           )}
@@ -234,6 +328,8 @@ export const CronsScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, des
         actions={actions}
         tick={tick}
         onEdit={cron => formDrawer.openEdit(cron.id)}
+        pollingIntervalMs={detailsPollingIntervalMs}
+        outputPollingIntervalMs={outputPollingIntervalMs}
       />
       <CronFormDrawer
         api={api}
@@ -243,5 +339,6 @@ export const CronsScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, des
         onClose={formDrawer.close}
       />
     </div>
+    </CronTimeDisplayProvider>
   );
 };

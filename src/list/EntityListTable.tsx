@@ -132,6 +132,35 @@ export interface EntityListTableProps<TItem> extends EntityListDataProps<TItem> 
   markUnsortedHeaders?: boolean;
   /** Which body rows tint on hover: `all` (default) or `action` (only rows with a row action, and selected rows keep their tint). */
   rowHover?: 'all' | 'action';
+  /**
+   * How a pinned column's scroll edge is drawn. `cell` (default): each pinned edge cell draws its own rule and shadow.
+   * `overlay`: one continuous rule and shadow per side across the header and the body (no seams between rows).
+   */
+  pinEdge?: 'cell' | 'overlay';
+  /** Width in px of the selection column (default 40: the 24 px card-edge inset and the 16 px checkbox). */
+  selectionColumnWidth?: number;
+  /** Width in px of the row index column (default 48 after the selection column, else 56). */
+  indexColumnWidth?: number;
+  /** Extra classes of the selection column's header and body cells. */
+  selectionCellClassName?: string;
+  /** Extra classes of the row index column's header and body cells. */
+  indexCellClassName?: string;
+  /**
+   * The colour header cells and pinned cells paint (a CSS colour, e.g. `var(--color-popover)` for a table on a
+   * popover). Default: the card colour. Set as `--list-surface` on the table's scroll container.
+   */
+  surface?: string;
+  /**
+   * The accessible name and tooltip of the "select all" checkbox, from the loaded row count and whether more rows exist
+   * on the server (already translated). Default "Select all loaded".
+   */
+  selectAllLabel?: (loadedCount: number, hasMore: boolean) => string;
+  /**
+   * What a fixed column `width` (`'120px'`) and a `minWidth` measure. `border-box` (default): the cell including its
+   * inline padding (16 px each side, 24 px at the card edge). `content-box`: the content only; the table adds the
+   * cell's padding to the track.
+   */
+  columnWidthBox?: 'border-box' | 'content-box';
 }
 
 /**
@@ -182,6 +211,10 @@ const pinProps = (layout: CellLayout, position: number, header: boolean) => {
   return { style, 'data-list-pin': placement.side, 'data-list-pin-edge': placement.edge ? '' : undefined };
 };
 
+/** The header's sticky offset and a leading cell's own width, merged (either may be absent). */
+const leadingStyle = (top: CSSProperties | undefined, own: CSSProperties | undefined): CSSProperties | undefined =>
+  top || own ? { ...own, ...top } : undefined;
+
 /** Cell content: as is in a content-sized table, in a shrinkable box in a table with tracks. */
 const cellContent = (layout: CellLayout, content: ReactNode, align?: ListColumnAlign) =>
   layout.tracks ? <div className={cn(TRACK_CONTENT_CLASS, align && ALIGN_CLASS[align])}>{content}</div> : content;
@@ -193,15 +226,16 @@ const cellLayoutClass = (layout: CellLayout, align?: ListColumnAlign) =>
 /** `role` of a table element in a table with tracks: `display: grid` drops the native table semantics in some browsers. */
 const roleIn = (layout: CellLayout, role: 'table' | 'rowgroup' | 'row' | 'columnheader' | 'cell') => (layout.tracks ? role : undefined);
 
-const SelectAllHeader = <TItem,>({ selection, disabled }: { selection: EntityListSelection<TItem>; disabled: boolean }) => {
+const SelectAllHeader = <TItem,>({ selection, disabled, label }: { selection: EntityListSelection<TItem>; disabled: boolean; label?: string }) => {
   const { t } = useTranslate();
+  const text = label ?? t('Select all loaded');
   return (
   <Checkbox
     checked={selection.allLoadedState}
     onCheckedChange={checked => selection.setAllLoadedSelected(checked === true)}
     disabled={disabled || selection.disabled}
-    aria-label={t('Select all loaded')}
-    title={t('Select all loaded')}
+    aria-label={text}
+    title={text}
     className="align-middle"
   />
   );
@@ -258,7 +292,28 @@ interface EntityListTableRowProps<TItem> {
   keyboardActivation?: boolean;
   /** Only rows with an action (or selected) tint on hover. */
   hoverOnlyWithAction: boolean;
+  /** The leading columns' own sizes and classes (`selectionColumnWidth`, `indexCellClassName`, …). */
+  leadingCells: LeadingCells;
 }
+
+/** Sizes and classes of the selection and row index cells; one object per table (the memoised rows compare it). */
+interface LeadingCells {
+  selectClassName: string;
+  indexClassName: string;
+  /** Inline width of the selection cell in a content-sized table (`selectionColumnWidth`). */
+  selectStyle?: CSSProperties;
+  /** Inline width of the row index cell in a content-sized table (`indexColumnWidth`). */
+  indexStyle?: CSSProperties;
+}
+
+/** Merges a pinned cell's props with an extra inline style. */
+const withStyle = <T extends { style?: CSSProperties } | undefined>(props: T, style: CSSProperties | undefined) =>
+  style ? { ...props, style: { ...style, ...props?.style } } : props;
+
+/** Shift with a press in the selection cell extends the selection: it must not select the page's text. */
+const preventShiftSelection = (event: MouseEvent<HTMLElement>) => {
+  if (event.shiftKey) event.preventDefault();
+};
 
 /** What a row's selection cell needs: plain values, so a row re-renders only when its own state changes. */
 interface RowSelectionCell {
@@ -293,6 +348,7 @@ const EntityListTableRowView = <TItem,>({
   className,
   keyboardActivation = false,
   hoverOnlyWithAction,
+  leadingCells,
 }: EntityListTableRowProps<TItem>) => {
   const action = useMemo(() => (rowAction ? rowAction(item) : undefined), [rowAction, item]);
   const activation = useRowActivation(action);
@@ -344,17 +400,19 @@ const EntityListTableRowView = <TItem,>({
         className
       )}
       data-state={selected ? 'selected' : undefined}
+      data-list-row-hover={hoverOnlyWithAction && !action ? 'none' : undefined}
       role={roleIn(layout, 'row')}
       {...activation}
       {...keyboard}
     >
       {selection && (
         <TableCell
-          className={cn(BODY_CELL_CLASS, SELECT_CELL_CLASS, onSelectCellClick && 'cursor-pointer')}
+          className={cn(BODY_CELL_CLASS, leadingCells.selectClassName, onSelectCellClick && 'cursor-pointer')}
           data-row-action-ignore
           role={roleIn(layout, 'cell')}
           onClick={onSelectCellClick}
-          {...pinProps(layout, 0, false)}
+          onMouseDown={preventShiftSelection}
+          {...withStyle(pinProps(layout, 0, false), leadingCells.selectStyle)}
         >
           {selection.selectable ? (
             <Checkbox
@@ -371,7 +429,11 @@ const EntityListTableRowView = <TItem,>({
         </TableCell>
       )}
       {rowNumber !== undefined && (
-        <TableCell className={cn(BODY_CELL_CLASS, INDEX_CELL_CLASS)} role={roleIn(layout, 'cell')} {...pinProps(layout, selection ? 1 : 0, false)}>
+        <TableCell
+          className={cn(BODY_CELL_CLASS, leadingCells.indexClassName)}
+          role={roleIn(layout, 'cell')}
+          {...withStyle(pinProps(layout, selection ? 1 : 0, false), leadingCells.indexStyle)}
+        >
           {rowNumber}
         </TableCell>
       )}
@@ -410,6 +472,7 @@ const EntityListTableRow = memo(
     previous.className === next.className &&
     previous.keyboardActivation === next.keyboardActivation &&
     previous.hoverOnlyWithAction === next.hoverOnlyWithAction &&
+    previous.leadingCells === next.leadingCells &&
     sameSelectionCell(previous.selection, next.selection)
 ) as typeof EntityListTableRowView;
 
@@ -469,6 +532,14 @@ export const EntityListTable = <TItem,>({
   stickyHeader = 'scroller',
   markUnsortedHeaders = false,
   rowHover = 'all',
+  pinEdge = 'cell',
+  selectionColumnWidth,
+  indexColumnWidth,
+  selectionCellClassName,
+  indexCellClassName,
+  surface,
+  selectAllLabel,
+  columnWidthBox = 'border-box',
 }: EntityListTableProps<TItem>) => {
   const { t } = useTranslate();
   const hasFilterRow = columns.some(column => column.filter !== undefined);
@@ -485,13 +556,38 @@ export const EntityListTable = <TItem,>({
     while (fillerBefore > 0 && columns[fillerBefore - 1]?.pin === 'end') fillerBefore -= 1;
   }
   const columnPosition = (index: number) => leadingCount + index + (fillerBefore !== null && index >= fillerBefore ? 1 : 0);
-  const columnTracks: ListTrack[] = columns.map(column => ({ width: column.width, minWidth: column.minWidth }));
+  const positionCount = leadingCount + columns.length + (fillerBefore !== null ? 1 : 0);
+  // `content-box`: a fixed width and a minimum name the content; the track adds the cell's inline padding
+  const contentBoxTrack = (column: EntityListColumn<TItem>, index: number): ListTrack => {
+    const position = columnPosition(index);
+    const padding = (position === 0 ? 24 : 16) + (position === positionCount - 1 ? 24 : 16);
+    const width = column.width?.endsWith('px') ? `${Number.parseFloat(column.width) + padding}px` : column.width;
+    return { width, minWidth: column.minWidth === undefined ? undefined : column.minWidth + padding };
+  };
+  const columnTracks: ListTrack[] = columns.map((column, index) =>
+    columnWidthBox === 'content-box' ? contentBoxTrack(column, index) : { width: column.width, minWidth: column.minWidth }
+  );
   if (fillerBefore !== null) columnTracks.splice(fillerBefore, 0, { width: '1fr', minWidth: 0 });
+  const selectTrackPx = selectionColumnWidth ?? SELECT_TRACK_PX;
+  const indexPx = indexColumnWidth ?? indexTrackPx(selection !== undefined);
   const tracks: ListTrack[] = [
-    ...(selection ? [{ width: `${SELECT_TRACK_PX}px` }] : []),
-    ...(showRowIndex ? [{ width: `${indexTrackPx(selection !== undefined)}px` }] : []),
+    ...(selection ? [{ width: `${selectTrackPx}px` }] : []),
+    ...(showRowIndex ? [{ width: `${indexPx}px` }] : []),
     ...columnTracks,
   ];
+  // the leading cells' classes and (content-sized table) inline widths; one object while they stay the same
+  const leadingCells = useMemo<LeadingCells>(
+    () => ({
+      selectClassName: cn(SELECT_CELL_CLASS, selectionCellClassName),
+      indexClassName: cn(INDEX_CELL_CLASS, indexCellClassName),
+      selectStyle: selectionColumnWidth !== undefined && !sized ? { width: selectionColumnWidth, minWidth: selectionColumnWidth } : undefined,
+      indexStyle: indexColumnWidth !== undefined && !sized ? { width: indexColumnWidth, minWidth: indexColumnWidth } : undefined,
+    }),
+    [selectionCellClassName, indexCellClassName, selectionColumnWidth, indexColumnWidth, sized]
+  );
+  const overlayEdges = pinEdge === 'overlay';
+  const surfaceStyle = surface ? ({ '--list-surface': surface } as CSSProperties) : undefined;
+  const headerSurfaceClass = surface ? 'bg-(--list-surface)' : undefined;
   const usesLayout = sized || showRowIndex || columns.some(column => column.pin !== undefined);
   const trackSignature = tracks.map(track => `${track.width ?? ''}/${track.minWidth ?? ''}`).join(' ');
   // `'content'` tracks: their header cells are measured like the cells of a content-sized table
@@ -503,7 +599,48 @@ export const EntityListTable = <TItem,>({
   const scrollRef = useRef<HTMLDivElement>(null);
   const headerScrollRef = useRef<HTMLDivElement>(null);
   const headerRowRef = useRef<HTMLTableRowElement>(null);
+  const pageHostRef = useRef<HTMLDivElement>(null);
+  const edgeOriginRef = useRef<HTMLDivElement>(null);
+  const edgeStartRef = useRef<HTMLDivElement>(null);
+  const edgeEndRef = useRef<HTMLDivElement>(null);
   const [measure, setMeasure] = useState<TableMeasure | null>(null);
+
+  // `pinEdge="overlay"`: one rule per side over header and body, placed at the pinned edge cell of the header row
+  // (written to the DOM directly, like the scroll attributes)
+  const positionEdgeOverlays = useCallback(() => {
+    const scroller = scrollRef.current;
+    const origin = edgeOriginRef.current;
+    if (!overlayEdges || !scroller || !origin) return;
+    const host = pageHeader ? pageHostRef.current : scroller;
+    if (!host) return;
+    const originRect = origin.getBoundingClientRect();
+    const hostRect = host.getBoundingClientRect();
+    const scrollerRect = scroller.getBoundingClientRect();
+    const tableRect = scroller.querySelector('table')?.getBoundingClientRect();
+    const rtl = window.getComputedStyle(scroller).direction === 'rtl';
+    const edges: [ListPinPlacement['side'], HTMLDivElement | null][] = [
+      ['start', edgeStartRef.current],
+      ['end', edgeEndRef.current],
+    ];
+    for (const [side, element] of edges) {
+      if (!element) continue;
+      const cell = headerRowRef.current?.querySelector(`[data-list-pin="${side}"][data-list-pin-edge]`);
+      element.hidden = !cell;
+      if (!cell) continue;
+      const cellRect = cell.getBoundingClientRect();
+      const towardsEnd = (side === 'start') !== rtl;
+      element.setAttribute('data-list-edge-shadow', towardsEnd ? 'right' : 'left');
+      element.style.left = `${(towardsEnd ? cellRect.right : cellRect.left) - originRect.left}px`;
+      if (pageHeader) {
+        element.style.top = '0px';
+        element.style.height = `${Math.max(0, scrollerRect.top - hostRect.top + scroller.clientHeight)}px`;
+      } else {
+        const visibleBottom = Math.min(scrollerRect.top + scroller.clientHeight, tableRect?.bottom ?? scrollerRect.bottom);
+        element.style.top = `${scrollerRect.top - originRect.top}px`;
+        element.style.height = `${Math.max(0, visibleBottom - scrollerRect.top)}px`;
+      }
+    }
+  }, [overlayEdges, pageHeader]);
 
   // After hydration only (effects never run on the server, and the first client render matches the server HTML):
   // the visible width, and in a content-sized table the header cells, re-read on every resize. The scroll position is
@@ -516,11 +653,14 @@ export const EntityListTable = <TItem,>({
       const overflow = scroller.scrollWidth - scroller.clientWidth;
       const scrolled = Math.abs(scroller.scrollLeft);
       const header = headerScrollRef.current;
-      for (const element of header ? [scroller, header] : [scroller]) {
+      const pageHost = overlayEdges ? pageHostRef.current : null;
+      for (const element of [scroller, header, pageHost]) {
+        if (!element) continue;
         element.toggleAttribute('data-list-overflow-start', overflow > 1 && scrolled > 1);
         element.toggleAttribute('data-list-overflow-end', overflow > 1 && scrolled < overflow - 1);
       }
       if (header && header.scrollLeft !== scroller.scrollLeft) header.scrollLeft = scroller.scrollLeft;
+      positionEdgeOverlays();
     };
     const read = () => {
       const visibleWidth = scroller.clientWidth;
@@ -546,12 +686,16 @@ export const EntityListTable = <TItem,>({
     return () => {
       observer.disconnect();
       scroller.removeEventListener('scroll', syncScrollEdges);
-      for (const element of [scroller, headerScrollRef.current]) {
+      for (const element of [scroller, headerScrollRef.current, pageHostRef.current]) {
         element?.removeAttribute('data-list-overflow-start');
         element?.removeAttribute('data-list-overflow-end');
       }
     };
-  }, [usesLayout, sized, measuresCells, trackSignature, pageHeader]);
+  }, [usesLayout, sized, measuresCells, trackSignature, pageHeader, positionEdgeOverlays]);
+  // the pinned edge cells move with the placements (a re-render): the overlays follow
+  useLayoutEffect(() => {
+    if (overlayEdges) positionEdgeOverlays();
+  });
 
   let gridStyle: CSSProperties | undefined;
   let placements: (ListPinPlacement | null)[] | null = null;
@@ -618,12 +762,23 @@ export const EntityListTable = <TItem,>({
     >
       <TableRow ref={headerRowRef} className="hover:bg-transparent" role={roleIn(layout, 'row')}>
         {selection && (
-          <TableHead className={cn(HEADER_CELL_CLASS, 'top-0', SELECT_CELL_CLASS)} {...headerCellProps(0, headerTopStyle)}>
-            <SelectAllHeader selection={selection} disabled={isLoading || items.length === 0} />
+          <TableHead
+            className={cn(HEADER_CELL_CLASS, headerSurfaceClass, 'top-0', leadingCells.selectClassName)}
+            onMouseDown={preventShiftSelection}
+            {...headerCellProps(0, leadingStyle(headerTopStyle, leadingCells.selectStyle))}
+          >
+            <SelectAllHeader
+              selection={selection}
+              disabled={isLoading || items.length === 0}
+              label={selectAllLabel?.(items.length, hasMore)}
+            />
           </TableHead>
         )}
         {showRowIndex && (
-          <TableHead className={cn(HEADER_CELL_CLASS, 'top-0', INDEX_CELL_CLASS)} {...headerCellProps(indexPosition, headerTopStyle)}>
+          <TableHead
+            className={cn(HEADER_CELL_CLASS, headerSurfaceClass, 'top-0', leadingCells.indexClassName)}
+            {...headerCellProps(indexPosition, leadingStyle(headerTopStyle, leadingCells.indexStyle))}
+          >
             <span aria-hidden>#</span>
             <span className="sr-only">{t('Row number')}</span>
           </TableHead>
@@ -636,7 +791,7 @@ export const EntityListTable = <TItem,>({
             return (
               <TableHead
                 key={column.id}
-                className={cn(HEADER_CELL_CLASS, 'top-0', column.className, column.headerClassName, cellLayoutClass(layout, column.align))}
+                className={cn(HEADER_CELL_CLASS, headerSurfaceClass, 'top-0', column.className, column.headerClassName, cellLayoutClass(layout, column.align))}
                 aria-sort={
                   direction === 'asc' ? 'ascending' : direction === 'desc' ? 'descending' : sortable && markUnsortedHeaders ? 'none' : undefined
                 }
@@ -661,14 +816,22 @@ export const EntityListTable = <TItem,>({
               </TableHead>
             );
           }),
-          <FillerCell key="list-filler" header className="top-0" />
+          <FillerCell key="list-filler" header className={cn(headerSurfaceClass, 'top-0')} />
         )}
       </TableRow>
       {hasFilterRow && (
         <TableRow className="hover:bg-transparent" role={roleIn(layout, 'row')}>
-          {selection && <TableHead className={cn(HEADER_CELL_CLASS, 'top-12 py-2.5', SELECT_CELL_CLASS)} {...headerCellProps(0)} />}
+          {selection && (
+            <TableHead
+              className={cn(HEADER_CELL_CLASS, headerSurfaceClass, 'top-12 py-2.5', leadingCells.selectClassName)}
+              {...headerCellProps(0, leadingCells.selectStyle)}
+            />
+          )}
           {showRowIndex && (
-            <TableHead className={cn(HEADER_CELL_CLASS, 'top-12 py-2.5', INDEX_CELL_CLASS)} {...headerCellProps(indexPosition)} />
+            <TableHead
+              className={cn(HEADER_CELL_CLASS, headerSurfaceClass, 'top-12 py-2.5', leadingCells.indexClassName)}
+              {...headerCellProps(indexPosition, leadingCells.indexStyle)}
+            />
           )}
           {withFiller(
             columns.map((column, index) => (
@@ -676,6 +839,7 @@ export const EntityListTable = <TItem,>({
                 key={column.id}
                 className={cn(
                   HEADER_CELL_CLASS,
+                  headerSurfaceClass,
                   'top-12 py-2.5 font-normal normal-case',
                   column.className,
                   column.headerClassName,
@@ -686,7 +850,7 @@ export const EntityListTable = <TItem,>({
                 {column.filter === undefined ? column.filter : cellContent(layout, column.filter, column.align)}
               </TableHead>
             )),
-            <FillerCell key="list-filler" header className="top-12 py-2.5" />
+            <FillerCell key="list-filler" header className={cn(headerSurfaceClass, 'top-12 py-2.5')} />
           )}
         </TableRow>
       )}
@@ -700,12 +864,20 @@ export const EntityListTable = <TItem,>({
             // biome-ignore lint/suspicious/noArrayIndexKey: static placeholder rows
             <TableRow key={row} className="hover:bg-transparent" aria-hidden role={roleIn(layout, 'row')}>
               {selection && (
-                <TableCell className={cn(BODY_CELL_CLASS, SELECT_CELL_CLASS)} role={roleIn(layout, 'cell')} {...pinProps(layout, 0, false)}>
+                <TableCell
+                  className={cn(BODY_CELL_CLASS, leadingCells.selectClassName)}
+                  role={roleIn(layout, 'cell')}
+                  {...withStyle(pinProps(layout, 0, false), leadingCells.selectStyle)}
+                >
                   <Skeleton className="size-4" />
                 </TableCell>
               )}
               {showRowIndex && (
-                <TableCell className={cn(BODY_CELL_CLASS, INDEX_CELL_CLASS)} role={roleIn(layout, 'cell')} {...pinProps(layout, indexPosition, false)}>
+                <TableCell
+                  className={cn(BODY_CELL_CLASS, leadingCells.indexClassName)}
+                  role={roleIn(layout, 'cell')}
+                  {...withStyle(pinProps(layout, indexPosition, false), leadingCells.indexStyle)}
+                >
                   <Skeleton className="h-4 w-5" />
                 </TableCell>
               )}
@@ -752,6 +924,7 @@ export const EntityListTable = <TItem,>({
                 className={rowClassName?.(item, index)}
                 keyboardActivation={rowKeyboardActivation}
                 hoverOnlyWithAction={rowHover === 'action'}
+                leadingCells={leadingCells}
               />
             );
           })}
@@ -759,6 +932,17 @@ export const EntityListTable = <TItem,>({
   );
 
   const tableClass = 'w-full caption-bottom text-sm';
+  const edgeOverlays = overlayEdges && usesLayout && (
+    <>
+      <div ref={edgeOriginRef} aria-hidden data-list-edge-origin="" className="pointer-events-none absolute top-0 left-0 size-0" />
+      <div ref={edgeStartRef} aria-hidden hidden data-list-edge-overlay="start" />
+      <div ref={edgeEndRef} aria-hidden hidden data-list-edge-overlay="end" />
+    </>
+  );
+  const hostAttributes = {
+    'data-list-pin-edges': overlayEdges ? 'overlay' : undefined,
+    'data-list-surface': surface ? '' : undefined,
+  };
   const status = (
     <>
       <EntityListStatus
@@ -781,9 +965,12 @@ export const EntityListTable = <TItem,>({
     // two tables on one set of tracks: the header in a sticky strip that follows the body's sideways scroll
     return (
       <div
+        ref={pageHostRef}
         data-list-page-header=""
+        {...hostAttributes}
         role="table"
         className={cn('relative md:min-h-0 md:flex-1', className)}
+        style={surfaceStyle}
         aria-busy={isLoading || isFetchingMore}
       >
         <div
@@ -802,6 +989,7 @@ export const EntityListTable = <TItem,>({
           </table>
         </div>
         {status}
+        {edgeOverlays}
       </div>
     );
   }
@@ -810,7 +998,9 @@ export const EntityListTable = <TItem,>({
     <div
       ref={scrollRef}
       data-entity-list-scroll
+      {...hostAttributes}
       className={cn('relative overflow-auto md:min-h-0 md:flex-1', className)}
+      style={surfaceStyle}
       aria-busy={isLoading || isFetchingMore}
     >
       <table className={tableClass} data-list-tracks={sized ? '' : undefined} role={roleIn(layout, 'table')} style={gridStyle}>
@@ -818,6 +1008,7 @@ export const EntityListTable = <TItem,>({
         {body}
       </table>
       {status}
+      {edgeOverlays}
     </div>
   );
 };

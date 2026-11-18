@@ -8,6 +8,8 @@
 #         links rendered by blocks go through AdminUiProvider.linkComponent and keep sticky parameters (withStickyParams)
 #         the shell renders on the server from one navigation (sidebar, breadcrumbs, title) and never reaches ./shell-background
 #         the optional props of 0.3.2 render on the server (options-render.mjs)
+#         the optional props of 0.3.3 render on the server (options-033-render.mjs)
+#         ./logic/pure loads from CommonJS through its require condition without any dependency (pure-require.cjs)
 #     T4  Node imports of every entry but ./next and ./notify-sonner (those two fail on the missing peer) and a
 #         strict tsc (skipLibCheck false) with moduleResolution bundler and nodenext
 #     T3  (server render) bound fields from ./translations and ./media find the form of ./form
@@ -107,6 +109,8 @@ node -e "for (const name of ['next','sonner','tailwindcss','recharts','@uiw/reac
 node -p "'installed: ddd-web ' + require('@mgamadeus/ddd-web/package.json').version + ', lucide-react ' + require('lucide-react/package.json').version"
 echo "── T4 Node imports"
 node smoke.mjs
+echo "── ./logic/pure from CommonJS (require condition, no dependency loaded)"
+node pure-require.cjs
 for MODE in bundler nodenext; do
   if [ "$MODE" = bundler ]; then MODULE=esnext; else MODULE=nodenext; fi
   cat > "tsconfig.$MODE.json" <<JSON
@@ -145,10 +149,16 @@ echo "── ./issues, ./database and ./crons screens on the static apis (server
 node issues-render.mjs
 node database-render.mjs
 node crons-render.mjs
+echo "── the screen options of 0.3.3 on the server: issues range and summary, schema diff guards, cron filters and times"
+node screens-options-render.mjs
 echo "── the shell on the server: one navigation for sidebar, breadcrumbs and title; rights predicate; no background reach"
 node shell-render.mjs
+echo "── the shell options of 0.3.3 on the server: display context, menus, top bar, breadcrumbs, background props"
+node shell-options-render.mjs
 echo "── the optional props of 0.3.2 on the server: language tabs, table, bulk bar, filter buttons, shell, segmented control"
 node options-render.mjs
+echo "── the optional props of 0.3.3 on the server: table surface, leading columns, edges, bulk labels, translatable counter"
+node options-033-render.mjs
 echo "── shipped i18n manifest"
 if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-i18n-manifest --check; else pnpm exec ddd-admin-ui-i18n-manifest --check; fi
 
@@ -198,6 +208,8 @@ else
   node browser-shell.mjs "http://127.0.0.1:$PORT"
   echo "── the options of 0.3.2: range selection, page-sticky header, dialog isolation and result (headless browser)"
   node browser-options.mjs "http://127.0.0.1:$PORT"
+  echo "── the options of 0.3.3: overlay edge, Shift in the select cell, hover without an action, dialog presses and Enter, language texts (headless browser)"
+  node browser-options-033.mjs "http://127.0.0.1:$PORT"
   kill $SERVER_PID 2>/dev/null || true
 fi
 

@@ -30,6 +30,8 @@ export interface EntityListBulkActionChoice {
   disabled?: boolean;
   /** `false`: `label` is already translated (a name from the server). */
   translate?: boolean;
+  /** Classes of the choice's menu item (e.g. `min-w-0` with a truncating label: the label sits in a `truncate` span). */
+  className?: string;
 }
 
 /**
@@ -81,7 +83,10 @@ export interface EntityListBulkAction {
    * (`%count%` is still filled in). Default: English UI texts, translated by the bar.
    */
   translate?: boolean;
-  /** Classes of the count in the label (` (3)`), e.g. a muted tone; without it the label is one text. */
+  /**
+   * Classes of the count in the label (` (3)`), e.g. a muted tone; without it the label is one text. With it the label
+   * is one element holding the text and the count, so the button's gap does not open around the count.
+   */
   countClassName?: string;
   /** Classes of the action's button. */
   className?: string;
@@ -104,6 +109,15 @@ export interface EntityListBulkBarProps {
   deleteHint?: string;
   /** Ask before `onDelete` runs (same rules as an action's `confirm`). */
   deleteConfirm?: EntityListBulkActionConfirm;
+  /**
+   * `false`: `deleteLabel`, `deleteHint` and the `deleteConfirm` texts are already translated and shown as given
+   * (`%count%` is still filled in). Default: English UI texts, translated by the bar.
+   */
+  deleteTranslate?: boolean;
+  /** Classes of the Delete button (after its red outline). */
+  deleteClassName?: string;
+  /** Classes of the count in Delete's label (as an action's `countClassName`). */
+  deleteCountClassName?: string;
   /**
    * Disables every action (writes not allowed, another bulk action running); Clear stays usable unless `busy`. A
    * `WriteAccessProvider` with `allowed: false` disables the actions and Delete as well (not Clear, not an action with
@@ -143,6 +157,9 @@ export const EntityListBulkBar = ({
   deleteDisabled = false,
   deleteHint,
   deleteConfirm,
+  deleteTranslate = true,
+  deleteClassName,
+  deleteCountClassName,
   countLive = false,
 }: EntityListBulkBarProps) => {
   const { t } = useTranslate();
@@ -189,7 +206,8 @@ export const EntityListBulkBar = ({
   const labelWithCount = (label: string, countClassName?: string): ReactNode => {
     if (!countClassName) return t('%label% (%count%)', { replacements: { label, count } });
     const template = t('%label% (%count%)', { replacements: { label: '\u0001', count: '\u0002' } });
-    return template.split(/(\u0001|\u0002)/).map((part, index) =>
+    // one element: the button's gap must not open between the label, the brackets and the count
+    return <span data-bulk-label="">{template.split(/(\u0001|\u0002)/).map((part, index) =>
       part === '\u0001' ? (
         // biome-ignore lint/suspicious/noArrayIndexKey: the parts of one fixed template
         <Fragment key={index}>{label}</Fragment>
@@ -201,7 +219,7 @@ export const EntityListBulkBar = ({
       ) : (
         part
       )
-    );
+    )}</span>;
   };
 
   return (
@@ -268,8 +286,15 @@ export const EntityListBulkBar = ({
                       key={choice.id}
                       disabled={choice.disabled}
                       onSelect={() => void confirmThen(action, () => action.onChoose?.(choice))}
+                      className={choice.className}
                     >
-                      {choice.translate === false ? choice.label : t(choice.label)}
+                      {choice.className ? (
+                        <span className="min-w-0 truncate">{choice.translate === false ? choice.label : t(choice.label)}</span>
+                      ) : choice.translate === false ? (
+                        choice.label
+                      ) : (
+                        t(choice.label)
+                      )}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -294,19 +319,23 @@ export const EntityListBulkBar = ({
         })}
         {onDelete &&
           withHint(
-            { id: 'delete', hint: deleteHint },
+            { id: 'delete', hint: deleteHint, translate: deleteTranslate === false ? false : undefined },
             <Button
               key="delete"
               type="button"
               size="sm"
               variant="outline"
-              onClick={deleteConfirm ? () => void confirmThen({ confirm: deleteConfirm }, onDelete) : onDelete}
+              onClick={
+                deleteConfirm
+                  ? () => void confirmThen({ confirm: deleteConfirm, translate: deleteTranslate === false ? false : undefined }, onDelete)
+                  : onDelete
+              }
               disabled={disabled || busy || writeBlocked || deleteDisabled}
               title={deleteHint ? undefined : blockedTitle}
-              className="h-8 border-destructive/40 bg-card text-destructive hover:bg-destructive/10 hover:text-destructive"
+              className={cn('h-8 border-destructive/40 bg-card text-destructive hover:bg-destructive/10 hover:text-destructive', deleteClassName)}
             >
               {deleteBusy ? <Loader2 className="animate-spin" aria-hidden /> : <Trash2 aria-hidden />}
-              {t('%label% (%count%)', { replacements: { label: t(deleteLabel), count } })}
+              {labelWithCount(deleteTranslate === false ? deleteLabel.replaceAll('%count%', String(count)) : t(deleteLabel), deleteCountClassName)}
             </Button>
           )}
       </div>

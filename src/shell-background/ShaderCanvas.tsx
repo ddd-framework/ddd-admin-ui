@@ -3,8 +3,11 @@
 import { useEffect, useRef } from 'react';
 
 import {
-  createDisplacementTexture,
+  createDisplacementTextureFrom,
+  displacementMean,
+  displacementPixels,
   initShaderProgram,
+  NEUTRAL_DISPLACEMENT_CENTER,
   SHADER_MOTION,
   SHADER_RENDER,
   SHADER_TIME_PERIOD,
@@ -16,6 +19,32 @@ import {
 
 const CONTEXT_ATTRIBUTES: WebGLContextAttributes = { depth: false, stencil: false, antialias: false, powerPreference: 'low-power' };
 const ACTIVITY_EVENTS = ['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll'] as const;
+/** Side of the texture a host image is drawn into (a power of two: WebGL 1 repeats only those). */
+const IMAGE_TEXTURE_SIZE = 256;
+
+/** A host image as square RGBA bytes (resampled to `IMAGE_TEXTURE_SIZE`); `null` when it cannot be read (no CORS). */
+const loadDisplacementImage = (url: string): Promise<Uint8Array | null> =>
+  new Promise(resolve => {
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.decoding = 'async';
+    image.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = IMAGE_TEXTURE_SIZE;
+        canvas.height = IMAGE_TEXTURE_SIZE;
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        if (!context) return resolve(null);
+        context.drawImage(image, 0, 0, IMAGE_TEXTURE_SIZE, IMAGE_TEXTURE_SIZE);
+        const data = context.getImageData(0, 0, IMAGE_TEXTURE_SIZE, IMAGE_TEXTURE_SIZE).data;
+        resolve(new Uint8Array(data.buffer.slice(0)));
+      } catch {
+        resolve(null);
+      }
+    };
+    image.onerror = () => resolve(null);
+    image.src = url;
+  });
 
 export interface ShaderCanvasProps {
   palette: ShaderPalette;
@@ -24,6 +53,8 @@ export interface ShaderCanvasProps {
   idleAfterMs: number;
   /** Displacement field and blob opacities (`ShaderLook`); absent values keep the defaults. */
   look?: ShaderLook;
+  /** Holds the current frame (no animation) until it turns `false`. */
+  paused?: boolean;
   className?: string;
 }
 
@@ -33,12 +64,16 @@ export interface ShaderCanvasProps {
  * `idleAfterMs` without input hold the last frame; it resumes with an immediate draw. A palette change redraws.
  * Browser-only; loaded lazily by `ShaderBackground`.
  */
-export const ShaderCanvas = ({ palette, dark, idleAfterMs, look, className }: ShaderCanvasProps) => {
+export const ShaderCanvas = ({ palette, dark, idleAfterMs, look, paused = false, className }: ShaderCanvasProps) => {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const paletteRef = useRef({ palette, dark, look });
   paletteRef.current = { palette, dark, look };
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
   const displacementCells = look?.displacementCells;
+  const displacementImage = look?.displacementImage;
   const redrawRef = useRef<(() => void) | null>(null);
+  const syncRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -58,13 +93,21 @@ export const ShaderCanvas = ({ palette, dark, idleAfterMs, look, className }: Sh
     let program: WebGLProgram | null = null;
     let uniforms: UniformMap | null = null;
     let texture: WebGLTexture | null = null;
+    // the field's bytes and its mean: the generated field until a host image has loaded
+    let field: { size: number; pixels: Uint8Array } = { size: 128, pixels: displacementPixels(128, displacementCells ?? 8) };
+    let fieldMean = displacementMean(field.pixels);
+    const buildTexture = () => {
+      if (texture) gl.deleteTexture(texture);
+      texture = createDisplacementTextureFrom(gl, field.size, field.pixels);
+      return texture !== null;
+    };
     const buildResources = () => {
       const built = initShaderProgram(gl);
       if (!built) return false;
       program = built.program;
       uniforms = built.uniforms;
-      texture = createDisplacementTexture(gl, 128, displacementCells ?? 8);
-      return texture !== null;
+      texture = null;
+      return buildTexture();
     };
     if (!buildResources()) {
       gl.getExtension('WEBGL_lose_context')?.loseContext();
@@ -110,6 +153,7 @@ export const ShaderCanvas = ({ palette, dark, idleAfterMs, look, className }: Sh
         rand: randSeed,
         texture,
         look: current.look,
+        center: current.look?.displacementZeroMean ? fieldMean : NEUTRAL_DISPLACEMENT_CENTER,
       });
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     };
@@ -133,7 +177,7 @@ export const ShaderCanvas = ({ palette, dark, idleAfterMs, look, className }: Sh
       }
     };
     const sync = () => {
-      if (cancelled || contextLost || idle || document.visibilityState !== 'visible') {
+      if (cancelled || contextLost || idle || pausedRef.current || document.visibilityState !== 'visible') {
         stop();
         return;
       }
@@ -158,6 +202,19 @@ export const ShaderCanvas = ({ palette, dark, idleAfterMs, look, className }: Sh
     redrawRef.current = () => {
       if (runStartedAt === null) draw();
     };
+    syncRef.current = () => {
+      sync();
+      if (runStartedAt === null) draw();
+    };
+    if (displacementImage) {
+      void loadDisplacementImage(displacementImage).then(pixels => {
+        if (cancelled || !pixels) return;
+        field = { size: IMAGE_TEXTURE_SIZE, pixels };
+        fieldMean = displacementMean(pixels);
+        if (!contextLost) buildTexture();
+        if (runStartedAt === null) draw();
+      });
+    }
     const observer = new ResizeObserver(() => {
       if (resize() && runStartedAt === null) draw();
     });
@@ -186,6 +243,7 @@ export const ShaderCanvas = ({ palette, dark, idleAfterMs, look, className }: Sh
     return () => {
       cancelled = true;
       redrawRef.current = null;
+      syncRef.current = null;
       stop();
       if (idleTimer !== undefined) clearTimeout(idleTimer);
       observer.disconnect();
@@ -199,10 +257,16 @@ export const ShaderCanvas = ({ palette, dark, idleAfterMs, look, className }: Sh
       gl.getExtension('WEBGL_lose_context')?.loseContext();
       canvas.remove();
     };
-  }, [idleAfterMs, displacementCells]);
+  }, [idleAfterMs, displacementCells, displacementImage]);
+
+  // `paused` holds the frame; turning it off resumes the loop
+  useEffect(() => {
+    void paused;
+    syncRef.current?.();
+  }, [paused]);
 
   // a palette change on a held frame redraws it in the new colours
-  const lookSignature = `${look?.displacementScale}/${look?.blob1Opacity}/${look?.blob2Opacity}`;
+  const lookSignature = `${look?.displacementScale}/${look?.blob1Opacity}/${look?.blob2Opacity}/${look?.displacementZeroMean}`;
   useEffect(() => {
     void palette;
     void dark;

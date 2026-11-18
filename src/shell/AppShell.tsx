@@ -6,12 +6,15 @@ import { useTranslate } from '../i18n/useTranslate.ts';
 import {
   filterNavigation,
   findActiveNavigation,
+  type LeadingCrumb,
+  menuNavigationOf,
   type NavigationAccess,
   type NavigationItem,
+  type ResolvedCrumb,
 } from '../logic/pure/navigation.ts';
 import { cn } from '../primitives/cn.ts';
 import { useCurrentPathname } from '../primitives/pathname.tsx';
-import { ShellBreadcrumbs } from './ShellBreadcrumbs.tsx';
+import { type BreadcrumbFoldWidths, ShellBreadcrumbs } from './ShellBreadcrumbs.tsx';
 import {
   type ShellNavDisplay,
   ShellNavDisplayContext,
@@ -23,8 +26,8 @@ import { ShellDocumentTitle, type ShellDocumentTitleProps } from './ShellDocumen
 import { ShellMenuButton, ShellMobileMenu } from './ShellMobileMenu.tsx';
 import { ShellSidebar } from './ShellSidebar.tsx';
 import { ShellTopBar } from './ShellTopBar.tsx';
-import { SIDEBAR_COLLAPSED_STORAGE_KEY, useSidebarCollapsed } from './useSidebarCollapsed.ts';
-import { SIDEBAR_SHORTCUT_KEY, useShellShortcut } from './useShellShortcut.ts';
+import { SIDEBAR_COLLAPSED_STORAGE_KEY, type SidebarCollapsedStorageValues, useSidebarCollapsed } from './useSidebarCollapsed.ts';
+import { type ShellShortcutOptions, SIDEBAR_SHORTCUT_KEY, useShellShortcut } from './useShellShortcut.ts';
 
 export interface ShellNavigationProviderProps<TEntity extends string = string> {
   /** The whole navigation tree. */
@@ -33,6 +36,12 @@ export interface ShellNavigationProviderProps<TEntity extends string = string> {
   useEntityLabel?: UseEntityLabel<TEntity>;
   /** Overrides the provider's pathname hook. */
   pathname?: string | null;
+  /** Crumbs before the navigation's own (scope crumbs) for the breadcrumbs (never in the document title). */
+  leadingCrumbs?: readonly LeadingCrumb[];
+  /** The query string the query crumbs read (the host's search parameters; default the pathname's own). */
+  search?: string | URLSearchParams | null;
+  /** Rights on any crumb (segments and query crumbs included): `false` turns it into text. A stable function. */
+  canAccessCrumb?: (crumb: ResolvedCrumb<string>) => boolean;
   children: ReactNode;
 }
 
@@ -42,6 +51,9 @@ export const ShellNavigationProvider = <TEntity extends string = string>({
   canAccess,
   useEntityLabel,
   pathname,
+  leadingCrumbs,
+  search,
+  canAccessCrumb,
   children,
 }: ShellNavigationProviderProps<TEntity>) => {
   const adapterPathname = useCurrentPathname();
@@ -52,8 +64,11 @@ export const ShellNavigationProvider = <TEntity extends string = string>({
       canAccess,
       useEntityLabel: useEntityLabel as UseEntityLabel<string> | undefined,
       pathname: path,
+      ...(leadingCrumbs !== undefined ? { leadingCrumbs } : {}),
+      ...(search !== undefined ? { search } : {}),
+      ...(canAccessCrumb !== undefined ? { canAccessCrumb } : {}),
     }),
-    [navigation, canAccess, useEntityLabel, path]
+    [navigation, canAccess, useEntityLabel, path, leadingCrumbs, search, canAccessCrumb]
   );
   return <ShellNavigationContext.Provider value={value}>{children}</ShellNavigationContext.Provider>;
 };
@@ -123,6 +138,44 @@ export interface AppShellProps<TEntity extends string = string> {
   onCollapsedChange?: (collapsed: boolean) => void;
   /** Mirrors the collapsed state as `data-shell-collapsed` on `<html>` (for fixed elements outside the frame). */
   markDocumentCollapsed?: boolean;
+  /** The mobile menu's header instead of `brand` (`null`: no header row). */
+  mobileMenuHeader?: ReactNode;
+  /** Extra classes of the waiting count on a list row. */
+  navBadgeClassName?: string;
+  /** Extra classes of a group's sub-list in the list (after its indent `ms-5 pt-1`). */
+  navChildListClassName?: string;
+  /** Extra classes of the list's top level (sidebar column and mobile menu). */
+  navListClassName?: string;
+  /** Extra classes of the sidebar's `<nav>` (its padding, its scroll area). */
+  sidebarNavClassName?: string;
+  /** The navigation is still loading (the rights arrive later): skeleton rows in the list and the rail (`true`: 6). */
+  navigationLoading?: boolean | number;
+  /**
+   * Controlled open groups of the list (keys, any level; one open per level). The list reports every change, a toggle
+   * or the group of a new route, through `onNavOpenGroupKeysChange`. Absent: the list keeps its own state.
+   */
+  navOpenGroupKeys?: readonly string[];
+  onNavOpenGroupKeysChange?: (keys: string[]) => void;
+  /** Extra classes of a group's flyout on the rail (its width: default `w-60`). */
+  railFlyoutClassName?: string;
+  /** `false`: on the rail a group's flyout heading links to the group's own page instead of a row of its own under it. */
+  railGroupPageRow?: boolean;
+  /** Classes of the top bar (`<header>`). */
+  topBarClassName?: string;
+  /** Extra classes of the top bar's row. */
+  topBarRowClassName?: string;
+  /** Crumbs before the navigation's own (a scope), never in the document title. */
+  leadingCrumbs?: readonly LeadingCrumb[];
+  /** The query string the query crumbs read (the host's search parameters; default the pathname's own). */
+  search?: string | URLSearchParams | null;
+  /** Rights on any crumb (segments and query crumbs included): `false` turns it into text. A stable function. */
+  canAccessCrumb?: (crumb: ResolvedCrumb<string>) => boolean;
+  /** Where the built-in breadcrumbs fold (default full from 40rem, the current crumb alone under 14rem). */
+  breadcrumbFoldWidths?: BreadcrumbFoldWidths;
+  /** The strings stored for the collapsed state (default `'1'` / `'0'`). */
+  collapsedStorageValues?: SidebarCollapsedStorageValues;
+  /** Options of the collapse shortcut (`media`, `ignoreSelector`). */
+  collapseShortcutOptions?: ShellShortcutOptions;
   children: ReactNode;
 }
 
@@ -168,15 +221,33 @@ export const AppShell = <TEntity extends string = string>({
   mobileMenuHeaderClassName,
   onCollapsedChange,
   markDocumentCollapsed = false,
+  mobileMenuHeader,
+  navBadgeClassName,
+  navChildListClassName,
+  navListClassName,
+  sidebarNavClassName,
+  navigationLoading,
+  navOpenGroupKeys,
+  onNavOpenGroupKeysChange,
+  railFlyoutClassName,
+  railGroupPageRow,
+  topBarClassName,
+  topBarRowClassName,
+  leadingCrumbs,
+  search,
+  canAccessCrumb,
+  breadcrumbFoldWidths,
+  collapsedStorageValues,
+  collapseShortcutOptions,
   children,
   ...rootAttributes
 }: AppShellProps<TEntity>) => {
   const { t } = useTranslate();
   const adapterPathname = useCurrentPathname();
   const path = pathname !== undefined ? pathname : adapterPathname;
-  const [collapsed, setCollapsed] = useSidebarCollapsed(collapsedStorageKey);
+  const [collapsed, setCollapsed] = useSidebarCollapsed(collapsedStorageKey, { values: collapsedStorageValues });
   const toggleCollapsed = useCallback(() => setCollapsed(), [setCollapsed]);
-  useShellShortcut(collapseShortcut, toggleCollapsed);
+  useShellShortcut(collapseShortcut, toggleCollapsed, collapseShortcutOptions);
   const [mobileOpen, setMobileOpen] = useState(false);
   // the collapsed state for elements outside the frame (after hydration, like the frame's own attribute)
   useEffect(() => {
@@ -189,8 +260,32 @@ export const AppShell = <TEntity extends string = string>({
     return () => root.removeAttribute('data-shell-collapsed');
   }, [collapsed, markDocumentCollapsed]);
   const navDisplay = useMemo<ShellNavDisplay>(
-    () => ({ rowClassName: navRowClassName, railRowClassName: navRailRowClassName, childIconsInList }),
-    [navRowClassName, navRailRowClassName, childIconsInList]
+    () => ({
+      rowClassName: navRowClassName,
+      railRowClassName: navRailRowClassName,
+      childIconsInList,
+      badgeClassName: navBadgeClassName,
+      childListClassName: navChildListClassName,
+      listClassName: navListClassName,
+      loading: navigationLoading,
+      openGroupKeys: navOpenGroupKeys,
+      onOpenGroupKeysChange: onNavOpenGroupKeysChange,
+      railFlyoutClassName,
+      railGroupPageRow,
+    }),
+    [
+      navRowClassName,
+      navRailRowClassName,
+      childIconsInList,
+      navBadgeClassName,
+      navChildListClassName,
+      navListClassName,
+      navigationLoading,
+      navOpenGroupKeys,
+      onNavOpenGroupKeysChange,
+      railFlyoutClassName,
+      railGroupPageRow,
+    ]
   );
   const dataAttributes = Object.fromEntries(Object.entries(rootAttributes).filter(([name]) => name.startsWith('data-')));
   const ids = useId();
@@ -201,9 +296,19 @@ export const AppShell = <TEntity extends string = string>({
   const items = navigation as readonly NavigationItem<string>[];
   const visible = useMemo(() => filterNavigation(items, canAccess), [items, canAccess]);
   const active = useMemo(() => findActiveNavigation(visible, path), [visible, path]);
+  // crumb-only entries resolve the active entry and the crumbs, but the menus do not draw them
+  const menuItems = useMemo(() => menuNavigationOf(visible), [visible]);
   const value = useMemo<ShellNavigationValue>(
-    () => ({ items, canAccess, useEntityLabel: useEntityLabel as UseEntityLabel<string> | undefined, pathname: path }),
-    [items, canAccess, useEntityLabel, path]
+    () => ({
+      items,
+      canAccess,
+      useEntityLabel: useEntityLabel as UseEntityLabel<string> | undefined,
+      pathname: path,
+      ...(leadingCrumbs !== undefined ? { leadingCrumbs } : {}),
+      ...(search !== undefined ? { search } : {}),
+      ...(canAccessCrumb !== undefined ? { canAccessCrumb } : {}),
+    }),
+    [items, canAccess, useEntityLabel, path, leadingCrumbs, search, canAccessCrumb]
   );
 
   return (
@@ -222,12 +327,14 @@ export const AppShell = <TEntity extends string = string>({
           menuButton={<ShellMenuButton open={mobileOpen} onOpenChange={setMobileOpen} controls={mobileMenuId} className={menuButtonClassName} />}
           brand={brand}
           start={topBarStart}
-          breadcrumbs={breadcrumbs === true ? <ShellBreadcrumbs /> : breadcrumbs === false ? null : breadcrumbs}
+          breadcrumbs={breadcrumbs === true ? <ShellBreadcrumbs foldWidths={breadcrumbFoldWidths} /> : breadcrumbs === false ? null : breadcrumbs}
           end={topBarEnd}
+          className={topBarClassName}
+          rowClassName={topBarRowClassName}
         />
         <ShellSidebar
           id={sidebarId}
-          items={visible}
+          items={menuItems}
           active={active}
           pathname={path}
           collapsed={collapsed}
@@ -237,16 +344,17 @@ export const AppShell = <TEntity extends string = string>({
           header={sidebarHeader}
           railHeader={sidebarRailHeader}
           footer={sidebarFooter}
+          navClassName={sidebarNavClassName}
         />
         <ShellMobileMenu
           id={mobileMenuId}
           open={mobileOpen}
           onOpenChange={setMobileOpen}
-          items={visible}
+          items={menuItems}
           active={active}
           pathname={path}
           label={navigationLabel}
-          header={brand}
+          header={mobileMenuHeader !== undefined ? mobileMenuHeader : brand}
           footer={mobileMenuFooter}
           className={mobileMenuClassName}
           headerClassName={mobileMenuHeaderClassName}

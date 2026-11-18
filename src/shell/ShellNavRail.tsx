@@ -25,6 +25,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../primitives/tooltip.t
 import { NAV_ICON_CLASS, NAV_RAIL_ROW_CLASS, NAV_ROW_ACTIVE_CLASS, NAV_ROW_CLASS } from './navClasses.ts';
 import { MarkedNavIcon, NavItemMarks, useNavMarkText } from './NavItemMarks.tsx';
 import { ShellNavLink } from './ShellNavLink.tsx';
+import { NavSkeletonRows } from './NavSkeletonRows.tsx';
 import { ShellNavDisplayContext } from './shellContext.ts';
 
 /** Delay before hover opens / closes a group flyout: sweeping along the rail does not flash every menu. */
@@ -61,10 +62,34 @@ const RailLeaf = ({ item, active, side }: { item: NavigationLeaf<string>; active
 };
 
 /** The group's entries in its flyout: leaves as items, a nested group as a label over its own entries. */
+/** A flyout heading that links to its group's own page (`railGroupPageRow={false}`). */
+const FlyoutHeadingLink = ({ group, active }: { group: NavigationGroup<string>; active: ActiveNavigation<string> | null }) => {
+  const { t } = useTranslate();
+  const current = active?.item.key === group.key;
+  return (
+    <DropdownMenuItem asChild className={cn('text-xs font-medium text-muted-foreground', current && 'bg-tint-strong font-semibold text-foreground')}>
+      <ShellNavLink item={{ key: group.key, href: group.href as string }} aria-current={current ? 'page' : undefined}>
+        <span className="truncate">{t(group.label)}</span>
+      </ShellNavLink>
+    </DropdownMenuItem>
+  );
+};
+
 const FlyoutEntries = ({ items, active }: { items: readonly NavigationItem<string>[]; active: ActiveNavigation<string> | null }): ReactNode => {
   const { t } = useTranslate();
+  const display = useContext(ShellNavDisplayContext);
+  const headingLinks = display.railGroupPageRow === false;
   return items.map(item => {
     if (isNavigationGroup(item)) {
+      if (headingLinks && item.href !== undefined) {
+        return (
+          <Fragment key={item.key}>
+            <DropdownMenuSeparator />
+            <FlyoutHeadingLink group={item} active={active} />
+            <FlyoutEntries items={item.children} active={active} />
+          </Fragment>
+        );
+      }
       return (
         <Fragment key={item.key}>
           <DropdownMenuSeparator />
@@ -159,7 +184,7 @@ const RailGroup = ({ group, active, side }: { group: NavigationGroup<string>; ac
         side={side}
         align="start"
         sideOffset={8}
-        className="w-60"
+        className={display.railFlyoutClassName ? cn('w-60', display.railFlyoutClassName) : 'w-60'}
         onPointerEnter={clearHoverTimer}
         onPointerLeave={event => event.pointerType === 'mouse' && setOpenAfterDelay(false)}
         onCloseAutoFocus={event => {
@@ -174,13 +199,19 @@ const RailGroup = ({ group, active, side }: { group: NavigationGroup<string>; ac
           if (event.target instanceof Node && triggerRef.current?.contains(event.target)) event.preventDefault();
         }}
       >
-        <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">{t(group.label)}</DropdownMenuLabel>
-        {group.href !== undefined && (
-          <DropdownMenuItem asChild className={cn('gap-3 text-foreground', active?.item.key === group.key && 'bg-tint-strong font-semibold')}>
-            <ShellNavLink item={{ key: group.key, href: group.href }} aria-current={active?.item.key === group.key ? 'page' : undefined}>
-              <span className="truncate">{t(group.label)}</span>
-            </ShellNavLink>
-          </DropdownMenuItem>
+        {display.railGroupPageRow === false && group.href !== undefined ? (
+          <FlyoutHeadingLink group={group} active={active} />
+        ) : (
+          <>
+            <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">{t(group.label)}</DropdownMenuLabel>
+            {group.href !== undefined && (
+              <DropdownMenuItem asChild className={cn('gap-3 text-foreground', active?.item.key === group.key && 'bg-tint-strong font-semibold')}>
+                <ShellNavLink item={{ key: group.key, href: group.href }} aria-current={active?.item.key === group.key ? 'page' : undefined}>
+                  <span className="truncate">{t(group.label)}</span>
+                </ShellNavLink>
+              </DropdownMenuItem>
+            )}
+          </>
         )}
         <DropdownMenuSeparator />
         <FlyoutEntries items={group.children} active={active} />
@@ -200,6 +231,8 @@ export interface ShellNavRailProps {
  */
 export const ShellNavRail = ({ items, active }: ShellNavRailProps) => {
   const side = Direction.useDirection() === 'rtl' ? 'left' : 'right';
+  const display = useContext(ShellNavDisplayContext);
+  if (display.loading) return <NavSkeletonRows rail count={display.loading === true ? undefined : display.loading} />;
   return (
     <ul className="space-y-1">
       {items.map(item => (

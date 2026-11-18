@@ -12,10 +12,24 @@ const listeners = new Map<string, Set<() => void>>();
 /** This visit's value when the storage refuses (private mode, blocked site data). */
 const memory = new Map<string, boolean>();
 
-/** `'1'` = rail, `'0'` = expanded; nothing stored = this visit's value, else expanded. */
-const readCollapsed = (key: string): boolean => {
+/** The stored strings of the two states. */
+export interface SidebarCollapsedStorageValues {
+  collapsed: string;
+  expanded: string;
+}
+
+/** The default stored strings: `'1'` = rail, `'0'` = expanded. */
+export const SIDEBAR_COLLAPSED_STORAGE_VALUES: SidebarCollapsedStorageValues = { collapsed: '1', expanded: '0' };
+
+export interface UseSidebarCollapsedOptions {
+  /** The strings stored for the two states (e.g. `{ collapsed: 'true', expanded: 'false' }` of an older frame). */
+  values?: SidebarCollapsedStorageValues;
+}
+
+/** The stored collapsed string means rail; anything else stored means expanded; nothing stored = this visit's value, else expanded. */
+const readCollapsed = (key: string, values: SidebarCollapsedStorageValues = SIDEBAR_COLLAPSED_STORAGE_VALUES): boolean => {
   const stored = readStored('local', key);
-  return stored === null ? (memory.get(key) ?? false) : stored === '1';
+  return stored === null ? (memory.get(key) ?? false) : stored === values.collapsed;
 };
 
 const subscribeTo = (key: string, onChange: () => void) => {
@@ -39,21 +53,29 @@ const expandedOnServer = () => false;
  * Whether the desktop sidebar is the icon rail, remembered in localStorage under `storageKey` (guarded: with blocked
  * storage it still toggles, for this visit). Hydration-safe: `false` (expanded) in the server render and while
  * hydrating, the stored value right after; a client-only mount reads it at once. Every sidebar with the same key, in
- * this tab and in others, follows a change. Returns `[collapsed, setCollapsed]`; `setCollapsed()` toggles.
+ * this tab and in others, follows a change. Returns `[collapsed, setCollapsed]`; `setCollapsed()` toggles. `values`: the
+ * stored strings (default `'1'` / `'0'`).
  */
 export const useSidebarCollapsed = (
-  storageKey: string = SIDEBAR_COLLAPSED_STORAGE_KEY
+  storageKey: string = SIDEBAR_COLLAPSED_STORAGE_KEY,
+  options: UseSidebarCollapsedOptions = {}
 ): [collapsed: boolean, setCollapsed: (next?: boolean) => void] => {
+  const collapsedValue = options.values?.collapsed ?? SIDEBAR_COLLAPSED_STORAGE_VALUES.collapsed;
+  const expandedValue = options.values?.expanded ?? SIDEBAR_COLLAPSED_STORAGE_VALUES.expanded;
   const subscribe = useCallback((onChange: () => void) => subscribeTo(storageKey, onChange), [storageKey]);
-  const collapsed = useSyncExternalStore(subscribe, () => readCollapsed(storageKey), expandedOnServer);
+  const collapsed = useSyncExternalStore(
+    subscribe,
+    () => readCollapsed(storageKey, { collapsed: collapsedValue, expanded: expandedValue }),
+    expandedOnServer
+  );
   const setCollapsed = useCallback(
     (next?: boolean) => {
-      const value = next ?? !readCollapsed(storageKey);
+      const value = next ?? !readCollapsed(storageKey, { collapsed: collapsedValue, expanded: expandedValue });
       memory.set(storageKey, value);
-      writeStored('local', storageKey, value ? '1' : '0');
+      writeStored('local', storageKey, value ? collapsedValue : expandedValue);
       for (const listener of listeners.get(storageKey) ?? []) listener();
     },
-    [storageKey]
+    [storageKey, collapsedValue, expandedValue]
   );
   return [collapsed, setCollapsed];
 };

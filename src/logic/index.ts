@@ -87,6 +87,8 @@ export {
   isNavigationGroup,
   isNavigationGroupActive,
   isNavigationLeafActive,
+  menuNavigation,
+  menuNavigationOf,
   normalisePathname,
   resolveCrumbs,
   resolveDocumentTitle,
@@ -97,11 +99,14 @@ export type {
   CrumbParams,
   CrumbRoute,
   DocumentTitleOptions,
+  LeadingCrumb,
   NavigationAccess,
   NavigationGroup,
   NavigationIcon,
+  NavigationIconProps,
   NavigationItem,
   NavigationLeaf,
+  QueryCrumb,
   ResolveCrumbsOptions,
   ResolvedCrumb,
 } from './pure/navigation.ts';
@@ -115,6 +120,7 @@ export {
   hydrateTranslations,
   mergeTranslatedStore,
   TRANSLATION_INFOS_OBJECT_TYPE,
+  translationsChanged,
 } from './pure/translationState.ts';
 export type { FieldTranslations, HydratedTranslations } from './pure/translationState.ts';
 export {
@@ -133,6 +139,7 @@ export type {
   ApiQueryHook,
   ApiQueryOptions,
   ApiQueryResult,
+  ApiRefetchCall,
   InjectableBaseApi,
   InjectedEndpointDefinition,
   InjectedRequest,
@@ -203,6 +210,7 @@ export {
   DEFAULT_STYLE_ORDER,
   languageEditedKey,
   languageFieldTabs,
+  languagesOfStore,
   languageTextsOf,
   mergeLanguageTabs,
   storeWithLanguageTexts,
@@ -210,7 +218,7 @@ export {
   translationKeyOf,
   translationLanguageOf,
 } from './pure/locales.ts';
-export type { LanguageTabsOptions, LocaleKeyTabsOptions } from './pure/locales.ts';
+export type { LanguageTabsOptions, LanguageTextsOptions, LocaleKeyTabsOptions } from './pure/locales.ts';
 export { countCodePoints, overLimitKeys } from './pure/textLimits.ts';
 export type { TextCounter, TextLimits } from './pure/textLimits.ts';
 export { TextLimitsContext, useTextLimits } from './react/textLimits.ts';

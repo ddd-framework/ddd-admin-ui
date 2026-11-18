@@ -54,7 +54,9 @@ const isMapped = <TValue extends string>(props: StatusBadgeProps<TValue>): props
 
 /**
  * The status badge of every list, card and detail (colour + icon + label, rounded pill). Either explicit
- * (`tone` + `label` + `icon`) or from a family map (`value` + `map`).
+ * (`tone` + `label` + `icon`) or from a family map (`value` + `map`). It carries its tone as `data-tone`
+ * (`success`, `warning`, `danger`, `info`, …): the success, warning, danger and info badges paint the soft surface
+ * `--<status>-soft` (`--destructive-soft` for danger), else the status colour at 15 %, with or without `theme.css`.
  */
 export const StatusBadge = <TValue extends string = string>(props: StatusBadgeProps<TValue>) => {
   const { t } = useTranslate();
@@ -77,7 +79,7 @@ export const StatusBadge = <TValue extends string = string>(props: StatusBadgePr
   }
 
   return (
-    <Badge variant="outline" title={title} className={cn('border-transparent', TONE_CLASS[tone], props.className)}>
+    <Badge variant="outline" title={title} data-tone={tone} className={cn('border-transparent', TONE_CLASS[tone], props.className)}>
       {Icon && <Icon aria-hidden />}
       {label}
     </Badge>

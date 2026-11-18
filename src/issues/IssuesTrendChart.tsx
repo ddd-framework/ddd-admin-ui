@@ -10,7 +10,18 @@ import { cn } from '../primitives/cn.ts';
 import { SegmentedControl } from '../primitives/segmented-control.tsx';
 import { Skeleton } from '../primitives/skeleton.tsx';
 import type { IssuesApi } from './api.ts';
-import { type IssuesTrendBar, ISSUES_WINDOW_PRESETS, type IssuesWindowPreset, trendAxisMax, trendBarsOf } from './format.ts';
+import { fromDateTimeInputValue, toDateTimeInputValue } from '../logic/pure/dateInput.ts';
+import { Input } from '../primitives/input.tsx';
+import {
+  ISSUES_CUSTOM_WINDOW,
+  type IssuesTrendBar,
+  ISSUES_WINDOW_PRESETS,
+  type IssuesWindowPreset,
+  type IssuesWindowValue,
+  resolveIssuesCustomRange,
+  trendAxisMax,
+  trendBarsOf,
+} from './format.ts';
 import type { IssuesTrendArg, IssuesTrendResponse } from './types.ts';
 
 /**
@@ -195,6 +206,91 @@ export const IssuesTrendCard = ({ api, arg, enabled = true, actions, className }
         )}
       </CardContent>
     </Card>
+  );
+};
+
+export interface IssuesTrendRangeControlProps {
+  /** A preset, or `custom` (the range below). */
+  value: IssuesWindowValue;
+  onValueChange: (value: IssuesWindowValue) => void;
+  /** The custom range's bounds (ISO instants); shown in the viewer's time zone. */
+  customFrom?: string | null;
+  customTo?: string | null;
+  /** A bound of the custom range changed (ISO instants, `''` for a cleared one). */
+  onCustomRangeChange: (range: { from: string; to: string }) => void;
+  /** The window the trend shows now: the bounds a switch to `custom` starts from. */
+  currentWindow?: { from: string; to: string };
+  className?: string;
+}
+
+/**
+ * The window switch with a "Custom" choice: from and to (date and time in the viewer's zone, at most 31 days apart).
+ * An unusable range says so; the trend keeps the default window meanwhile.
+ */
+export const IssuesTrendRangeControl = ({
+  value,
+  onValueChange,
+  customFrom,
+  customTo,
+  onCustomRangeChange,
+  currentWindow,
+  className,
+}: IssuesTrendRangeControlProps) => {
+  const { t } = useTranslate();
+  const hours = (count: number) => t('{count, plural, one {# hour} other {# hours}}', { count });
+  const days = (count: number) => t('{count, plural, one {# day} other {# days}}', { count });
+  const labels: Record<IssuesWindowPreset, string> = { '1h': hours(1), '6h': hours(6), '24h': hours(24), '7d': days(7), '30d': days(30) };
+  const isCustom = value === ISSUES_CUSTOM_WINDOW;
+  const inputValue = (iso: string | null | undefined) => toDateTimeInputValue(iso ? new Date(iso) : null, 'local');
+  const toIso = (input: string) => fromDateTimeInputValue(input, 'local')?.toISOString().replace(/\.\d{3}Z$/, 'Z') ?? '';
+  const invalid = isCustom && Boolean(customFrom || customTo) && resolveIssuesCustomRange(customFrom, customTo) === null;
+  return (
+    <div data-slot="issues-trend-range" className={cn('flex flex-wrap items-center gap-2', className)}>
+      <SegmentedControl<IssuesWindowValue>
+        aria-label={t('Time window')}
+        value={value}
+        onValueChange={next => {
+          if (next === ISSUES_CUSTOM_WINDOW && !customFrom && !customTo && currentWindow) onCustomRangeChange(currentWindow);
+          onValueChange(next);
+        }}
+        height={32}
+        activation="manual"
+        translate={false}
+        options={[
+          ...ISSUES_WINDOW_PRESETS.map(preset => ({ value: preset, label: labels[preset] })),
+          { value: ISSUES_CUSTOM_WINDOW, label: t('Custom', { context: 'trend-window' }) },
+        ]}
+      />
+      {isCustom && (
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <label className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">{t('From', { context: 'trend-window' })}</span>
+            <Input
+              type="datetime-local"
+              value={inputValue(customFrom)}
+              onChange={event => onCustomRangeChange({ from: toIso(event.target.value), to: customTo ?? '' })}
+              aria-invalid={invalid || undefined}
+              className="h-8 w-auto text-xs"
+            />
+          </label>
+          <label className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">{t('To', { context: 'trend-window' })}</span>
+            <Input
+              type="datetime-local"
+              value={inputValue(customTo)}
+              onChange={event => onCustomRangeChange({ from: customFrom ?? '', to: toIso(event.target.value) })}
+              aria-invalid={invalid || undefined}
+              className="h-8 w-auto text-xs"
+            />
+          </label>
+          {invalid && (
+            <span role="status" className="text-destructive" data-slot="issues-trend-range-invalid">
+              {t('The range must end after it starts and span at most 31 days.')}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
   );
 };
 

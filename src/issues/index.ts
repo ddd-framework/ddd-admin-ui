@@ -11,10 +11,10 @@ export { ISSUE_SECTION_OPTIONS, IssuesScreen } from './IssuesScreen.tsx';
 export type { IssuesScreenProps } from './IssuesScreen.tsx';
 export { IssueGroupDrawer, IssueGroupFlags, IssueGroupStatusActions } from './IssueGroupDrawer.tsx';
 export type { IssueGroupDrawerProps, IssueGroupStatusActionsProps } from './IssueGroupDrawer.tsx';
-export { IssueCauses, IssueCodeContext, IssueDetailBlock, IssueEventDetails, IssueFrameList, IssueWorkerContext } from './IssueEventDetails.tsx';
+export { IssueCauses, IssueCodeContext, IssueDetailBlock, IssueEventDetails, IssueEventSummary, IssueFrameList, IssueWorkerContext } from './IssueEventDetails.tsx';
 export type { IssueEventDetailsProps } from './IssueEventDetails.tsx';
-export { IssuesTrendBars, IssuesTrendCard, IssuesWindowSwitch, useStepLabel, useTrendErrorText } from './IssuesTrendChart.tsx';
-export type { IssuesTrendBarsProps, IssuesTrendCardProps, IssuesWindowSwitchProps } from './IssuesTrendChart.tsx';
+export { IssuesTrendBars, IssuesTrendCard, IssuesTrendRangeControl, IssuesWindowSwitch, useStepLabel, useTrendErrorText } from './IssuesTrendChart.tsx';
+export type { IssuesTrendBarsProps, IssuesTrendCardProps, IssuesTrendRangeControlProps, IssuesWindowSwitchProps } from './IssuesTrendChart.tsx';
 
 // Status map and helpers
 export { ISSUE_GROUP_STATUS, toIssueGroupStatus } from './status.ts';
@@ -26,17 +26,26 @@ export {
   ISSUE_GROUPS_PAGE_SIZE,
   ISSUE_SECTIONS,
   isClientIssueSection,
+  issueEnvironmentLabel,
+  issueFileLineOf,
   issueFrameViewsOf,
   issueGroupKey,
   ISSUES_WINDOW_PRESETS,
   issueShowCommand,
+  issueStackText,
+  issueTopFrame,
+  ISSUES_CUSTOM_WINDOW,
+  ISSUES_MAX_RANGE_MS,
   parseIssueGroupKey,
   parseIssuesTime,
+  resolveIssuesCustomRange,
+  resolveIssuesTrendRange,
   resolveIssuesWindow,
   segmentIssueFrames,
   sortIssueEventsNewestFirst,
   toIssuesWindowPreset,
+  toIssuesWindowValue,
   trendAxisMax,
   trendBarsOf,
 } from './format.ts';
-export type { IssueFrameSegment, IssueFrameView, IssuesTrendBar, IssuesWindowPreset } from './format.ts';
+export type { IssueFrameSegment, IssueFrameView, IssuesTrendBar, IssuesWindowPreset, IssuesWindowValue } from './format.ts';

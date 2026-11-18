@@ -1,0 +1,15 @@
+{
+  // The CommonJS build of the dependency-free entry (`./logic/pure`, `require` condition): the entry and the files it
+  // imports, into dist/cjs (a `package.json` with `"type": "commonjs"` is written there by scripts/build.mjs).
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "outDir": "dist/cjs",
+    "module": "commonjs",
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": false,
+    "declarationMap": false,
+    "sourceMap": false
+  },
+  "include": ["src/logic/pure/index.ts"],
+  "exclude": ["node_modules", "src/**/*.test.ts"]
+}

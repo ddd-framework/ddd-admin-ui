@@ -186,6 +186,8 @@ export interface IssueEventWorkerContext {
   handler?: string | null;
   messageKeys?: IssuesElements<IssueEventKeyValue>;
   attempt?: number | null;
+  /** The attempts the transport allows in all, when the payload carries it (older servers send none). */
+  maxAttempts?: number | null;
   /** `true`: the message is dropped (or in the failure transport); `false`: it comes back. */
   final?: boolean | null;
   retryCount?: number | null;

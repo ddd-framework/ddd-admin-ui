@@ -106,10 +106,12 @@ export function checkPackage(packageDirectory, options = {}) {
   if (runs(1)) {
     const failures = [];
     const targets = [];
-    for (const [key, value] of Object.entries(manifest.exports ?? {})) {
-      if (typeof value === 'string') targets.push([key, value]);
-      else for (const [condition, target] of Object.entries(value)) targets.push([`${key} (${condition})`, target]);
-    }
+    // conditions nest (`./logic/pure`: import / require, each with types / default)
+    const collect = (label, value) => {
+      if (typeof value === 'string') targets.push([label, value]);
+      else for (const [condition, target] of Object.entries(value)) collect(`${label} (${condition})`, target);
+    };
+    for (const [key, value] of Object.entries(manifest.exports ?? {})) collect(key, value);
     for (const [key, target] of targets) if (!existsSync(join(packageDir, target))) failures.push(`${key} → ${target} missing`);
     if (!manifest.exports?.['./package.json']) failures.push('./package.json is not exported');
     const bins = Object.entries(manifest.bin ?? {});

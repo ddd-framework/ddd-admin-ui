@@ -54,6 +54,9 @@ export { parseValidationErrors, toFormSubmitError } from '../logic/pure/submitEr
 /** @deprecated moved to logic/pure/submitError — the re-export is removed in a later minor */
 export type { FormSubmitError, FormValidationError } from '../logic/pure/submitError.ts';
 export { useConfirmDialog } from './useConfirmDialog.tsx';
+/** The package's confirmation dialog as a component (title, text, typed phrase): a host's own confirm service can render it. */
+export { ConfirmDialogView } from '../primitives/confirmDialogView.tsx';
+export type { ConfirmDialogViewEntry, ConfirmDialogViewOptions, ConfirmDialogViewProps } from '../primitives/confirmDialogView.tsx';
 /** @deprecated moved to logic/pure/entityDrawer — the re-export is removed in a later minor */
 export { drawerKey } from '../logic/pure/entityDrawer.ts';
 /** @deprecated moved to logic/react/useEntityDrawer — the re-export is removed in a later minor */

@@ -80,6 +80,12 @@ export interface AdminUiProviderProps {
    */
   confirm?: (options: ConfirmOptions) => Promise<boolean>;
   /**
+   * With `confirm`: who answers a confirmation that asks for a typed phrase (`requirePhrase`), for a host service that
+   * shows text only. `'package'`: the package dialog (with its phrase field); a function: that service. Absent: `confirm`
+   * answers every confirmation, as before.
+   */
+  confirmWithPhrase?: 'package' | ((options: ConfirmOptions) => Promise<boolean>);
+  /**
    * The `Intl` locale date cells format in (`de-CH`, `en-US`) when it differs from the UI language's; a cell's own
    * `locale` wins. Absent: the UI language.
    */

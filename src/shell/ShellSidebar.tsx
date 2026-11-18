@@ -33,9 +33,13 @@ export interface ShellSidebarProps {
   /** Between the list and the collapse toggle. */
   footer?: ReactNode;
   className?: string;
+  /** Extra classes of the `<nav>` holding the list or the rail (its padding, its scroll area). */
+  navClassName?: string;
 }
 
-const CollapseToggle = ({ collapsed, onToggle, controls, shortcut }: { collapsed: boolean; onToggle: () => void; controls?: string; shortcut: string | null }) => {
+const SIDEBAR_NAV_CLASS = 'min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 pt-2 pb-4';
+
+const CollapseToggle =({ collapsed, onToggle, controls, shortcut }: { collapsed: boolean; onToggle: () => void; controls?: string; shortcut: string | null }) => {
   const { t } = useTranslate();
   const label = collapsed ? t('Expand sidebar') : t('Collapse sidebar');
   const Icon = collapsed ? PanelLeftOpen : PanelLeftClose;
@@ -95,6 +99,7 @@ export const ShellSidebar = ({
   railHeader,
   footer,
   className,
+  navClassName,
 }: ShellSidebarProps) => {
   const { t } = useTranslate();
   const top = collapsed ? railHeader : header;
@@ -111,7 +116,10 @@ export const ShellSidebar = ({
       )}
     >
       {top && <div className={cn('shrink-0 px-3 pt-2 pb-1', collapsed && 'flex justify-center')}>{top}</div>}
-      <nav aria-label={label ?? t('Main', { context: 'navigation' })} className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 pt-2 pb-4">
+      <nav
+        aria-label={label ?? t('Main', { context: 'navigation' })}
+        className={navClassName ? cn(SIDEBAR_NAV_CLASS, navClassName) : SIDEBAR_NAV_CLASS}
+      >
         {collapsed ? <ShellNavRail items={items} active={active} /> : <ShellNavList items={items} active={active} pathname={pathname} />}
       </nav>
       {footer && <div className="shrink-0 px-3 pb-1">{footer}</div>}

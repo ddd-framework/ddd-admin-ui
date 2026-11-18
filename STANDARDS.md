@@ -155,11 +155,14 @@ The bar's actions and Delete follow the write access; an action that only reads 
 - **Range selection**: `useRowSelection({ rangeSelection: true })` — Shift with a click sets every selectable loaded
   row from the anchor (the last row clicked without Shift) to the clicked one; `anchorKey`, `setAnchorKey` and
   `setRangeSelected(from, to, selected)` serve a host's own keyboard selection. `selectionHitArea="cell"` on the table
-  makes the whole select cell the target.
+  makes the whole select cell the target; Shift with a press there selects no page text.
+  `selectAllLabel(loadedCount, hasMore)` names the select-all checkbox (e.g. "Select all 50 loaded" while more exist).
 - **Bulk bar options**: `variant: 'destructive'` on an irreversible action (choices, confirmation, hint included);
   Delete takes `deleteDisabled`, `deleteHint` and `deleteConfirm`; `confirm.cancelLabel`; `translate: false` for texts
   that are already translated; `countClassName`, `className`, `choicesClassName`; `countLive` makes the count a polite
-  live region. A typed confirmation is
+  live region. Delete's own texts as given: `deleteTranslate={false}`; `deleteClassName`, `deleteCountClassName`; a
+  choice's `className` lets its label truncate. With a `countClassName` the label is one element, so the button's gap
+  stays outside "(3)". A typed confirmation is
 `confirm({ …, requirePhrase: entity.name })`; a job that needs a result summary uses the host's dialogs.
 
 ## 5. Columns and cells
@@ -250,8 +253,16 @@ const columns: EntityListColumn<Project>[] = [
 - **Rows** are memoised: keep `columns` (`useMemo`) and `rowAction` (`useCallback`) stable and a selection change
   re-renders only the rows it touches.
 - `markUnsortedHeaders` puts `aria-sort="none"` on sortable unsorted headers; `rowHover="action"` tints only rows with a
-  row action; `emptyIcon` draws an icon over the empty state; `headerClassName` / `cellClassName` style one side of a
-  column.
+  row action (their pinned cells too); `emptyIcon` draws an icon over the empty state; `headerClassName` /
+  `cellClassName` style one side of a column.
+- **Scroll edges**: `pinEdge="overlay"` draws one rule and shadow per pinned side across header and body (no seam per
+  row) instead of one per cell.
+- **Leading columns and widths**: `selectionColumnWidth` (default 40) and `indexColumnWidth` (48 / 56) size the select
+  and `#` columns, `selectionCellClassName` / `indexCellClassName` style them. A column's fixed `width` and `minWidth`
+  include the cell padding; `columnWidthBox="content-box"` makes them name the content (the track adds 16 px a side,
+  24 px at the card edge).
+- **Surface**: a table on another surface than a card (a popover, a tinted panel) passes `surface="var(--color-popover)"`:
+  header and pinned cells paint it (`--list-surface`).
 
 ## 6. Status badges
 
@@ -283,6 +294,8 @@ roles (`--success-text`, `--warning-text`, `--destructive-text`, `--info-text`; 
 tints its soft surfaces (`--<status>-soft`; unset = the status colour at 15 %). A host whose status colours are fill
 colours sets the text roles once, light and dark (README › Host setup › Status text); a screen keeps
 `text-success` / `StatusBadge`.
+A badge carries its tone as `data-tone` (`success`, `warning`, `danger`, `info`, …): a host binding of the soft
+surfaces and the contrast check select the same element.
 
 ## 7. Multi-select inputs
 
@@ -577,7 +590,10 @@ const rename = useRenameMutation();
 - `submitVariant="destructive"` for an irreversible submit, `submitDisabled` while nothing can be saved.
 - `footerStart` holds a third action; `result` replaces the fields and actions with the outcome and one Close button
   (`closeLabel`); `noValidate` overrides the default; `data-*` props reach the dialog content; `isolateEvents` keeps
-  clicks inside the dialog and on its overlay from React ancestors (a dialog opened from a list row).
+  clicks and presses (`click`, `pointerdown`, `mousedown`) inside the dialog and on its overlay from React ancestors
+  (a dialog opened from a list row); `resultActions` sit next to Close in the result state; `submitOnEnter={false}`
+  keeps Enter in a single-line field from submitting (the button and ⌘S still do); `descriptionProps` reach the
+  description.
 
 Confirmations ask through the provider: `const confirm = useConfirm()` (`./logic`) and
 `if (!(await confirm({ title, description, confirmLabel, confirmVariant: 'destructive' }))) return;`. Nothing renders
@@ -672,11 +688,19 @@ focusFirstOverLimitTranslation(formElement);
 - **Edited key per field**: with `tabModel: 'language'`, `editedKeyPerField: true` lets each field edit the key that
   holds its text (FORMAL, else INFORMAL when only that exists) instead of one key per form.
 - **One text per language**: call sites that keep `{ de: '…', en: '…' }` plus the field's store use
-  `TranslatableLanguageInput` (`texts`, `store`, `onChange({ texts, store })`, `languages`, `activeLanguage`) or the
-  pure helpers `languageTextsOf` / `storeWithLanguageTexts`.
+  `TranslatableLanguageInput` / `TranslatableLanguageMarkdown` (`texts`, `store`, `onChange({ texts, store, reason })`,
+  `languages`, `activeLanguage`) or the pure helpers `languageTextsOf` / `storeWithLanguageTexts` (`{ editedKeys,
+  keepBlank }`). `texts` names every language of the store; a language keeps the key it was typed in while mounted; the
+  editing state keeps blank texts (a leading space is typable), the reported `store` drops them.
+- **Change reasons**: a translatable field's `onChange(value, { reason })` tells typing (`edit`) from "Clear all"
+  (`clear-all`, which keeps keys that name no language) and "Clear other languages" (`clear-others`).
+- **Tabs and payload**: `useEntityTranslations({ activeLocale, onActiveLocaleChange })` controls the tab from the host;
+  `buildChangedPayload` returns `undefined` when no text changed since `hydrate` (a partial update leaves
+  `translationInfos` out).
 - Field options: `autoGenerateDisabledReason` (AI off with a reason, the field stays editable), `autoGenerateSlot`,
   `autoGenerateVariant`; `showCounterFrom` (counter from a threshold), `announceOverLimit` (one announcement per
-  crossing); `clearOtherLanguages`, `clearLabelVisible`, `showEditingLanguage`.
+  crossing); `clearOtherLanguages`, `clearLabelVisible`, `showEditingLanguage`; `renderCounter` (the host's counter; the
+  editor's `aria-describedby` points at the counter's id).
 
 ## 18. Key figures — `MetricTile`, `MetricGrid`, `DeltaText`, `NoteList`
 

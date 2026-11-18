@@ -24,7 +24,7 @@ uniform vec3 u_col2; uniform float u_opacity2;
 uniform float u_b1_radius; uniform float u_b2_radius;
 uniform float u_blur; uniform float u_distort;
 uniform float u_bx; uniform float u_by; uniform int u_blend;
-uniform sampler2D u_displace; uniform float u_displace_scale;
+uniform sampler2D u_displace; uniform vec2 u_displace_scale; uniform vec2 u_displace_center;
 uniform float u_b1_fx; uniform float u_b1_fy; uniform float u_b1_ox; uniform float u_b1_oy;
 uniform float u_b2_fx; uniform float u_b2_fy; uniform float u_b2_ox; uniform float u_b2_oy;
 float blob(vec2 st,vec2 c,float r,float b){return 1.0-smoothstep(r,r+b,distance(st,c)*2.0);}
@@ -36,7 +36,7 @@ void main(){
   float t=u_time+u_rand;
   float aspect=u_resolution.x/u_resolution.y;
   vec2 dispUv=vec2(uv.x,0.5+(uv.y-0.5)/aspect);
-  vec2 td=texture2D(u_displace,dispUv).rg-0.5;
+  vec2 td=texture2D(u_displace,dispUv).rg-u_displace_center;
   vec2 st1=uv; st1.x+=cos(t*.30+st1.x*4.)*.21*sin(t*.40+st1.y*8.)*.29*u_distort; st1.y+=sin(t*.10+st1.x*7.)*.37*cos(t*.60+st1.y*5.)*.12*u_distort;
   vec2 st2=uv; st2.x+=cos(t*.45+st2.x*5.)*.18*sin(t*.35+st2.y*6.)*.24*u_distort; st2.y+=sin(t*.20+st2.x*9.)*.29*cos(t*.55+st2.y*4.)*.16*u_distort;
   st1+=td*u_displace_scale;
@@ -69,22 +69,53 @@ export const SHADER_MOTION = {
 
 /**
  * What a host may tune of the look (each absent value keeps `SHADER_MOTION`): the strength of the displacement field
- * (`displacementScale`, default 2.2; 0 turns it off), its grain (`displacementCells`, lattice cells per tile, default
- * 8; more = finer), and the opacity of each blob (0–1; default 1 and 0.6).
+ * (`displacementScale`, default 2.2; 0 turns it off; `[x, y]` per axis), its grain (`displacementCells`, lattice cells
+ * per tile, default 8; more = finer), the opacity of each blob (0–1; default 1 and 0.6), a zero-mean field
+ * (`displacementZeroMean`: the field is centred on its own mean, so it warps the blobs without moving them as a whole)
+ * and a host image as the field (`displacementImage`: a URL; red and green are the two axes; the generated field shows
+ * until it has loaded and when it fails).
  */
 export interface ShaderLook {
-  displacementScale?: number;
+  displacementScale?: number | readonly [number, number];
   displacementCells?: number;
   blob1Opacity?: number;
   blob2Opacity?: number;
+  displacementZeroMean?: boolean;
+  displacementImage?: string;
 }
+
+/** The neutral centre of a displacement field: 0.5 per channel (a value of 0.5 moves nothing). */
+export const NEUTRAL_DISPLACEMENT_CENTER: readonly [number, number] = [0.5, 0.5];
+
+/**
+ * The mean of the red and green channels of RGBA bytes, 0–1 each: the centre that makes the field zero-mean. A field of
+ * value noise on a small lattice is rarely centred on 0.5 (8 cells: about 0.51 / 0.43; 2 cells: about 0.69 / 0.63, which
+ * at the default strength moves the blobs by up to 0.41 of the viewport).
+ */
+export const displacementMean = (pixels: Uint8Array | Uint8ClampedArray): [number, number] => {
+  const count = Math.floor(pixels.length / 4);
+  if (count === 0) return [0.5, 0.5];
+  let red = 0;
+  let green = 0;
+  for (let index = 0; index < count * 4; index += 4) {
+    red += pixels[index] ?? 0;
+    green += pixels[index + 1] ?? 0;
+  }
+  return [red / count / 255, green / count / 255];
+};
+
+/** The per-axis strength of the displacement field. */
+export const displacementScaleOf = (look: ShaderLook | undefined): [number, number] => {
+  const scale = look?.displacementScale ?? SHADER_MOTION.displaceScale;
+  return typeof scale === 'number' ? [scale, scale] : [scale[0], scale[1]];
+};
 
 /** Render budget: quarter resolution, at most 512 px wide, at most 20 frames per second. */
 export const SHADER_RENDER = { renderScale: 0.25, maxRenderWidth: 512, maxFps: 20 } as const;
 
 const UNIFORM_NAMES = [
   'resolution', 'time', 'rand', 'bg', 'col1', 'opacity1', 'col2', 'opacity2', 'b1_radius', 'b2_radius', 'blur', 'distort',
-  'bx', 'by', 'blend', 'displace', 'displace_scale', 'b1_fx', 'b1_fy', 'b1_ox', 'b1_oy', 'b2_fx', 'b2_fy', 'b2_ox', 'b2_oy',
+  'bx', 'by', 'blend', 'displace', 'displace_scale', 'displace_center', 'b1_fx', 'b1_fy', 'b1_ox', 'b1_oy', 'b2_fx', 'b2_fy', 'b2_ox', 'b2_oy',
 ] as const;
 
 export type UniformMap = Record<(typeof UNIFORM_NAMES)[number], WebGLUniformLocation | null>;
@@ -157,12 +188,16 @@ export const displacementPixels = (size = 128, cells = 8): Uint8Array => {
 };
 
 /** The displacement texture (generated value noise, repeating). */
-export const createDisplacementTexture = (gl: WebGLRenderingContext, size = 128, cells = 8): WebGLTexture | null => {
+export const createDisplacementTexture = (gl: WebGLRenderingContext, size = 128, cells = 8): WebGLTexture | null =>
+  createDisplacementTextureFrom(gl, size, displacementPixels(size, cells));
+
+/** A repeating displacement texture from square RGBA bytes (`size` a power of two: WebGL 1 repeats only those). */
+export const createDisplacementTextureFrom = (gl: WebGLRenderingContext, size: number, pixels: Uint8Array): WebGLTexture | null => {
   const texture = gl.createTexture();
   if (!texture) return null;
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, texture);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, displacementPixels(size, cells));
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size, size, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -177,7 +212,14 @@ export const setShaderUniforms = (
   canvas: HTMLCanvasElement,
   palette: ShaderPalette,
   dark: boolean,
-  frame: { time: number; rand: number; texture: WebGLTexture; look?: ShaderLook }
+  frame: {
+    time: number;
+    rand: number;
+    texture: WebGLTexture;
+    look?: ShaderLook;
+    /** The field's centre (`displacementMean` for a zero-mean field); default 0.5 per channel. */
+    center?: readonly [number, number];
+  }
 ): void => {
   const { blob1, blob2 } = SHADER_MOTION;
   const look = frame.look ?? {};
@@ -196,7 +238,8 @@ export const setShaderUniforms = (
   gl.uniform1f(uniforms.bx, SHADER_MOTION.bx);
   gl.uniform1f(uniforms.by, SHADER_MOTION.by);
   gl.uniform1i(uniforms.blend, dark ? 0 : 1);
-  gl.uniform1f(uniforms.displace_scale, look.displacementScale ?? SHADER_MOTION.displaceScale);
+  gl.uniform2fv(uniforms.displace_scale, displacementScaleOf(look));
+  gl.uniform2fv(uniforms.displace_center, frame.center ?? NEUTRAL_DISPLACEMENT_CENTER);
   gl.uniform1f(uniforms.b1_fx, blob1.fx);
   gl.uniform1f(uniforms.b1_fy, blob1.fy);
   gl.uniform1f(uniforms.b1_ox, blob1.ox);

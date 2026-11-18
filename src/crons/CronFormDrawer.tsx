@@ -35,12 +35,13 @@ import {
   type CronFormValues,
   describeCronSchedule,
   EMPTY_CRON_FORM,
-  formatCronDateTime,
   isCronArguments,
   isCronName,
+  lockedCronCommandReason,
   toCronCreateBody,
   toCronFormValues,
 } from './format.ts';
+import { useCronTimeFormat } from './timeDisplay.ts';
 import type { CronOverview } from './types.ts';
 
 /** Wait after the last keystroke in the schedule before the preview is asked for. */
@@ -56,6 +57,7 @@ export interface CronSchedulePreviewProps {
 /** Whether the expression is valid and its next 5 slots (`GET /schedule-preview`, debounced). */
 export const CronSchedulePreview = ({ api, schedule }: CronSchedulePreviewProps) => {
   const { t } = useTranslate();
+  const { dateTime, viewerTime } = useCronTimeFormat();
   const debounced = useDebouncedValue(schedule.trim(), CRON_SCHEDULE_PREVIEW_DEBOUNCE_MS);
   const query = api.useCronSchedulePreviewQuery({ schedule: debounced }, { skip: debounced === '' });
   const preview = debounced === '' ? undefined : query.currentData;
@@ -66,10 +68,14 @@ export const CronSchedulePreview = ({ api, schedule }: CronSchedulePreviewProps)
         <p className="text-muted-foreground">{t('Checking the schedule…')}</p>
       ) : preview.isValid ? (
         <>
-          <p className="text-success">{t('%reading% · next runs (server time):', { replacements: { reading: describeCronSchedule(debounced, t) } })}</p>
+          <p className="text-success">
+            {viewerTime
+              ? t('%reading% · next runs (your time):', { replacements: { reading: describeCronSchedule(debounced, t) } })
+              : t('%reading% · next runs (server time):', { replacements: { reading: describeCronSchedule(debounced, t) } })}
+          </p>
           <ol className="flex flex-wrap gap-x-3 gap-y-0.5 text-muted-foreground tabular-nums">
             {(preview.nextRuns.elements ?? []).map(slot => (
-              <li key={slot.scheduledAt ?? ''}>{formatCronDateTime(slot.scheduledAt)}</li>
+              <li key={slot.scheduledAt ?? ''}>{dateTime(slot.scheduledAt)}</li>
             ))}
           </ol>
         </>
@@ -126,6 +132,13 @@ const CronForm = ({ api, cron, onClose, onSaved }: CronFormProps) => {
     [commandOptions, values.commandName]
   );
 
+  // a stored command the list does not offer (not schedulable, or missing from this build) stays as stored, read-only,
+  // until the user decides to pick another one
+  const schedulableNames = useMemo(() => (commandsQuery.data ? (commandsQuery.data.commands.elements ?? []).map(command => command.name) : null), [commandsQuery.data]);
+  const lockReason = lockedCronCommandReason(cron, schedulableNames, t);
+  const [commandUnlocked, setCommandUnlocked] = useState(false);
+  const commandLocked = lockReason !== null && !commandUnlocked && values.commandName === cron?.commandName;
+
   const isPending = createState.isLoading || updateState.isLoading;
   const descriptionLength = (values.description ?? '').trim().length;
   const commandLine = composeCronCommandLine(values.commandName ?? '', values.arguments);
@@ -134,7 +147,9 @@ const CronForm = ({ api, cron, onClose, onSaved }: CronFormProps) => {
     if (!writeAccess.allowed) return;
     setSubmitError(null);
     let invalid = false;
-    if (!isCronName(formValues.name.trim())) {
+    // a name stored before the kebab-case rule stays valid while it is not changed
+    const nameUnchanged = !isCreate && formValues.name.trim() === baseline.name.trim();
+    if (!nameUnchanged && !isCronName(formValues.name.trim())) {
       form.setError('name', { message: t('3 to 80 lowercase letters, digits and single hyphens, e.g. send-reminders') });
       invalid = true;
     }
@@ -205,7 +220,18 @@ const CronForm = ({ api, cron, onClose, onSaved }: CronFormProps) => {
               {({ field, control }) => <Textarea {...control} {...field} rows={2} />}
             </FormField>
             <FormField<CronFormValues, 'commandName'> name="commandName" label={t('Command')} required description={t('Only commands marked as schedulable are offered.')}>
-              {({ field, control, disabled }) => (
+              {({ field, control, disabled }) =>
+                commandLocked ? (
+                  <div data-slot="cron-command-locked" className="flex flex-wrap items-center gap-2">
+                    <code id={control.id} className="rounded-md bg-tint px-2 py-1 font-mono text-xs break-all">
+                      {field.value}
+                    </code>
+                    <span className="text-xs text-muted-foreground">{lockReason}</span>
+                    <Button type="button" variant="outline" size="xs" disabled={disabled} onClick={() => setCommandUnlocked(true)}>
+                      {t('Pick another command')}
+                    </Button>
+                  </div>
+                ) : (
                 <Combobox
                   id={control.id}
                   aria-label={t('Command')}
@@ -219,7 +245,8 @@ const CronForm = ({ api, cron, onClose, onSaved }: CronFormProps) => {
                   emptyMessage={t('No schedulable command')}
                   disabled={disabled}
                 />
-              )}
+                )
+              }
             </FormField>
             <FormField<CronFormValues, 'arguments'> name="arguments" label={t('Arguments')} description={t('One line, no quote characters.')}>
               {({ field, control }) => <Input {...control} {...field} autoComplete="off" spellCheck={false} className="font-mono" placeholder={t('e.g. --limit=100')} />}

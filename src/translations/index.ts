@@ -9,14 +9,25 @@ export { useLocaleName } from '../logic/react/useLocaleName.ts';
 /** @deprecated moved to logic/pure/locales — the re-export is removed in a later minor */
 export type { TranslatableLocale } from '../logic/pure/locales.ts';
 export { TranslatableField } from './TranslatableField.tsx';
-export type { TranslatableFieldBaseProps } from './TranslatableField.tsx';
+export type {
+  TranslatableChangeMeta,
+  TranslatableChangeReason,
+  TranslatableCounterArgs,
+  TranslatableFieldBaseProps,
+} from './TranslatableField.tsx';
 export { TranslatableInput } from './TranslatableInput.tsx';
 export type { TranslatableInputProps } from './TranslatableInput.tsx';
-export { TranslatableLanguageInput } from './TranslatableLanguageInput.tsx';
-export type { LanguageTextsChange, TranslatableLanguageInputProps } from './TranslatableLanguageInput.tsx';
+export { TranslatableLanguageInput, TranslatableLanguageMarkdown } from './TranslatableLanguageInput.tsx';
+export type {
+  LanguageTextsBindingProps,
+  LanguageTextsChange,
+  TranslatableLanguageInputProps,
+  TranslatableLanguageMarkdownProps,
+} from './TranslatableLanguageInput.tsx';
 export {
   languageEditedKey,
   languageFieldTabs,
+  languagesOfStore,
   languageTextsOf,
   storeWithLanguageTexts,
   translationFieldKey,

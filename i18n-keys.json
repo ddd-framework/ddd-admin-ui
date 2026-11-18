@@ -1,6 +1,6 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
@@ -10,6 +10,14 @@
         "database/SchemaDiffScreen.tsx"
       ],
       "hint": "Schema diff admin screen (database changes between the code's entities and the live database): confirmation text before applying several table changes at once; the placeholders are counts per severity."
+    },
+    {
+      "key": "%attempt% of %max%",
+      "text": "%attempt% of %max%",
+      "files": [
+        "issues/IssueEventDetails.tsx"
+      ],
+      "hint": "Error details of a failed background job: which delivery attempt failed, out of the maximum the queue allows (e.g. \"2 of 3\"). %attempt% and %max% are numbers."
     },
     {
       "key": "%count% / %max%",
@@ -251,6 +259,14 @@
         "crons/CronFormDrawer.tsx"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): line under the schedule field: the schedule in words, followed by the next run times on the server's clock."
+    },
+    {
+      "key": "%reading% · next runs (your time):",
+      "text": "%reading% · next runs (your time):",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "Live preview under the schedule field of a scheduled task: %reading% is the schedule in words (e.g. \"Daily at 03:00\"), followed by the next run times, shown in the viewer's own time zone."
     },
     {
       "key": "%runs% newest runs, %failed% failed",
@@ -635,6 +651,14 @@
       "hint": "Filter chip that shows every row (no filter), next to chips such as “Failed” or “Stopped”."
     },
     {
+      "key": "All Crons",
+      "text": "All Crons",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "First option of the \"Cron\" filter on the list of runs of scheduled tasks (Crons): show the runs of every scheduled task."
+    },
+    {
       "key": "All environments",
       "text": "All environments",
       "files": [
@@ -649,6 +673,14 @@
         "issues/IssuesScreen.tsx"
       ],
       "hint": "Issues admin screen (errors grouped by root cause): first entry of the section filter: no section filter."
+    },
+    {
+      "key": "All statuses",
+      "text": "All statuses",
+      "files": [
+        "crons/CronsScreen.tsx"
+      ],
+      "hint": "First option of the status filter of the list of scheduled tasks (Crons): no status filter."
     },
     {
       "key": "All time",
@@ -1123,6 +1155,15 @@
       "hint": "Button label under a media field preview; click to open the picker and replace the currently chosen image. Shown only when an image is already set."
     },
     {
+      "key": "Changed__schema-diff-drift",
+      "text": "Changed",
+      "context": "schema-diff-drift",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Small badge on a database table in the schema comparison: this table's pending change differs from what was shown before the last reload."
+    },
+    {
       "key": "Checking the schedule…",
       "text": "Checking the schedule…",
       "files": [
@@ -1458,6 +1499,14 @@
       "hint": "Accessible label (screen reader and tooltip) of the small button that copies the record ID to the clipboard, shown in the metadata block of every detail screen. %id% is the record ID, for example 4711 or a UUID. Imperative tone."
     },
     {
+      "key": "Copy file and line",
+      "text": "Copy file and line",
+      "files": [
+        "issues/IssueEventDetails.tsx"
+      ],
+      "hint": "Tooltip / accessible name of a copy button in the error details: copies the source file path and line number of a stack frame (for opening it in an editor)."
+    },
+    {
       "key": "Copy for agent",
       "text": "Copy for agent",
       "files": [
@@ -1472,6 +1521,14 @@
         "workers/transport.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): button that copies the id of the error group to the clipboard."
+    },
+    {
+      "key": "Copy stack",
+      "text": "Copy stack",
+      "files": [
+        "issues/IssueEventDetails.tsx"
+      ],
+      "hint": "Button in the error details: copies the whole stack trace of the error to the clipboard."
     },
     {
       "key": "Copy the output",
@@ -1672,6 +1729,15 @@
         "logic/pure/dateRangePresets.ts"
       ],
       "hint": "Preset of a date range filter: the user picks the start and end dates in two date fields."
+    },
+    {
+      "key": "Custom__trend-window",
+      "text": "Custom",
+      "context": "trend-window",
+      "files": [
+        "issues/IssuesTrendChart.tsx"
+      ],
+      "hint": "Last choice of the time window switch above the error chart: pick your own start and end date instead of a preset (1 hour … 30 days)."
     },
     {
       "key": "Daily at %time%",
@@ -2617,6 +2683,15 @@
       "hint": "Crop shape without a fixed aspect ratio."
     },
     {
+      "key": "From__trend-window",
+      "text": "From",
+      "context": "trend-window",
+      "files": [
+        "issues/IssuesTrendChart.tsx"
+      ],
+      "hint": "Label of the start date-and-time field of a custom time window for the error chart."
+    },
+    {
       "key": "Generate again",
       "text": "Generate again",
       "files": [
@@ -3491,6 +3566,14 @@
       "hint": "Accessible name (screen-reader label) of the spinner at the end of a list while the next page of rows is being loaded during infinite scroll."
     },
     {
+      "key": "Loading navigation",
+      "text": "Loading navigation",
+      "files": [
+        "shell/NavSkeletonRows.tsx"
+      ],
+      "hint": "Screen-reader text in the sidebar and the mobile menu while the navigation entries are still loading (placeholder rows are shown instead of the entries)."
+    },
+    {
       "key": "Loading processes",
       "text": "Loading processes",
       "files": [
@@ -3903,6 +3986,7 @@
       "key": "Need attention",
       "text": "Need attention",
       "files": [
+        "crons/CronsScreen.tsx",
         "crons/parts.tsx",
         "workers/overview.tsx"
       ],
@@ -4924,6 +5008,14 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): notice in the edit form of a job whose command is missing."
     },
     {
+      "key": "Pick another command",
+      "text": "Pick another command",
+      "files": [
+        "crons/CronFormDrawer.tsx"
+      ],
+      "hint": "Button in the scheduled task form, next to a stored console command that cannot be chosen from the list: unlocks the field to choose another command."
+    },
+    {
       "key": "Plural",
       "text": "Plural",
       "files": [
@@ -5736,6 +5828,14 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): accessible name of the search field."
     },
     {
+      "key": "Search Crons…",
+      "text": "Search Crons…",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "Placeholder of the search field in the \"Cron\" filter of the runs list (scheduled tasks are called Crons)."
+    },
+    {
       "key": "Search commands…",
       "text": "Search commands…",
       "files": [
@@ -6148,6 +6248,14 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): description of the run dialog: start time and duration."
     },
     {
+      "key": "Started %start% (your time) · %duration%",
+      "text": "Started %start% (your time) · %duration%",
+      "files": [
+        "crons/runs.tsx"
+      ],
+      "hint": "Subtitle of the dialog showing one run of a scheduled task: %start% is when it started, in the viewer's own time zone; %duration% is how long it ran (e.g. \"2 min 5 s\")."
+    },
+    {
       "key": "Starts__chart-series",
       "text": "Starts",
       "context": "chart-series",
@@ -6171,6 +6279,7 @@
       "text": "Status",
       "files": [
         "crons/CronDetailsDrawer.tsx",
+        "crons/CronsScreen.tsx",
         "crons/parts.tsx",
         "issues/IssuesScreen.tsx"
       ],
@@ -6731,6 +6840,14 @@
       "hint": "Workers admin chart: description."
     },
     {
+      "key": "The range must end after it starts and span at most 31 days.",
+      "text": "The range must end after it starts and span at most 31 days.",
+      "files": [
+        "issues/IssuesTrendChart.tsx"
+      ],
+      "hint": "Error next to the start and end fields of a custom time window for the error chart: the end is before the start, or the window is longer than 31 days."
+    },
+    {
       "key": "The report could not be sent.",
       "text": "The report could not be sent.",
       "files": [
@@ -7008,6 +7125,14 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): error for an unknown transport; %transport% is the queue name."
     },
     {
+      "key": "This apply is not allowed",
+      "text": "This apply is not allowed",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Title of an error notice on the database schema comparison: the server refused to apply a change for this user or request (a permission refusal); the server's reason follows."
+    },
+    {
       "key": "This browser cannot process images",
       "text": "This browser cannot process images",
       "files": [
@@ -7030,6 +7155,30 @@
         "crons/CronFormDrawer.tsx"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): notice title in the edit form; %command% is a console command name."
+    },
+    {
+      "key": "This build does not have this command; it is kept as stored.",
+      "text": "This build does not have this command; it is kept as stored.",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "Note next to a scheduled task's console command in its edit form: the installed application no longer has this command, so it is shown read-only and saved unchanged."
+    },
+    {
+      "key": "This command cannot be scheduled here; it is kept as stored.",
+      "text": "This command cannot be scheduled here; it is kept as stored.",
+      "files": [
+        "crons/format.ts"
+      ],
+      "hint": "Note next to a scheduled task's console command in its edit form: this command may not be chosen in the admin (it is not marked as schedulable), so it is shown read-only and saved unchanged."
+    },
+    {
+      "key": "This diff changed since the previous load.",
+      "text": "This diff changed since the previous load.",
+      "files": [
+        "database/SchemaDiffCard.tsx"
+      ],
+      "hint": "Tooltip of the \"Changed\" badge on a database table in the schema comparison: its pending change is different from the one shown before the last reload."
     },
     {
       "key": "This diff drops or rewrites data. Before applying, decide which side is wrong: the entity or the live database.",
@@ -7243,12 +7392,29 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): accessible name of the timeline window switch."
     },
     {
+      "key": "Times are in your time zone, converted from the server clock the runner evaluates the schedule in.",
+      "text": "Times are in your time zone, converted from the server clock the runner evaluates the schedule in.",
+      "files": [
+        "crons/CronDetailsDrawer.tsx"
+      ],
+      "hint": "Note in the details of a scheduled task: the times are shown in the viewer's time zone, converted from the server's clock (the server evaluates the schedule on its own clock)."
+    },
+    {
       "key": "Times are on the server clock, the zone the runner evaluates the schedule in.",
       "text": "Times are on the server clock, the zone the runner evaluates the schedule in.",
       "files": [
         "crons/CronDetailsDrawer.tsx"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): note in the job's details."
+    },
+    {
+      "key": "To__trend-window",
+      "text": "To",
+      "context": "trend-window",
+      "files": [
+        "issues/IssuesTrendChart.tsx"
+      ],
+      "hint": "Label of the end date-and-time field of a custom time window for the error chart."
     },
     {
       "key": "Today",
@@ -8696,6 +8862,22 @@
         "workers/window.ts"
       ],
       "hint": "Workers admin chart: option of the time window switch: a number of days."
+    },
+    {
+      "key": "{count, plural, one {# diff has no signature: reload first.} other {# diffs have no signature: reload first.}}",
+      "text": "{count, plural, one {# diff has no signature: reload first.} other {# diffs have no signature: reload first.}}",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Why the \"Apply all\" button of the database schema comparison is disabled: some pending table changes lack the fingerprint the server checks before applying; reloading the comparison fixes it. # is the number of such changes."
+    },
+    {
+      "key": "{count, plural, one {# diff is blocked: apply the others one by one or by selection.} other {# diffs are blocked: apply the others one by one or by selection.}}",
+      "text": "{count, plural, one {# diff is blocked: apply the others one by one or by selection.} other {# diffs are blocked: apply the others one by one or by selection.}}",
+      "files": [
+        "database/SchemaDiffScreen.tsx"
+      ],
+      "hint": "Why the \"Apply all\" button of the database schema comparison is disabled: the large-table safety guard blocks some table changes, so they cannot be applied from this screen; the remaining changes can be applied individually or by selecting them. # is the number of blocked changes."
     },
     {
       "key": "{count, plural, one {# event} other {# events}}",

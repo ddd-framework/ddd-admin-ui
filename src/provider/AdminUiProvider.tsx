@@ -54,11 +54,21 @@ export const AdminUiProvider = ({
   linkComponent,
   usePathname,
   confirm: hostConfirm,
+  confirmWithPhrase,
   formatLocale,
   textLimits,
 }: AdminUiProviderProps) => {
   const [confirmQueue] = useState(() => createConfirmQueue<ConfirmOptions>());
-  const confirm = hostConfirm ?? confirmQueue.request;
+  const phraseConfirm = confirmWithPhrase === 'package' ? confirmQueue.request : confirmWithPhrase;
+  const confirm = useMemo(
+    () =>
+      hostConfirm && phraseConfirm
+        ? (options: ConfirmOptions) => (options.requirePhrase !== undefined ? phraseConfirm(options) : hostConfirm(options))
+        : (hostConfirm ?? confirmQueue.request),
+    [hostConfirm, phraseConfirm, confirmQueue]
+  );
+  // the package dialog renders when it answers anything: always without a host service, phrase calls with 'package'
+  const renderPackageDialog = !hostConfirm || confirmWithPhrase === 'package';
 
   // A layout effect: registered before any child's ordinary effect can raise a toast.
   useLayoutEffect(() => {
@@ -93,7 +103,7 @@ export const AdminUiProvider = ({
         <PortalContainerProvider container={portalContainer}>
           <ConfirmContext.Provider value={confirm}>
             {content}
-            {hostConfirm ? null : <ConfirmHost queue={confirmQueue} />}
+            {renderPackageDialog ? <ConfirmHost queue={confirmQueue} /> : null}
           </ConfirmContext.Provider>
         </PortalContainerProvider>
       </TooltipProvider>

@@ -1,7 +1,4 @@
-import type { ComponentType } from 'react';
-
-import { translateText } from '../../i18n/store.ts';
-import type { TranslateFn } from '../../i18n/useTranslate.ts';
+import { type TranslateFn, translateText } from '../../i18n/store.ts';
 
 /**
  * The navigation model of a host: ONE tree that feeds the sidebar, the breadcrumbs and the document title. Pure (no
@@ -11,8 +8,18 @@ import type { TranslateFn } from '../../i18n/useTranslate.ts';
  * host marks them with `m()` for its text export.
  */
 
-/** An icon component (`lucide-react` icons fit). */
-export type NavigationIcon = ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>;
+/** The props the shell passes to a navigation icon. */
+export interface NavigationIconProps {
+  className?: string;
+  'aria-hidden'?: boolean | 'true' | 'false';
+}
+
+/**
+ * An icon component (`lucide-react` icons fit): a function or class component taking `NavigationIconProps`. Typed
+ * without React's types, so the navigation model (and `./logic/pure`) loads without React.
+ */
+// biome-ignore lint/suspicious/noExplicitAny: a component's return type (a React node) without importing React's types
+export type NavigationIcon = ((props: NavigationIconProps) => any) | (new (props: NavigationIconProps) => any);
 
 /** Route parameters matched below a navigation leaf (`{ itemId: '42' }`), decoded. */
 export type CrumbParams = Readonly<Record<string, string>>;
@@ -33,6 +40,30 @@ export interface CrumbRoute<TEntity extends string = string> {
   /** `false`: no page renders at this path (a redirect): the crumb is text, never a link. Default `true`. */
   link?: boolean;
   children?: readonly CrumbRoute<TEntity>[];
+  /** Crumbs from the query string while this route is the deepest matched one (a tab: `?tab=members`). */
+  queryCrumbs?: readonly QueryCrumb[];
+}
+
+/**
+ * A crumb from a query parameter of the current URL (a tab, a view): shown when the parameter has a value, after the
+ * segment crumbs. `label`: a fixed UI text, a text built from the value, or a map value → UI text (a value missing
+ * from the map adds no crumb). Its `href` keeps the query crumbs before it. `link: false`: text, never a link.
+ */
+export interface QueryCrumb {
+  param: string;
+  label: CrumbLabel | Readonly<Record<string, string>>;
+  link?: boolean;
+}
+
+/**
+ * A crumb before the navigation's own (a scope: the workspace, the client). UI text translated unless `translate:
+ * false` (a name from the server); a link with `href`. Never part of the document title.
+ */
+export interface LeadingCrumb {
+  key: string;
+  label: string;
+  href?: string;
+  translate?: boolean;
 }
 
 interface NavigationItemBase {
@@ -41,6 +72,10 @@ interface NavigationItemBase {
   /** UI text, translated when rendered. */
   label: string;
   icon?: NavigationIcon;
+  /** `false`: this item's crumb is text, never a link (a redirect, a page without content of its own). */
+  crumbLink?: boolean;
+  /** `true`: no crumb for this item (a silent level, a home entry the trail does not name). */
+  crumbHidden?: boolean;
 }
 
 /** An entry that opens a page. */
@@ -61,6 +96,13 @@ export interface NavigationLeaf<TEntity extends string = string> extends Navigat
   externalLabel?: string;
   /** Child segments for the breadcrumbs below `href`. */
   crumbs?: readonly CrumbRoute<TEntity>[];
+  /** Crumbs from the query string on this entry's own page (see `QueryCrumb`). */
+  queryCrumbs?: readonly QueryCrumb[];
+  /**
+   * Only for the breadcrumbs and the document title: not drawn in the sidebar, the rail or the mobile menu
+   * (`menuNavigation`); its groups still count as active on its page.
+   */
+  crumbOnly?: boolean;
 }
 
 /** A group of entries (groups nest). A group with an own `href` is also a page: its label links there. */
@@ -138,6 +180,25 @@ export const isNavigationGroupActive = (
 ): boolean => active !== null && (active.item.key === group.key || active.groups.some(candidate => candidate.key === group.key));
 
 /**
+ * The tree the menus draw: `crumbOnly` leaves removed, and groups left without children and without an own page.
+ */
+export const menuNavigation = <TEntity extends string>(items: readonly NavigationItem<TEntity>[]): NavigationItem<TEntity>[] =>
+  items.flatMap((item): NavigationItem<TEntity>[] => {
+    if (!isNavigationGroup(item)) return item.crumbOnly ? [] : [item];
+    const children = menuNavigation(item.children);
+    if (children.length === 0 && item.href === undefined && item.children.length > 0) return [];
+    return [children.length === item.children.length && children.every((child, index) => child === item.children[index]) ? item : { ...item, children }];
+  });
+
+/** Whether a tree holds a `crumbOnly` leaf at any depth. */
+const hasCrumbOnly = (items: readonly NavigationItem<string>[]): boolean =>
+  items.some(item => (isNavigationGroup(item) ? hasCrumbOnly(item.children) : item.crumbOnly === true));
+
+/** `menuNavigation`, returning the same array when nothing is crumb-only (stable for memoised menus). */
+export const menuNavigationOf = <TEntity extends string>(items: readonly NavigationItem<TEntity>[]): readonly NavigationItem<TEntity>[] =>
+  hasCrumbOnly(items as readonly NavigationItem<string>[]) ? menuNavigation(items) : items;
+
+/**
  * The tree the viewer may see: items `canAccess` refuses are dropped; a group left without children is dropped too,
  * unless it has its own page and is allowed. Hiding is presentation; the server still checks every request.
  */
@@ -168,8 +229,11 @@ export type ResolvedCrumb<TEntity extends string = string> =
   | (ResolvedCrumbBase & { kind: 'group'; label: string; item: NavigationGroup<TEntity> })
   /** The navigation entry the path is in. */
   | (ResolvedCrumbBase & { kind: 'leaf'; label: string; item: NavigationItem<TEntity>; external: boolean })
-  /** A segment below the entry with a fixed or built text. */
-  | (ResolvedCrumbBase & { kind: 'text'; label: string })
+  /**
+   * A segment below the entry with a fixed or built text; with `scope` a leading crumb (`leadingCrumbs`), with `query`
+   * a crumb of that query parameter (`queryCrumbs`).
+   */
+  | (ResolvedCrumbBase & { kind: 'text'; label: string; scope?: true; query?: string })
   /** A segment naming an entity: the host's hook resolves its name. */
   | (ResolvedCrumbBase & { kind: 'entity'; entity: TEntity; id: string; params: CrumbParams });
 
@@ -178,6 +242,12 @@ export interface ResolveCrumbsOptions {
   t?: TranslateFn;
   /** The rights predicate: a crumb of a refused item stays as text (the trail never breaks). */
   canAccess?: NavigationAccess;
+  /** Rights on any crumb (segments and query crumbs included): `false` turns it into text. */
+  canAccessCrumb?: (crumb: ResolvedCrumb<string>) => boolean;
+  /** Crumbs before the navigation's own (scope crumbs). */
+  leadingCrumbs?: readonly LeadingCrumb[];
+  /** The query string for `queryCrumbs` (`?tab=members`, `tab=members` or `URLSearchParams`); default the pathname's own. */
+  search?: string | URLSearchParams | null;
 }
 
 const decodeSegment = (segment: string): string => {
@@ -205,43 +275,59 @@ export const resolveCrumbs = <TEntity extends string>(
   items: readonly NavigationItem<TEntity>[],
   options: ResolveCrumbsOptions = {}
 ): ResolvedCrumb<TEntity>[] => {
-  const { t = translateText, canAccess = () => true } = options;
+  const { t = translateText, canAccess = () => true, canAccessCrumb, leadingCrumbs = [] } = options;
   const active = findActiveNavigation(items, pathname);
   if (!active || pathname === null) return [];
+  const query =
+    options.search instanceof URLSearchParams
+      ? options.search
+      : new URLSearchParams(options.search ?? (pathname.includes('?') ? (pathname.split('?')[1] ?? '').split('#')[0] : ''));
   const path = normalisePathname(pathname);
   const { item, groups } = active;
   const itemHref = normalisePathname(item.href ?? '/');
-  const crumbs: ResolvedCrumb<TEntity>[] = [];
+  const crumbs: ResolvedCrumb<TEntity>[] = leadingCrumbs.map(leading => ({
+    kind: 'text' as const,
+    key: `scope:${leading.key}`,
+    label: leading.translate === false ? leading.label : t(leading.label),
+    href: leading.href ?? '',
+    link: leading.href !== undefined,
+    scope: true as const,
+  }));
 
   for (const group of groups) {
     const groupHref = group.href === undefined ? undefined : normalisePathname(group.href);
     if (groupHref === itemHref && group.label === item.label) continue;
+    if (group.crumbHidden) continue;
     crumbs.push({
       kind: 'group',
       key: `group:${group.key}`,
       label: t(group.label),
       item: group,
       href: groupHref ?? '',
-      link: groupHref !== undefined && groupHref !== itemHref && canAccess(group),
+      link: groupHref !== undefined && groupHref !== itemHref && group.crumbLink !== false && canAccess(group),
     });
   }
-  crumbs.push({
-    kind: 'leaf',
-    key: `nav:${item.key}`,
-    label: t(item.label),
-    item,
-    href: itemHref,
-    external: !isNavigationGroup(item) && item.external === true,
-    link: canAccess(item),
-  });
+  if (!item.crumbHidden) {
+    crumbs.push({
+      kind: 'leaf',
+      key: `nav:${item.key}`,
+      label: t(item.label),
+      item,
+      href: itemHref,
+      external: !isNavigationGroup(item) && item.external === true,
+      link: item.crumbLink !== false && canAccess(item),
+    });
+  }
 
   const params: Record<string, string> = {};
   let routes: readonly CrumbRoute<TEntity>[] = isNavigationGroup(item) ? [] : (item.crumbs ?? []);
   let href = itemHref === '/' ? '' : itemHref;
   const rest = path === itemHref ? '' : path.slice(itemHref === '/' ? 0 : itemHref.length);
+  let queryCrumbs: readonly QueryCrumb[] | undefined = isNavigationGroup(item) ? undefined : item.queryCrumbs;
   for (const rawSegment of rest.split('/').filter(Boolean)) {
     const route = matchRoute(routes, rawSegment);
     if (!route) break;
+    queryCrumbs = route.queryCrumbs;
     const segment = decodeSegment(rawSegment);
     href = `${href}/${rawSegment}`;
     if (route.segment.startsWith(':')) params[route.segment.slice(1)] = segment;
@@ -254,7 +340,29 @@ export const resolveCrumbs = <TEntity extends string>(
     }
     routes = route.children ?? [];
   }
-  return crumbs;
+
+  const kept = new URLSearchParams();
+  for (const queryCrumb of queryCrumbs ?? []) {
+    const value = query.get(queryCrumb.param);
+    if (value === null || value === '') continue;
+    const { label: labelSource } = queryCrumb;
+    const label =
+      typeof labelSource === 'string'
+        ? t(labelSource)
+        : typeof labelSource === 'function'
+          ? labelSource(value, t, { ...params })
+          : labelSource[value] !== undefined
+            ? t(labelSource[value] as string)
+            : undefined;
+    if (label === undefined) continue;
+    kept.set(queryCrumb.param, value);
+    const queryHref = `${href === '' ? '/' : href}?${kept.toString()}`;
+    crumbs.push({ kind: 'text', key: `query:${queryHref}`, label, href: queryHref, link: queryCrumb.link !== false, query: queryCrumb.param });
+  }
+
+  return canAccessCrumb
+    ? crumbs.map(crumb => (crumb.link && !canAccessCrumb(crumb as ResolvedCrumb<string>) ? { ...crumb, link: false } : crumb))
+    : crumbs;
 };
 
 export interface DocumentTitleOptions {
@@ -266,6 +374,10 @@ export interface DocumentTitleOptions {
   depth?: number;
   /** Between the parts; default ` · `. */
   separator?: string;
+  /** Passed on to `resolveCrumbs` (the scope crumbs never name the page). */
+  leadingCrumbs?: readonly LeadingCrumb[];
+  /** Passed on to `resolveCrumbs`: query crumbs can name the page. */
+  search?: string | URLSearchParams | null;
   /** The text of an entity crumb (by crumb key); default its id. */
   entityText?: (crumb: Extract<ResolvedCrumb<string>, { kind: 'entity' }>) => string | null | undefined;
 }
@@ -277,7 +389,7 @@ export const documentTitleParts = <TEntity extends string>(
 ): string[] => {
   const { depth = 2, entityText, appName } = options;
   const parts = crumbs
-    .filter(crumb => crumb.kind !== 'group')
+    .filter(crumb => crumb.kind !== 'group' && !(crumb.kind === 'text' && crumb.scope))
     .slice(-Math.max(1, depth))
     .reverse()
     .map(crumb => (crumb.kind === 'entity' ? (entityText?.(crumb as Extract<ResolvedCrumb<string>, { kind: 'entity' }>) || crumb.id) : crumb.label));
@@ -295,7 +407,7 @@ export const resolveDocumentTitle = <TEntity extends string>(
   items: readonly NavigationItem<TEntity>[],
   options: DocumentTitleOptions = {}
 ): string | null => {
-  const { separator = ' · ', t } = options;
-  const parts = documentTitleParts(resolveCrumbs(pathname, items, { t }), options);
+  const { separator = ' · ', t, leadingCrumbs, search } = options;
+  const parts = documentTitleParts(resolveCrumbs(pathname, items, { t, leadingCrumbs, search }), options);
   return parts.length > 0 ? parts.join(separator) : null;
 };

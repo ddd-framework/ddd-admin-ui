@@ -22,10 +22,19 @@ export const parseCronTime = (value: string | null | undefined): number | null =
   return Number.isNaN(ms) ? null : ms;
 };
 
-/** `31 Jan, 10:00` on the server's wall clock, in the UI language (`seconds` adds them); `—` without a value. */
-export const formatCronDateTime = (value: string | number | null | undefined, options: { seconds?: boolean; year?: boolean } = {}): string => {
+/**
+ * `31 Jan, 10:00` on the server's wall clock, in the UI language (`seconds` adds them); `—` without a value. With
+ * `viewerOffsetMs` (how far the server clock runs ahead of UTC, `estimateCronServerOffsetMs`) the time is converted to
+ * and shown in the viewer's own time zone instead.
+ */
+export const formatCronDateTime = (
+  value: string | number | null | undefined,
+  options: { seconds?: boolean; year?: boolean; viewerOffsetMs?: number | null } = {}
+): string => {
   const ms = typeof value === 'number' ? value : parseCronTime(value);
   if (ms === null) return '—';
+  const viewerOffsetMs = options.viewerOffsetMs;
+  const viewer = typeof viewerOffsetMs === 'number';
   return new Intl.DateTimeFormat(getUiLocale(), {
     day: 'numeric',
     month: 'short',
@@ -33,13 +42,29 @@ export const formatCronDateTime = (value: string | number | null | undefined, op
     hour: '2-digit',
     minute: '2-digit',
     ...(options.seconds ? { second: '2-digit' } : {}),
-    timeZone: 'UTC',
-  }).format(new Date(ms));
+    ...(viewer ? {} : { timeZone: 'UTC' }),
+  }).format(new Date(viewer ? ms - viewerOffsetMs : ms));
 };
 
-/** `10:00` on the server's wall clock. */
-export const formatCronClock = (ms: number): string =>
-  new Intl.DateTimeFormat(getUiLocale(), { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }).format(new Date(ms));
+/** `10:00` on the server's wall clock (with `viewerOffsetMs`: in the viewer's time zone). */
+export const formatCronClock = (ms: number, viewerOffsetMs?: number | null): string =>
+  typeof viewerOffsetMs === 'number'
+    ? new Intl.DateTimeFormat(getUiLocale(), { hour: '2-digit', minute: '2-digit' }).format(new Date(ms - viewerOffsetMs))
+    : new Intl.DateTimeFormat(getUiLocale(), { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }).format(new Date(ms));
+
+/** Every time zone in use is a multiple of 15 minutes off UTC. */
+const OFFSET_STEP_MS = 15 * 60_000;
+
+/**
+ * How far the server's wall clock runs ahead of UTC, in ms (`3_600_000` for a server on UTC+1): its `serverNow`
+ * against the browser's clock when the answer arrived, rounded to 15 minutes (latency and a little clock skew do not
+ * count). `null` without a readable `serverNow`.
+ */
+export const estimateCronServerOffsetMs = (serverNow: string | null | undefined, browserNowMs: number): number | null => {
+  const serverMs = parseCronTime(serverNow);
+  if (serverMs === null) return null;
+  return Math.round((serverMs - browserNowMs) / OFFSET_STEP_MS) * OFFSET_STEP_MS || 0;
+};
 
 /** `< 1 s`, `12 s`, `2 min 5 s`, `1 h 5 min` (the server measures whole seconds); `—` without a value. */
 export const formatCronDuration = (durationMs: number | null | undefined): string => {
@@ -235,3 +260,71 @@ export const recentRunsOf = (cron: Pick<CronOverview, 'recentExecutions'>, limit
 /** True when every active Cron is overdue: the runner (`app:crons:execute` every minute) does not tick. */
 export const isRunnerStalled = (runner: { activeCount?: number; overdueCount?: number }): boolean =>
   (runner.overdueCount ?? 0) > 0 && (runner.overdueCount ?? 0) >= (runner.activeCount ?? 0);
+
+// ── names, order, filters, locked commands ──────────────────────────────────────────────────────────────────────────
+
+/**
+ * A Cron name in one comparable form: lower case, word breaks of camelCase and runs of `_`, `.`, `:`, spaces and
+ * hyphens as one hyphen (`Nightly_Cleanup`, `nightlyCleanup` and `nightly-cleanup` match). Names stored before the
+ * kebab-case rule keep their spelling; compare names with this, never with `===`.
+ */
+export const normalizeCronName = (name: string | null | undefined): string =>
+  (name ?? '')
+    .trim()
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .toLowerCase()
+    .replace(/[\s_.:-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+/** A stored name from before the kebab-case rule (`Nightly_Cleanup`): an edit keeps it unless the name is changed. */
+export const isLegacyCronName = (name: string): boolean => name !== '' && !isCronName(name);
+
+/** The statuses from the worst to the best: what needs a hand first, a paused Cron last. */
+export const CRON_STATUS_SEVERITY: readonly string[] = ['MISSING_COMMAND', 'FAILING', 'OVERDUE', 'RUNNING', 'OK', 'PAUSED'];
+
+/** The rank of a status in `CRON_STATUS_SEVERITY` (an unknown status after the known ones). */
+export const cronStatusRank = (status: string): number => {
+  const index = CRON_STATUS_SEVERITY.indexOf(status);
+  return index === -1 ? CRON_STATUS_SEVERITY.length : index;
+};
+
+/** The order of the Crons list: `name` as the API sends them (by name), `severity` the worst status first, then by name. */
+export type CronListSort = 'name' | 'severity';
+
+/** The Crons in the given order (a new array). */
+export const sortCrons = <TCron extends Pick<CronOverview, 'name' | 'status'>>(crons: readonly TCron[], sort: CronListSort): TCron[] =>
+  sort === 'severity'
+    ? [...crons].sort((left, right) => cronStatusRank(left.status) - cronStatusRank(right.status) || left.name.localeCompare(right.name))
+    : [...crons];
+
+/** The status filter of the Crons list: every status, the ones that need attention, or one status. */
+export type CronStatusFilter = 'ALL' | 'ATTENTION' | 'MISSING_COMMAND' | 'PAUSED' | 'RUNNING' | 'OVERDUE' | 'FAILING' | 'OK';
+
+/** The statuses "Need attention" covers (the summary tile's sum). */
+export const CRON_ATTENTION_STATUSES: readonly string[] = ['MISSING_COMMAND', 'FAILING', 'OVERDUE'];
+
+const STATUS_FILTER_VALUES: readonly CronStatusFilter[] = ['ATTENTION', 'MISSING_COMMAND', 'FAILING', 'OVERDUE', 'RUNNING', 'OK', 'PAUSED'];
+
+/** Whether a Cron passes the status filter. */
+export const matchesCronStatusFilter = (cron: Pick<CronOverview, 'status'>, filter: CronStatusFilter): boolean =>
+  filter === 'ALL' ? true : filter === 'ATTENTION' ? CRON_ATTENTION_STATUSES.includes(cron.status) : cron.status === filter;
+
+/** A status filter from the URL (`ALL` for anything else). */
+export const toCronStatusFilter = (value: string | null | undefined): CronStatusFilter =>
+  STATUS_FILTER_VALUES.find(filter => filter === value) ?? 'ALL';
+
+/**
+ * Why the edit form keeps a stored Cron's command as it is (read-only, with this reason): the command is missing from
+ * this build, or it may not be scheduled from the admin (no `#[CronSchedulable]`, so the command list does not offer
+ * it). `null` when it can be picked from the list.
+ */
+export const lockedCronCommandReason = (
+  cron: Pick<CronOverview, 'commandName' | 'commandSchedulable' | 'commandExists'> | undefined,
+  schedulableNames: readonly string[] | null,
+  t: TranslateFn
+): string | null => {
+  if (!cron?.commandName) return null;
+  if (cron.commandExists === false) return t('This build does not have this command; it is kept as stored.');
+  const notSchedulable = cron.commandSchedulable === false || (schedulableNames !== null && !schedulableNames.includes(cron.commandName));
+  return notSchedulable ? t('This command cannot be scheduled here; it is kept as stored.') : null;
+};

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Builds the package into dist/: removes the previous output, runs `tsc -p tsconfig.build.json` (one JS + one
-// declaration file per source file, directives kept, relative specifiers rewritten to `.js` in the JS), rewrites the
+// declaration file per source file, directives kept, relative specifiers rewritten to `.js` in the JS), then
+// `tsc -p tsconfig.cjs.json` (the dependency-free `./logic/pure` entry as CommonJS in dist/cjs), rewrites the
 // declarations' relative `.ts` / `.tsx` specifiers to `.js` (the compiler keeps them), then copy-assets puts the
 // stylesheets, the JSON manifests and the shipped scripts next to the compiled files.
 //
@@ -28,6 +29,10 @@ const walk = dir =>
 rmSync(dist, { recursive: true, force: true });
 const emit = spawnSync(tsc, ['-p', join(packageDir, 'tsconfig.build.json')], { stdio: 'inherit' });
 if (emit.status !== 0) process.exit(emit.status ?? 1);
+// The dependency-free entry once more as CommonJS (the `require` condition of `./logic/pure`), into dist/cjs.
+const emitCjs = spawnSync(tsc, ['-p', join(packageDir, 'tsconfig.cjs.json')], { stdio: 'inherit' });
+if (emitCjs.status !== 0) process.exit(emitCjs.status ?? 1);
+writeFileSync(join(dist, 'cjs', 'package.json'), `${JSON.stringify({ type: 'commonjs' }, null, 2)}\n`);
 
 // Declarations: relative `.ts` / `.tsx` specifiers → `.js` (from '…', import('…'), export … from '…').
 const SPECIFIER = /((?:\bfrom\s*|\bimport\s*\(\s*)['"])(\.{1,2}\/[^'"]+?)\.tsx?(['"])/g;

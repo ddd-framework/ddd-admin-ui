@@ -3,7 +3,7 @@ name: ddd-admin-ui-specialist
 description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries, import matrix, host setup (AdminUiProvider, theme.css, components.css, tokens.json, ddd-admin-ui-check-tokens, -radix, -contrast), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title from one navigation; ./shell-background), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route states, form drawers and dialogs, the save shortcut, useConfirm, write access, locale::style translations, media with image crop, colour fields, key figures (./data), markdown, the admin screens ./workers, ./translations, ./issues, ./database (schema diff), ./crons, status text roles, ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form or admin screen, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast fails or status text is too light, or URL filters get lost."
 metadata:
   author: mgamadeus
-  version: 0.3.2
+  version: 0.3.3
 ---
 
 # ddd-admin-ui specialist
@@ -29,7 +29,9 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | one router link for every block, sticky search parameters | `AdminUiProvider.linkComponent` + `withStickyParams` | provider, logic |
 | the application frame: sidebar (groups, badges, locks), icon rail with `[`, mobile menu, top bar slots | `AppShell` with one `NavigationItem[]` tree, `canAccess`, `AdminUiProvider usePathname={useNextPathname}` | shell, logic, next |
 | breadcrumbs and the tab title from the same tree | leaf `crumbs` (`'create'`, `':itemId'` + `entity`), `useEntityLabel`, `documentTitle={{ appName }}`; `resolveDocumentTitle` on the server | shell, logic |
-| account and language menus fed by the host | `AccountMenu` (entries, `LanguageMenuSub` inside), `LanguageMenu` | shell |
+| breadcrumbs with scope, query-string tabs, rights per crumb, pages only in the trail | `leadingCrumbs`, `queryCrumbs` + `search`, `canAccessCrumb`, `crumbOnly`, `crumbLink` / `crumbHidden` | shell, logic |
+| shell parts without `AppShell`, controlled open groups, loading navigation | `ShellNavDisplayProvider`, `navOpenGroupKeys`, `navigationLoading` | shell |
+| account and language menus fed by the host | `AccountMenu` (entries, `LanguageMenuSub` inside; `triggerVariant="avatar"`, `header`), `LanguageMenu` (`renderOption`) | shell |
 | an animated background | `background={<ShaderBackground />}` (separate, lazy) | shell-background |
 | a `type="date"` / `datetime-local` value | `toDateInputValue` / `fromDateTimeInputValue` … with `'local'` or `'utc'` | logic |
 | see every block in the host theme, light and dark | `Showcase` on a development route | showcase |
@@ -40,9 +42,12 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | a short form in a dialog (rename, a reason) | `FormDialog` (`form` optional: react-hook-form or plain state) | form |
 | drawer state in the URL (`?edit=<id>`, `?create=1`) | `useEntityDrawer` with `useNextDrawerUrlAdapter` | logic, next |
 | a text per content locale | `useEntityTranslations` + `FormTranslatableInput` / `FormTranslatableMarkdown` | logic, translations |
-| one text per language plus the field's store (`{ de, en }` call sites) | `TranslatableLanguageInput` (`languageTextsOf` / `storeWithLanguageTexts`) | translations, logic |
+| one text per language plus the field's store (`{ de, en }` call sites) | `TranslatableLanguageInput` / `TranslatableLanguageMarkdown` (`onChange({ texts, store, reason })`; `languageTextsOf` / `storeWithLanguageTexts`) | translations, logic |
+| the tab from the URL; no `translationInfos` when nothing changed | `useEntityTranslations({ activeLocale, onActiveLocaleChange })`, `buildChangedPayload` | logic |
 | tabs only for offered locales; the edited key per field (FORMAL, else INFORMAL) | `useEntityTranslations({ offeredTabsOnly, editedKeyPerField })` | logic |
 | Shift-click ranges, a header that sticks to the page over a sideways scroller, a table that fills its card | `useRowSelection({ rangeSelection })`, `EntityListTable` `selectionHitArea`, `stickyHeader="page"`, `fillWidth` | logic, list |
+| one seamless scroll edge, sized select / `#` columns, a table on a popover, widths without padding | `EntityListTable` `pinEdge="overlay"`, `selectionColumnWidth` / `indexColumnWidth`, `surface`, `columnWidthBox="content-box"` | list |
+| crumbs, list sort or tracks in a worker, a Node script or a CommonJS test | `./logic/pure` (no React, no ddd-web; `require` works) | logic/pure |
 | a media reference | `FormMediaItemField` (+ the host's `MediaItemPickerDialog`) | media |
 | a confirmation from screen code | `useConfirm()` → `confirm(options)` (the provider draws it; `requirePhrase` for a typed name) | logic |
 | a confirmation inside a block with its own dialog | `useConfirmDialog` (returns `{ confirm, dialog }`) | form |
@@ -74,6 +79,8 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | one error occurrence (frames with code, causes, request, job, client) in a host's own view | `IssueEventDetails` (+ `IssueFrameList`, `IssueCauses`) | issues |
 | the schema diff (apply per table or in bulk, blocked tables, the signature gate, generated SQL and model code) | `createDatabaseApi({ baseApi, apiPrefix })` + `SchemaDiffScreen` (`GeneratedCodePanel` alone for the previews) | database |
 | scheduled commands: list with health, run now, on / off, runs and output, timeline, create / edit with schedule preview | `createCronsApi({ baseApi, apiPrefix })` + `CronsScreen` (`urlStateAdapter`, `drawerUrlAdapter`) | crons |
+| crons worst first, polling, times in the viewer's zone; issues with a custom range or load-more; a reworded schema-write refusal | `CronsScreen` `sort="severity"`, `*PollingIntervalMs`, `timeZone="viewer"`; `IssuesScreen` `customTrendRange`, `pagination="load-more"`; `SchemaDiffScreen` `isSchemaWritesRefusal` | crons, issues, database |
+| a text-only host confirm service plus typed-phrase confirmations | `AdminUiProvider confirmWithPhrase="package"` (or a function); `ConfirmDialogView` | provider, form |
 | status text legible on a host whose status colours are fills | set `--success-text`, `--warning-text`, `--destructive-text`, `--info-text` (light and dark); badges keep `StatusBadge` | theme.css, tokens.json |
 | a maintenance action (run, pending, last outcome) | `MaintenanceActionCard` | page |
 

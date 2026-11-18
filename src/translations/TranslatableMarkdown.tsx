@@ -15,6 +15,8 @@ export interface MarkdownEditorRenderArgs {
   disabled?: boolean;
   /** An error on the field or the text over its limit: the editor sets `aria-invalid`. */
   invalid?: boolean;
+  /** The id of the visible counter: the editor sets it as `aria-describedby` (absent while no counter shows). */
+  describedBy?: string;
 }
 
 export interface TranslatableMarkdownProps extends TranslatableFieldBaseProps {
@@ -30,7 +32,7 @@ export const TranslatableMarkdown = ({ renderEditor, ...fieldProps }: Translatab
   const limits = useTextLimits();
   return (
     <TranslatableField {...fieldProps} maxLength={fieldProps.maxLength ?? limits.multiline}>
-      {({ id, text, setText, invalid }) =>
+      {({ id, text, setText, invalid, describedBy }) =>
         renderEditor({
           id,
           value: text,
@@ -38,6 +40,7 @@ export const TranslatableMarkdown = ({ renderEditor, ...fieldProps }: Translatab
           editorKey: fieldProps.activeLocale,
           disabled: fieldProps.disabled,
           invalid,
+          describedBy,
         })
       }
     </TranslatableField>

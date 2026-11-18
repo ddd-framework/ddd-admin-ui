@@ -3,7 +3,8 @@
 import { useTranslate } from '../i18n/useTranslate.ts';
 import { cn } from '../primitives/cn.ts';
 import { HoverReadout } from '../primitives/hint.tsx';
-import { formatCronClock, formatCronDateTime, formatCronDuration, parseCronTime } from './format.ts';
+import { formatCronDuration, parseCronTime } from './format.ts';
+import { useCronTimeFormat } from './timeDisplay.ts';
 import { cronRunResultOf } from './status.ts';
 import type { CronExecutionOverview, CronsTimelineResponse, CronTimelineBucket } from './types.ts';
 
@@ -24,6 +25,7 @@ export interface CronDurationChartProps {
 /** The durations of the last ended runs as bars, oldest left; failed runs in the danger colour; the average as a line. */
 export const CronDurationChart = ({ runs, className }: CronDurationChartProps) => {
   const { t } = useTranslate();
+  const { dateTime } = useCronTimeFormat();
   if (runs.length === 0) {
     return <p className="text-sm text-muted-foreground">{t('No ended run yet.')}</p>;
   }
@@ -63,7 +65,7 @@ export const CronDurationChart = ({ runs, className }: CronDurationChartProps) =
               fill={isFailed ? 'var(--destructive)' : 'var(--primary)'}
               fillOpacity={isFailed ? 1 : 0.75}
             >
-              <title>{`${formatCronDateTime(run.startedAt)} · ${formatCronDuration(run.durationMs)}${isFailed ? ` · ${t('failed', { context: 'cron-run' })}` : ''}`}</title>
+              <title>{`${dateTime(run.startedAt)} · ${formatCronDuration(run.durationMs)}${isFailed ? ` · ${t('failed', { context: 'cron-run' })}` : ''}`}</title>
             </rect>
           );
         })}
@@ -107,6 +109,7 @@ export interface CronTimelineProps {
  */
 export const CronTimeline = ({ timeline, className }: CronTimelineProps) => {
   const { t } = useTranslate();
+  const { dateTime, clock } = useCronTimeFormat();
   const fromMs = parseCronTime(timeline.from);
   const toMs = parseCronTime(timeline.to);
   const stepMs = Math.max(1, timeline.bucketMinutes) * 60_000;
@@ -142,13 +145,13 @@ export const CronTimeline = ({ timeline, className }: CronTimelineProps) => {
                   const label = runs
                     ? t('%time%: %runs% runs, %failures% failed, longest %duration%', {
                         replacements: {
-                          time: formatCronDateTime(start),
+                          time: dateTime(start),
                           runs: String(runs),
                           failures: String(bucket?.failureCount ?? 0),
                           duration: formatCronDuration(bucket?.maxDurationMs),
                         },
                       })
-                    : t('%time%: no run', { replacements: { time: formatCronDateTime(start) } });
+                    : t('%time%: no run', { replacements: { time: dateTime(start) } });
                   return (
                     <td key={start} className="p-0">
                       <span data-readout={label} aria-label={label} role="img" className={cn('block h-5 w-2.5 rounded-[2px] sm:w-3', cellClass(bucket))} />
@@ -164,7 +167,7 @@ export const CronTimeline = ({ timeline, className }: CronTimelineProps) => {
             <td />
             {starts.map((start, index) => (
               <td key={start} className="relative h-4 p-0 text-muted-foreground">
-                {index % tickEvery === 0 && <span className="absolute top-0 left-0 whitespace-nowrap tabular-nums">{formatCronClock(start)}</span>}
+                {index % tickEvery === 0 && <span className="absolute top-0 left-0 whitespace-nowrap tabular-nums">{clock(start)}</span>}
               </td>
             ))}
           </tr>

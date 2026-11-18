@@ -4,9 +4,9 @@
 
 import { useCallback, useSyncExternalStore } from 'react';
 
-import { getTranslationState, subscribeTranslations, type TranslateOptions, translateText } from './store.ts';
+import { getTranslationState, subscribeTranslations, type TranslateFn, translateText } from './store.ts';
 
-export type TranslateFn = (text: string, options?: TranslateOptions) => string;
+export type { TranslateFn } from './store.ts';
 
 const serverState = () => getTranslationState();
 

@@ -148,21 +148,57 @@ export interface DBApplyFailure {
   /** The server's message (with the error code), or the fallback. */
   message: string;
   status: number | string | null;
+  /**
+   * A 403 that is the schema-write refusal (`APP_SCHEMA_WRITES_DISABLED`: every write of the screen stays off), not
+   * another refusal such as the access hook (only this request is refused). See `isSchemaWritesDisabledMessage`.
+   */
+  schemaWritesDisabled: boolean;
 }
+
+/** The start of Core's message for disabled schema writes (`getSchemaWritesDisabledMessage()`). */
+export const SCHEMA_WRITES_DISABLED_MESSAGE_PATTERN = /schema writes are disabled/i;
+
+/**
+ * Whether a 403's message is the schema-write refusal: Core's default message (`Schema writes are disabled on this
+ * process: …`). An application that rewords it (`getSchemaWritesDisabledMessage()`) passes its own test to the screen
+ * (`SchemaDiffScreen.isSchemaWritesRefusal`).
+ */
+export const isSchemaWritesDisabledMessage = (message: string): boolean => SCHEMA_WRITES_DISABLED_MESSAGE_PATTERN.test(message);
 
 /**
  * Sorts an apply's failure: `[DIFF_SIGNATURE_MISMATCH]` (the diff changed since it was shown: reload),
  * `[DIFF_APPLY_LOCK_BUSY]` (another apply runs: retry), 403 (schema writes are disabled on this process), 404 (no pending
  * diff: reload), anything else refused (the production guard, an invalid table list) with its message.
  */
-export const classifyApplyFailure = (error: unknown, fallbackMessage: string): DBApplyFailure => {
+export const classifyApplyFailure = (
+  error: unknown,
+  fallbackMessage: string,
+  isSchemaWritesRefusal: (message: string) => boolean = isSchemaWritesDisabledMessage
+): DBApplyFailure => {
   const normalized = normalizeDddError(error, fallbackMessage);
   const { message, status } = normalized;
-  if (message.includes(DIFF_SIGNATURE_MISMATCH)) return { kind: 'signature-mismatch', message, status };
-  if (message.includes(DIFF_APPLY_LOCK_BUSY)) return { kind: 'lock-busy', message, status };
-  if (status === 403) return { kind: 'forbidden', message, status };
-  if (status === 404) return { kind: 'not-found', message, status };
-  return { kind: 'refused', message, status };
+  const failure = (kind: DBApplyFailureKind, schemaWritesDisabled = false): DBApplyFailure => ({ kind, message, status, schemaWritesDisabled });
+  if (message.includes(DIFF_SIGNATURE_MISMATCH)) return failure('signature-mismatch');
+  if (message.includes(DIFF_APPLY_LOCK_BUSY)) return failure('lock-busy');
+  if (status === 403) return failure('forbidden', isSchemaWritesRefusal(message));
+  if (status === 404) return failure('not-found');
+  return failure('refused');
+};
+
+/** A diff the bulk applies can send: applicable and signed (an unsigned diff is reloaded first). */
+export const isBulkApplicableDiff = (diff: DBTableDiff): boolean => isApplicableDiff(diff) && Boolean(diff.diffSignature);
+
+/**
+ * The tables whose diff changed between two loads (another signature than before; a table new to the list does not
+ * count): the drift since the operator last looked.
+ */
+export const driftedTableNames = (previous: readonly DBTableDiff[], next: readonly DBTableDiff[]): string[] => {
+  const before = new Map(previous.flatMap(diff => (diff.sqlTableName ? [[diff.sqlTableName, diff.diffSignature ?? ''] as const] : [])));
+  return next.flatMap(diff => {
+    const name = diff.sqlTableName;
+    if (!name || !before.has(name)) return [];
+    return before.get(name) !== (diff.diffSignature ?? '') ? [name] : [];
+  });
 };
 
 /** The server's message without its leading error code (`[DIFF_SIGNATURE_MISMATCH] The diff …` → `The diff …`). */

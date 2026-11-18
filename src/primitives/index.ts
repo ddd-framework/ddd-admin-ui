@@ -27,5 +27,7 @@ export * from './textarea.tsx';
 export * from './segmented-control.tsx';
 export * from './link.tsx';
 export * from './pathname.tsx';
+export { ConfirmDialogView } from './confirmDialogView.tsx';
+export type { ConfirmDialogViewEntry, ConfirmDialogViewOptions, ConfirmDialogViewProps } from './confirmDialogView.tsx';
 export { FormActionsSlot, FormActionsSlotProvider } from './formActionsSlot.tsx';
 export type { FormActionsSlotProps, FormActionsSlotProviderProps } from './formActionsSlot.tsx';

@@ -22,11 +22,18 @@ export const useNavMarkText = (item: MarkedItem): string[] => {
  * The marks at the end of a labelled row: the waiting count, a lock (the reason as hidden text), the external mark. A
  * badge `0` renders nothing.
  */
-export const NavItemMarks = ({ item }: { item: MarkedItem }) => {
+export const NavItemMarks = ({
+  item,
+  badgeClassName,
+}: {
+  item: MarkedItem;
+  /** Extra classes of the waiting count. */
+  badgeClassName?: string;
+}) => {
   const { t } = useTranslate();
   return (
     <>
-      {!!item.badge && <span className={NAV_BADGE_CLASS}>{item.badge}</span>}
+      {!!item.badge && <span className={badgeClassName ? cn(NAV_BADGE_CLASS, badgeClassName) : NAV_BADGE_CLASS}>{item.badge}</span>}
       {item.lockedReason && (
         <>
           <Lock aria-hidden className={cn('size-3.5 shrink-0 opacity-70', !item.badge && 'ms-auto')} />

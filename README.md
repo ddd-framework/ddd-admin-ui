@@ -22,6 +22,7 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | Entry | What it holds | May import (besides React and its peers) |
 |---|---|---|
 | `./logic` | pure helpers (`formatDate`, `defineStatusMap`, conditions, schemas, `notify`, `runSequential`, the navigation model with `resolveCrumbs`, `resolveDocumentTitle`, `filterNavigation`, `findActiveNavigation`), React hooks without markup (`useUrlListState`, `useEntityDrawer`, `useRowSelection`, `useEntityTranslations`, …), browser helpers (`prepareImageFile`, `readStored` / `writeStored`, `buildStorageKey`), date input values (`toDateInputValue`, `fromDateTimeInputValue`, …), `withStickyParams`, `useLatestSearch`, `useConfirm` (the provider's confirmation), `WriteAccessProvider` / `useWriteAccess`, date range presets, bulk summaries with skipped rows (`skipSequential`, `bulkSummaryText`), text limits (`countCodePoints`, `overLimitKeys`), colour values, `useMediaQuery`, the image normaliser (`normalizeImage`) and crop geometry, the api injection of the screen entries (`InjectableBaseApi`, `ApiQueryHook`, `staticQueryHook`, …), `useMemoryUrlState`, `useOptimisticRowPatches` | `./i18n` |
+| `./logic/pure` | the dependency-free part of `./logic` (no React, no `@mgamadeus/ddd-web`): the navigation model and crumb resolver, list sort and tracks, URL list state, sticky parameters, date inputs and presets, colour values, image crop geometry, text limits, write access, the api injection helpers, `translateText`; ESM and CommonJS (`require`) | its own `i18n` text store only |
 | `./i18n` | the UI text store (`m`, `translateText`, `setTranslations`), `useTranslate`, `<Translate>`, number / date formats of the UI locale, server-message translation | — |
 | `./primitives` | buttons, inputs, selects, dialogs, sheets, popovers, menus, tooltips, tables, badges, `SegmentedControl`, `cn`, the portal container, the link component and pathname hook contexts, the header slot of form actions (`FormActionsSlotProvider`, `FormActionsSlot`) | `./i18n` |
 | `./list` | entity list card, toolbar, search, filters, table, grid, load-more, status badge, cells, multi-select, combobox, bulk bar, column factories (`textColumn`, `moneyColumn`, `actionsColumn`, …), the toolbar's filter toggle, count and clear as blocks | logic, i18n, primitives |
@@ -270,6 +271,14 @@ const STATUS = defineStatusMap({ ACTIVE: { label: 'Active', tone: 'success' } })
 
 Client components (`DateCell`, `EntityListTable`, `Form`, …) render from server components as long as they get no
 function props there.
+
+Code that must not load React or `@mgamadeus/ddd-web` (a worker, a Node script, a CommonJS test runner, a shared
+navigation module) imports `./logic/pure`: the same helpers, built twice (`import` → ESM, `require` → CommonJS in
+`dist/cjs`). A CommonJS caller gets its own copy of the text store; it passes `t` where a helper takes one.
+
+```js
+const { resolveCrumbs, resolveDocumentTitle } = require('@mgamadeus/ddd-admin-ui/logic/pure');
+```
 
 ## Dates in native inputs
 
@@ -531,6 +540,11 @@ export const IssuesPage = () => (
 `createStaticIssuesApi(showcaseIssuesData)` answers the sample payloads of `./showcase` (two environments, six groups,
 a stalled staging registry, every occurrence kind).
 
+Options (0.3.3): `customTrendRange` (a "Custom" from / to window, at most 31 days, URL keys `from` / `to`),
+`environmentLabels`, `headerActions`, `pagination="load-more"` (the next 50 append through the list's infinite-scroll
+tail), `eventSummary`; `IssueEventDetails` shows a summary and copy actions for the stack and file:line
+(`copyActions={false}` turns them off). A job's attempt reads "2 of 3" when the payload carries `maxAttempts`.
+
 ### `./database`
 
 The schema diff screen on Core's `DatabaseModelsControllerTrait` (mgamadeus/ddd **3.35.1** or later: the trait, its
@@ -580,6 +594,13 @@ export const SchemaDiffPage = () => <SchemaDiffScreen api={databaseApi} />;
   leaves the panels out.
 - Writes follow the screen's `WriteAccessProvider`; the switch "Foreign key checks off while applying" sends
   `disableForeignKeyChecks` (default true, as the trait).
+
+Options (0.3.3): only the schema-write refusal (a 403 whose message matches
+`SCHEMA_WRITES_DISABLED_MESSAGE_PATTERN`) turns the screen's writes off until remount; another 403 shows the server's
+message and refuses that apply only. A host that rewords `getSchemaWritesDisabledMessage()` passes
+`isSchemaWritesRefusal`. A failed apply refetches the diff; "Apply all" is off while a diff has no signature
+(`applyAllWithBlockedDiffs="disable"` also while one is blocked); a card shows the server's `directApplyBlockReason`
+and marks a table whose diff changed since the previous load ("Changed").
 
 ### `./crons`
 
@@ -639,6 +660,13 @@ export const CronsPage = () => (
   search, runs filter and timeline window (`view`, `q`, `result`, `hours`) with `urlStateAdapter`. Charts (the duration
   bars of the last 100 ended runs, the timeline heatmap, the run strip) are drawn by the entry; no chart library. Writes
   (Add, Run now, the switch, Edit, Delete, the form's save) follow `WriteAccessProvider`.
+
+Options (0.3.3): a status filter (URL key `status`, with "Need attention") and a Cron filter on the runs list (URL key
+`runsCron`), both shown by default (`statusFilter={false}`, `runsCronFilter={false}` hide them); `sort="severity"`
+(worst first); `detailsPollingIntervalMs`, `timelinePollingIntervalMs`, `outputPollingIntervalMs` (default 0; output
+polls only while a run is running); `timeZone="viewer"` shows times in the viewer's zone (`serverUtcOffsetMinutes`, else
+estimated from `serverNow` after hydration, rounded to 15 minutes). A stored command that cannot be scheduled stays
+read-only with its reason; names stored before the kebab-case rule save unchanged and are found in either spelling.
 
 ## Design studio
 
@@ -753,6 +781,21 @@ const useEntityLabel: UseEntityLabel<'item'> = ({ id }) => { const query = useIt
   `avatarClassName` and `beforeEntries`; `LanguageMenu` `triggerAriaLabel`, `LanguageMenuSub` `triggerLabel`;
   `documentTitle` `formatTitle` and `reassert` (written again after a router changes the title); `ShaderBackground`
   `displacementScale`, `displacementCells`, `blob1Opacity`, `blob2Opacity`.
+- **More crumbs** (0.3.3): `leadingCrumbs` (scope crumbs before the tree; they never name the page in the title),
+  `queryCrumbs` on a leaf or route (a tab from the query string; pass `search`: a router's pathname has no query),
+  `canAccessCrumb` (rights per crumb, segments included), `crumbOnly` (a page in the trail but not in the menus; use it
+  instead of hiding a page through `canAccess`), `crumbLink: false` / `crumbHidden` on leaves and groups (a redirect, a
+  silent level), `foldWidths` for the folding thresholds; `useEntityLabel` may answer with a `node` (a muted id), `link:
+  false` and a `state` (`data-crumb-state`).
+- **Parts alone and more looks** (0.3.3): `ShellNavDisplayProvider` lets `ShellSidebar`, `ShellNavList`, `ShellNavRail`
+  and `ShellMobileMenu` draw like inside `AppShell`; `mobileMenuHeader`, `navBadgeClassName`, `navChildListClassName`,
+  `navListClassName`, `sidebarNavClassName`, `navigationLoading` (skeleton rows), `navOpenGroupKeys` /
+  `onNavOpenGroupKeysChange` (controlled open groups: store what it reports, or a route change cannot open its group),
+  `railFlyoutClassName`, `railGroupPageRow={false}`, `topBarClassName` / `topBarRowClassName`, `collapsedStorageValues`,
+  `collapseShortcutOptions`. `AccountMenu` `triggerVariant="avatar"`, `contentClassName`, `header`, `itemClassName`,
+  `afterEntries`, entry `before`; `LanguageMenu` `icon`, `iconVisibility`, `contentClassName`, `heading`,
+  `renderOption`. `ShaderBackground` `displacementScale={[x, y]}`, `displacementZeroMean`, `displacementImage`
+  (same-origin or served with CORS), `paused`.
 
 ## Texts
 
@@ -784,7 +827,7 @@ project's `.claude/skills/`. Idempotent; repoints an existing symlink, never tou
 
 ## Versioning
 
-0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.2"`,
+0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.3"`,
 `pnpm add -E` / `npm install -E`); modules peer on the version they were tested with. Stable releases are published
 under the `latest` dist-tag, pre-releases (`x.y.z-…`) under `next`. Changes per release: [CHANGELOG.md](CHANGELOG.md).
 

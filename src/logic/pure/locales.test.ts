@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import {
   languageEditedKey,
   languageFieldTabs,
+  languagesOfStore,
   languageTextsOf,
   mergeLanguageTabs,
   mergeLocaleKeys,
@@ -87,5 +88,26 @@ describe('one text per language', () => {
         ['de:at:FORMAL', 'DE-AT', ['de:at:FORMAL', 'de:at:INFORMAL']],
       ]
     );
+  });
+});
+
+describe('language texts with fixed edited keys (0.3.3)', () => {
+  it('keeps a language on the key it was typed in after that key was emptied', () => {
+    const store = { 'de::FORMAL': '', 'de::INFORMAL': 'Hallo du' };
+    assert.deepEqual(languageTextsOf(store, ['de']), { de: 'Hallo du' });
+    assert.deepEqual(languageTextsOf(store, ['de'], undefined, { editedKeys: { de: 'de::FORMAL' } }), { de: '' });
+    assert.deepEqual(
+      storeWithLanguageTexts(store, { de: 'H' }, undefined, { editedKeys: { de: 'de::FORMAL' } }),
+      { 'de::FORMAL': 'H', 'de::INFORMAL': 'Hallo du' }
+    );
+  });
+
+  it('keeps blank texts in the editing state only with keepBlank', () => {
+    assert.deepEqual(storeWithLanguageTexts({}, { de: ' ' }), {});
+    assert.deepEqual(storeWithLanguageTexts({}, { de: ' ' }, undefined, { keepBlank: true }), { 'de::FORMAL': ' ' });
+  });
+
+  it('lists the languages of a store once each', () => {
+    assert.deepEqual(languagesOfStore({ 'de::FORMAL': 'a', 'de::INFORMAL': 'b', 'de:at:FORMAL': 'c', 'en::FORMAL': 'd' }), ['de', 'de:at', 'en']);
   });
 });

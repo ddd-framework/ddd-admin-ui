@@ -2,7 +2,7 @@
 
 import { normalizeDddError } from '@mgamadeus/ddd-web/contract';
 import { ListChecks, Play, RefreshCw, ShieldCheck, Sigma } from 'lucide-react';
-import { type ReactNode, useCallback, useMemo, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useTranslate } from '../i18n/useTranslate.ts';
 import { notify } from '../logic/pure/notify.ts';
@@ -22,7 +22,19 @@ import { Label } from '../primitives/label.tsx';
 import { Skeleton } from '../primitives/skeleton.tsx';
 import { Switch } from '../primitives/switch.tsx';
 import type { DatabaseApi } from './api.ts';
-import { classifyApplyFailure, countDiffSeverities, type DBApplyFailure, expectedSignaturesOf, isApplicableDiff, isRiskyDiff, sqlStatementsOf, withoutErrorCode } from './diff.ts';
+import {
+  classifyApplyFailure,
+  countDiffSeverities,
+  type DBApplyFailure,
+  driftedTableNames,
+  expectedSignaturesOf,
+  isApplicableDiff,
+  isBulkApplicableDiff,
+  isRiskyDiff,
+  isSchemaWritesDisabledMessage,
+  sqlStatementsOf,
+  withoutErrorCode,
+} from './diff.ts';
 import { GeneratedCodePanel } from './GeneratedCode.tsx';
 import { SchemaDiffCard } from './SchemaDiffCard.tsx';
 import { DB_DIFF_SEVERITY } from './status.ts';
@@ -41,6 +53,17 @@ export interface SchemaDiffScreenProps {
   description?: ReactNode;
   /** The previews of the generated SQL and model code below the diff (default true). */
   showGeneratedCode?: boolean;
+  /**
+   * Whether a 403's message is the schema-write refusal, which switches every write of the screen off until it remounts
+   * (default: Core's message, `isSchemaWritesDisabledMessage`). Any other 403 shows its message and refuses only that
+   * request. An application that rewords `getSchemaWritesDisabledMessage()` passes its own test.
+   */
+  isSchemaWritesRefusal?: (message: string) => boolean;
+  /**
+   * "Apply all" while the production guard blocks a diff: `leave-out` (default) applies the others and says so;
+   * `disable` keeps "Apply all" off until no diff is blocked (apply them one by one or by selection).
+   */
+  applyAllWithBlockedDiffs?: 'leave-out' | 'disable';
 }
 
 /** A notice after an apply: what happened and what to do. */
@@ -59,7 +82,14 @@ interface ApplyNotice {
  * 403 (schema writes disabled on this process) is shown and switches every write of the screen off; a blocked table
  * (large-table guard) has no Apply action. Writes follow `WriteAccessProvider`.
  */
-export const SchemaDiffScreen = ({ api, title, description, showGeneratedCode = true }: SchemaDiffScreenProps) => {
+export const SchemaDiffScreen = ({
+  api,
+  title,
+  description,
+  showGeneratedCode = true,
+  isSchemaWritesRefusal = isSchemaWritesDisabledMessage,
+  applyAllWithBlockedDiffs = 'leave-out',
+}: SchemaDiffScreenProps) => {
   const { t } = useTranslate();
   const outerWriteAccess = useWriteAccess();
   const confirm = useConfirm();
@@ -78,6 +108,25 @@ export const SchemaDiffScreen = ({ api, title, description, showGeneratedCode = 
   const diffs = applied && applied.basis === diffQuery.data ? applied.diffs : queryDiffs;
   const counts = useMemo(() => countDiffSeverities(diffs), [diffs]);
   const applicable = useMemo(() => diffs.filter(isApplicableDiff), [diffs]);
+  const unsignedCount = useMemo(() => applicable.filter(diff => !diff.diffSignature).length, [applicable]);
+  const applyAllReason =
+    unsignedCount > 0
+      ? t('{count, plural, one {# diff has no signature: reload first.} other {# diffs have no signature: reload first.}}', { count: unsignedCount })
+      : applyAllWithBlockedDiffs === 'disable' && counts.blocked > 0
+        ? t('{count, plural, one {# diff is blocked: apply the others one by one or by selection.} other {# diffs are blocked: apply the others one by one or by selection.}}', {
+            count: counts.blocked,
+          })
+        : undefined;
+
+  // the drift marker: tables whose diff changed between two loads (a refetch or an apply's answer)
+  const shownBefore = useRef<readonly DBTableDiff[] | null>(null);
+  const [drifted, setDrifted] = useState<ReadonlySet<string>>(() => new Set());
+  useEffect(() => {
+    const previous = shownBefore.current;
+    shownBefore.current = diffs;
+    if (previous === null || previous === diffs) return;
+    setDrifted(new Set(driftedTableNames(previous, diffs)));
+  }, [diffs]);
   const busy = applyDiffState.isLoading || applyDiffsState.isLoading || applyingTable !== null;
   const writeAccess = forbiddenReason ? { allowed: false, reason: forbiddenReason } : outerWriteAccess;
   const writesAllowed = writeAccess.allowed && outerWriteAccess.allowed;
@@ -87,7 +136,7 @@ export const SchemaDiffScreen = ({ api, title, description, showGeneratedCode = 
     getKey: diff => diff.sqlTableName || null,
     // a new diff (other signatures) starts with an empty selection
     resetKey: diffs.map(diff => `${diff.sqlTableName}:${diff.diffSignature ?? ''}`).join('|'),
-    isSelectable: isApplicableDiff,
+    isSelectable: isBulkApplicableDiff,
     disabled: busy || !writesAllowed,
   });
 
@@ -96,8 +145,20 @@ export const SchemaDiffScreen = ({ api, title, description, showGeneratedCode = 
     setNotice(null);
     void diffQuery.refetch();
   }, [diffQuery]);
+  /** After a failed apply: the current diff again, the notice stays. */
+  const refetchKeepingNotice = () => {
+    setApplied(null);
+    void diffQuery.refetch();
+  };
 
   const handleFailure = (failure: DBApplyFailure) => {
+    if (failure.kind === 'forbidden' && failure.schemaWritesDisabled) {
+      setForbiddenReason(failure.message);
+      setNotice(null);
+      return;
+    }
+    // every other failure shows the server's answer over the diff as it is now
+    refetchKeepingNotice();
     if (failure.kind === 'signature-mismatch') {
       setNotice({
         tone: 'warning',
@@ -112,8 +173,7 @@ export const SchemaDiffScreen = ({ api, title, description, showGeneratedCode = 
       return;
     }
     if (failure.kind === 'forbidden') {
-      setForbiddenReason(failure.message);
-      setNotice(null);
+      setNotice({ tone: 'destructive', title: t('This apply is not allowed'), description: failure.message });
       return;
     }
     if (failure.kind === 'not-found') {
@@ -153,7 +213,7 @@ export const SchemaDiffScreen = ({ api, title, description, showGeneratedCode = 
       showAnswer(response);
       notify.success(t('Applied the diff of %table%', { replacements: { table: tableName } }));
     } catch (error) {
-      handleFailure(classifyApplyFailure(error, t('The diff could not be applied.')));
+      handleFailure(classifyApplyFailure(error, t('The diff could not be applied.'), isSchemaWritesRefusal));
     } finally {
       setApplyingTable(null);
     }
@@ -161,7 +221,8 @@ export const SchemaDiffScreen = ({ api, title, description, showGeneratedCode = 
 
   const handleApplyMany = async (scope: 'all' | 'selected') => {
     if (!writesAllowed || busy) return;
-    const targets = scope === 'all' ? applicable : applicable.filter(diff => selection.isSelected(diff.sqlTableName ?? ''));
+    if (scope === 'all' && applyAllReason) return;
+    const targets = (scope === 'all' ? applicable : applicable.filter(diff => selection.isSelected(diff.sqlTableName ?? ''))).filter(isBulkApplicableDiff);
     if (targets.length === 0) return;
     const targetCounts = countDiffSeverities(targets);
     const leftOut = scope === 'all' ? counts.blocked : 0;
@@ -196,7 +257,7 @@ export const SchemaDiffScreen = ({ api, title, description, showGeneratedCode = 
           : t('{count, plural, one {Applied; # diff still pending} other {Applied; # diffs still pending}}', { count: remaining })
       );
     } catch (error) {
-      handleFailure(classifyApplyFailure(error, t('The diffs could not be applied.')));
+      handleFailure(classifyApplyFailure(error, t('The diffs could not be applied.'), isSchemaWritesRefusal));
     }
   };
 
@@ -230,8 +291,8 @@ export const SchemaDiffScreen = ({ api, title, description, showGeneratedCode = 
                   {t('Apply selected (%count%)', { replacements: { count: selection.count } })}
                 </Button>
               </ControlHint>
-              <ControlHint disabledReason={writeReason}>
-                <Button type="button" disabled={!writesAllowed || busy || applicable.length === 0} onClick={() => void handleApplyMany('all')}>
+              <ControlHint disabledReason={writeReason ?? applyAllReason}>
+                <Button type="button" disabled={!writesAllowed || busy || applicable.length === 0 || Boolean(applyAllReason)} onClick={() => void handleApplyMany('all')}>
                   <Play aria-hidden />
                   {applyDiffsState.isLoading ? t('Applying…') : t('Apply all')}
                 </Button>
@@ -340,7 +401,8 @@ export const SchemaDiffScreen = ({ api, title, description, showGeneratedCode = 
                       isApplying={applyingTable === tableName}
                       onApply={blocked ? undefined : target => void handleApply(target)}
                       selected={selection.isSelected(tableName)}
-                      onSelectedChange={blocked || !tableName ? undefined : value => selection.setSelected(tableName, value)}
+                      drifted={drifted.has(tableName)}
+                      onSelectedChange={blocked || !tableName || !diff.diffSignature ? undefined : value => selection.setSelected(tableName, value)}
                     />
                   );
                 })}
@@ -355,7 +417,7 @@ export const SchemaDiffScreen = ({ api, title, description, showGeneratedCode = 
                 description={t('What the entities generate, to read, copy or download. Nothing here runs against the database.')}
               />
               <div className="grid min-w-0 grid-cols-1 gap-4">
-                <GeneratedCodePanel api={api} kind="tables" onForbidden={setForbiddenReason} />
+                <GeneratedCodePanel api={api} kind="tables" onForbidden={message => isSchemaWritesRefusal(message) && setForbiddenReason(message)} />
                 <GeneratedCodePanel api={api} kind="models" />
                 <GeneratedCodePanel api={api} kind="entity" />
               </div>

@@ -1,8 +1,8 @@
 'use client';
 
-import type { PropertyTranslations } from '@mgamadeus/ddd-web/contract';
+import { parseTranslationKey, type PropertyTranslations } from '@mgamadeus/ddd-web/contract';
 import { Loader2, Sparkles, Trash2 } from 'lucide-react';
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
 
 import { Button, Label } from '../primitives/index.ts';
 import { useConfirmDialog } from '../form/useConfirmDialog.tsx';
@@ -15,11 +15,32 @@ import { isInlineDescription } from '../primitives/descriptionContent.ts';
 import { ControlHint } from '../primitives/hint.tsx';
 import { countCodePoints, type TextCounter } from '../logic/pure/textLimits.ts';
 
+/** Why a translatable field's value changed: typing, "Clear all", or "Clear other languages". */
+export type TranslatableChangeReason = 'edit' | 'clear-all' | 'clear-others';
+
+/** The second argument of a translatable field's `onChange`. */
+export interface TranslatableChangeMeta {
+  reason: TranslatableChangeReason;
+}
+
+/** What `renderCounter` receives (the field's limit and the active text's length). */
+export interface TranslatableCounterArgs {
+  /** The active text's length, counted like the limit. */
+  count: number;
+  max: number;
+  over: boolean;
+  /** Characters over the limit (0 when under it). */
+  overBy: number;
+  /** The id the editor's `aria-describedby` points at: put it on the counter's element. */
+  id: string;
+}
+
 /** Props every translatable input shares (keyed by full `locale::style`). */
 export interface TranslatableFieldBaseProps {
   /** Full translation key → text of this field. */
   value: PropertyTranslations;
-  onChange: (value: PropertyTranslations) => void;
+  /** The next value, and why it changed (`meta.reason`: `edit`, `clear-all`, `clear-others`). */
+  onChange: (value: PropertyTranslations, meta?: TranslatableChangeMeta) => void;
   /** Tabs, from `useEntityTranslations().locales`. */
   locales: TranslatableLocale[];
   /** The form-wide tab (`useEntityTranslations().activeLocale`). */
@@ -74,12 +95,30 @@ export interface TranslatableFieldBaseProps {
   clearLabelVisible?: boolean;
   /** A line under the editor that names the language being edited ("Editing: German"). */
   showEditingLanguage?: boolean;
+  /**
+   * With `maxLength`: draws the counter instead of the built-in "12 / 80" line (shown under the same rules); put
+   * `args.id` on its element, the editor's `aria-describedby` points there.
+   */
+  renderCounter?: (args: TranslatableCounterArgs) => ReactNode;
 }
 
 interface TranslatableFieldProps extends TranslatableFieldBaseProps {
-  /** The editor for the active locale's text; `invalid`: an error or the active text over `maxLength`. */
-  children: (args: { id?: string; text: string; setText: (text: string) => void; localeLabel: string; invalid: boolean }) => ReactNode;
+  /**
+   * The editor for the active locale's text; `invalid`: an error or the active text over `maxLength`; `describedBy`:
+   * the id of the visible counter (the editor's `aria-describedby`), absent while no counter shows.
+   */
+  children: (args: {
+    id?: string;
+    text: string;
+    setText: (text: string) => void;
+    localeLabel: string;
+    invalid: boolean;
+    describedBy?: string;
+  }) => ReactNode;
 }
+
+/** Keys that are no `<language>:<country>:<style>` key: "Clear all" keeps them (they are no language's text). */
+const isLanguageKey = (key: string): boolean => parseTranslationKey(key) !== null;
 
 /**
  * Shared frame of `TranslatableInput` and `TranslatableMarkdown`, compact: one header row with the label left and, right of it, one tab per full `locale::style` key (filled tabs
@@ -113,20 +152,26 @@ export const TranslatableField = ({
   clearOtherLanguages = false,
   clearLabelVisible = false,
   showEditingLanguage = false,
+  renderCounter,
   children,
 }: TranslatableFieldProps) => {
   const { t } = useTranslate();
   const localeName = useLocaleName();
   const packageConfirm = useConfirmDialog();
   const confirm = hostConfirm ?? packageConfirm.confirm;
+  const counterId = useId();
   const active = locales.find(locale => locale.key === activeLocale);
+  // per-field tabs: the key a tab was typed in stays its key while the field is mounted (emptying FORMAL must not
+  // switch the tab to INFORMAL mid-typing)
+  const stickyKeys = useRef(new Map<string, string>());
   // the key this field edits under a tab: the tab's key, or (per-field tabs) the first key with text in this field
-  const editedKeyOf = (locale: TranslatableLocale | undefined, fallback: string) => (locale ? translationFieldKey(locale, value) : fallback);
+  const editedKeyOf = (locale: TranslatableLocale | undefined, fallback: string) =>
+    locale ? (locale.fieldKeys ? stickyKeys.current.get(locale.key) : undefined) ?? translationFieldKey(locale, value) : fallback;
   const activeKey = editedKeyOf(active, activeLocale);
   const labelOf = (locale: TranslatableLocale, editedKey: string) =>
     locale.fieldKeys && editedKey !== locale.key ? toTranslatableLocale(editedKey).label : locale.label;
   const activeLabel = active ? labelOf(active, activeKey) : activeLocale;
-  const hasAnyContent = Object.values(value).some(text => text.trim() !== '');
+  const hasAnyContent = Object.entries(value).some(([key, text]) => text.trim() !== '' && isLanguageKey(key));
   const activeLanguage = translationLanguageOf(activeKey);
   const hasOtherLanguageContent = Object.entries(value).some(
     ([key, text]) => text.trim() !== '' && translationLanguageOf(key) !== activeLanguage
@@ -156,7 +201,8 @@ export const TranslatableField = ({
       confirmLabel: t('Clear all', { context: 'translations-action' }),
       confirmVariant: 'destructive',
     });
-    if (confirmed) onChange({});
+    // keys that name no language (not `<language>:<country>:<style>`) are no language's text: they stay
+    if (confirmed) onChange(Object.fromEntries(Object.entries(value).filter(([key]) => !isLanguageKey(key))), { reason: 'clear-all' });
   };
 
   const handleClearOtherLanguages = async () => {
@@ -168,7 +214,11 @@ export const TranslatableField = ({
       confirmLabel: t('Clear other languages'),
       confirmVariant: 'destructive',
     });
-    if (confirmed) onChange(Object.fromEntries(Object.entries(value).filter(([key]) => translationLanguageOf(key) === activeLanguage)));
+    if (confirmed) {
+      onChange(Object.fromEntries(Object.entries(value).filter(([key]) => translationLanguageOf(key) === activeLanguage)), {
+        reason: 'clear-others',
+      });
+    }
   };
 
   const autoGenerateBlocked = !!autoGenerateDisabledReason;
@@ -307,9 +357,13 @@ export const TranslatableField = ({
       {children({
         id,
         text: value[activeKey] ?? '',
-        setText: text => onChange({ ...value, [activeKey]: text }),
+        setText: text => {
+          if (active?.fieldKeys) stickyKeys.current.set(active.key, activeKey);
+          onChange({ ...value, [activeKey]: text }, { reason: 'edit' });
+        },
         localeLabel: activeLabel,
         invalid: !!error || activeOver,
+        describedBy: showCounter ? counterId : undefined,
       })}
 
       {showEditingLanguage && (
@@ -317,8 +371,15 @@ export const TranslatableField = ({
           {t('Editing: %language%', { replacements: { language: localeName(activeKey) } })}
         </p>
       )}
-      {showCounter && (
-        <p className={cn('text-xs tabular-nums', activeOver ? 'text-destructive' : 'text-muted-foreground')}>
+      {showCounter && renderCounter?.({
+        count: activeCount,
+        max: maxLength,
+        over: activeOver,
+        overBy: Math.max(0, activeCount - maxLength),
+        id: counterId,
+      })}
+      {showCounter && !renderCounter && (
+        <p id={counterId} className={cn('text-xs tabular-nums', activeOver ? 'text-destructive' : 'text-muted-foreground')}>
           {t('%count% / %max%', { replacements: { count: activeCount, max: maxLength } })}
           {activeOver && (
             <>

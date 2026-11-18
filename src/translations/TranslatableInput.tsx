@@ -24,7 +24,7 @@ export const TranslatableInput = ({ multiline = false, rows = 4, placeholder, ..
   const maxLength = fieldProps.maxLength ?? (multiline ? limits.multiline : limits.singleLine);
   return (
   <TranslatableField {...fieldProps} maxLength={maxLength}>
-    {({ id, text, setText, localeLabel, invalid }) =>
+    {({ id, text, setText, localeLabel, invalid, describedBy }) =>
       multiline ? (
         <Textarea
           id={id}
@@ -34,6 +34,7 @@ export const TranslatableInput = ({ multiline = false, rows = 4, placeholder, ..
           rows={rows}
           disabled={fieldProps.disabled}
           aria-invalid={invalid}
+          aria-describedby={describedBy}
           className="field-sizing-fixed resize-y"
         />
       ) : (
@@ -44,6 +45,7 @@ export const TranslatableInput = ({ multiline = false, rows = 4, placeholder, ..
           placeholder={placeholder ?? t('Enter %language% text…', { replacements: { language: localeLabel } })}
           disabled={fieldProps.disabled}
           aria-invalid={invalid}
+          aria-describedby={describedBy}
         />
       )
     }

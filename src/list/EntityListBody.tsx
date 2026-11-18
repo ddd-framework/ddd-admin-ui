@@ -24,6 +24,14 @@ export interface EntityListBodyProps<TItem, TExtra extends string = never>
       | 'stickyHeaderTop'
       | 'markUnsortedHeaders'
       | 'rowHover'
+      | 'pinEdge'
+      | 'selectionColumnWidth'
+      | 'indexColumnWidth'
+      | 'selectionCellClassName'
+      | 'indexCellClassName'
+      | 'surface'
+      | 'selectAllLabel'
+      | 'columnWidthBox'
     > {
   displayMode: ListDisplayMode | TExtra;
   columns: EntityListColumn<TItem>[];
@@ -89,6 +97,14 @@ export const EntityListBody = <TItem, TExtra extends string = never>({
   stickyHeaderTop,
   markUnsortedHeaders,
   rowHover,
+  pinEdge,
+  selectionColumnWidth,
+  indexColumnWidth,
+  selectionCellClassName,
+  indexCellClassName,
+  surface,
+  selectAllLabel,
+  columnWidthBox,
   className,
   tableBreakpoint = 'md',
   ...data
@@ -110,6 +126,14 @@ export const EntityListBody = <TItem, TExtra extends string = never>({
     stickyHeaderTop,
     markUnsortedHeaders,
     rowHover,
+    pinEdge,
+    selectionColumnWidth,
+    indexColumnWidth,
+    selectionCellClassName,
+    indexCellClassName,
+    surface,
+    selectAllLabel,
+    columnWidthBox,
   };
   if (isExtraMode(displayMode) && renderExtraView) {
     return (

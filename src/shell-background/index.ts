@@ -2,5 +2,5 @@
 // lazily from inside it.
 export { SHADER_BACKGROUND_PROPERTIES, ShaderBackground } from './ShaderBackground.tsx';
 export type { ShaderBackgroundProps } from './ShaderBackground.tsx';
-export { tintShaderPalette } from './shader.ts';
+export { displacementMean, NEUTRAL_DISPLACEMENT_CENTER, tintShaderPalette } from './shader.ts';
 export type { Rgb, ShaderLook, ShaderPalette, ShaderTint } from './shader.ts';

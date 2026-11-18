@@ -13,11 +13,12 @@ import { Card, CardContent } from '../primitives/card.tsx';
 import { Skeleton } from '../primitives/skeleton.tsx';
 import type { CronsApi } from './api.ts';
 import { CronDurationChart } from './charts.tsx';
-import { formatCronCount, formatCronDateTime, formatCronDuration, formatCronRate } from './format.ts';
+import { formatCronCount, formatCronDuration, formatCronRate } from './format.ts';
 import { CronLastRun, CronNextRun, CronRowActions, CronScheduleText } from './parts.tsx';
 import { CronRunsView } from './runs.tsx';
 import { CRON_STATUS, toCronStatus } from './status.ts';
 import type { CronExecutionsResultFilter, CronOverview, CronStatus } from './types.ts';
+import { useCronTimeFormat } from './timeDisplay.ts';
 import { type CronActions, isCronRunQueued } from './useCronActions.ts';
 
 export interface CronDetailsDrawerProps {
@@ -30,16 +31,32 @@ export interface CronDetailsDrawerProps {
   onEdit?: (cron: CronOverview) => void;
   /** `false` stops the countdown (a showcase, a test). */
   tick?: boolean;
+  /** Refresh of the Cron's details in ms while the drawer is open (default 0 = off; its runs refresh on their own). */
+  pollingIntervalMs?: number;
+  /** Refresh of an open run's output while it runs, in ms (default 0 = off). */
+  outputPollingIntervalMs?: number;
 }
 
 /**
  * One Cron (`GET /{cronId}`) in a drawer: its definition with Run now, the switch, Edit and Delete, the next 5 slots,
  * the 14-day stats, the durations of the last 100 ended runs, and its runs.
  */
-export const CronDetailsDrawer = ({ api, open, cronId, onClose, actions, onEdit, tick = true }: CronDetailsDrawerProps) => {
+export const CronDetailsDrawer = ({
+  api,
+  open,
+  cronId,
+  onClose,
+  actions,
+  onEdit,
+  tick = true,
+  pollingIntervalMs = 0,
+  outputPollingIntervalMs = 0,
+}: CronDetailsDrawerProps) => {
   const { t } = useTranslate();
+  const { dateTime, viewerTime } = useCronTimeFormat();
   const [result, setResult] = useState<CronExecutionsResultFilter>('ALL');
-  const query = api.useCronQuery({ cronId: cronId ?? 0 }, { skip: cronId === null });
+  const polling = open && pollingIntervalMs > 0 ? { pollingInterval: pollingIntervalMs } : {};
+  const query = api.useCronQuery({ cronId: cronId ?? 0 }, { skip: cronId === null, ...polling });
   const detail = cronId === null ? undefined : query.currentData;
   const cron = detail?.cron;
   const stats = detail?.stats14d;
@@ -84,7 +101,11 @@ export const CronDetailsDrawer = ({ api, open, cronId, onClose, actions, onEdit,
                   { label: t('Last run'), value: <CronLastRun execution={cron.lastExecution} /> },
                 ]}
               />
-              <p className="mt-3 text-xs text-muted-foreground">{t('Times are on the server clock, the zone the runner evaluates the schedule in.')}</p>
+              <p className="mt-3 text-xs text-muted-foreground">
+                {viewerTime
+                  ? t('Times are in your time zone, converted from the server clock the runner evaluates the schedule in.')
+                  : t('Times are on the server clock, the zone the runner evaluates the schedule in.')}
+              </p>
             </CardContent>
           </Card>
 
@@ -95,7 +116,7 @@ export const CronDetailsDrawer = ({ api, open, cronId, onClose, actions, onEdit,
             ) : (
               <ol className="space-y-1 text-sm tabular-nums" data-slot="cron-next-slots">
                 {(detail.nextRuns.elements ?? []).map(slot => (
-                  <li key={slot.scheduledAt ?? ''}>{formatCronDateTime(slot.scheduledAt, { year: false })}</li>
+                  <li key={slot.scheduledAt ?? ''}>{dateTime(slot.scheduledAt, { year: false })}</li>
                 ))}
               </ol>
             )}
@@ -126,7 +147,7 @@ export const CronDetailsDrawer = ({ api, open, cronId, onClose, actions, onEdit,
 
           <section>
             <SectionHeader as="h3" title={t('Runs')} className="mb-2" />
-            <CronRunsView api={api} cronId={cron.id} result={result} onResultChange={setResult} compact pageSize={20} />
+            <CronRunsView api={api} cronId={cron.id} result={result} onResultChange={setResult} compact pageSize={20} outputPollingIntervalMs={outputPollingIntervalMs} />
           </section>
         </div>
       )}

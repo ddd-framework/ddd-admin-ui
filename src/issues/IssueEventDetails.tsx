@@ -7,14 +7,18 @@ import { formatUiNumber } from '../i18n/format.ts';
 import { m } from '../i18n/store.ts';
 import { useTranslate } from '../i18n/useTranslate.ts';
 import { DateCell } from '../list/cells.tsx';
+import { CopyButton } from '../list/CopyButton.tsx';
 import { StatusBadge } from '../list/StatusBadge.tsx';
 import { DefinitionList, type DefinitionItem } from '../page/DefinitionList.tsx';
 import { cn } from '../primitives/cn.ts';
 import {
   causeFrameViewsOf,
   codeContextRows,
+  issueFileLineOf,
   type IssueFrameView,
   issueFrameViewsOf,
+  issueStackText,
+  issueTopFrame,
   segmentIssueFrames,
 } from './format.ts';
 import type { IssueEventBreadcrumb, IssueEventCause, IssueEventDetail, IssueEventKeyValue, IssueEventWorkerContext } from './types.ts';
@@ -55,12 +59,17 @@ export const IssueCodeContext = ({ frame }: { frame: IssueFrameView }) => {
   );
 };
 
-const FrameLine = ({ frame, muted }: { frame: IssueFrameView; muted?: boolean }) => {
+const FrameLine = ({ frame, muted, copyLocation = false }: { frame: IssueFrameView; muted?: boolean; copyLocation?: boolean }) => {
   const { t } = useTranslate();
   return (
-    <div className={cn('min-w-0 break-all', muted && 'text-muted-foreground')}>
+    <div className={cn('group/frame min-w-0 break-all', muted && 'text-muted-foreground')}>
       {frame.functionName && <div className={cn(!muted && 'font-semibold')}>{frame.functionName}</div>}
-      <div className="text-muted-foreground">{frame.location}</div>
+      <div className="flex min-w-0 items-center gap-1 text-muted-foreground">
+        <span className="min-w-0">{frame.location}</span>
+        {copyLocation && frame.location !== '?' && (
+          <CopyButton value={issueFileLineOf(frame.location)} label={m('Copy file and line')} reveal="hover" className="shrink-0" />
+        )}
+      </div>
       {frame.minifiedLocation && (
         <div className="text-[11px] text-muted-foreground">{t('minified: %location%', { replacements: { location: frame.minifiedLocation } })}</div>
       )}
@@ -69,7 +78,7 @@ const FrameLine = ({ frame, muted }: { frame: IssueFrameView; muted?: boolean })
 };
 
 /** A stack, innermost frame first: application frames open, each run of framework frames folded to "+N framework frames". */
-export const IssueFrameList = ({ frames }: { frames: readonly IssueFrameView[] }) => {
+export const IssueFrameList = ({ frames, copyLocations = false }: { frames: readonly IssueFrameView[]; copyLocations?: boolean }) => {
   const { t } = useTranslate();
   if (frames.length === 0) return null;
   return (
@@ -77,7 +86,7 @@ export const IssueFrameList = ({ frames }: { frames: readonly IssueFrameView[] }
       {segmentIssueFrames(frames).map(segment =>
         segment.kind === 'app' ? (
           <li key={segment.index} data-frame="app">
-            <FrameLine frame={segment.frame} />
+            <FrameLine frame={segment.frame} copyLocation={copyLocations} />
             <IssueCodeContext frame={segment.frame} />
           </li>
         ) : (
@@ -161,7 +170,12 @@ export const IssueWorkerContext = ({ worker }: { worker: IssueEventWorkerContext
     {
       id: 'attempt',
       label: m('Attempt'),
-      value: worker.attempt === null || worker.attempt === undefined ? null : formatUiNumber(worker.attempt),
+      value:
+        worker.attempt === null || worker.attempt === undefined
+          ? null
+          : typeof worker.maxAttempts === 'number' && worker.maxAttempts > 0
+            ? t('%attempt% of %max%', { replacements: { attempt: formatUiNumber(worker.attempt), max: formatUiNumber(worker.maxAttempts) } })
+            : formatUiNumber(worker.attempt),
       hint: delivery,
     },
     { id: 'retryCount', label: m('Retries'), value: worker.retryCount === null || worker.retryCount === undefined ? null : formatUiNumber(worker.retryCount) },
@@ -210,11 +224,45 @@ const Breadcrumbs = ({ breadcrumbs }: { breadcrumbs: readonly IssueEventBreadcru
 export interface IssueEventDetailsProps {
   event: IssueEventDetail;
   className?: string;
+  /**
+   * A summary card on top: the error type and message, the innermost application frame (`file:line`, copyable), the
+   * time and the release. Default `false`.
+   */
+  summary?: boolean;
+  /** "Copy stack" on the stack and a copy button on each application frame's `file:line` (default `true`). */
+  copyActions?: boolean;
 }
 
-/** Every block of one occurrence: stack, causes, request, command, job, client, breadcrumbs, meta. */
-export const IssueEventDetails = ({ event, className }: IssueEventDetailsProps) => {
+/** The summary card of an occurrence (`IssueEventDetails` with `summary`). */
+export const IssueEventSummary = ({ event, className }: { event: IssueEventDetail; className?: string }) => {
   const { t } = useTranslate();
+  const top = issueTopFrame(issueFrameViewsOf(event));
+  const fileLine = top && top.location !== '?' ? issueFileLineOf(top.location) : null;
+  return (
+    <div data-slot="issue-event-summary" className={cn('min-w-0 space-y-1.5 rounded-lg border bg-muted/30 p-3', className)}>
+      <div className="text-sm font-semibold break-words">{event.errorType ?? t('Unknown error')}</div>
+      {event.message && <p className="line-clamp-3 text-sm break-words text-muted-foreground">{event.message}</p>}
+      {fileLine && (
+        <div className="flex min-w-0 items-center gap-1 font-mono text-xs">
+          <span className="min-w-0 break-all" data-slot="issue-event-file-line">
+            {top?.functionName ? `${top.functionName} · ` : ''}
+            {fileLine}
+          </span>
+          <CopyButton value={fileLine} label={m('Copy file and line')} className="shrink-0" />
+        </div>
+      )}
+      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+        {event.timestamp && <DateCell value={event.timestamp} />}
+        {event.release && <span className="font-mono break-all">{event.release}</span>}
+      </div>
+    </div>
+  );
+};
+
+/** Every block of one occurrence: stack, causes, request, command, job, client, breadcrumbs, meta. */
+export const IssueEventDetails = ({ event, className, summary = false, copyActions = true }: IssueEventDetailsProps) => {
+  const { t } = useTranslate();
+  const stackText = copyActions ? issueStackText(event) : '';
   const frames = issueFrameViewsOf(event);
   const parameters = event.routeParameters?.elements ?? [];
   const causes = event.causes?.elements ?? [];
@@ -225,9 +273,14 @@ export const IssueEventDetails = ({ event, className }: IssueEventDetailsProps) 
 
   return (
     <div data-slot="issue-event-details" className={cn('min-w-0 space-y-4', className)}>
-      {event.message && <p className="text-sm break-words">{event.message}</p>}
+      {summary ? <IssueEventSummary event={event} /> : event.message && <p className="text-sm break-words">{event.message}</p>}
       <IssueDetailBlock title={t('Stack')}>
-        {frames.length > 0 ? <IssueFrameList frames={frames} /> : rawStack ? null : <p className="text-sm text-muted-foreground">{t('No stack recorded.')}</p>}
+        {stackText && (
+          <div className="flex justify-end" data-slot="issue-copy-stack">
+            <CopyButton value={stackText} label={m('Copy stack')} />
+          </div>
+        )}
+        {frames.length > 0 ? <IssueFrameList frames={frames} copyLocations={copyActions} /> : rawStack ? null : <p className="text-sm text-muted-foreground">{t('No stack recorded.')}</p>}
         {event.resolveError && <p className="text-xs text-warning">{t('The source maps could not be read: %error%', { replacements: { error: event.resolveError } })}</p>}
         {rawStack &&
           (frames.length > 0 ? (

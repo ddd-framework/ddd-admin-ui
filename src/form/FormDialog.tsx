@@ -1,6 +1,15 @@
 'use client';
 
-import { type FormEvent, type ReactNode, type SyntheticEvent, useContext, useRef, useState } from 'react';
+import {
+  type ComponentProps,
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+  type SyntheticEvent,
+  useContext,
+  useRef,
+  useState,
+} from 'react';
 import { type FieldValues, FormProvider, type SubmitHandler, type UseFormReturn } from 'react-hook-form';
 
 import { useTranslate } from '../i18n/index.ts';
@@ -64,12 +73,21 @@ interface FormDialogBaseProps {
   result?: ReactNode;
   /** The Close button's label in the result state; default "Close". */
   closeLabel?: ReactNode;
+  /** More actions next to Close in the result state (copy the secret, open the created item), before Close. */
+  resultActions?: ReactNode;
+  /**
+   * `false`: Enter in a single-line field does not submit (a dialog whose fields take Enter themselves, or a submit that
+   * must be a deliberate click); ⌘S / Ctrl+S and the submit button still do. Default `true`.
+   */
+  submitOnEnter?: boolean;
+  /** Props of the description element (`className`, `id`, `data-*`). */
+  descriptionProps?: Omit<ComponentProps<typeof DialogDescription>, 'children' | 'asChild'>;
   /** The browser's own validation off (`noValidate`); default: off with `form` (the form library validates), on without. */
   noValidate?: boolean;
   /**
-   * Clicks and presses inside the dialog and on its overlay stop at the dialog: they do not reach the React ancestors
-   * of the place it is rendered (a portal bubbles through the React tree, so a dialog opened from a list row would
-   * otherwise run the row's action). Default `false`.
+   * Clicks and presses (`click`, `pointerdown`, `mousedown`) inside the dialog and on its overlay stop at the dialog:
+   * they do not reach the React ancestors of the place it is rendered (a portal bubbles through the React tree, so a
+   * dialog opened from a list row would otherwise run the row's action). Default `false`.
    */
   isolateEvents?: boolean;
 }
@@ -121,6 +139,9 @@ export const FormDialog = <TFieldValues extends FieldValues = FieldValues, TTran
     closeLabel,
     noValidate,
     isolateEvents = false,
+    resultActions,
+    submitOnEnter = true,
+    descriptionProps,
   } = props;
   const dataAttributes = Object.fromEntries(Object.entries(props).filter(([name]) => name.startsWith('data-')));
   const stopAtDialog = (event: SyntheticEvent) => event.stopPropagation();
@@ -168,11 +189,22 @@ export const FormDialog = <TFieldValues extends FieldValues = FieldValues, TTran
     void Promise.resolve(result).finally(() => setSubmitting(false));
   };
 
+  // `submitOnEnter={false}`: Enter in a single-line field is not an implicit submit (a textarea, a button keep theirs)
+  const blockEnterSubmit = (event: KeyboardEvent<HTMLFormElement>) => {
+    if (event.key !== 'Enter' || event.nativeEvent.isComposing) return;
+    const target = event.target;
+    // a field of a dialog opened from this one bubbles here through the React tree: its form decides
+    if (!(target instanceof HTMLInputElement) || target.form !== event.currentTarget) return;
+    if (['button', 'submit', 'reset', 'checkbox', 'radio', 'file', 'image'].includes(target.type)) return;
+    event.preventDefault();
+  };
+
   const body = (
     <form
       ref={formRef}
       noValidate={noValidate ?? props.form !== undefined}
       onSubmit={handleSubmit}
+      onKeyDown={submitOnEnter ? undefined : blockEnterSubmit}
       aria-busy={busy || undefined}
       className="grid gap-4"
     >
@@ -180,9 +212,9 @@ export const FormDialog = <TFieldValues extends FieldValues = FieldValues, TTran
         <DialogTitle>{title}</DialogTitle>
         {description &&
           (isInlineDescription(description) ? (
-            <DialogDescription>{description}</DialogDescription>
+            <DialogDescription {...descriptionProps}>{description}</DialogDescription>
           ) : (
-            <DialogDescription asChild>
+            <DialogDescription {...descriptionProps} asChild>
               <div>{description}</div>
             </DialogDescription>
           ))}
@@ -191,9 +223,12 @@ export const FormDialog = <TFieldValues extends FieldValues = FieldValues, TTran
       <DialogFooter ref={footerRef}>
         {footerStart && <div className="flex flex-wrap items-center gap-2 sm:me-auto">{footerStart}</div>}
         {showsResult ? (
-          <Button type="button" onClick={() => onOpenChange(false)}>
-            {closeLabel ?? t('Close', { context: 'form-dialog' })}
-          </Button>
+          <>
+            {resultActions}
+            <Button type="button" onClick={() => onOpenChange(false)}>
+              {closeLabel ?? t('Close', { context: 'form-dialog' })}
+            </Button>
+          </>
         ) : (
           <>
             <Button type="button" variant="outline" disabled={busy} onClick={() => void requestClose()}>

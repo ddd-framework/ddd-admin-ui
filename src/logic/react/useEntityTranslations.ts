@@ -12,6 +12,7 @@ import {
   type FieldTranslations,
   hydrateTranslations,
   mergeTranslatedStore,
+  translationsChanged,
 } from '../pure/translationState.ts';
 
 export interface UseEntityTranslationsOptions<F extends string> {
@@ -49,6 +50,13 @@ export interface UseEntityTranslationsOptions<F extends string> {
    * INFORMAL when only that exists), so one form can edit `de::INFORMAL` in one field and `de::FORMAL` in the next.
    */
   editedKeyPerField?: boolean;
+  /**
+   * The active tab, controlled (a full key or a language, resolved like `initialLocale`): the host keeps it (in the
+   * URL, shared across forms) and `setActiveLocale` calls `onActiveLocaleChange` instead of keeping its own state.
+   */
+  activeLocale?: string | null;
+  /** Called with the chosen tab's key (with or without a controlled `activeLocale`). */
+  onActiveLocaleChange?: (key: string) => void;
 }
 
 /** The tab state every translatable field of one form shares (pass it to `FormTranslatableInput`). */
@@ -77,7 +85,12 @@ export interface UseEntityTranslationsReturn<F extends string> extends Translati
    * not clear.
    */
   buildPayload: (translations: FieldTranslations<F>) => TranslationInfos;
-  /** Merges translated texts (an AI result) into `current`, filling blank entries only (pure; `setValue` it). */
+  /**
+   * `buildPayload`, or `undefined` when no non-blank text differs from the last `hydrate` (blank maps before one): a
+   * partial update leaves `translationInfos` out when nothing changed.
+   */
+  buildChangedPayload: (translations: FieldTranslations<F>) => TranslationInfos | undefined;
+  /** Merges translated texts (an AI result) into `current`, filling blank entries only, skipping blank incoming texts (pure; `setValue` it). */
   mergeTranslated: (current: FieldTranslations<F>, store: TranslationsStore) => FieldTranslations<F>;
   /** A field's text in the default locale (the plain property's value). */
   defaultValue: (translations: FieldTranslations<F>, field: F) => string;
@@ -103,11 +116,26 @@ export const useEntityTranslations = <F extends string>({
   initialLocale,
   offeredTabsOnly = false,
   editedKeyPerField = false,
+  activeLocale: controlledLocale,
+  onActiveLocaleChange,
 }: UseEntityTranslationsOptions<F>): UseEntityTranslationsReturn<F> => {
   /** Store entries of translatable properties this form does not edit: sent back unchanged. */
   const passthroughRef = useRef<TranslationsStore>({});
+  /** The texts of the last hydration (`buildChangedPayload` compares against them). */
+  const hydratedRef = useRef<FieldTranslations<F> | null>(null);
   const [storedKeys, setStoredKeys] = useState<string[]>([]);
-  const [selectedLocale, setActiveLocale] = useState<string | null>(null);
+  const [ownLocale, setOwnLocale] = useState<string | null>(null);
+  const controlled = controlledLocale !== undefined;
+  const selectedLocale = controlled ? controlledLocale : ownLocale;
+  const onActiveLocaleChangeRef = useRef(onActiveLocaleChange);
+  onActiveLocaleChangeRef.current = onActiveLocaleChange;
+  const setActiveLocale = useCallback(
+    (key: string) => {
+      if (!controlled) setOwnLocale(key);
+      onActiveLocaleChangeRef.current?.(key);
+    },
+    [controlled]
+  );
 
   const styleSignature = styleOrder?.join('|') ?? '';
   // biome-ignore lint/correctness/useExhaustiveDependencies: styleSignature stands for styleOrder (an inline array)
@@ -134,6 +162,7 @@ export const useEntityTranslations = <F extends string>({
     (entity: unknown) => {
       const hydrated = hydrateTranslations(entity, fields, defaultLocale);
       passthroughRef.current = hydrated.passthrough;
+      hydratedRef.current = hydrated.translations;
       const keys = new Set<string>();
       for (const field of fields) for (const key of Object.keys(hydrated.translations[field])) keys.add(key);
       setStoredKeys([...keys]);
@@ -145,6 +174,14 @@ export const useEntityTranslations = <F extends string>({
   const buildPayload = useCallback(
     (translations: FieldTranslations<F>) =>
       buildTranslationInfos(translations, passthroughRef.current, fields, defaultLocale),
+    [fields, defaultLocale]
+  );
+
+  const buildChangedPayload = useCallback(
+    (translations: FieldTranslations<F>) =>
+      translationsChanged(translations, hydratedRef.current ?? blankTranslations(fields), fields)
+        ? buildTranslationInfos(translations, passthroughRef.current, fields, defaultLocale)
+        : undefined,
     [fields, defaultLocale]
   );
 
@@ -173,6 +210,7 @@ export const useEntityTranslations = <F extends string>({
     empty,
     hydrate,
     buildPayload,
+    buildChangedPayload,
     mergeTranslated,
     defaultValue,
     hasContent,

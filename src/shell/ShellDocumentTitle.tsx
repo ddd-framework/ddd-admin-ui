@@ -68,7 +68,9 @@ export const ShellDocumentTitle = <TEntity extends string = string>({
   const items = (navigation ?? shell?.items ?? []) as readonly NavigationItem<string>[];
   const entityHook = (useEntityLabel ?? shell?.useEntityLabel) as UseEntityLabel<string> | undefined;
   const path = pathname !== undefined ? pathname : shell ? shell.pathname : adapterPathname;
-  const crumbs = useMemo(() => resolveCrumbs(path, items, { t }), [path, items, t]);
+  const leadingCrumbs = shell?.leadingCrumbs;
+  const search = shell?.search;
+  const crumbs = useMemo(() => resolveCrumbs(path, items, { t, leadingCrumbs, search }), [path, items, t, leadingCrumbs, search]);
   const [entityTexts, setEntityTexts] = useState<Readonly<Record<string, string | null>>>({});
   const onText = useCallback(
     (key: string, text: string | null) => setEntityTexts(current => (current[key] === text ? current : { ...current, [key]: text })),
@@ -76,7 +78,7 @@ export const ShellDocumentTitle = <TEntity extends string = string>({
   );
 
   // the entity crumbs that name the page (within `depth` of the current one)
-  const named = crumbs.filter(crumb => crumb.kind !== 'group').slice(-Math.max(1, depth));
+  const named = crumbs.filter(crumb => crumb.kind !== 'group' && !(crumb.kind === 'text' && crumb.scope)).slice(-Math.max(1, depth));
   const probes = entityHook ? (named.filter(crumb => crumb.kind === 'entity') as EntityCrumb[]) : [];
   const parts = documentTitleParts(crumbs, { depth, appName, entityText: crumb => entityTexts[crumb.key] });
   const computed = crumbs.length === 0 ? (outside === 'app-name' && appName ? appName : null) : parts.join(separator);

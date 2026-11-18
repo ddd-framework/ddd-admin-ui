@@ -30,6 +30,8 @@ export interface AccountMenuEntry {
   disabled?: boolean;
   /** A separator before this entry. */
   separatorBefore?: boolean;
+  /** Menu content right before this entry (after its separator): a heading, a status line. */
+  before?: ReactNode;
 }
 
 export interface AccountMenuProps {
@@ -54,6 +56,16 @@ export interface AccountMenuProps {
   /** Rendered instead of the menu without a `name`, so nobody is left without a way out. */
   fallback?: ReactNode;
   className?: string;
+  /** `full` (default): avatar, name (from `sm`) and chevron; `avatar`: the avatar alone (the button keeps its name). */
+  triggerVariant?: 'full' | 'avatar';
+  /** Classes of the menu's content (its width: default `w-72`). */
+  contentClassName?: string;
+  /** The menu's header: default the account summary; a node replaces it; `false` drops it with its separator. */
+  header?: ReactNode | false;
+  /** Extra classes of every entry. */
+  itemClassName?: string;
+  /** Menu content after the entries, before `children`. */
+  afterEntries?: ReactNode;
 }
 
 const initialsOf = (name: string): string => {
@@ -131,28 +143,41 @@ export const AccountMenu = ({
   beforeEntries,
   fallback,
   className,
+  triggerVariant = 'full',
+  contentClassName,
+  header,
+  itemClassName,
+  afterEntries,
 }: AccountMenuProps) => {
   const { t } = useTranslate();
   if (!name) return <>{fallback ?? null}</>;
+  const full = triggerVariant === 'full';
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={t('Account menu of %name%', { replacements: { name } })}
         data-shell-account-menu=""
         className={cn(
-          'inline-flex h-10 shrink-0 items-center gap-2 rounded-full p-1 text-sm font-medium text-foreground transition-colors outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-ring sm:pe-3',
+          'inline-flex h-10 shrink-0 items-center gap-2 rounded-full p-1 text-sm font-medium text-foreground transition-colors outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-ring',
+          full && 'sm:pe-3',
           className
         )}
       >
         {avatar ?? <AccountAvatar name={name} avatarUrl={avatarUrl} className={avatarClassName} />}
-        <span className="hidden max-w-48 truncate sm:inline">{name}</span>
-        <ChevronDown aria-hidden className="hidden size-4 text-muted-foreground sm:block" />
+        {full && <span className="hidden max-w-48 truncate sm:inline">{name}</span>}
+        {full && <ChevronDown aria-hidden className="hidden size-4 text-muted-foreground sm:block" />}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72">
-        <DropdownMenuLabel className="py-2 font-normal">
-          <AccountSummary name={name} description={description} avatarUrl={avatarUrl} avatar={avatar} avatarClassName={avatarClassName} />
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
+      <DropdownMenuContent align="end" className={contentClassName ? cn('w-72', contentClassName) : 'w-72'}>
+        {header !== false && (
+          <>
+            <DropdownMenuLabel className="py-2 font-normal">
+              {header ?? (
+                <AccountSummary name={name} description={description} avatarUrl={avatarUrl} avatar={avatar} avatarClassName={avatarClassName} />
+              )}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+          </>
+        )}
         {beforeEntries}
         {entries.map(entry => {
           const Icon = entry.icon;
@@ -165,18 +190,20 @@ export const AccountMenu = ({
           return (
             <Fragment key={entry.key}>
               {entry.separatorBefore && <DropdownMenuSeparator />}
+              {entry.before}
               {entry.href !== undefined ? (
-                <DropdownMenuItem asChild variant={entry.variant} disabled={entry.disabled} onSelect={entry.onSelect}>
+                <DropdownMenuItem asChild variant={entry.variant} disabled={entry.disabled} onSelect={entry.onSelect} className={itemClassName}>
                   <ShellNavLink item={{ key: entry.key, href: entry.href, external: entry.external }} data-nav-key={undefined} data-account-entry={entry.key}>{content}</ShellNavLink>
                 </DropdownMenuItem>
               ) : (
-                <DropdownMenuItem variant={entry.variant} disabled={entry.disabled} onSelect={entry.onSelect} data-account-entry={entry.key}>
+                <DropdownMenuItem variant={entry.variant} disabled={entry.disabled} onSelect={entry.onSelect} data-account-entry={entry.key} className={itemClassName}>
                   {content}
                 </DropdownMenuItem>
               )}
             </Fragment>
           );
         })}
+        {afterEntries}
         {children}
       </DropdownMenuContent>
     </DropdownMenu>

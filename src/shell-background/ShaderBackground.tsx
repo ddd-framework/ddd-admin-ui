@@ -63,14 +63,26 @@ export interface ShaderBackgroundProps {
   dark?: boolean;
   /** No input for this long → the frame holds (default 60 s). */
   idleAfterMs?: number;
-  /** Strength of the displacement field (default 2.2; `0` turns it off). */
-  displacementScale?: number;
+  /** Strength of the displacement field (default 2.2; `0` turns it off); `[x, y]`: per axis. */
+  displacementScale?: number | readonly [number, number];
   /** Grain of the displacement field: lattice cells per tile (default 8; more = finer). */
   displacementCells?: number;
   /** Opacity of the first blob, 0–1 (default 1). */
   blob1Opacity?: number;
   /** Opacity of the second blob, 0–1 (default 0.6). */
   blob2Opacity?: number;
+  /**
+   * Centre the displacement field on its own mean (default `false`): it warps the blobs without shifting them as a whole
+   * (a coarse field, few `displacementCells`, otherwise moves them by up to 0.41 of the viewport).
+   */
+  displacementZeroMean?: boolean;
+  /**
+   * A host image as the displacement field (a URL, same origin or served with CORS; red and green are the axes, resampled
+   * to 256 px and repeated). The generated field shows until it has loaded and when it cannot be read.
+   */
+  displacementImage?: string;
+  /** Holds the current frame (no animation) while `true`. */
+  paused?: boolean;
   className?: string;
 }
 
@@ -91,12 +103,20 @@ export const ShaderBackground = ({
   displacementCells,
   blob1Opacity,
   blob2Opacity,
+  displacementZeroMean,
+  displacementImage,
+  paused = false,
   className,
 }: ShaderBackgroundProps) => {
   const look: ShaderLook | undefined =
-    displacementScale === undefined && displacementCells === undefined && blob1Opacity === undefined && blob2Opacity === undefined
+    displacementScale === undefined &&
+    displacementCells === undefined &&
+    blob1Opacity === undefined &&
+    blob2Opacity === undefined &&
+    displacementZeroMean === undefined &&
+    displacementImage === undefined
       ? undefined
-      : { displacementScale, displacementCells, blob1Opacity, blob2Opacity };
+      : { displacementScale, displacementCells, blob1Opacity, blob2Opacity, displacementZeroMean, displacementImage };
   const hostRef = useRef<HTMLDivElement | null>(null);
   const [state, setState] = useState<{ palette: ShaderPalette; dark: boolean } | null>(null);
   const [reducedMotion, setReducedMotion] = useState(true);
@@ -131,7 +151,7 @@ export const ShaderBackground = ({
     <div ref={hostRef} aria-hidden data-shell-background="" className={className ?? 'pointer-events-none fixed inset-0 -z-10'}>
       {state && !reducedMotion && (
         <Suspense fallback={null}>
-          <ShaderCanvas palette={state.palette} dark={state.dark} idleAfterMs={idleAfterMs} look={look} className="size-full" />
+          <ShaderCanvas palette={state.palette} dark={state.dark} idleAfterMs={idleAfterMs} look={look} paused={paused} className="size-full" />
         </Suspense>
       )}
     </div>

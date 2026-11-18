@@ -21,9 +21,7 @@ import {
   cronNextRunState,
   deleteBlockedReason,
   describeCronSchedule,
-  formatCronClock,
   formatCronCount,
-  formatCronDateTime,
   formatCronDuration,
   formatCronRate,
   formatCronRelative,
@@ -35,11 +33,13 @@ import {
 import { CRON_EXECUTION_RESULT, CRON_STATUS, cronRunResultOf, toCronStatus } from './status.ts';
 import type { CronExecutionOverview, CronOverview, CronRunnerSummary, CronStatus } from './types.ts';
 import { type CronActions, isCronRunQueued } from './useCronActions.ts';
+import { useCronTimeFormat } from './timeDisplay.ts';
 import { useServerClock } from './useServerClock.ts';
 
 /** The runner's summary as tiles: active, paused, running, overdue, failing, missing command, the last 24 hours, the last run. */
 export const CronSummaryTiles = ({ runner, isLoading = false }: { runner?: CronRunnerSummary; isLoading?: boolean }) => {
   const { t } = useTranslate();
+  const { dateTime } = useCronTimeFormat();
   const lastRunMs = parseCronTime(runner?.lastRunStartedAt);
   const serverMs = parseCronTime(runner?.serverNow);
   return (
@@ -80,7 +80,7 @@ export const CronSummaryTiles = ({ runner, isLoading = false }: { runner?: CronR
               size="compact"
               label={t('Last run started')}
               icon={<CalendarClock aria-hidden />}
-              value={lastRunMs === null ? <EmptyValue /> : formatCronDateTime(lastRunMs)}
+              value={lastRunMs === null ? <EmptyValue /> : dateTime(lastRunMs)}
               hint={lastRunMs !== null && serverMs !== null ? formatCronRelative(lastRunMs, serverMs) : t('No run yet')}
             />
           </>
@@ -119,6 +119,7 @@ export const CronScheduleText = ({ schedule, className }: { schedule: string; cl
 /** The next run of a Cron, counted down against the server's clock (`serverNow`, ticking); none while paused. */
 export const CronNextRun = ({ cron, serverNow, tick = true, queued = false }: { cron: CronOverview; serverNow?: string | null; tick?: boolean; queued?: boolean }) => {
   const { t } = useTranslate();
+  const { dateTime, clock } = useCronTimeFormat();
   const serverMs = useServerClock(serverNow, { tick });
   const state = cronNextRunState(cron, serverMs);
   if (queued) {
@@ -144,12 +145,12 @@ export const CronNextRun = ({ cron, serverNow, tick = true, queued = false }: { 
   }
   if (state.kind === 'unknown') return <EmptyValue />;
   return (
-    <Hint content={formatCronDateTime(state.atMs, { seconds: true })} className="inline-flex">
+    <Hint content={dateTime(state.atMs, { seconds: true })} className="inline-flex">
       <span data-slot="cron-next-run" data-cron-next="due" className="flex flex-col gap-0.5">
         <span className={cn('text-sm tabular-nums', state.inMs < -120_000 && 'text-warning')}>
           {state.inMs < 0 ? t('due %relative%', { replacements: { relative: formatCronRelative(state.atMs, state.atMs - state.inMs) } }) : formatCronRelative(state.atMs, state.atMs - state.inMs)}
         </span>
-        <span className="text-xs text-muted-foreground tabular-nums">{formatCronClock(state.atMs)}</span>
+        <span className="text-xs text-muted-foreground tabular-nums">{clock(state.atMs)}</span>
       </span>
     </Hint>
   );
@@ -158,6 +159,7 @@ export const CronNextRun = ({ cron, serverNow, tick = true, queued = false }: { 
 /** The last run: result, start, duration and the first output line. */
 export const CronLastRun = ({ execution }: { execution?: CronExecutionOverview | null }) => {
   const { t } = useTranslate();
+  const { dateTime } = useCronTimeFormat();
   if (!execution) return <span className="text-xs text-muted-foreground">{t('Never ran')}</span>;
   const result = cronRunResultOf(execution);
   return (
@@ -165,7 +167,7 @@ export const CronLastRun = ({ execution }: { execution?: CronExecutionOverview |
       <span className="flex flex-wrap items-center gap-1.5">
         <StatusBadge value={result} map={CRON_EXECUTION_RESULT} />
         <span className="text-xs text-muted-foreground tabular-nums">
-          {formatCronDateTime(execution.startedAt)} · {formatCronDuration(execution.durationMs)}
+          {dateTime(execution.startedAt)} · {formatCronDuration(execution.durationMs)}
         </span>
       </span>
       {execution.outputPreview && (
@@ -185,6 +187,7 @@ const RUN_BAR_CLASS = { SUCCESSFUL: 'bg-success', FAILED: 'bg-destructive', RUNN
  */
 export const CronRunStrip = ({ runs, slots = 30 }: { runs: readonly CronExecutionOverview[]; slots?: number }) => {
   const { t } = useTranslate();
+  const { dateTime } = useCronTimeFormat();
   if (runs.length === 0) return <span className="text-xs text-muted-foreground">{t('No runs')}</span>;
   const longest = Math.max(1, ...runs.map(run => run.durationMs ?? 0));
   const ordered = [...runs.slice(0, slots)].reverse();
@@ -203,7 +206,7 @@ export const CronRunStrip = ({ runs, slots = 30 }: { runs: readonly CronExecutio
         return (
           <span
             key={run.id}
-            data-readout={`${formatCronDateTime(run.startedAt)} · ${t(CRON_EXECUTION_RESULT[result].label, { context: 'cron-run-result' })} · ${formatCronDuration(run.durationMs)}`}
+            data-readout={`${dateTime(run.startedAt)} · ${t(CRON_EXECUTION_RESULT[result].label, { context: 'cron-run-result' })} · ${formatCronDuration(run.durationMs)}`}
             className={cn('w-1 shrink-0 rounded-[1px]', RUN_BAR_CLASS[result])}
             style={{ height: `${Math.round(share * 100)}%` }}
           />
@@ -345,8 +348,11 @@ export const CronsTable = ({ crons, runner, actions, isLoading, error, onOpen, o
       id: 'name',
       header: m('Name'),
       cell: cron => (
-        <span className="flex max-w-72 min-w-40 flex-col gap-0.5">
-          <span className="font-medium">{cron.name}</span>
+        <span className="flex max-w-72 min-w-40 flex-col gap-0.5 overflow-hidden">
+          {/* clipped in its cell (a long kebab-case name has no break point); the details drawer shows it in full */}
+          <span className="block min-w-0 truncate font-medium" data-slot="cron-name">
+            {cron.name}
+          </span>
           {cron.description && (
             <Hint content={cron.description} className="line-clamp-2 text-xs text-muted-foreground">
               {cron.description}

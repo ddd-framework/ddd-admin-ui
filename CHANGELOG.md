@@ -3,6 +3,128 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.3.3
+
+Optional props for hosts moving their tables, shells, translatable fields and operations screens onto the package, a
+dependency-free `./logic/pure` entry (also CommonJS), and fixes listed per entry. Everything is additive: a caller that
+sets none of the new props renders as on 0.3.2, except two screen defaults (the crons status and runs filters, the
+issue copy actions) and the badge's `data-tone` (see there). The form actions snapshot is unchanged; the list snapshot
+differs only by `data-tone` on its badges.
+
+`./logic/pure` (new entry):
+
+- The dependency-free helpers of `./logic` in an entry of their own, loadable without React and `@mgamadeus/ddd-web`:
+  the navigation model and the crumb resolver (`resolveCrumbs`, `resolveDocumentTitle`, `filterNavigation`, …), list
+  sort and tracks, URL list state, sticky parameters, date inputs and presets, colour values, image crop geometry, text
+  limits, write access, the injected api helpers, `translateText`. Also built as CommonJS:
+  `require('@mgamadeus/ddd-admin-ui/logic/pure')` resolves `dist/cjs` (a CommonJS caller has its own copy of the text
+  store; pass `t` where a helper takes one). `./logic` exports the same names as before.
+- `NavigationIcon` is typed without React's types (a function or class component taking `NavigationIconProps`;
+  `lucide-react` icons and every component that took `className` still fit). `TranslateFn` lives in `./i18n`'s store
+  (re-exported where it was).
+
+`./list`:
+
+- `EntityListTable` (and `EntityListBody`): `pinEdge="overlay"` (one scroll-edge rule and shadow per side across the
+  header and the body instead of one per pinned cell; `data-list-pin-edges="overlay"`, `data-list-edge-overlay`),
+  `selectionColumnWidth`, `indexColumnWidth`, `selectionCellClassName`, `indexCellClassName`, `surface` (the colour of
+  header and pinned cells, set as `--list-surface`; new token), `selectAllLabel(loadedCount, hasMore)`,
+  `columnWidthBox="content-box"` (a fixed `width` and a `minWidth` name the content; the track adds the cell padding).
+- Fixes: Shift with a press in the selection cell (and on the select-all cell) no longer selects page text (the
+  mousedown default is prevented with Shift); with `rowHover="action"` the pinned cells of a row without an action no
+  longer tint on hover (such a row carries `data-list-row-hover="none"`).
+- `EntityListBulkBar`: `deleteTranslate={false}`, `deleteClassName`, `deleteCountClassName`; a choice's `className`
+  (its label then sits in a truncating span). With `countClassName` the label is one element (`data-bulk-label`), so
+  the button's gap no longer opens between the label, the brackets and the count.
+
+`./form`: `FormDialog` `resultActions` (next to Close in the result state), `submitOnEnter={false}` (Enter in a
+single-line field does not submit; the button and ⌘S / Ctrl+S still do), `descriptionProps`. `isolateEvents` already
+stopped `pointerdown` and `mousedown` as well as `click` (now documented and covered by a browser test).
+
+`./translations`, `./logic`:
+
+- `TranslatableLanguageInput`: `texts` in the change name every language of the store and of `texts`, not only the
+  offered ones (a cleared language maps to `''`); the change carries `reason` (`edit`, `clear-all`, `clear-others`); a
+  language keeps the key it was typed in while mounted (emptying FORMAL no longer switches the tab to INFORMAL while
+  typing); blank texts are dropped from the reported `store` only, not from the editing state (a leading space is
+  typable and reported in `texts`). New `TranslatableLanguageMarkdown` (the same binding for the markdown field).
+- Translatable fields: `onChange(value, { reason })`; per-field tabs (`fieldKeys`) keep the key they were typed in
+  while mounted; `renderCounter` (a host counter; the built-in one gets an id); the editor's `aria-describedby` points at
+  the visible counter (`describedBy` in the render args of `TranslatableMarkdown`). "Clear all" keeps keys that name no
+  language (not `<language>:<country>:<style>`) and is off while only such keys hold text.
+- `useEntityTranslations`: controlled `activeLocale` / `onActiveLocaleChange`; `buildChangedPayload` (`undefined` when
+  no non-blank text differs from the last hydration); `mergeTranslated` skips blank incoming texts.
+- Pure: `languageTextsOf` / `storeWithLanguageTexts` take `{ editedKeys, keepBlank }`; `languagesOfStore`,
+  `translationsChanged`.
+
+`./shell`, `./shell-background`:
+
+- Parts without the frame: `ShellNavDisplayContext`, `ShellNavDisplayProvider` (`ShellSidebar`, `ShellNavList`,
+  `ShellNavRail`, `ShellMobileMenu` draw as inside `AppShell`).
+- `AppShell`: `mobileMenuHeader` (default `brand`), `navBadgeClassName`, `navChildListClassName`, `navListClassName`,
+  `sidebarNavClassName` (`ShellSidebar navClassName`), `navigationLoading` (skeleton rows in the list and the rail),
+  `navOpenGroupKeys` / `onNavOpenGroupKeysChange` (controlled open groups, one per level; a route change reports the
+  active group), `railFlyoutClassName`, `railGroupPageRow={false}` (the flyout heading links to the group's page),
+  `topBarClassName`, `topBarRowClassName`, `leadingCrumbs`, `search`, `canAccessCrumb`, `breadcrumbFoldWidths`,
+  `collapsedStorageValues`, `collapseShortcutOptions`. `ShellTopBar` `rowClassName`, `data-*`.
+- `AccountMenu` `triggerVariant="avatar"` (no name, no chevron), `contentClassName`, `header` (a node or `false`),
+  `itemClassName`, `afterEntries`, entry `before`; `LanguageMenu` `icon`, `iconVisibility="always"` (the icon below
+  640 px too; the trigger itself was never hidden), `contentClassName`, `heading`, `renderOption` (also on
+  `LanguageMenuSub` / `LanguageMenuItems` where they apply).
+- `ShellBreadcrumbs` `leadingCrumbs`, `search`, `canAccessCrumb`, `foldWidths` (custom thresholds through a scoped
+  style; the default classes stay); `EntityLabelResult` `node`, `link`, `state` (`data-crumb-state`).
+  `useSidebarCollapsed(key, { values })`, `useShellShortcut(key, onPress, { media, ignoreSelector })`.
+- `ShaderBackground`: `displacementScale` per axis (`[x, y]`), `displacementZeroMean` (the field's measured mean as
+  its centre; off by default, the default look keeps its offset), `displacementImage` (a host image as the field,
+  same-origin or CORS), `paused`; `displacementMean`, `NEUTRAL_DISPLACEMENT_CENTER`.
+- `./logic` (navigation): `resolveCrumbs` options `leadingCrumbs` (crumbs of kind `text` with `scope: true`, never in
+  a document title), `search`, `canAccessCrumb`; `queryCrumbs` on leaves and routes, `crumbOnly`, `crumbLink`,
+  `crumbHidden`; `menuNavigation`, `menuNavigationOf`; types `LeadingCrumb`, `QueryCrumb`, `NavigationIconProps`.
+
+`./crons`:
+
+- `CronsScreen`: a status filter (URL key `status`, with "Need attention") and a Cron filter on the global runs list
+  (URL key `runsCron`), shown by default (`statusFilter={false}`, `runsCronFilter={false}`); `sort="severity"` (worst
+  first; default `name`); `detailsPollingIntervalMs`, `timelinePollingIntervalMs`, `outputPollingIntervalMs` (default
+  0); `timeZone="viewer"` with `serverUtcOffsetMinutes` (`CronTimeDisplayProvider`, `useCronTimeFormat`).
+  `CronRunsView` `cronOptions`, `cronFilterId`, `onCronFilterChange`. Helpers `sortCrons`, `CRON_STATUS_SEVERITY`,
+  `cronStatusRank`, `matchesCronStatusFilter`, `toCronStatusFilter`, `CRON_ATTENTION_STATUSES`,
+  `estimateCronServerOffsetMs`, `normalizeCronName`, `isLegacyCronName`.
+- A stored command that cannot be scheduled (or is missing from the build) stays read-only in the form with its reason
+  and "Pick another command". A name stored before the kebab-case rule saves unchanged and is found in either spelling.
+- Fix: the name in the Crons table clips (`data-slot="cron-name"`) instead of running into the schedule column.
+
+`./issues`: `IssuesScreen` `customTrendRange` (`IssuesTrendRangeControl`; URL keys `from` / `to`, at most 31 days),
+`environmentLabels`, `headerActions`, `pagination="load-more"`, `eventSummary`; `IssueEventDetails` `summary`
+(`IssueEventSummary`) and `copyActions` (Copy stack, copy file:line; on by default). A job's attempt reads "2 of 3" when
+the payload has `maxAttempts`. Helpers `toIssuesWindowValue`, `resolveIssuesCustomRange`, `resolveIssuesTrendRange`,
+`issueTopFrame`, `issueFileLineOf`, `issueStackText`, `issueEnvironmentLabel`, `ISSUES_CUSTOM_WINDOW`,
+`ISSUES_MAX_RANGE_MS`.
+
+`./database`: a 403 shows the server's message; only the schema-write refusal turns writes off until remount
+(`DBApplyFailure.schemaWritesDisabled`, `isSchemaWritesDisabledMessage`, `SCHEMA_WRITES_DISABLED_MESSAGE_PATTERN`,
+`SchemaDiffScreen isSchemaWritesRefusal`). A failed apply refetches the diff. "Apply all" is off while a diff has no
+signature (unsigned diffs are not bulk targets, `isBulkApplicableDiff`); `applyAllWithBlockedDiffs="disable"`. The card
+shows the server's `directApplyBlockReason` and a drift mark (`SchemaDiffCard drifted`, `data-drifted`,
+`driftedTableNames`).
+
+`./provider`, `./form`, `./primitives`: `AdminUiProvider confirmWithPhrase` (`'package'` or a function: confirmations
+with `requirePhrase` bypass a text-only host `confirm`); `ConfirmDialogView` and its types exported.
+
+`./list`: `StatusBadge` carries `data-tone`; the soft surface binds to `--<status>-soft` with the same 15 % fallback,
+with or without `theme.css`. This changes the list snapshot by the added `data-tone` attributes only (nothing else).
+
+`./logic`: `ApiQueryResult.refetch` returns `ApiRefetchCall<TData> | void` (new type; the static hooks return an object
+with `unwrap()`).
+
+Texts: new keys "Loading navigation"; crons "All Crons", "All statuses", "Search Crons…", "Pick another command",
+"%reading% · next runs (your time):", "Started %start% (your time) · %duration%", "Times are in your time zone, converted
+from the server clock…", "This build does not have this command; it is kept as stored.", "This command cannot be
+scheduled here; it is kept as stored."; issues "%attempt% of %max%", "Copy file and line", "Copy stack", "Custom" /
+"From" / "To" (context `trend-window`), "The range must end after it starts and span at most 31 days."; schema diff
+"Changed" (context `schema-diff-drift`), "This diff changed since the previous load.", "This apply is not allowed" and
+two plural "Apply all" reasons.
+
 ## 0.3.2
 
 Optional props for hosts moving their own lists, forms and frames onto the package. Everything is additive: a caller

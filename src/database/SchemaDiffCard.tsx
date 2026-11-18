@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, Database, Play } from 'lucide-react';
+import { ChevronDown, Database, Play, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 
 import { formatUiNumber } from '../i18n/format.ts';
@@ -87,6 +87,8 @@ export interface SchemaDiffCardProps {
   onSelectedChange?: (selected: boolean) => void;
   /** The details (per-aspect changes and statements) start open. */
   defaultExpanded?: boolean;
+  /** This table's diff changed since the previous load (another signature): a "Changed" mark and `data-drifted`. */
+  drifted?: boolean;
 }
 
 /**
@@ -103,6 +105,7 @@ export const SchemaDiffCard = ({
   selected,
   onSelectedChange,
   defaultExpanded = false,
+  drifted = false,
 }: SchemaDiffCardProps) => {
   const { t } = useTranslate();
   const writeAccess = useWriteAccess();
@@ -126,6 +129,7 @@ export const SchemaDiffCard = ({
       data-slot="schema-diff-card"
       data-table={tableName}
       data-blocked={blocked ? '' : undefined}
+      data-drifted={drifted ? '' : undefined}
       aria-label={t('Diff of %table%', { replacements: { table: tableName } })}
       className={cn('min-w-0 gap-0 py-0', blocked && 'ring-2 ring-destructive/40')}
     >
@@ -147,6 +151,14 @@ export const SchemaDiffCard = ({
               <StatusBadge value={diff.severity} map={SEVERITY_MAP} />
               {size && <StatusBadge tone="neutral" icon={Database} label={size} />}
               {blocked && <StatusBadge tone="danger" icon={DB_APPLY_BLOCKED_ICON} label={t('Apply blocked')} />}
+              {drifted && (
+                <StatusBadge
+                  tone="warning"
+                  icon={RefreshCw}
+                  label={t('Changed', { context: 'schema-diff-drift' })}
+                  title={t('This diff changed since the previous load.')}
+                />
+              )}
             </div>
             {entityClass && (
               <Hint content={entityClass} className="block max-w-full truncate font-mono text-xs text-muted-foreground">
@@ -182,6 +194,11 @@ export const SchemaDiffCard = ({
             title={t('Direct apply blocked by the large-table guard')}
             description={
               <div className="space-y-2">
+                {diff.directApplyBlockReason && (
+                  <p className="break-words" data-slot="schema-diff-block-reason">
+                    {diff.directApplyBlockReason}
+                  </p>
+                )}
                 <p>
                   {t('The table holds %size% (thresholds: %sizeThreshold% MB or %rowThreshold% rows), and the diff forces a copy of the whole table:', {
                     replacements: {

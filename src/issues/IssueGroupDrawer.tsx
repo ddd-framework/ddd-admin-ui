@@ -21,7 +21,7 @@ import { Button } from '../primitives/button.tsx';
 import { ControlHint, Hint } from '../primitives/hint.tsx';
 import { Skeleton } from '../primitives/skeleton.tsx';
 import type { IssuesApi } from './api.ts';
-import { issueShowCommand, parseIssueGroupKey, sortIssueEventsNewestFirst, trendBarsOf } from './format.ts';
+import { issueEnvironmentLabel, issueShowCommand, parseIssueGroupKey, sortIssueEventsNewestFirst, trendBarsOf } from './format.ts';
 import { IssueDetailBlock, IssueEventDetails } from './IssueEventDetails.tsx';
 import { IssuesTrendBars } from './IssuesTrendChart.tsx';
 import { ISSUE_GROUP_STATUS, toIssueGroupStatus } from './status.ts';
@@ -128,6 +128,10 @@ export interface IssueGroupDrawerProps {
   /** The screen's trend window: the group's sparkline shows the same one. */
   trendWindow: { from: string; to: string };
   onGroupChanged?: (group: IssueGroupSummary) => void;
+  /** Each occurrence starts with its summary card (`IssueEventDetails` `summary`). Default `false`. */
+  eventSummary?: boolean;
+  /** Labels of environment codes (`{ prod: 'Production' }`), shown instead of the code. */
+  environmentLabels?: Readonly<Record<string, string>>;
 }
 
 /**
@@ -135,7 +139,7 @@ export interface IssueGroupDrawerProps {
  * link) and "Copy for agent", the group's trend, where it happens (its issues) and the last occurrences. When the log
  * backend cannot be read, `eventsError` stands in for the occurrences; the group and its issues stay usable.
  */
-export const IssueGroupDrawer = ({ api, drawer, trendWindow, onGroupChanged }: IssueGroupDrawerProps) => {
+export const IssueGroupDrawer = ({ api, drawer, trendWindow, onGroupChanged, eventSummary = false, environmentLabels }: IssueGroupDrawerProps) => {
   const { t } = useTranslate();
   const arg = parseIssueGroupKey(drawer.shown?.mode === 'edit' ? drawer.shown.id : null);
   const query = api.useIssueGroupDetailQuery(arg ?? { environment: '', groupHash: '' }, { skip: arg === null });
@@ -157,7 +161,15 @@ export const IssueGroupDrawer = ({ api, drawer, trendWindow, onGroupChanged }: I
           <Skeleton className="h-48 rounded-xl" />
         </div>
       ) : (
-        <IssueGroupDetailBody api={api} arg={arg} detail={detail} trendWindow={trendWindow} onGroupChanged={onGroupChanged} />
+        <IssueGroupDetailBody
+          api={api}
+          arg={arg}
+          detail={detail}
+          trendWindow={trendWindow}
+          onGroupChanged={onGroupChanged}
+          eventSummary={eventSummary}
+          environmentLabels={environmentLabels}
+        />
       )}
     </FormDrawer>
   );
@@ -169,12 +181,16 @@ const IssueGroupDetailBody = ({
   detail,
   trendWindow,
   onGroupChanged,
+  eventSummary,
+  environmentLabels,
 }: {
   api: IssuesApi;
   arg: IssueGroupArg;
   detail: IssueGroupDetailResponse;
   trendWindow: { from: string; to: string };
   onGroupChanged?: (group: IssueGroupSummary) => void;
+  eventSummary: boolean;
+  environmentLabels?: Readonly<Record<string, string>>;
 }) => {
   const { t } = useTranslate();
   const trendQuery = api.useIssuesTrendQuery({ environment: arg.environment, groupHash: arg.groupHash, from: trendWindow.from, to: trendWindow.to });
@@ -219,7 +235,7 @@ const IssueGroupDetailBody = ({
       <DefinitionList
         layout="rows"
         items={[
-          { id: 'environment', label: m('Environment'), value: group.environment },
+          { id: 'environment', label: m('Environment'), value: issueEnvironmentLabel(group.environment, environmentLabels) },
           { id: 'section', label: m('Section'), value: group.section },
           { id: 'route', label: m('Entry point'), value: group.routePattern && <span className="font-mono text-xs break-all">{group.routePattern}</span> },
           { id: 'events', label: m('Events'), value: t('about %count%', { replacements: { count: formatUiNumber(group.eventCount) } }), hint: t('Counts are approximate (the collector may replay events).') },
@@ -289,7 +305,7 @@ const IssueGroupDetailBody = ({
                   <span className="min-w-0 flex-1 truncate font-medium">{event.errorType ?? group.exceptionType}</span>
                 </summary>
                 <div className="border-t px-3 py-3">
-                  <IssueEventDetails event={event} />
+                  <IssueEventDetails event={event} summary={eventSummary} />
                 </div>
               </details>
             ))}

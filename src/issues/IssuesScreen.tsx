@@ -29,19 +29,22 @@ import type { IssuesApi } from './api.ts';
 import {
   ALL_ISSUE_ENVIRONMENTS,
   ISSUE_GROUPS_PAGE_SIZE,
+  issueEnvironmentLabel,
   issueGroupKey,
+  ISSUES_CUSTOM_WINDOW,
   type IssuesWindowPreset,
-  resolveIssuesWindow,
-  toIssuesWindowPreset,
+  type IssuesWindowValue,
+  resolveIssuesTrendRange,
+  toIssuesWindowValue,
 } from './format.ts';
 import { IssueGroupDrawer, IssueGroupFlags } from './IssueGroupDrawer.tsx';
-import { IssuesTrendCard, IssuesWindowSwitch } from './IssuesTrendChart.tsx';
+import { IssuesTrendCard, IssuesTrendRangeControl, IssuesWindowSwitch } from './IssuesTrendChart.tsx';
 import { ISSUE_GROUP_STATUS, toIssueGroupStatus } from './status.ts';
 import type { IssueGroupsListArg, IssueGroupStatus, IssueGroupSummary, IssueStatusFilter } from './types.ts';
 
-const LIST_KEYS = ['environment', 'status', 'q', 'section', 'release', 'window', 'page'] as const;
-/** Scope, tab, search, window and page are not panel filters. */
-const UNCOUNTED = ['environment', 'status', 'q', 'window', 'page'] as const;
+const LIST_KEYS = ['environment', 'status', 'q', 'section', 'release', 'window', 'page', 'from', 'to'] as const;
+/** Scope, tab, search, window (and its custom range) and page are not panel filters. */
+const UNCOUNTED = ['environment', 'status', 'q', 'window', 'page', 'from', 'to'] as const;
 const STATUS_FILTERS: readonly IssueStatusFilter[] = ['OPEN', 'RESOLVED', 'IGNORED', 'ALL'];
 const toStatusFilter = (value: string): IssueStatusFilter => (STATUS_FILTERS as readonly string[]).includes(value) ? (value as IssueStatusFilter) : 'OPEN';
 
@@ -72,6 +75,19 @@ export interface IssuesScreenProps {
   asSpecimen?: boolean;
   /** Pins the end of the trend window (a showcase, a test); default: now, taken again on a window change or a return to the tab. */
   trendAnchorMs?: number;
+  /** A "Custom" choice in the window switch: from and to, at most 31 days apart (URL keys `from`, `to`). Default `false`. */
+  customTrendRange?: boolean;
+  /** Labels of environment codes (`{ prod: 'Production' }`): the switch, the column and the drawer show them instead of the code. */
+  environmentLabels?: Readonly<Record<string, string>>;
+  /** Page actions at the right edge of the header (a link to the alert settings). */
+  headerActions?: ReactNode;
+  /**
+   * `pages` (default): 50 groups per page with Previous / Next. `load-more`: the list grows by 50 when it is scrolled to
+   * its end (the infinite-scroll tail of the list; a filter change starts again at 50).
+   */
+  pagination?: 'pages' | 'load-more';
+  /** Each occurrence in the drawer starts with its summary card (type, message, `file:line`, time, release). */
+  eventSummary?: boolean;
 }
 
 /**
@@ -81,7 +97,20 @@ export interface IssuesScreenProps {
  * Resolve / Ignore / Reopen. An empty list while the registry is unhealthy says "unknown", never "no errors". Writes
  * follow `WriteAccessProvider`.
  */
-export const IssuesScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, description, asSpecimen, trendAnchorMs }: IssuesScreenProps) => {
+export const IssuesScreen = ({
+  api,
+  urlStateAdapter,
+  drawerUrlAdapter,
+  title,
+  description,
+  asSpecimen,
+  trendAnchorMs,
+  customTrendRange = false,
+  environmentLabels,
+  headerActions,
+  pagination = 'pages',
+  eventSummary = false,
+}: IssuesScreenProps) => {
   const { t } = useTranslate();
   const memory = useMemoryUrlState();
   const drawer = useEntityDrawer({ adapter: drawerUrlAdapter ?? memory.drawerUrlAdapter, editKey: 'issue' });
@@ -89,8 +118,10 @@ export const IssuesScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, de
   const { values, debounced, setValues } = listState;
 
   const status = toStatusFilter(values.status);
-  const windowPreset = toIssuesWindowPreset(values.window);
-  const page = Math.max(1, Number.parseInt(values.page, 10) || 1);
+  const windowValue: IssuesWindowValue = customTrendRange ? toIssuesWindowValue(values.window) : toIssuesWindowValue(values.window === ISSUES_CUSTOM_WINDOW ? '' : values.window);
+  const windowPreset: IssuesWindowPreset = windowValue === ISSUES_CUSTOM_WINDOW ? '24h' : windowValue;
+  const loadMoreMode = pagination === 'load-more';
+  const page = loadMoreMode ? 1 : Math.max(1, Number.parseInt(values.page, 10) || 1);
   const search = debounced.q.trim();
   const release = debounced.release.trim();
   const section = values.section;
@@ -98,6 +129,10 @@ export const IssuesScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, de
   // a filter change starts at page 1 again
   const setFilter = (updates: Partial<Record<(typeof LIST_KEYS)[number], string>>) => setValues({ page: '', ...updates });
 
+  // load-more: the groups of the earlier pages stay; the query reads the next page (a filter change starts again)
+  const filterKey = [values.environment, status, search, section, release].join('\u0001');
+  const [loadMoreState, setLoadMoreState] = useState<{ key: string; offset: number; earlier: IssueGroupSummary[] }>({ key: filterKey, offset: 0, earlier: [] });
+  const stitched = loadMoreMode && loadMoreState.key === filterKey ? loadMoreState : { key: filterKey, offset: 0, earlier: [] as IssueGroupSummary[] };
   const listArg = useMemo<IssueGroupsListArg>(
     () => ({
       ...(values.environment ? { environment: values.environment } : {}),
@@ -106,9 +141,9 @@ export const IssuesScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, de
       ...(section ? { section } : {}),
       ...(release ? { release } : {}),
       limit: ISSUE_GROUPS_PAGE_SIZE,
-      offset: (page - 1) * ISSUE_GROUPS_PAGE_SIZE,
+      offset: loadMoreMode ? stitched.offset : (page - 1) * ISSUE_GROUPS_PAGE_SIZE,
     }),
-    [values.environment, status, search, section, release, page]
+    [values.environment, status, search, section, release, page, loadMoreMode, stitched.offset]
   );
   const listQuery = api.useIssueGroupsQuery(listArg);
   const response = listQuery.currentData ?? listQuery.data;
@@ -117,7 +152,13 @@ export const IssuesScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, de
   const isAll = environment === ALL_ISSUE_ENVIRONMENTS;
   const counts = response?.statusCounts;
   const health = response?.health;
-  const loadedGroups = useMemo(() => listQuery.currentData?.groups.elements ?? [], [listQuery.currentData]);
+  const pageGroups = useMemo(() => listQuery.currentData?.groups.elements ?? [], [listQuery.currentData]);
+  const earlierGroups = stitched.earlier;
+  const loadedGroups = useMemo(() => {
+    if (earlierGroups.length === 0) return pageGroups;
+    const seen = new Set(earlierGroups.map(issueGroupKey));
+    return [...earlierGroups, ...pageGroups.filter(group => !seen.has(issueGroupKey(group)))];
+  }, [earlierGroups, pageGroups]);
   const patches = useOptimisticRowPatches(loadedGroups, issueGroupKey);
   const groups = patches.displayed;
   const { begin, succeed } = patches;
@@ -140,8 +181,11 @@ export const IssuesScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, de
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, [trendAnchorMs]);
-  const trendWindow = useMemo(() => resolveIssuesWindow(windowPreset, trendAnchorMs ?? anchorMs), [windowPreset, trendAnchorMs, anchorMs]);
-  const changeWindow = (next: IssuesWindowPreset) => {
+  const trendWindow = useMemo(
+    () => resolveIssuesTrendRange(windowValue, trendAnchorMs ?? anchorMs, { from: values.from, to: values.to }),
+    [windowValue, trendAnchorMs, anchorMs, values.from, values.to]
+  );
+  const changeWindow = (next: IssuesWindowValue) => {
     if (trendAnchorMs === undefined) setAnchorMs(Date.now());
     setValues({ window: next });
   };
@@ -149,7 +193,12 @@ export const IssuesScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, de
   const jobStalled = health?.jobStalled === true;
   const collectorSilent = !jobStalled && health?.collectorSilent === true;
   const noEnvironments = listQuery.isSuccess && environments.length === 0;
-  const hasNextPage = groups.length >= ISSUE_GROUPS_PAGE_SIZE;
+  const hasNextPage = loadMoreMode ? pageGroups.length >= ISSUE_GROUPS_PAGE_SIZE : groups.length >= ISSUE_GROUPS_PAGE_SIZE;
+  const loadMore = () => {
+    if (!listQuery.currentData || !hasNextPage) return;
+    setLoadMoreState({ key: filterKey, offset: stitched.offset + ISSUE_GROUPS_PAGE_SIZE, earlier: loadedGroups });
+  };
+  const envLabel = (code: string) => issueEnvironmentLabel(code, environmentLabels);
   const isFiltered = Boolean(search || section || release);
 
   const emptyMessage = noEnvironments
@@ -184,7 +233,7 @@ export const IssuesScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, de
         </div>
       ),
     },
-    ...(isAll ? [{ id: 'environment', header: m('Environment'), width: '120px' as const, cell: (group: IssueGroupSummary) => <span className="font-mono text-xs">{group.environment}</span> }] : []),
+    ...(isAll ? [{ id: 'environment', header: m('Environment'), width: '120px' as const, cell: (group: IssueGroupSummary) => <span className={environmentLabels?.[group.environment] ? 'text-xs' : 'font-mono text-xs'}>{envLabel(group.environment)}</span> }] : []),
     ...(status === 'ALL'
       ? [{ id: 'status', header: m('Status'), width: '130px' as const, cell: (group: IssueGroupSummary) => <StatusBadge value={(toIssueGroupStatus(group.status) ?? group.status) as IssueGroupStatus} map={ISSUE_GROUP_STATUS} /> }]
       : []),
@@ -228,6 +277,7 @@ export const IssuesScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, de
       asSpecimen={asSpecimen}
       title={title ?? t('Issues')}
       description={description ?? t('Errors of every environment, grouped by root cause.')}
+      headerActions={headerActions}
       belowHeader={
         <div data-slot="issues-screen" className="min-w-0 space-y-4">
           {jobStalled && (
@@ -268,12 +318,12 @@ export const IssuesScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, de
                 height={32}
                 translate={false}
                 options={[
-                  ...environments.map(code => ({ value: code, label: code })),
+                  ...environments.map(code => ({ value: code, label: envLabel(code) })),
                   { value: ALL_ISSUE_ENVIRONMENTS, label: t('All environments') },
                 ]}
               />
             ) : environment ? (
-              <p className="text-sm text-muted-foreground">{t('Environment: %name%', { replacements: { name: environment } })}</p>
+              <p className="text-sm text-muted-foreground">{t('Environment: %name%', { replacements: { name: envLabel(environment) } })}</p>
             ) : null}
             <SegmentedControl<IssueStatusFilter>
               aria-label={t('Status')}
@@ -295,7 +345,20 @@ export const IssuesScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, de
               from: trendWindow.from,
               to: trendWindow.to,
             }}
-            actions={<IssuesWindowSwitch value={windowPreset} onValueChange={changeWindow} />}
+            actions={
+              customTrendRange ? (
+                <IssuesTrendRangeControl
+                  value={windowValue}
+                  onValueChange={changeWindow}
+                  customFrom={values.from}
+                  customTo={values.to}
+                  onCustomRangeChange={range => setValues({ from: range.from, to: range.to })}
+                  currentWindow={trendWindow}
+                />
+              ) : (
+                <IssuesWindowSwitch value={windowPreset} onValueChange={changeWindow} />
+              )
+            }
           />
         </div>
       }
@@ -332,7 +395,8 @@ export const IssuesScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, de
         getRowKey={issueGroupKey}
         rowAction={rowAction}
         rowKeyboardActivation
-        isLoading={!listQuery.currentData && !listQuery.isError}
+        isLoading={!listQuery.currentData && !listQuery.isError && earlierGroups.length === 0}
+        {...(loadMoreMode ? { hasMore: hasNextPage, isFetchingMore: listQuery.isFetching && earlierGroups.length > 0, onLoadMore: loadMore } : {})}
         emptyMessage={emptyMessage}
         noResultsMessage={t('No errors match the filters.')}
         isSearchActive={isFiltered}
@@ -340,7 +404,7 @@ export const IssuesScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, de
         loadingMessage={t('Loading error groups')}
         error={listError}
       />
-      {(page > 1 || hasNextPage) && (
+      {!loadMoreMode && (page > 1 || hasNextPage) && (
         <div data-slot="issues-pager" className="flex items-center justify-between gap-2 border-t px-4 py-3">
           <Button type="button" variant="outline" size="sm" disabled={page <= 1} onClick={() => setValues({ page: page <= 2 ? '' : String(page - 1) })}>
             <ChevronLeft aria-hidden />
@@ -353,7 +417,14 @@ export const IssuesScreen = ({ api, urlStateAdapter, drawerUrlAdapter, title, de
           </Button>
         </div>
       )}
-      <IssueGroupDrawer api={api} drawer={drawer} trendWindow={trendWindow} onGroupChanged={replaceGroup} />
+      <IssueGroupDrawer
+        api={api}
+        drawer={drawer}
+        trendWindow={trendWindow}
+        onGroupChanged={replaceGroup}
+        eventSummary={eventSummary}
+        environmentLabels={environmentLabels}
+      />
     </EntityListPage>
   );
 };

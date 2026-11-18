@@ -50,7 +50,16 @@ export interface ApiQueryResult<TData> {
   isSuccess: boolean;
   isError: boolean;
   error?: unknown;
-  refetch: () => unknown;
+  /**
+   * Fetches the current arguments again. RTK Query answers the started request (`unwrap()` resolves with the data or
+   * rejects with the error); the static hooks (`staticQueryHook`) answer the fixed data the same way.
+   */
+  refetch: () => ApiRefetchCall<TData> | void;
+}
+
+/** A started refetch (RTK Query's `QueryActionCreatorResult`, the part the screens use). */
+export interface ApiRefetchCall<TData> {
+  unwrap: () => Promise<TData>;
 }
 
 /** Options of a query hook (RTK Query's names). */
@@ -184,7 +193,8 @@ export const staticQueryHook =
     }
     const answered = answer(arg);
     if (isStaticQueryFailure(answered)) {
-      return { isLoading: false, isFetching: false, isSuccess: false, isError: true, error: answered.error, refetch: () => undefined };
+      const error = answered.error;
+      return { isLoading: false, isFetching: false, isSuccess: false, isError: true, error, refetch: () => ({ unwrap: () => Promise.reject(error) }) };
     }
     const data = answered;
     return {
@@ -194,7 +204,7 @@ export const staticQueryHook =
       isFetching: false,
       isSuccess: data !== undefined,
       isError: false,
-      refetch: () => undefined,
+      refetch: () => ({ unwrap: () => (data === undefined ? new Promise<TData>(() => undefined) : Promise.resolve(data)) }),
     };
   };
 

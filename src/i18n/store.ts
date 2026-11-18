@@ -20,6 +20,9 @@ export interface TranslateOptions {
   replacements?: Record<string, string | number>;
 }
 
+/** A translate function (`useTranslate().t`, `translateText`): the English text (plus options) → the shown text. */
+export type TranslateFn = (text: string, options?: TranslateOptions) => string;
+
 interface TranslationState {
   languageCode: string;
   writingStyle: WritingStyle;

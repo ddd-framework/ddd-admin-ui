@@ -201,36 +201,61 @@ export const languageEditedKey = (
   return languageKeysOf(language, store, order).find(key => (store[key] ?? '').trim() !== '') ?? translationKeyOf(language, order[0] as WritingStyle);
 };
 
+/** Options of `languageTextsOf` and `storeWithLanguageTexts`. */
+export interface LanguageTextsOptions {
+  /**
+   * The key a language edits, fixed (language → full key, `{ de: 'de::FORMAL' }`), instead of `languageEditedKey`: a
+   * language keeps editing the key it was edited in even after that key's text was emptied.
+   */
+  editedKeys?: Readonly<Record<string, string>>;
+  /** `storeWithLanguageTexts`: keep blank entries (the state being edited: a leading space stays typable). */
+  keepBlank?: boolean;
+}
+
+/** The languages of a store's keys (`de::INFORMAL`, `de:at:FORMAL` → `de`, `de:at`), in key order, once each. */
+export const languagesOfStore = (store: Readonly<Record<string, string>>): string[] => [
+  ...new Set(Object.keys(store).map(translationLanguageOf)),
+];
+
+const editedKeyIn = (
+  store: Readonly<Record<string, string>>,
+  language: string,
+  styleOrder: readonly WritingStyle[] | undefined,
+  options: LanguageTextsOptions
+): string => options.editedKeys?.[language] ?? languageEditedKey(store, language, styleOrder);
+
 /**
  * One text per language from a field's full store (`{ 'de::INFORMAL': 'Hallo', 'en::FORMAL': 'Hello' }` →
- * `{ de: 'Hallo', en: 'Hello' }`): the text of each language's edited key (`languageEditedKey`). `languages`: the
- * languages to read (`de`, `de:at`; a full key counts as its language); default every language of the store. A
- * language without text maps to `''`.
+ * `{ de: 'Hallo', en: 'Hello' }`): the text of each language's edited key (`languageEditedKey`, or the fixed key of
+ * `options.editedKeys`). `languages`: the languages to read (`de`, `de:at`; a full key counts as its language);
+ * default every language of the store. A language without text maps to `''`.
  */
 export const languageTextsOf = (
   store: Readonly<Record<string, string>>,
   languages?: readonly string[],
-  styleOrder?: readonly WritingStyle[]
+  styleOrder?: readonly WritingStyle[],
+  options: LanguageTextsOptions = {}
 ): Record<string, string> => {
-  const wanted = languages ? languages.map(translationLanguageOf) : [...new Set(Object.keys(store).map(translationLanguageOf))];
+  const wanted = languages ? languages.map(translationLanguageOf) : languagesOfStore(store);
   const texts: Record<string, string> = {};
-  for (const language of wanted) texts[language] = store[languageEditedKey(store, language, styleOrder)] ?? '';
+  for (const language of wanted) texts[language] = store[editedKeyIn(store, language, styleOrder, options)] ?? '';
   return texts;
 };
 
 /**
  * A field's full store with one text per language written in (`texts`: language → text): each text goes to the
- * language's edited key (`languageEditedKey`), every other key stays as it is, and blank entries are dropped. A
- * language missing from `texts` is left untouched.
+ * language's edited key (`languageEditedKey`, or the fixed key of `options.editedKeys`), every other key stays as it
+ * is, and blank entries are dropped (kept with `options.keepBlank`). A language missing from `texts` is left untouched.
  */
 export const storeWithLanguageTexts = (
   store: Readonly<Record<string, string>>,
   texts: Readonly<Record<string, string>>,
-  styleOrder?: readonly WritingStyle[]
+  styleOrder?: readonly WritingStyle[],
+  options: LanguageTextsOptions = {}
 ): Record<string, string> => {
   const next: Record<string, string> = { ...store };
-  for (const [language, text] of Object.entries(texts)) next[languageEditedKey(store, translationLanguageOf(language), styleOrder)] = text;
-  return Object.fromEntries(Object.entries(next).filter(([, text]) => text.trim() !== ''));
+  for (const [language, text] of Object.entries(texts)) next[editedKeyIn(store, translationLanguageOf(language), styleOrder, options)] = text;
+  return options.keepBlank ? next : Object.fromEntries(Object.entries(next).filter(([, text]) => text.trim() !== ''));
 };
 
 /**

@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronDown } from 'lucide-react';
-import { useContext, useEffect, useId, useState } from 'react';
+import { useContext, useEffect, useId, useRef, useState } from 'react';
 
 import { useTranslate } from '../i18n/useTranslate.ts';
 import {
@@ -16,6 +16,7 @@ import {
 import { cn } from '../primitives/cn.ts';
 import { NAV_GROUP_ACTIVE_CLASS, NAV_ICON_CLASS, NAV_ROW_ACTIVE_CLASS, NAV_ROW_CLASS } from './navClasses.ts';
 import { NavItemMarks } from './NavItemMarks.tsx';
+import { NavSkeletonRows } from './NavSkeletonRows.tsx';
 import { ShellNavLink } from './ShellNavLink.tsx';
 import { ShellNavDisplayContext } from './shellContext.ts';
 
@@ -48,7 +49,7 @@ const NavLeafRow = ({ item, pathname, active, onNavigate, child }: { item: Navig
     >
       {Icon ? <Icon aria-hidden className={cn(NAV_ICON_CLASS, child && 'size-4')} /> : child ? null : <span aria-hidden className="size-[1.125rem] shrink-0" />}
       <span className="min-w-0 truncate">{t(item.label)}</span>
-      <NavItemMarks item={item} />
+      <NavItemMarks item={item} badgeClassName={display.badgeClassName} />
     </ShellNavLink>
   );
 };
@@ -139,7 +140,7 @@ const NavGroupRow = ({
             onNavigate={onNavigate}
             depth={depth + 1}
             inert={!open}
-            className="ms-5 pt-1"
+            className={display.childListClassName ? cn('ms-5 pt-1', display.childListClassName) : 'ms-5 pt-1'}
           />
         </div>
       </div>
@@ -158,9 +159,33 @@ const ShellNavTree = ({
   className,
 }: ShellNavListProps & { depth: number; id?: string; inert?: boolean; className?: string }) => {
   // one open group per level; the group of the current route opens on every route change
+  const display = useContext(ShellNavDisplayContext);
   const activeGroupKey = activeGroupKeyOf(items, active);
-  const [openKey, setOpenKey] = useState<string | null>(activeGroupKey);
-  useEffect(() => setOpenKey(activeGroupKey), [activeGroupKey]);
+  const [ownOpenKey, setOwnOpenKey] = useState<string | null>(activeGroupKey);
+  // controlled (`openGroupKeys`): the latest keys, so two levels changing in one commit do not undo each other
+  const controlledKeys = display.openGroupKeys;
+  const latestKeys = useRef(controlledKeys);
+  latestKeys.current = controlledKeys;
+  const onKeysChange = useRef(display.onOpenGroupKeysChange);
+  onKeysChange.current = display.onOpenGroupKeysChange;
+  const levelKeys = items.filter(isNavigationGroup).map(item => item.key);
+  const controlled = controlledKeys !== undefined;
+  const openKey = controlled ? (levelKeys.find(key => controlledKeys.includes(key)) ?? null) : ownOpenKey;
+  const setOpenKey = (update: string | null | ((current: string | null) => string | null)) => {
+    if (!controlled) {
+      setOwnOpenKey(update);
+      return;
+    }
+    const current = latestKeys.current ?? [];
+    const currentLevelKey = levelKeys.find(key => current.includes(key)) ?? null;
+    const nextLevelKey = typeof update === 'function' ? update(currentLevelKey) : update;
+    if (nextLevelKey === currentLevelKey && current.filter(key => levelKeys.includes(key)).length <= 1) return;
+    const next = [...current.filter(key => !levelKeys.includes(key)), ...(nextLevelKey === null ? [] : [nextLevelKey])];
+    latestKeys.current = next;
+    onKeysChange.current?.(next);
+  };
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a route change re-opens the active group; setOpenKey reads refs
+  useEffect(() => setOpenKey(activeGroupKey), [activeGroupKey, controlled]);
 
   return (
     <ul id={id} inert={inert} className={cn('space-y-1', className)}>
@@ -192,4 +217,8 @@ const ShellNavTree = ({
  * label and toggles with the caret). The current entry carries `aria-current="page"`. Lists are `<ul>`, groups are
  * disclosure buttons (`aria-expanded`, `aria-controls`); a closed group's entries are `inert`.
  */
-export const ShellNavList = (props: ShellNavListProps) => <ShellNavTree {...props} depth={0} />;
+export const ShellNavList = (props: ShellNavListProps) => {
+  const display = useContext(ShellNavDisplayContext);
+  if (display.loading) return <NavSkeletonRows count={display.loading === true ? undefined : display.loading} className={display.listClassName} />;
+  return <ShellNavTree {...props} depth={0} className={display.listClassName} />;
+};

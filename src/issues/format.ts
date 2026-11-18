@@ -171,6 +171,66 @@ export const codeContextRows = (
 export const sortIssueEventsNewestFirst = (events: readonly IssueEventDetail[]): IssueEventDetail[] =>
   [...events].sort((a, b) => (parseIssuesTime(b.timestamp) ?? 0) - (parseIssuesTime(a.timestamp) ?? 0));
 
+// ── custom trend range, stack text, labels ──────────────────────────────────────────────────────────────────────────
+
+/** The window value of a custom range (`from` / `to` chosen by the viewer). */
+export const ISSUES_CUSTOM_WINDOW = 'custom';
+/** A preset or a custom range. */
+export type IssuesWindowValue = IssuesWindowPreset | typeof ISSUES_CUSTOM_WINDOW;
+/** The longest range the trend endpoint takes. */
+export const ISSUES_MAX_RANGE_MS = 31 * 24 * 3_600_000;
+
+/** A window value from the URL, `custom` included; anything unknown is the default preset. */
+export const toIssuesWindowValue = (value: string | null | undefined): IssuesWindowValue =>
+  value === ISSUES_CUSTOM_WINDOW ? ISSUES_CUSTOM_WINDOW : toIssuesWindowPreset(value);
+
+/**
+ * A custom range as the ISO bounds the trend takes, or `null` when it is unusable: a bound missing or unreadable, `to`
+ * not after `from`, or longer than 31 days.
+ */
+export const resolveIssuesCustomRange = (from: string | null | undefined, to: string | null | undefined): { from: string; to: string } | null => {
+  const fromMs = parseIssuesTime(from);
+  const toMs = parseIssuesTime(to);
+  if (fromMs === null || toMs === null || toMs <= fromMs || toMs - fromMs > ISSUES_MAX_RANGE_MS) return null;
+  return { from: toIsoSeconds(fromMs), to: toIsoSeconds(toMs) };
+};
+
+/**
+ * The trend window of a window value: a preset ends at the minute of `anchorMs`; `custom` is its range (the default
+ * preset when the range is unusable).
+ */
+export const resolveIssuesTrendRange = (
+  value: IssuesWindowValue,
+  anchorMs: number,
+  custom: { from?: string | null; to?: string | null } = {}
+): { from: string; to: string } =>
+  (value === ISSUES_CUSTOM_WINDOW ? resolveIssuesCustomRange(custom.from, custom.to) : null) ??
+  resolveIssuesWindow(value === ISSUES_CUSTOM_WINDOW ? DEFAULT_ISSUES_WINDOW : value, anchorMs);
+
+/** The frame a reader looks at first: the innermost application frame, else the innermost frame; `null` without frames. */
+export const issueTopFrame = (frames: readonly IssueFrameView[]): IssueFrameView | null => frames.find(frame => frame.isApp) ?? frames[0] ?? null;
+
+/** `file:line` of a frame's location (`src/a.php:42:7` → `src/a.php:42`), for an editor's "go to file". */
+export const issueFileLineOf = (location: string): string => {
+  const match = /^(.*?:\d+)(?::\d+)?$/.exec(location);
+  return match?.[1] ?? location;
+};
+
+/**
+ * The stack of an event as plain text for the clipboard: the raw (resolved) stack trace when recorded, else one line
+ * per frame (`function (file:line)`), innermost first; `''` without either.
+ */
+export const issueStackText = (event: IssueEventDetail): string => {
+  const raw = event.resolvedStackTrace || event.stackTrace;
+  if (raw) return raw;
+  return issueFrameViewsOf(event)
+    .map(frame => (frame.functionName ? `${frame.functionName} (${frame.location})` : frame.location))
+    .join('\n');
+};
+
+/** The label of an environment code (`environmentLabels` of the screen), else the code. */
+export const issueEnvironmentLabel = (code: string, labels?: Readonly<Record<string, string>>): string => labels?.[code] || code;
+
 /** The command that prints the same group again, for an agent (`app:issues:show`). */
 export const issueShowCommand = ({ environment, groupHash }: IssueGroupArg): string =>
   `php bin/console app:issues:show ${groupHash} --environment=${environment} --events=3 --format=json`;

@@ -47,13 +47,29 @@ export interface LanguageMenuProps {
   triggerAriaLabel?: string;
   /** The submenu trigger's text (`LanguageMenuSub`), already translated, instead of "Language: <name>". */
   triggerLabel?: string;
+  /** The trigger's icon instead of the languages icon (`false`: none); also the submenu trigger's. */
+  icon?: ReactNode | false;
+  /** `sm` (default): the trigger's icon shows from 640 px (the code alone below); `always`: at every width. */
+  iconVisibility?: 'sm' | 'always';
+  /** Classes of the menu's content (its width: default `w-64`; the submenu's `w-60`). */
+  contentClassName?: string;
+  /** The heading over the choices: default "Language"; a node replaces it; `false` drops it. */
+  heading?: ReactNode | false;
+  /** The content of one choice instead of the native name and the English name (the check stays). */
+  renderOption?: (language: LanguageOption, checked: boolean) => ReactNode;
 }
 
 const PILL_CLASS =
   'inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-medium text-foreground uppercase tabular-nums transition-colors outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50';
 
 /** The language rows (menu items with a radio role and a check on the current one). */
-export const LanguageMenuItems = ({ languages, current, onChange, isPending }: Pick<LanguageMenuProps, 'languages' | 'current' | 'onChange' | 'isPending'>) => (
+export const LanguageMenuItems = ({
+  languages,
+  current,
+  onChange,
+  isPending,
+  renderOption,
+}: Pick<LanguageMenuProps, 'languages' | 'current' | 'onChange' | 'isPending' | 'renderOption'>) => (
   <>
     {languages.map(language => {
       const checked = language.code === current;
@@ -68,12 +84,16 @@ export const LanguageMenuItems = ({ languages, current, onChange, isPending }: P
           }}
           className="justify-between gap-3"
         >
-          <span className="min-w-0 truncate">
-            <span lang={language.code}>{language.nativeName}</span>
-            {language.englishName && language.englishName !== language.nativeName && (
-              <span className="ms-1.5 text-xs text-muted-foreground">{language.englishName}</span>
-            )}
-          </span>
+          {renderOption ? (
+            renderOption(language, checked)
+          ) : (
+            <span className="min-w-0 truncate">
+              <span lang={language.code}>{language.nativeName}</span>
+              {language.englishName && language.englishName !== language.nativeName && (
+                <span className="ms-1.5 text-xs text-muted-foreground">{language.englishName}</span>
+              )}
+            </span>
+          )}
           <Check aria-hidden className={cn('size-4', checked ? 'opacity-100' : 'opacity-0')} />
         </DropdownMenuItem>
       );
@@ -99,6 +119,11 @@ export const LanguageMenu = ({
   hideWhenSingle = true,
   className,
   triggerAriaLabel,
+  icon,
+  iconVisibility = 'sm',
+  contentClassName,
+  heading,
+  renderOption,
 }: LanguageMenuProps) => {
   const { t } = useTranslate();
   if (hideWhenSingle && languages.length < 2 && !children) return null;
@@ -111,14 +136,25 @@ export const LanguageMenu = ({
       >
         {isPending ? (
           <Loader2 aria-hidden className="size-4 animate-spin text-muted-foreground" />
+        ) : icon === false ? null : icon !== undefined ? (
+          <span aria-hidden className={cn('shrink-0 text-muted-foreground', iconVisibility === 'sm' && 'hidden sm:inline-flex')}>
+            {icon}
+          </span>
         ) : (
-          <Languages aria-hidden className="hidden size-4 text-muted-foreground sm:block" />
+          <Languages aria-hidden className={iconVisibility === 'always' ? 'size-4 text-muted-foreground' : 'hidden size-4 text-muted-foreground sm:block'} />
         )}
         <span translate="no">{current}</span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="max-h-[min(32rem,var(--radix-dropdown-menu-content-available-height))] w-64 overflow-y-auto">
-        <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">{t('Language')}</DropdownMenuLabel>
-        <LanguageMenuItems languages={languages} current={current} onChange={onChange} isPending={isPending} />
+      <DropdownMenuContent
+        align="end"
+        className={
+          contentClassName
+            ? cn('max-h-[min(32rem,var(--radix-dropdown-menu-content-available-height))] w-64 overflow-y-auto', contentClassName)
+            : 'max-h-[min(32rem,var(--radix-dropdown-menu-content-available-height))] w-64 overflow-y-auto'
+        }
+      >
+        {heading !== false && <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">{heading ?? t('Language')}</DropdownMenuLabel>}
+        <LanguageMenuItems languages={languages} current={current} onChange={onChange} isPending={isPending} renderOption={renderOption} />
         {children}
         {note && <div className="max-w-60 px-2 py-1.5 text-xs text-muted-foreground">{note}</div>}
       </DropdownMenuContent>
@@ -134,18 +170,31 @@ export const LanguageMenuSub = ({
   isPending,
   note,
   triggerLabel,
-}: Omit<LanguageMenuProps, 'children' | 'hideWhenSingle' | 'className' | 'triggerAriaLabel'>) => {
+  icon,
+  contentClassName,
+  heading,
+  renderOption,
+}: Omit<LanguageMenuProps, 'children' | 'hideWhenSingle' | 'className' | 'triggerAriaLabel' | 'iconVisibility'>) => {
   const { t } = useTranslate();
   return (
     <DropdownMenuSub>
       <DropdownMenuSubTrigger>
-        <Languages aria-hidden />
+        {icon === undefined ? <Languages aria-hidden /> : icon === false ? null : icon}
         <span className="min-w-0 flex-1 truncate">
           {triggerLabel ?? t('Language: %language%', { replacements: { language: currentName(languages, current) } })}
         </span>
       </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent className="max-h-[min(32rem,var(--radix-dropdown-menu-content-available-height))] w-60 overflow-y-auto">
-        <LanguageMenuItems languages={languages} current={current} onChange={onChange} isPending={isPending} />
+      <DropdownMenuSubContent
+        className={
+          contentClassName
+            ? cn('max-h-[min(32rem,var(--radix-dropdown-menu-content-available-height))] w-60 overflow-y-auto', contentClassName)
+            : 'max-h-[min(32rem,var(--radix-dropdown-menu-content-available-height))] w-60 overflow-y-auto'
+        }
+      >
+        {heading !== undefined && heading !== false && (
+          <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">{heading}</DropdownMenuLabel>
+        )}
+        <LanguageMenuItems languages={languages} current={current} onChange={onChange} isPending={isPending} renderOption={renderOption} />
         {note && <div className="max-w-60 px-2 py-1.5 text-xs text-muted-foreground">{note}</div>}
       </DropdownMenuSubContent>
     </DropdownMenuSub>

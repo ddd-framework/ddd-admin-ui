@@ -34,6 +34,7 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
       SelectScrollDownButton: DRAWN_BY('SelectContent'),
       SelectScrollUpButton: DRAWN_BY('SelectContent'),
       PortalContainerContext: 'a context (PortalContainerProvider is shown)',
+      ConfirmDialogView: 'drawn by every package confirmation (the confirm hook and the confirm dialog hook; the form samples ask through it)',
       AnchorLink: 'the default link of every block (drawn by the ./page tabs and back links)',
       LinkComponentContext: 'a context (set by AdminUiProvider.linkComponent)',
       LinkComponentProvider: 'mounted by AdminUiProvider when linkComponent is set',
@@ -67,7 +68,10 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
       'FormJumpBar', 'FormSection', 'FormSubmitButton', 'FormWrapper', 'VisibleWhen',
       'ColorValueField',
     ],
-    notShown: { UnsavedChangesContext: 'a context (used by FormDrawer)' },
+    notShown: {
+      UnsavedChangesContext: 'a context (used by FormDrawer)',
+      ConfirmDialogView: 'drawn by every package confirmation (the confirm hook and the confirm dialog hook; the form samples ask through it)',
+    },
   },
   translations: {
     shown: [
@@ -75,7 +79,10 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
       'LocalesScreen', 'TranslatableField', 'TranslatableInput', 'TranslatableLanguageInput', 'TranslatableMarkdown',
       'TranslationCompleteness', 'TranslationControls',
     ],
-    notShown: { AppTranslationKeyDrawer: 'drawn by AppTranslationsScreen when a row or Add opens it' },
+    notShown: {
+      AppTranslationKeyDrawer: 'drawn by AppTranslationsScreen when a row or Add opens it',
+      TranslatableLanguageMarkdown: 'TranslatableLanguageInput with the markdown editor of TranslatableMarkdown',
+    },
   },
   workers: {
     shown: [
@@ -97,7 +104,11 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
       'IssueCauses', 'IssueCodeContext', 'IssueDetailBlock', 'IssueEventDetails', 'IssueFrameList', 'IssueGroupFlags',
       'IssueGroupStatusActions', 'IssueWorkerContext', 'IssuesScreen', 'IssuesTrendBars', 'IssuesTrendCard', 'IssuesWindowSwitch',
     ],
-    notShown: { IssueGroupDrawer: 'drawn by IssuesScreen when a row opens a group' },
+    notShown: {
+      IssueGroupDrawer: 'drawn by IssuesScreen when a row opens a group',
+      IssueEventSummary: 'drawn by IssueEventDetails with summary (IssuesScreen eventSummary)',
+      IssuesTrendRangeControl: 'drawn by IssuesScreen with customTrendRange instead of IssuesWindowSwitch',
+    },
   },
   database: {
     shown: ['CodeBlock', 'GeneratedCodePanel', 'SchemaDiffCard', 'SchemaDiffScreen'],
@@ -109,7 +120,10 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
       'CronNextRun', 'CronRowActions', 'CronRunStrip', 'CronRunnerBanner', 'CronRunsView', 'CronScheduleText',
       'CronSchedulePreview', 'CronSummaryTiles', 'CronTimeline', 'CronTimelineCard', 'CronsScreen', 'CronsTable',
     ],
-    notShown: {},
+    notShown: {
+      CronTimeDisplayContext: 'a context (set by CronTimeDisplayProvider)',
+      CronTimeDisplayProvider: 'mounted by CronsScreen (timeZone); wraps the parts drawn on their own',
+    },
   },
   media: {
     shown: ['FormMediaItemField', 'MediaItemField', 'MediaItemPickerDialog', 'MediaPreview', 'ImageCropDialog'],
@@ -144,6 +158,8 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
       ShellNavLink: DRAWN_BY('ShellNavList'),
       ShellNavList: DRAWN_BY('ShellSidebar'),
       ShellNavRail: DRAWN_BY('ShellSidebar'),
+      ShellNavDisplayContext: 'a context (set by AppShell or ShellNavDisplayProvider)',
+      ShellNavDisplayProvider: 'the row display of AppShell for parts used without the frame',
       ShellNavigationContext: 'a context (set by AppShell)',
       ShellNavigationProvider: 'the navigation context of AppShell without the frame',
       ShellSidebar: DRAWN_BY('AppShell'),

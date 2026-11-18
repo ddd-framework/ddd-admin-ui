@@ -32,6 +32,8 @@ export type { CronRowActionsProps, CronsTableProps } from './parts.tsx';
 export { CRON_CONFLICT_RETRY_MS, isCronRunQueued, useCronActions } from './useCronActions.ts';
 export type { CronActionError, CronActions, CronQueuedRuns } from './useCronActions.ts';
 export { useCronsPageVisible, useCronsRefreshWhileVisible, useServerClock } from './useServerClock.ts';
+export { CronTimeDisplayContext, CronTimeDisplayProvider, useCronTimeFormat } from './timeDisplay.ts';
+export type { CronTimeDisplay, CronTimeDisplayProviderProps, CronTimeZoneMode } from './timeDisplay.ts';
 
 // Status maps and helpers
 export { CRON_EXECUTION_RESULT, CRON_RUN_RESULT_FILTERS, CRON_STATUS, cronRunResultOf, toCronRunResultFilter, toCronStatus } from './status.ts';
@@ -39,11 +41,15 @@ export type { CronRunResult } from './status.ts';
 export {
   changedCronFields,
   composeCronCommandLine,
+  CRON_ATTENTION_STATUSES,
   CRON_SCHEDULE_PRESETS,
+  CRON_STATUS_SEVERITY,
+  cronStatusRank,
   cronNextRunState,
   deleteBlockedReason,
   describeCronSchedule,
   EMPTY_CRON_FORM,
+  estimateCronServerOffsetMs,
   formatCronClock,
   formatCronCount,
   formatCronDateTime,
@@ -52,11 +58,17 @@ export {
   formatCronRelative,
   isCronArguments,
   isCronName,
+  isLegacyCronName,
+  lockedCronCommandReason,
+  matchesCronStatusFilter,
+  normalizeCronName,
   isRunnerStalled,
   parseCronTime,
   recentRunsOf,
   runNowBlockedReason,
+  sortCrons,
   toCronCreateBody,
   toCronFormValues,
+  toCronStatusFilter,
 } from './format.ts';
-export type { CronFormValues, CronNextRunState } from './format.ts';
+export type { CronFormValues, CronListSort, CronNextRunState, CronStatusFilter } from './format.ts';
