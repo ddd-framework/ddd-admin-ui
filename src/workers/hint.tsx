@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { Hint, type HintProps } from '../primitives/hint.tsx';
 
 export type WorkerHintProps = Omit<HintProps, 'slot'>;
@@ -11,3 +13,16 @@ export type WorkerHintProps = Omit<HintProps, 'slot'>;
  * still renders.
  */
 export const WorkerHint = (props: WorkerHintProps) => <Hint {...props} slot="worker-hint" />;
+
+/**
+ * A truncated value whose full text opens in the package tooltip (`WorkerHint`); without `full` a plain span with the
+ * same classes.
+ */
+export const WorkerTruncatedText = ({ full, className, children }: { full?: string | null; className?: string; children: ReactNode }) =>
+  full ? (
+    <WorkerHint content={full} className={className}>
+      {children}
+    </WorkerHint>
+  ) : (
+    <span className={className}>{children}</span>
+  );

@@ -4,7 +4,10 @@ import {
   type InjectableBaseApi,
   type InjectedEndpointDefinition,
   type InjectedRequest,
+  hostTagTypes,
   injectEndpointsOnce,
+  type InjectedHostTags,
+  withHostTags,
   staticMutationHook,
   staticQueryHook,
   toQueryString,
@@ -47,6 +50,8 @@ export interface CreateWorkersApiOptions {
   baseApi: InjectableBaseApi;
   /** Where the host mounts `WorkersControllerTrait`, without a trailing slash (`/api/admin/maintenance/workers`). */
   apiPrefix: string;
+  /** The host's cache tags joined with the package's: provided by every query, invalidated by the restart request. */
+  tags?: InjectedHostTags;
 }
 
 const windowQuery = ({ from, to, stepSeconds }: WorkersWindowArg): string => toQueryString({ from, to, stepSeconds });
@@ -109,15 +114,21 @@ export const workersEndpointDefinitions = (apiPrefix: string) => {
  * export const workersApi = createWorkersApi({ baseApi: adminApi, apiPrefix: '/api/admin/maintenance/workers' });
  * ```
  */
-export const createWorkersApi = ({ baseApi, apiPrefix }: CreateWorkersApiOptions): WorkersApi =>
-  injectEndpointsOnce(baseApi, `workers:${trimApiPrefix(apiPrefix)}`, [WORKERS_TAG], workersEndpointDefinitions(apiPrefix), hookOf => ({
+export const createWorkersApi = ({ baseApi, apiPrefix, tags }: CreateWorkersApiOptions): WorkersApi =>
+  injectEndpointsOnce(
+    baseApi,
+    `workers:${trimApiPrefix(apiPrefix)}${tags ? `:tags:${JSON.stringify(tags)}` : ''}`,
+    [WORKERS_TAG, ...hostTagTypes(tags)],
+    withHostTags(workersEndpointDefinitions(apiPrefix), tags),
+    hookOf => ({
     useOverviewQuery: hookOf('adminUiWorkersOverview') as WorkersApi['useOverviewQuery'],
     useHistoryQuery: hookOf('adminUiWorkersHistory') as WorkersApi['useHistoryQuery'],
     useTransportDetailQuery: hookOf('adminUiWorkerTransportDetail') as WorkersApi['useTransportDetailQuery'],
     useMessageRunsQuery: hookOf('adminUiWorkerMessageRuns') as WorkersApi['useMessageRunsQuery'],
     useProcessesQuery: hookOf('adminUiWorkerProcesses') as WorkersApi['useProcessesQuery'],
     useRestartMutation: hookOf('adminUiWorkersRestart') as WorkersApi['useRestartMutation'],
-  }));
+    })
+  );
 
 /** Fixed answers of a `createStaticWorkersApi`; an operation without one stays loading. */
 export interface StaticWorkersData {

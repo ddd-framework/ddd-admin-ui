@@ -158,7 +158,9 @@ export type {
 } from './writeAccess.ts';
 export {
   injectedHookName,
+  hostTagTypes,
   injectEndpointsOnce,
+  withHostTags,
   staticMutationHook,
   staticQueryFailure,
   staticQueryHook,
@@ -176,6 +178,7 @@ export type {
   InjectableBaseApi,
   InjectedEndpointDefinition,
   InjectedRequest,
+  InjectedHostTags,
   InjectedTag,
   StaticQueryFailure,
 } from './injectedApi.ts';

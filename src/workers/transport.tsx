@@ -5,7 +5,7 @@ import { RotateCcw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { m } from '../i18n/store.ts';
-import { useTranslate } from '../i18n/useTranslate.ts';
+import { type TranslateFn, useTranslate } from '../i18n/useTranslate.ts';
 import { DateCell } from '../list/cells.tsx';
 import { ChipToggleGroup } from '../list/ChipToggleGroup.tsx';
 import { CopyButton } from '../list/CopyButton.tsx';
@@ -41,7 +41,7 @@ import {
   wantsLogScale,
   zipSeries,
 } from './format.ts';
-import { WorkerHint } from './hint.tsx';
+import { WorkerHint, WorkerTruncatedText } from './hint.tsx';
 import { rawStatusValue, WORKER_MESSAGE_OUTCOME, WORKER_PROCESS_STATE } from './status.ts';
 import { durationTicks } from './ticks.ts';
 import type {
@@ -262,9 +262,9 @@ export const WorkerMessageClassesTable = ({ messageClasses }: { messageClasses: 
       id: 'messageClass',
       header: m('Message class'),
       cell: stat => (
-        <span className="block max-w-80 truncate font-mono text-[13px]" title={stat.messageClass}>
+        <WorkerTruncatedText full={stat.messageClass} className="block max-w-80 truncate font-mono text-[13px]">
           {shortClassName(stat.messageClass)}
-        </span>
+        </WorkerTruncatedText>
       ),
       className: 'min-w-56',
     },
@@ -373,9 +373,9 @@ export const WorkerProcessesTable = ({
       id: 'host',
       header: m('Host · PID'),
       cell: process => (
-        <span className="block max-w-48 truncate font-mono text-xs" title={process.processKey ?? undefined}>
+        <WorkerTruncatedText full={process.processKey} className="block max-w-48 truncate font-mono text-xs">
           {shortHost(process.hostName)} · {process.processId ?? '—'}
-        </span>
+        </WorkerTruncatedText>
       ),
       className: 'w-44',
     },
@@ -436,9 +436,9 @@ export const WorkerProcessesTable = ({
       cell: process =>
         process.currentMessageClass ? (
           <div className="flex max-w-52 flex-col">
-            <span className="truncate font-mono text-xs" title={process.currentMessageClass}>
+            <WorkerTruncatedText full={process.currentMessageClass} className="truncate font-mono text-xs">
               {shortClassName(process.currentMessageClass)}
-            </span>
+            </WorkerTruncatedText>
             {process.currentMessageSince && <DateCell value={process.currentMessageSince} className="text-[11px] text-muted-foreground" />}
           </div>
         ) : process.stoppedAt ? (
@@ -611,7 +611,8 @@ export const workerRunOutcomeFilterString = (filter: WorkerRunOutcomeFilter): st
 };
 
 const PAGE_SIZE = 50;
-const MAX_TOP = 500;
+/** The default cap of the processes and runs lists: "load more" stops at this many rows (the tabs' `maxTop`). */
+export const WORKER_LIST_MAX_TOP = 500;
 
 /** Under a list that reached the request cap: the newest rows only, a narrower filter reaches older ones. */
 const ListCapNotice = ({ count }: { count: number }) => {
@@ -630,13 +631,18 @@ export interface WorkerProcessesTabProps {
   transport: string;
   filter: WorkerProcessFilter;
   onFilterChange: (filter: WorkerProcessFilter) => void;
+  /**
+   * How many rows "load more" reaches (one growing request, `top` up to this; default 500). `Infinity`: no cap (the
+   * backend must accept that `top`). At the cap a note says only the newest rows are shown.
+   */
+  maxTop?: number;
 }
 
 /**
  * The process history of a transport (`GET /transports/{transport}/processes`), newest first: their lifetimes on one
  * axis, then the table. Refreshes every 15 s while the tab is visible, so a restart request can be followed.
  */
-export const WorkerProcessesTab = ({ api, transport, filter, onFilterChange }: WorkerProcessesTabProps) => {
+export const WorkerProcessesTab = ({ api, transport, filter, onFilterChange, maxTop = WORKER_LIST_MAX_TOP }: WorkerProcessesTabProps) => {
   const { t } = useTranslate();
   const args = useMemo<Omit<WorkerTransportListArg, 'top' | 'skip'>>(
     () => ({ transport, filters: workerProcessFilterString(filter), orderBy: 'startedAt desc' }),
@@ -647,7 +653,7 @@ export const WorkerProcessesTab = ({ api, transport, filter, onFilterChange }: W
     args,
     extractItems: extractProcesses,
     pageSize: PAGE_SIZE,
-    maxTop: MAX_TOP,
+    maxTop,
     resetKey: JSON.stringify(args),
   });
   // "now" of the timeline: the clock after hydration (the server render and the first client render use the newest
@@ -716,11 +722,110 @@ export const WorkerProcessesTab = ({ api, transport, filter, onFilterChange }: W
           isSearchActive={filter !== ''}
           onClearSearch={() => onFilterChange('')}
         />
-        {!list.hasMore && list.items.length >= MAX_TOP && <ListCapNotice count={MAX_TOP} />}
+        {!list.hasMore && Number.isFinite(maxTop) && list.items.length >= maxTop && <ListCapNotice count={maxTop} />}
       </EntityListCard>
     </div>
   );
 };
+
+/**
+ * The columns of the message runs table (`WorkerMessageRunsTab`): started (with the process), outcome, message (class
+ * and dispatch origin), wait, duration, attempt, error and issue group. Exported for a host's own runs table (pick,
+ * reorder or extend them); `t` is `useTranslate().t`.
+ */
+export const workerMessageRunColumns = (t: TranslateFn): EntityListColumn<WorkerMessageRun>[] => [
+  {
+    id: 'started',
+    header: m('Started'),
+    cell: run => (
+      <div className="flex flex-col gap-0.5">
+        <DateCell value={run.startedAt} />
+        <WorkerTruncatedText full={run.processKey} className="max-w-40 truncate font-mono text-[11px] text-muted-foreground">
+          {run.processKey ? shortHost(run.processKey.split(':')[0]) : t('command line')}
+        </WorkerTruncatedText>
+      </div>
+    ),
+    className: 'w-44',
+  },
+  {
+    id: 'outcome',
+    header: m('Outcome'),
+    cell: run => <StatusBadge value={rawStatusValue<WorkerMessageOutcome>(run.outcome)} map={WORKER_MESSAGE_OUTCOME} />,
+    className: 'w-28',
+  },
+  {
+    id: 'message',
+    header: m('Message'),
+    cell: run => {
+      const origin = dispatchOrigin(run);
+      return (
+        <div className="flex max-w-80 min-w-0 flex-col gap-0.5">
+          <WorkerTruncatedText full={run.messageClass} className="truncate font-mono text-[13px]">
+            {shortClassName(run.messageClass)}
+          </WorkerTruncatedText>
+          <WorkerTruncatedText full={origin} className="truncate text-xs text-muted-foreground">
+            {origin ? t('from %origin%', { replacements: { origin } }) : t('dispatch origin unknown')}
+          </WorkerTruncatedText>
+        </div>
+      );
+    },
+    className: 'min-w-56',
+  },
+  {
+    id: 'wait',
+    header: m('Wait'),
+    cell: run =>
+      run.waitMs === null || run.waitMs === undefined ? (
+        <WorkerHint content={t('The message carried no dispatch time')} className="text-xs text-muted-foreground">
+          {t('unknown', { context: 'wait-time' })}
+        </WorkerHint>
+      ) : (
+        <span className="text-sm whitespace-nowrap tabular-nums">{formatDurationMs(run.waitMs)}</span>
+      ),
+    className: 'w-24',
+  },
+  { id: 'duration', header: m('Duration'), cell: run => <span className="text-sm whitespace-nowrap tabular-nums">{formatDurationMs(run.durationMs)}</span>, className: 'w-24' },
+  {
+    id: 'attempt',
+    header: m('Attempt'),
+    cell: run => (
+      <span className="text-sm whitespace-nowrap tabular-nums">
+        {run.attempt}
+        {run.willRetry === true && <span className="text-xs text-muted-foreground"> · {t('will retry')}</span>}
+        {run.willRetry === false && run.outcome === 'THROWN' && <span className="text-xs text-destructive"> · {t('final', { context: 'attempt' })}</span>}
+      </span>
+    ),
+    className: 'w-32',
+  },
+  {
+    id: 'error',
+    header: m('Error'),
+    cell: run =>
+      run.errorClass || run.errorMessage ? (
+        <WorkerHint content={[run.errorClass, run.errorMessage].filter(Boolean).join('\n')} className="block max-w-64 truncate text-xs">
+          <span className="font-medium text-destructive">{shortClassName(run.errorClass)}</span>
+          {run.errorMessage && <span className="text-muted-foreground"> · {run.errorMessage}</span>}
+        </WorkerHint>
+      ) : (
+        <EmptyValue />
+      ),
+    className: 'min-w-48',
+  },
+  {
+    id: 'issue',
+    header: m('Issue group'),
+    cell: run =>
+      run.issueGroupHash ? (
+        <span className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground">
+          <WorkerTruncatedText full={run.issueGroupHash}>{run.issueGroupHash.slice(0, 10)}</WorkerTruncatedText>
+          <CopyButton value={run.issueGroupHash} label={m('Copy issue group hash')} />
+        </span>
+      ) : (
+        <EmptyValue />
+      ),
+    className: 'w-36',
+  },
+];
 
 export interface WorkerMessageRunsTabProps {
   api: WorkersApi;
@@ -729,13 +834,15 @@ export interface WorkerMessageRunsTabProps {
   onOutcomeChange: (outcome: WorkerRunOutcomeFilter) => void;
   /** The transport's `messageLog` setting: `failures` / `off` record fewer or no runs (the statistics stay complete). */
   messageLog?: string | null;
+  /** How many rows "load more" reaches (default 500; `Infinity`: no cap), as `WorkerProcessesTab.maxTop`. */
+  maxTop?: number;
 }
 
 /**
  * The single messages of a transport (`GET /transports/{transport}/messageRuns`), newest first: outcome, class, where it
  * was dispatched from, queue wait, handling time, attempt, error and its issue group. Refreshes every 15 s.
  */
-export const WorkerMessageRunsTab = ({ api, transport, outcome, onOutcomeChange, messageLog }: WorkerMessageRunsTabProps) => {
+export const WorkerMessageRunsTab = ({ api, transport, outcome, onOutcomeChange, messageLog, maxTop = WORKER_LIST_MAX_TOP }: WorkerMessageRunsTabProps) => {
   const { t } = useTranslate();
   const args = useMemo<Omit<WorkerTransportListArg, 'top' | 'skip'>>(
     () => ({ transport, filters: workerRunOutcomeFilterString(outcome), orderBy: 'startedAt desc' }),
@@ -746,104 +853,12 @@ export const WorkerMessageRunsTab = ({ api, transport, outcome, onOutcomeChange,
     args,
     extractItems: extractRuns,
     pageSize: PAGE_SIZE,
-    maxTop: MAX_TOP,
+    maxTop,
     resetKey: JSON.stringify(args),
   });
   useRefreshWhileVisible(list.refetch, WORKERS_LIST_POLL_MS);
 
-  const columns: EntityListColumn<WorkerMessageRun>[] = [
-    {
-      id: 'started',
-      header: m('Started'),
-      cell: run => (
-        <div className="flex flex-col gap-0.5">
-          <DateCell value={run.startedAt} />
-          <span className="max-w-40 truncate font-mono text-[11px] text-muted-foreground" title={run.processKey ?? undefined}>
-            {run.processKey ? shortHost(run.processKey.split(':')[0]) : t('command line')}
-          </span>
-        </div>
-      ),
-      className: 'w-44',
-    },
-    {
-      id: 'outcome',
-      header: m('Outcome'),
-      cell: run => <StatusBadge value={rawStatusValue<WorkerMessageOutcome>(run.outcome)} map={WORKER_MESSAGE_OUTCOME} />,
-      className: 'w-28',
-    },
-    {
-      id: 'message',
-      header: m('Message'),
-      cell: run => {
-        const origin = dispatchOrigin(run);
-        return (
-          <div className="flex max-w-80 min-w-0 flex-col gap-0.5">
-            <span className="truncate font-mono text-[13px]" title={run.messageClass ?? undefined}>
-              {shortClassName(run.messageClass)}
-            </span>
-            <span className="truncate text-xs text-muted-foreground" title={origin ?? undefined}>
-              {origin ? t('from %origin%', { replacements: { origin } }) : t('dispatch origin unknown')}
-            </span>
-          </div>
-        );
-      },
-      className: 'min-w-56',
-    },
-    {
-      id: 'wait',
-      header: m('Wait'),
-      cell: run =>
-        run.waitMs === null || run.waitMs === undefined ? (
-          <span className="text-xs text-muted-foreground" title={t('The message carried no dispatch time')}>
-            {t('unknown', { context: 'wait-time' })}
-          </span>
-        ) : (
-          <span className="text-sm whitespace-nowrap tabular-nums">{formatDurationMs(run.waitMs)}</span>
-        ),
-      className: 'w-24',
-    },
-    { id: 'duration', header: m('Duration'), cell: run => <span className="text-sm whitespace-nowrap tabular-nums">{formatDurationMs(run.durationMs)}</span>, className: 'w-24' },
-    {
-      id: 'attempt',
-      header: m('Attempt'),
-      cell: run => (
-        <span className="text-sm whitespace-nowrap tabular-nums">
-          {run.attempt}
-          {run.willRetry === true && <span className="text-xs text-muted-foreground"> · {t('will retry')}</span>}
-          {run.willRetry === false && run.outcome === 'THROWN' && <span className="text-xs text-destructive"> · {t('final', { context: 'attempt' })}</span>}
-        </span>
-      ),
-      className: 'w-32',
-    },
-    {
-      id: 'error',
-      header: m('Error'),
-      cell: run =>
-        run.errorClass || run.errorMessage ? (
-          <WorkerHint content={[run.errorClass, run.errorMessage].filter(Boolean).join('\n')} className="block max-w-64 truncate text-xs">
-            <span className="font-medium text-destructive">{shortClassName(run.errorClass)}</span>
-            {run.errorMessage && <span className="text-muted-foreground"> · {run.errorMessage}</span>}
-          </WorkerHint>
-        ) : (
-          <EmptyValue />
-        ),
-      className: 'min-w-48',
-    },
-    {
-      id: 'issue',
-      header: m('Issue group'),
-      cell: run =>
-        run.issueGroupHash ? (
-          <span className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground" title={run.issueGroupHash}>
-            {run.issueGroupHash.slice(0, 10)}
-            <CopyButton value={run.issueGroupHash} label={m('Copy issue group hash')} />
-          </span>
-        ) : (
-          <EmptyValue />
-        ),
-      className: 'w-36',
-    },
-  ];
+  const columns = useMemo(() => workerMessageRunColumns(t), [t]);
 
   const logNote =
     messageLog === 'failures'
@@ -895,7 +910,7 @@ export const WorkerMessageRunsTab = ({ api, transport, outcome, onOutcomeChange,
         loadingMessage={t('Loading message runs')}
         className="md:flex-none"
       />
-      {!list.hasMore && list.items.length >= MAX_TOP && <ListCapNotice count={MAX_TOP} />}
+      {!list.hasMore && Number.isFinite(maxTop) && list.items.length >= maxTop && <ListCapNotice count={maxTop} />}
     </EntityListCard>
   );
 };

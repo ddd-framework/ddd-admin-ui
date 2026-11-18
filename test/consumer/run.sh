@@ -9,6 +9,7 @@
 #         the shell renders on the server from one navigation (sidebar, breadcrumbs, title) and never reaches ./shell-background
 #         the optional props of 0.3.2 render on the server (options-render.mjs)
 #         the optional props of 0.3.3 render on the server (options-033-render.mjs)
+#         the optional props of 0.3.4 render on the server (options-034-render.mjs)
 #         ./logic/pure loads from CommonJS through its require condition without any dependency (pure-require.cjs)
 #     T4  Node imports of every entry but ./next and ./notify-sonner (those two fail on the missing peer) and a
 #         strict tsc (skipLibCheck false) with moduleResolution bundler and nodenext
@@ -159,6 +160,8 @@ echo "── the optional props of 0.3.2 on the server: language tabs, table, bu
 node options-render.mjs
 echo "── the optional props of 0.3.3 on the server: table surface, leading columns, edges, bulk labels, translatable counter"
 node options-033-render.mjs
+echo "── the optional props of 0.3.4 on the server: workers section state and runs cap, translations filters and slots, host tags"
+node options-034-render.mjs
 echo "── shipped i18n manifest"
 if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-i18n-manifest --check; else pnpm exec ddd-admin-ui-i18n-manifest --check; fi
 

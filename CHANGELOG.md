@@ -3,6 +3,60 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.3.4
+
+Optional props for hosts moving their workers and app translations screens onto the package, URL list state that
+follows outside URL changes, and host cache tags on the api factories. Everything is additive: a caller that sets none
+of the new props renders as on 0.3.3, except that `useUrlListState` now takes a URL change from outside (see there) and
+the wait-time "unknown" of the runs table opens its reason in the package tooltip instead of a native title. The list
+and form actions snapshots are unchanged.
+
+`./workers`:
+
+- `WorkerTransportScreen listMaxTop` and `maxTop` on `WorkerMessageRunsTab` / `WorkerProcessesTab`: how many rows
+  "load more" reaches (default `WORKER_LIST_MAX_TOP`, 500; `Infinity`: no cap).
+- `renderSection(id, section, state)`: a third argument with the screen's state (`WorkersOverviewSectionState`: window,
+  search, monitoring, loading, stale, payload; `WorkerTransportSectionState`: transport, tab, window, outcome, process
+  filter, monitoring, detail).
+- The throughput description names the payload's windows when they are not 5 / 15 min, 1 h and 24 h
+  (`throughputDescriptionText`); the sparkline labels name `sequenceWindowSeconds` (`sequenceLabelText`). Truncated
+  process keys, message classes and origins open in the package tooltip (`WorkerTruncatedText`), no native titles.
+  `workerMessageRunColumns(t)` exported (the runs table's columns for a host table).
+- `createWorkersApi({ tags })`: the host's cache tags, provided by every query and invalidated by the restart.
+
+`./translations`:
+
+- `AppTranslationsScreen`: `transformListArgs` (the list request before it is sent), `languageFilter` ("Has a value
+  in": a root filter on the values and the same filter on the expand, so a row shows that language's values; URL key
+  `language`, renamable through `urlParamNames`), `extraResetKey` (the host's filters restart the list window and the
+  selection), `showGenerateAll`, `showCompleteness`, `cardFooter`, `rowActions(key, defaultActions)`, `renderCard` with
+  `parts` (`keyLink`, `values`, `actions`, `card`; an `EntityCardRenderer` still fits), `drawerCreateValue`,
+  `mapBulkDeleteResponse`, `editableValueLocale`, `valueActions`. The `sortKey` of a host column (through `columns`)
+  is sorted on (`<sortKey> <direction>, id <direction>`).
+- `AppTranslationKeyDrawer`: `editableValueLocale` (language and country of a stored value editable; a move onto a
+  combination another value holds is refused) and `valueActions` (after Save and Delete).
+- `createTranslationsApi({ tags, bulkDelete: { mapResponse } })`: host cache tags; the counts of the endpoint's own
+  bulk delete answer (`TranslationsApi.mapBulkDeleteResponse`, `AppTranslationKeysBulkDeleteCounts`).
+- Helpers `appTranslationKeysExpand`, `buildAppTranslationKeysLanguageFilter`,
+  `APP_TRANSLATION_KEY_LANGUAGE_FILTER_KEYS`; types `AppTranslationKeyCardParts`, `AppTranslationKeyCardRenderer`,
+  `AppTranslationKeysListArgs`. `renameUrlStateKeys`' `restore` no longer hands a host parameter under a renamed key's
+  own name back as the list's filter.
+
+`./logic`, `./next`:
+
+- `useUrlListState` re-syncs its inputs when the URL changes from outside (Back / Forward, a link to the same page with
+  other filters, a host write); the echo of its own write is no change. Helpers `readListValues`,
+  `externalListChange`.
+- `useEntityDrawer({ createValue })` and `ENTITY_DRAWER_CREATE_VALUE` (`'1'`).
+- `withHostTags`, `hostTagTypes`, `InjectedHostTags` (also in `./logic/pure`).
+- `useNextUrlStateAdapter({ restore: false })` (no saved state comes back) and `savedKeys` (only these parameters are
+  saved for `restore`, not a drawer's `edit` or another list's filters; default the whole query as before).
+
+Texts: new keys "Any language", "Has a value in", "Language of the %locale% value", "Country of the %locale% value";
+workers "Failed messages %window%", "Handled messages %window%", "Messages in work %window%", "Waiting messages
+%window%", "Worker processes %window%", "Messages finished per transport in each window (%windows%), with the rate and
+what one worker finished per minute.".
+
 ## 0.3.3
 
 Optional props for hosts moving their tables, shells, translatable fields and operations screens onto the package, a

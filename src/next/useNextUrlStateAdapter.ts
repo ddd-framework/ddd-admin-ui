@@ -13,6 +13,17 @@ export interface NextUrlStateAdapterOptions {
    * inside one entity carries the entity id; two states on one page (filters + selection) share the id.
    */
   listId: string;
+  /**
+   * `false`: no saved state comes back (`restore` is left out): a list opened without its parameters starts empty.
+   * Writes still save the query (another list of the same id may restore it). Default `true`.
+   */
+  restore?: boolean;
+  /**
+   * The parameters a write remembers for `restore` (the list's own keys, e.g. the keys passed to `useUrlListState`):
+   * a drawer's `edit`, another list's filters or a host parameter are then never saved with the list. Default: the
+   * whole query, as before. Two states sharing the `listId` name both their keys.
+   */
+  savedKeys?: readonly string[];
 }
 
 /**
@@ -25,20 +36,25 @@ export interface NextUrlStateAdapterOptions {
  *
  * `const list = useUrlListState(KEYS, { adapter: useNextUrlStateAdapter({ listId: 'admin.items' }), uncounted: ['q'] });`
  */
-export const useNextUrlStateAdapter = ({ listId }: NextUrlStateAdapterOptions): UrlStateAdapter => {
+export const useNextUrlStateAdapter = ({ listId, restore = true, savedKeys }: NextUrlStateAdapterOptions): UrlStateAdapter => {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
   const { storageKey: keyOf, preserveSearchParams } = useAdminUi();
   const storageKey = keyOf('list-filters', listId);
+  const savedKeysText = savedKeys ? savedKeys.join('\n') : null;
 
   return useMemo<UrlStateAdapter>(
     () => ({
       get: key => searchParams.get(key),
       replace: updates =>
-        queueSearchParamsWrite(pathname, router, updates, { saveAs: storageKey, preserve: preserveSearchParams }),
-      restore: () => readSavedListQuery(storageKey),
+        queueSearchParamsWrite(pathname, router, updates, {
+          saveAs: storageKey,
+          preserve: preserveSearchParams,
+          ...(savedKeysText === null ? {} : { saveKeys: savedKeysText.split('\n') }),
+        }),
+      ...(restore ? { restore: () => readSavedListQuery(storageKey) } : {}),
     }),
-    [pathname, router, storageKey, searchParams, preserveSearchParams]
+    [pathname, router, storageKey, searchParams, preserveSearchParams, restore, savedKeysText]
   );
 };

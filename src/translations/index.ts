@@ -77,6 +77,7 @@ export {
 export type {
   AppTranslationKeysBulkDelete,
   AppTranslationKeysBulkDeleteArg,
+  AppTranslationKeysBulkDeleteCounts,
   AppTranslationKeysBulkDeleteResponse,
   CreateTranslationsApiOptions,
   StaticTranslationsData,
@@ -87,11 +88,14 @@ export {
   ACTIVE_LANGUAGES_ARG,
   ACTIVE_LOCALES_WITH_COUNTRIES_ARG,
   APP_TRANSLATION_KEY_FILTER_KEYS,
+  APP_TRANSLATION_KEY_LANGUAGE_FILTER_KEYS,
   APP_TRANSLATION_KEY_SORT_KEYS,
   APP_TRANSLATION_KEYS_PAGE_SIZE,
   APP_TRANSLATIONS_LANGUAGES_ARG,
+  appTranslationKeysExpand,
   appTranslationKeysOrderBy,
   buildAppTranslationKeysFilter,
+  buildAppTranslationKeysLanguageFilter,
   buildAppTranslationKeysListArgs,
   CONTENT_LOCALES_ARG,
   DEFAULT_APP_TRANSLATION_KEY_SORT,
@@ -119,7 +123,13 @@ export {
 } from './adminFormat.ts';
 export type { AppTranslationValuesFilter, CountryCodeMap, LanguageCodeMap } from './adminFormat.ts';
 export { AppTranslationsScreen } from './AppTranslationsScreen.tsx';
-export type { AppTranslationsScreenProps, AppTranslationsUrlParamNames } from './AppTranslationsScreen.tsx';
+export type {
+  AppTranslationKeyCardParts,
+  AppTranslationKeyCardRenderer,
+  AppTranslationKeysListArgs,
+  AppTranslationsScreenProps,
+  AppTranslationsUrlParamNames,
+} from './AppTranslationsScreen.tsx';
 export { AppTranslationKeyDrawer } from './AppTranslationKeyDrawer.tsx';
 export type { AppTranslationKeyDrawerProps } from './AppTranslationKeyDrawer.tsx';
 export { TranslationCompleteness } from './TranslationCompleteness.tsx';

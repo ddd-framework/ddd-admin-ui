@@ -19,7 +19,7 @@ import { Button } from '../primitives/button.tsx';
 import { cn } from '../primitives/cn.ts';
 import { LinkComponentProvider, type PageLinkComponent } from '../primitives/link.tsx';
 import type { WorkersApi } from './api.ts';
-import { formatClockTime, formatCount, parseWorkersTime, sortTransports } from './format.ts';
+import { formatClockTime, formatCount, parseWorkersTime, sortTransports, throughputDescriptionText, throughputWindowSeconds } from './format.ts';
 import { WorkersHistoryCharts, WorkersWindowSwitch } from './history.tsx';
 import {
   WorkerKpiTiles,
@@ -32,7 +32,8 @@ import {
 } from './overview.tsx';
 import { usePageVisible, useWorkersWindow } from './useWorkersWindow.ts';
 import { WorkerRestartButton } from './WorkerRestartButton.tsx';
-import { DEFAULT_WORKERS_WINDOW, toWorkersWindowPreset, WORKERS_OVERVIEW_POLL_MS } from './window.ts';
+import type { WorkersOverview } from './types.ts';
+import { DEFAULT_WORKERS_WINDOW, toWorkersWindowPreset, WORKERS_OVERVIEW_POLL_MS, type WorkersWindowPreset } from './window.ts';
 
 const LIST_KEYS = ['window', 'q'] as const;
 
@@ -42,8 +43,25 @@ export type WorkersOverviewSectionId = 'status' | 'live' | 'throughput' | 'histo
 /**
  * Draws one section of a workers screen: return `section` to keep it, `null` to leave it out, or the host's own node
  * in its place (`section` is null where the screen draws nothing there, e.g. the history while the monitoring is off).
+ * `state`: the screen's state the section is drawn with (window, search or filters, monitoring), for a host section
+ * that follows it.
  */
-export type WorkersSectionRenderer<TSectionId extends string> = (id: TSectionId, section: ReactNode) => ReactNode;
+export type WorkersSectionRenderer<TSectionId extends string, TState = unknown> = (id: TSectionId, section: ReactNode, state: TState) => ReactNode;
+
+/** The third argument of `WorkersOverviewScreen.renderSection`. */
+export interface WorkersOverviewSectionState {
+  /** The history window (`window`). */
+  window: WorkersWindowPreset;
+  /** The transport search as typed (`q`). */
+  search: string;
+  monitoringEnabled: boolean;
+  /** The overview has not loaded yet. */
+  isLoading: boolean;
+  /** A refresh failed; the last data is shown. */
+  isStale: boolean;
+  /** The overview payload, once loaded. */
+  overview?: WorkersOverview;
+}
 
 export interface WorkersOverviewScreenProps {
   /** The hooks of `createWorkersApi`. */
@@ -71,7 +89,7 @@ export interface WorkersOverviewScreenProps {
    */
   linkComponent?: PageLinkComponent;
   /** Keeps, replaces or leaves out a section (`status`, `live`, `throughput`, `history`, `transports`, `loops`). */
-  renderSection?: WorkersSectionRenderer<WorkersOverviewSectionId>;
+  renderSection?: WorkersSectionRenderer<WorkersOverviewSectionId, WorkersOverviewSectionState>;
   /** Opens a transport from a row of the transports table (default: its link is followed). */
   onOpenTransport?: (transport: string) => void;
 }
@@ -126,7 +144,15 @@ export const WorkersOverviewScreen = ({
 
   const liveProcesses = overview?.processes?.elements;
   const isStale = Boolean(overview) && overviewQuery.isError;
-  const section = (id: WorkersOverviewSectionId, node: ReactNode) => (renderSection ? renderSection(id, node) : node);
+  const sectionState: WorkersOverviewSectionState = {
+    window: windowPreset,
+    search: values.q,
+    monitoringEnabled,
+    isLoading: overviewQuery.isLoading,
+    isStale,
+    overview,
+  };
+  const section = (id: WorkersOverviewSectionId, node: ReactNode) => (renderSection ? renderSection(id, node, sectionState) : node);
 
   const statusSection = (
     <div className="space-y-4">
@@ -191,11 +217,14 @@ export const WorkersOverviewScreen = ({
     </section>
   ) : null;
 
+  const throughputWindows = [
+    ...new Set([overview?.totals?.throughputWindows, ...allTransports.map(transport => transport.throughputWindows)].flatMap(throughputWindowSeconds)),
+  ].sort((left, right) => left - right);
   const throughputSection = overview?.monitoringEnabled ? (
     <section>
       <SectionHeader
         title={t('Throughput')}
-        description={t('Messages finished per transport in the last 5 and 15 minutes, the last hour and the last 24 hours, with the rate and what one worker finished per minute.')}
+        description={throughputDescriptionText(throughputWindows, t)}
       />
       <WorkersThroughputTable
         transports={allTransports}

@@ -124,7 +124,9 @@ export {
 } from './pure/translationState.ts';
 export type { FieldTranslations, HydratedTranslations } from './pure/translationState.ts';
 export {
+  hostTagTypes,
   injectEndpointsOnce,
+  withHostTags,
   injectedHookName,
   staticMutationHook,
   staticQueryFailure,
@@ -143,6 +145,7 @@ export type {
   InjectableBaseApi,
   InjectedEndpointDefinition,
   InjectedRequest,
+  InjectedHostTags,
   InjectedTag,
   StaticQueryFailure,
 } from './pure/injectedApi.ts';
@@ -155,7 +158,7 @@ export { ConfirmContext, useConfirm } from './react/useConfirm.ts';
 export { useCopyToClipboard } from './react/useCopyToClipboard.ts';
 export type { CopyToClipboard } from './react/useCopyToClipboard.ts';
 export { useDebouncedValue } from './react/useDebouncedValue.ts';
-export { useEntityDrawer } from './react/useEntityDrawer.ts';
+export { ENTITY_DRAWER_CREATE_VALUE, useEntityDrawer } from './react/useEntityDrawer.ts';
 export type { EntityDrawer, UseEntityDrawerOptions } from './react/useEntityDrawer.ts';
 export { useEntityTranslations } from './react/useEntityTranslations.ts';
 export { useHydrated } from './react/useHydrated.ts';
@@ -186,7 +189,7 @@ export type { WriteAccessProviderProps } from './react/writeAccess.ts';
 export { useMemoryUrlState } from './react/useMemoryUrlState.ts';
 export { useOptimisticRowPatches } from './react/useOptimisticRowPatches.ts';
 export type { OptimisticRowPatches } from './react/useOptimisticRowPatches.ts';
-export { useUrlListState } from './react/useUrlListState.ts';
+export { externalListChange, readListValues, useUrlListState } from './react/useUrlListState.ts';
 export type { UrlListState, UseUrlListStateOptions } from './react/useUrlListState.ts';
 
 // Browser

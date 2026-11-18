@@ -31,12 +31,14 @@ import {
   WorkerProcessesTab,
   WorkerProcessesTable,
   WorkerTransportCharts,
+  type WorkerProcessFilter,
+  type WorkerRunOutcomeFilter,
 } from './transport.tsx';
-import type { WorkerTransportOverview, WorkerTransportState } from './types.ts';
+import type { WorkerTransportDetail, WorkerTransportOverview, WorkerTransportState } from './types.ts';
 import { usePageVisible, useWorkersWindow } from './useWorkersWindow.ts';
 import { WorkerRestartButton } from './WorkerRestartButton.tsx';
 import type { WorkersSectionRenderer } from './WorkersOverviewScreen.tsx';
-import { DEFAULT_WORKERS_WINDOW, toWorkersWindowPreset, WORKERS_LIST_POLL_MS } from './window.ts';
+import { DEFAULT_WORKERS_WINDOW, toWorkersWindowPreset, WORKERS_LIST_POLL_MS, type WorkersWindowPreset } from './window.ts';
 
 /** The tabs of `WorkerTransportScreen` in their order, with their labels (marked texts; translate with `t`): e.g. a host breadcrumb. */
 export const WORKER_TRANSPORT_TABS: readonly { readonly id: WorkerTransportTab; readonly label: string }[] = [
@@ -47,6 +49,21 @@ export const WORKER_TRANSPORT_TABS: readonly { readonly id: WorkerTransportTab; 
 
 /** The sections of `WorkerTransportScreen` (`renderSection`): the Overview tab's four, and the two other tabs. */
 export type WorkerTransportSectionId = 'facts' | 'history' | 'messageClasses' | 'liveProcesses' | 'runs' | 'processes';
+
+/** The third argument of `WorkerTransportScreen.renderSection`. */
+export interface WorkerTransportSectionState {
+  transport: string;
+  tab: WorkerTransportTab;
+  /** The chart window (`window`). */
+  window: WorkersWindowPreset;
+  /** The runs tab's outcome filter (`outcome`). */
+  outcome: WorkerRunOutcomeFilter;
+  /** The processes tab's state filter (`process`). */
+  processFilter: WorkerProcessFilter;
+  monitoringEnabled: boolean;
+  /** The transport detail, once loaded. */
+  detail?: WorkerTransportDetail;
+}
 
 const toTransportTab = (value: string): WorkerTransportTab => (value === 'runs' || value === 'processes' ? value : 'overview');
 
@@ -177,7 +194,9 @@ export interface WorkerTransportScreenProps {
   /** The router link of the screen's links (back link). Default: the provider's (`AdminUiProvider.linkComponent`). */
   linkComponent?: PageLinkComponent;
   /** Keeps, replaces or leaves out a section (`facts`, `history`, `messageClasses`, `liveProcesses`, `runs`, `processes`). */
-  renderSection?: WorkersSectionRenderer<WorkerTransportSectionId>;
+  renderSection?: WorkersSectionRenderer<WorkerTransportSectionId, WorkerTransportSectionState>;
+  /** How many rows "load more" reaches in the Message runs and Processes tabs (default 500; `Infinity`: no cap). */
+  listMaxTop?: number;
 }
 
 /**
@@ -196,6 +215,7 @@ export const WorkerTransportScreen = ({
   headerActions,
   linkComponent,
   renderSection,
+  listMaxTop,
 }: WorkerTransportScreenProps) => {
   const { t } = useTranslate();
   const visible = usePageVisible();
@@ -215,7 +235,10 @@ export const WorkerTransportScreen = ({
   const monitoringQuery = api.useOverviewQuery(undefined, { skip: monitoringEnabledProp !== undefined });
   const monitoringEnabled = monitoringEnabledProp ?? monitoringQuery.data?.workersOverview?.monitoringEnabled ?? true;
   const liveProcesses = detail?.processes?.elements;
-  const section = (id: WorkerTransportSectionId, node: ReactNode) => (renderSection ? renderSection(id, node) : node);
+  const outcome = toWorkerRunOutcomeFilter(values.outcome);
+  const processFilter = toWorkerProcessFilter(values.process);
+  const sectionState: WorkerTransportSectionState = { transport, tab, window: windowPreset, outcome, processFilter, monitoringEnabled, detail };
+  const section = (id: WorkerTransportSectionId, node: ReactNode) => (renderSection ? renderSection(id, node, sectionState) : node);
   const shellError =
     detailQuery.isError && !detail
       ? getErrorStatus(detailQuery.error) === 404
@@ -315,16 +338,23 @@ export const WorkerTransportScreen = ({
             <WorkerMessageRunsTab
               api={api}
               transport={transport}
-              outcome={toWorkerRunOutcomeFilter(values.outcome)}
-              onOutcomeChange={outcome => setValue('outcome', outcome)}
+              outcome={outcome}
+              onOutcomeChange={next => setValue('outcome', next)}
               messageLog={overview?.definition?.messageLog}
+              maxTop={listMaxTop}
             />
           )}
 
         {tab === 'processes' &&
           section(
             'processes',
-            <WorkerProcessesTab api={api} transport={transport} filter={toWorkerProcessFilter(values.process)} onFilterChange={filter => setValue('process', filter)} />
+            <WorkerProcessesTab
+              api={api}
+              transport={transport}
+              filter={processFilter}
+              onFilterChange={filter => setValue('process', filter)}
+              maxTop={listMaxTop}
+            />
           )}
       </EntityDetailShell>
     </div>

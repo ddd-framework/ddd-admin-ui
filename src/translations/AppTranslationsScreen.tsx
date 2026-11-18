@@ -13,12 +13,13 @@ import { EntityListBulkBar } from '../list/EntityListBulkBar.tsx';
 import type { EntityListColumn } from '../list/EntityListTable.tsx';
 import { EntityListToolbar } from '../list/EntityListToolbar.tsx';
 import { EntityListViewToggle } from '../list/EntityListViewToggle.tsx';
-import { FilterPanel, FilterText } from '../list/filters.tsx';
+import { FilterPanel, FilterSelect, FilterText } from '../list/filters.tsx';
 import { StatusBadge } from '../list/StatusBadge.tsx';
-import type { EntityCardRenderer } from '../list/types.ts';
+import type { EntityCardProps, EntityCardRenderer } from '../list/types.ts';
 import type { ListDisplayMode } from '../logic/pure/displayMode.ts';
 import type { EntityDrawerUrlAdapter } from '../logic/pure/entityDrawer.ts';
 import { type EntityListSort, formatListSort, parseListSort } from '../logic/pure/listSort.ts';
+import { ENTITY_DRAWER_CREATE_VALUE } from '../logic/react/useEntityDrawer.ts';
 import { notify } from '../logic/pure/notify.ts';
 import { bulkSummaryText, runSequentialWithSummary, type SequentialSummaryLabels } from '../logic/pure/runSequential.ts';
 import type { UrlStateAdapter } from '../logic/pure/urlListState.ts';
@@ -35,7 +36,7 @@ import { AddEntityButton, type MoreActionItem, PageToolbar } from '../page/PageT
 import { Button } from '../primitives/button.tsx';
 import { Card, CardContent } from '../primitives/card.tsx';
 import { cn } from '../primitives/cn.ts';
-import type { AppTranslationKey, AppTranslationKeysResponse, TranslationsListArg } from './adminTypes.ts';
+import type { AppTranslationKey, AppTranslationKeysResponse, AppTranslationValue, TranslationsListArg } from './adminTypes.ts';
 import {
   appTranslationValueCountryCode,
   appTranslationValueLocaleKey,
@@ -45,10 +46,11 @@ import {
   toCountryCodeMap,
   toLanguageCodeMap,
 } from './adminFormat.ts';
-import type { TranslationsApi } from './api.ts';
+import type { AppTranslationKeysBulkDeleteCounts, AppTranslationKeysBulkDeleteResponse, TranslationsApi } from './api.ts';
 import {
   ACTIVE_LOCALES_WITH_COUNTRIES_ARG,
   APP_TRANSLATION_KEY_FILTER_KEYS,
+  APP_TRANSLATION_KEY_LANGUAGE_FILTER_KEYS,
   APP_TRANSLATION_KEY_SORT_KEYS,
   APP_TRANSLATION_KEYS_PAGE_SIZE,
   APP_TRANSLATIONS_LANGUAGES_ARG,
@@ -66,11 +68,37 @@ const SORT_KEYS = ['sort'] as const;
 /** Values shown per key before "+N" (the rest opens in place). */
 const DEFAULT_VALUES_PREVIEW_COUNT = 4;
 
+/** The package columns' ids and sort keys without cells: what the host's `columns` transform is asked for its sort keys. */
+const SORT_PROBE_COLUMNS: EntityListColumn<AppTranslationKey>[] = [
+  { id: 'id', header: 'ID', cell: () => null, sortKey: 'id', sortStart: 'desc' },
+  { id: 'key', header: 'Key', cell: () => null, sortKey: 'key' },
+  { id: 'translations', header: 'Translations', cell: () => null },
+  { id: 'actions', header: '', cell: () => null },
+];
+
 const extractKeys = (data: AppTranslationKeysResponse): AppTranslationKey[] => data.appTranslationKeys.elements ?? [];
 const keyIdOf = (key: AppTranslationKey): string | null => (key.id === null || key.id === undefined || key.id === '' ? null : String(key.id));
 
-/** The URL parameter names of the keys list (`id`, `key`, `translation`, `sort`); an unnamed one keeps its own. */
-export type AppTranslationsUrlParamNames = Partial<Record<'id' | 'key' | 'translation' | 'sort', string>>;
+/** The URL parameter names of the keys list (`id`, `key`, `translation`, `language`, `sort`); an unnamed one keeps its own. */
+export type AppTranslationsUrlParamNames = Partial<Record<'id' | 'key' | 'translation' | 'language' | 'sort', string>>;
+
+/** The package's parts of a key's card (`AppTranslationsScreen.renderCard` gets them to reuse). */
+export interface AppTranslationKeyCardParts {
+  /** The key as a link to its drawer (or text without an id). */
+  keyLink: ReactNode;
+  /** The values as `locale::style`, the first few with "+N". */
+  values: ReactNode;
+  /** The row actions (`rowActions` applied). */
+  actions: ReactNode;
+  /** The package's whole card with these parts (and `cardFooter`). */
+  card: ReactNode;
+}
+
+/** `AppTranslationsScreen.renderCard`: the card props plus the package's parts (an `EntityCardRenderer` fits too). */
+export type AppTranslationKeyCardRenderer = (props: EntityCardProps<AppTranslationKey> & { parts: AppTranslationKeyCardParts }) => ReactNode;
+
+/** The list arguments as the screen builds them (filters, expand, order), before `transformListArgs`. */
+export type AppTranslationKeysListArgs = Omit<TranslationsListArg, 'top' | 'skip'>;
 
 interface KeyValuesProps {
   item: AppTranslationKey;
@@ -161,10 +189,11 @@ interface KeyCardProps {
   keyLink: ReactNode;
   values: ReactNode;
   actions: ReactNode;
+  footer?: ReactNode;
 }
 
 /** The card of a key (below `md`, and in the card view): id, key with hint and flags, the values, the row actions. */
-const KeyCard = ({ item, onActivate, keyLink, values, actions }: KeyCardProps) => {
+const KeyCard = ({ item, onActivate, keyLink, values, actions, footer }: KeyCardProps) => {
   const { t } = useTranslate();
   const activation = useRowActivation(onActivate);
   return (
@@ -180,6 +209,7 @@ const KeyCard = ({ item, onActivate, keyLink, values, actions }: KeyCardProps) =
           <div className="shrink-0">{actions}</div>
         </div>
         {values}
+        {footer !== undefined && footer !== null && <div data-slot="app-translation-key-card-footer">{footer}</div>}
       </CardContent>
     </Card>
   );
@@ -216,8 +246,33 @@ export interface AppTranslationsScreenProps {
   extraActiveFilterCount?: number;
   /** Clears the host's filters with "Clear filters" (which keeps the toolbar search). */
   onClearExtraFilters?: () => void;
-  /** Draws a key's card (below `md` and in the card view) instead of the package's. */
-  renderCard?: EntityCardRenderer<AppTranslationKey>;
+  /**
+   * Draws a key's card (below `md` and in the card view) instead of the package's; it also gets the package's parts
+   * (`parts.keyLink`, `parts.values`, `parts.actions`, `parts.card`) to reuse.
+   */
+  renderCard?: AppTranslationKeyCardRenderer;
+  /** Content at the bottom of the package's card (a status line, links). */
+  cardFooter?: (key: AppTranslationKey) => ReactNode;
+  /** The row actions of a key (table column and card) from the package's (its delete button): add, wrap or replace. */
+  rowActions?: (key: AppTranslationKey, defaultActions: ReactNode) => ReactNode;
+  /**
+   * Changes the list request (filters joined, another expand, a scope) before it is sent; keep it stable
+   * (`useCallback`). Gets the arguments the screen builds (filters, expand, order) without `top` / `skip`.
+   */
+  transformListArgs?: (args: AppTranslationKeysListArgs) => AppTranslationKeysListArgs;
+  /**
+   * A "Has a value in" filter in the panel (default `false`): keys with a value in the chosen language (a root filter on
+   * the values), each row showing that language's values only (the same filter on the expand). URL key `language`.
+   */
+  languageFilter?: boolean;
+  /** Changes with the host's own filters (`extraFilters`): the list window and the selection start over. */
+  extraResetKey?: string;
+  /** "Generate all missing" in the header (default `true`). */
+  showGenerateAll?: boolean;
+  /** The completeness per locale above the list (default `true`). */
+  showCompleteness?: boolean;
+  /** The bulk delete's counts from its answer; default the api's `mapBulkDeleteResponse`, else the top-level counts. */
+  mapBulkDeleteResponse?: (response: AppTranslationKeysBulkDeleteResponse) => AppTranslationKeysBulkDeleteCounts;
   /** The view (`table` / `grid`): controlled with `onDisplayModeChange` (e.g. `useListViewParam`), else component state. */
   displayMode?: ListDisplayMode;
   onDisplayModeChange?: (mode: ListDisplayMode) => void;
@@ -234,6 +289,12 @@ export interface AppTranslationsScreenProps {
   drawerEditKey?: string;
   /** URL parameter of the create form (default `create`). */
   drawerCreateKey?: string;
+  /** Value of the create parameter that opens the create form (default `ENTITY_DRAWER_CREATE_VALUE`, `1`). */
+  drawerCreateValue?: string;
+  /** The drawer's value rows edit their language and country too (`AppTranslationKeyDrawer.editableValueLocale`). */
+  editableValueLocale?: boolean;
+  /** The host's actions of one stored value in the drawer (`AppTranslationKeyDrawer.valueActions`). */
+  valueActions?: (value: AppTranslationValue, key: AppTranslationKey) => ReactNode;
   /** Other URL parameter names of the list (`{ id: 'keyId' }` keeps the id filter apart from a host's `id`). */
   urlParamNames?: AppTranslationsUrlParamNames;
 }
@@ -272,21 +333,45 @@ export const AppTranslationsScreen = ({
   showRowIndex = true,
   drawerEditKey = 'edit',
   drawerCreateKey = 'create',
+  drawerCreateValue = ENTITY_DRAWER_CREATE_VALUE,
   urlParamNames,
+  cardFooter,
+  rowActions,
+  transformListArgs,
+  languageFilter = false,
+  extraResetKey = '',
+  showGenerateAll = true,
+  showCompleteness = true,
+  mapBulkDeleteResponse,
+  editableValueLocale,
+  valueActions,
 }: AppTranslationsScreenProps) => {
   const { t } = useTranslate();
   const writeAccess = useWriteAccess();
   const memory = useMemoryUrlState();
-  const drawer = useEntityDrawer({ adapter: drawerUrlAdapter ?? memory.drawerUrlAdapter, editKey: drawerEditKey, createKey: drawerCreateKey });
+  const drawer = useEntityDrawer({
+    adapter: drawerUrlAdapter ?? memory.drawerUrlAdapter,
+    editKey: drawerEditKey,
+    createKey: drawerCreateKey,
+    createValue: drawerCreateValue,
+  });
   const baseAdapter = urlStateAdapter ?? memory.urlStateAdapter;
   const paramNamesKey = JSON.stringify(urlParamNames ?? {});
   // biome-ignore lint/correctness/useExhaustiveDependencies: the names are compared by value (an inline object each render)
   const listAdapter = useMemo(() => (urlParamNames ? renameUrlStateKeys(baseAdapter, urlParamNames) : baseAdapter), [baseAdapter, paramNamesKey]);
   const listState = useUrlListState(APP_TRANSLATION_KEY_FILTER_KEYS, { adapter: listAdapter, uncounted: UNCOUNTED });
   const sortState = useUrlListState(SORT_KEYS, { adapter: listAdapter, uncounted: SORT_KEYS });
+  const languageState = useUrlListState(APP_TRANSLATION_KEY_LANGUAGE_FILTER_KEYS, { adapter: listAdapter });
+  const languageId = languageFilter ? languageState.debounced.language : '';
   const { values, debounced, setValue, setValues } = listState;
-  const sort = parseListSort(sortState.values.sort, APP_TRANSLATION_KEY_SORT_KEYS) ?? DEFAULT_APP_TRANSLATION_KEY_SORT;
-  const debouncedSort = parseListSort(sortState.debounced.sort, APP_TRANSLATION_KEY_SORT_KEYS);
+  // the package's sort keys plus the `sortKey`s of the host's columns (sent as `<sortKey> <direction>, id <direction>`);
+  // read from the host's transform of the package columns' shape (their cells are drawn below)
+  const hostSortKeys = transformColumns
+    ? transformColumns(SORT_PROBE_COLUMNS).flatMap(column => (column.sortKey === undefined ? [] : [column.sortKey]))
+    : [];
+  const sortKeys = [...new Set([...APP_TRANSLATION_KEY_SORT_KEYS, ...hostSortKeys])];
+  const sort = parseListSort(sortState.values.sort, sortKeys) ?? DEFAULT_APP_TRANSLATION_KEY_SORT;
+  const debouncedSort = parseListSort(sortState.debounced.sort, sortKeys);
   const setSort = (next: EntityListSort | null) => {
     const isDefault = !next || (next.key === DEFAULT_APP_TRANSLATION_KEY_SORT.key && next.direction === DEFAULT_APP_TRANSLATION_KEY_SORT.direction);
     sortState.setValue('sort', isDefault ? '' : formatListSort(next));
@@ -298,14 +383,18 @@ export const AppTranslationsScreen = ({
 
   const filterString = buildAppTranslationKeysFilter(debounced);
   const sortText = formatListSort(debouncedSort);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: the filter string and the sort text carry the arguments
-  const listArgs = useMemo(() => buildAppTranslationKeysListArgs(debounced, debouncedSort), [filterString, sortText]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the filter string, the language and the sort text carry the arguments
+  const listArgs = useMemo(() => {
+    const built = buildAppTranslationKeysListArgs({ ...debounced, language: languageId }, debouncedSort);
+    return transformListArgs ? transformListArgs(built) : built;
+  }, [filterString, sortText, languageId, transformListArgs]);
+  const resetKey = `${filterString ?? ''}|${sortText}${languageId ? `|language:${languageId}` : ''}${extraResetKey ? `|${extraResetKey}` : ''}`;
   const list = useGrowingWindowList({
     useListQuery: useListQuery ?? api.useAppTranslationKeysQuery,
     args: listArgs,
     extractItems: extractKeys,
     pageSize: APP_TRANSLATION_KEYS_PAGE_SIZE,
-    resetKey: `${filterString ?? ''}|${sortText}`,
+    resetKey,
   });
   const languagesQuery = api.useLanguagesQuery(APP_TRANSLATIONS_LANGUAGES_ARG);
   const languageCodes = useMemo(() => toLanguageCodeMap(languagesQuery.data?.languages.elements ?? []), [languagesQuery.data]);
@@ -322,7 +411,7 @@ export const AppTranslationsScreen = ({
   const selection = useRowSelection({
     items: list.items,
     getKey: keyIdOf,
-    resetKey: `${filterString ?? ''}|${sortText}`,
+    resetKey,
     disabled: isDeleting,
     rowLabel: key => t('Select key %id%', { replacements: { id: String(key.id) } }),
   });
@@ -347,7 +436,9 @@ export const AppTranslationsScreen = ({
     setIsDeleting(true);
     try {
       if (bulkDelete) {
-        const response = await bulkDelete({ appTranslationKeyIds: ids }).unwrap();
+        const raw = await bulkDelete({ appTranslationKeyIds: ids }).unwrap();
+        const mapCounts = mapBulkDeleteResponse ?? api.mapBulkDeleteResponse;
+        const response = mapCounts ? mapCounts(raw) : raw;
         const deleted = Math.min(response.deletedCount ?? ids.length, ids.length);
         const skipped = Math.max(response.skippedCount ?? ids.length - deleted, 0);
         notify.success(bulkSummaryText({ succeeded: deleted, failed: 0, skipped, total: ids.length }, deleteLabels));
@@ -413,7 +504,7 @@ export const AppTranslationsScreen = ({
   const valuesOf = (key: AppTranslationKey) => (
     <KeyValues item={key} languageCodes={languageCodes} countryCodes={countryCodes} previewCount={valuesPreviewCount} />
   );
-  const actionsOf = (key: AppTranslationKey) =>
+  const defaultActionsOf = (key: AppTranslationKey) =>
     keyIdOf(key) === null ? null : (
       <Button
         type="button"
@@ -428,6 +519,7 @@ export const AppTranslationsScreen = ({
         <Trash2 aria-hidden />
       </Button>
     );
+  const actionsOf = (key: AppTranslationKey) => (rowActions ? rowActions(key, defaultActionsOf(key)) : defaultActionsOf(key));
 
   const defaultColumns: EntityListColumn<AppTranslationKey>[] = [
     { id: 'id', header: m('ID'), cell: key => <IdCell id={key.id} copyable />, className: 'w-20', sortKey: 'id', sortStart: 'desc' },
@@ -454,15 +546,29 @@ export const AppTranslationsScreen = ({
   ];
   const columns = transformColumns ? transformColumns(defaultColumns) : defaultColumns;
 
-  const cardRenderer: EntityCardRenderer<AppTranslationKey> =
-    renderCard ??
-    (({ item, onActivate }) => <KeyCard item={item} onActivate={onActivate} keyLink={keyLinkOf(item)} values={valuesOf(item)} actions={actionsOf(item)} />);
+  const cardRenderer: EntityCardRenderer<AppTranslationKey> = props => {
+    const { item, onActivate } = props;
+    const keyLink = keyLinkOf(item);
+    const keyValues = valuesOf(item);
+    const actions = actionsOf(item);
+    const card = <KeyCard item={item} onActivate={onActivate} keyLink={keyLink} values={keyValues} actions={actions} footer={cardFooter?.(item)} />;
+    return renderCard ? renderCard({ ...props, parts: { keyLink, values: keyValues, actions, card } }) : card;
+  };
 
   const clearFilters = () => {
     setValues({ id: '', translation: '' });
+    if (languageFilter) languageState.clear();
     onClearExtraFilters?.();
   };
-  const isFiltered = listState.isActive || extraActiveFilterCount > 0;
+  const languageFilterActive = languageFilter && languageState.values.language !== '';
+  const isFiltered = listState.isActive || (languageFilter && languageState.isActive) || extraActiveFilterCount > 0;
+  const languageOptions = useMemo(
+    () =>
+      (languagesQuery.data?.languages.elements ?? []).flatMap(language =>
+        language.id === null || language.id === undefined ? [] : [{ value: String(language.id), label: language.name || language.languageCode || String(language.id) }]
+      ),
+    [languagesQuery.data]
+  );
   const addAction = (
     <AddEntityButton entity={m('Translation key')} onClick={drawer.openCreate} />
   );
@@ -479,20 +585,22 @@ export const AppTranslationsScreen = ({
       description={description ?? t('Translation keys of the apps and the backend, stored in the database, with their values per locale and writing style.')}
       headerActions={
         <PageToolbar moreActions={moreActions} primaryAction={addAction}>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => void runGenerateAll()}
-            disabled={!writeAccess.allowed || generateAllState.isLoading}
-            title={writeAccess.allowed ? t('Generate every missing value for every active locale and writing style') : writeAccess.reason}
-          >
-            <Sparkles aria-hidden />
-            {generateAllState.isLoading ? t('Generating…') : t('Generate all missing')}
-          </Button>
+          {showGenerateAll && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void runGenerateAll()}
+              disabled={!writeAccess.allowed || generateAllState.isLoading}
+              title={writeAccess.allowed ? t('Generate every missing value for every active locale and writing style') : writeAccess.reason}
+            >
+              <Sparkles aria-hidden />
+              {generateAllState.isLoading ? t('Generating…') : t('Generate all missing')}
+            </Button>
+          )}
           {headerActions}
         </PageToolbar>
       }
-      belowHeader={<TranslationCompleteness api={api} />}
+      belowHeader={showCompleteness ? <TranslationCompleteness api={api} /> : undefined}
       toolbar={
         <EntityListToolbar
           search={{ value: values.key, onChange: value => setValue('key', value), placeholder: t('Search keys…'), 'aria-label': t('Filter by key') }}
@@ -500,10 +608,20 @@ export const AppTranslationsScreen = ({
             <FilterPanel>
               <FilterText label={t('ID')} inputMode="numeric" value={values.id} onChange={value => setValue('id', value)} />
               <FilterText label={t('Translation')} value={values.translation} onChange={value => setValue('translation', value)} placeholder={t('Search translations…')} />
+              {languageFilter && (
+                <FilterSelect
+                  label={t('Has a value in')}
+                  value={languageState.values.language}
+                  onChange={value => languageState.setValue('language', value)}
+                  options={languageOptions}
+                  allLabel={t('Any language')}
+                  isLoading={languagesQuery.isFetching && !languagesQuery.data}
+                />
+              )}
               {extraFilters}
             </FilterPanel>
           }
-          activeFilterCount={listState.activeFilterCount + extraActiveFilterCount}
+          activeFilterCount={listState.activeFilterCount + (languageFilterActive ? 1 : 0) + extraActiveFilterCount}
           onClearFilters={clearFilters}
           trailing={toolbarTrailing}
           viewToggle={<EntityListViewToggle displayMode={displayMode} onDisplayModeChange={setDisplayMode} />}
@@ -535,12 +653,13 @@ export const AppTranslationsScreen = ({
         isSearchActive={isFiltered}
         onClearSearch={() => {
           listState.clear();
+          if (languageFilter) languageState.clear();
           onClearExtraFilters?.();
         }}
         loadingMessage={t('Loading translation keys')}
         error={list.isError ? t('The translation keys could not be loaded.') : undefined}
       />
-      <AppTranslationKeyDrawer api={api} drawer={drawer} />
+      <AppTranslationKeyDrawer api={api} drawer={drawer} editableValueLocale={editableValueLocale} valueActions={valueActions} />
     </EntityListPage>
   );
 };

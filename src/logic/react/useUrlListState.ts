@@ -59,6 +59,31 @@ export const initialListValues = <K extends string>(
   return initial;
 };
 
+/** The list's keys as the URL holds them now (trimmed; `''` = absent). */
+export const readListValues = <K extends string>(keys: readonly K[], adapter: UrlStateAdapter): Record<K, string> => {
+  const record = emptyRecord(keys);
+  for (const key of keys) record[key] = (adapter.get(key) ?? '').trim();
+  return record;
+};
+
+/**
+ * Whether the URL changed the list's keys from outside (Back / Forward, a link to the same page with other filters, a
+ * host write): the URL now differs from what it held at the last look (`lastSeen`) AND from what the list wrote last
+ * (`lastWritten`, the echo of its own write). Returns the URL's values then, else `null`. A URL that still holds the old
+ * values while the list's own write is pending is no change.
+ */
+export const externalListChange = <K extends string>(
+  keys: readonly K[],
+  urlNow: Readonly<Record<K, string>>,
+  lastSeen: Readonly<Record<K, string>>,
+  lastWritten: Readonly<Record<K, string>> | null
+): Record<K, string> | null => {
+  const differs = (left: Readonly<Record<K, string>>, right: Readonly<Record<K, string>>) => keys.some(key => left[key] !== right[key]);
+  if (!differs(urlNow, lastSeen)) return null;
+  if (lastWritten && !differs(urlNow, lastWritten)) return null;
+  return { ...urlNow };
+};
+
 /**
  * A list's search and filters, kept in the URL: a reload, Back and a shared link keep them; when the URL has none of
  * the keys, the adapter's `restore` (last saved state of this list) is used, so a return to the list keeps its filters. One hook for every list (replaces the
@@ -79,6 +104,21 @@ export const useUrlListState = <K extends string>(
 
   const adapterRef = useRef(adapter);
   adapterRef.current = adapter;
+
+  // A URL change from outside (Back / Forward, a link with other filters) reaches the inputs: the adapter is a new
+  // object whenever its URL changes; its values count only when they are neither the last seen nor the list's own write.
+  const lastSeenUrlRef = useRef<Record<K, string> | null>(null);
+  const lastWrittenRef = useRef<Record<K, string> | null>(null);
+  useEffect(() => {
+    const urlNow = readListValues(keys, adapter);
+    const lastSeen = lastSeenUrlRef.current;
+    lastSeenUrlRef.current = urlNow;
+    if (lastSeen === null) return;
+    const external = externalListChange(keys, urlNow, lastSeen, lastWrittenRef.current);
+    if (!external) return;
+    lastWrittenRef.current = null;
+    setValuesState(previous => (keys.some(key => previous[key].trim() !== external[key]) ? external : previous));
+  }, [adapter, keys]);
 
   const restoreAfterHydrationRef = useRef(!hydrated);
   useEffect(() => {
@@ -111,7 +151,11 @@ export const useUrlListState = <K extends string>(
       updates[key] = next === '' ? null : next;
       changed = true;
     }
-    if (changed) adapterRef.current.replace(updates);
+    if (!changed) return;
+    const written = emptyRecord(keys);
+    for (const key of keys) written[key] = debounced[key].trim();
+    lastWrittenRef.current = written;
+    adapterRef.current.replace(updates);
   }, [debounced, keys]);
 
   const setValue = useCallback(

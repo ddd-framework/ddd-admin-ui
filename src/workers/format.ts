@@ -137,6 +137,43 @@ export const windowHeaderText = (seconds: number, t: TranslateFn): string => {
 export const inWindowText = (seconds: number, t: TranslateFn): string =>
   seconds === 3600 ? t('in the last hour') : t('in the last %window%', { replacements: { window: formatWindowLength(seconds, t) } });
 
+/** What a sequence sparkline shows (its accessible label names the sequence window). */
+export type WorkerSequenceLabelKind = 'processes' | 'waiting' | 'inFlight' | 'handled' | 'failed';
+
+/**
+ * The label of a sequence sparkline over `seconds` (`sequenceWindowSeconds`): "Handled messages in the last hour" for
+ * the hour, else "Handled messages in the last 30 min".
+ */
+export const sequenceLabelText = (kind: WorkerSequenceLabelKind, seconds: number, t: TranslateFn): string => {
+  if (seconds === 3600) {
+    if (kind === 'processes') return t('Worker processes in the last hour');
+    if (kind === 'waiting') return t('Waiting messages in the last hour');
+    if (kind === 'inFlight') return t('Messages in work in the last hour');
+    if (kind === 'handled') return t('Handled messages in the last hour');
+    return t('Failed messages in the last hour');
+  }
+  const window = inWindowText(seconds, t);
+  if (kind === 'processes') return t('Worker processes %window%', { replacements: { window } });
+  if (kind === 'waiting') return t('Waiting messages %window%', { replacements: { window } });
+  if (kind === 'inFlight') return t('Messages in work %window%', { replacements: { window } });
+  if (kind === 'handled') return t('Handled messages %window%', { replacements: { window } });
+  return t('Failed messages %window%', { replacements: { window } });
+};
+
+/**
+ * The description of the throughput table from the windows of the payload (`throughputWindowSeconds`): the fixed text
+ * for 5 and 15 min, 1 h and 24 h, else the windows named ("…in the last 10 min, 1 hour, 7 days…").
+ */
+export const throughputDescriptionText = (windowSeconds: readonly number[], t: TranslateFn): string => {
+  const isDefault = windowSeconds.length === 0 || windowSeconds.join(',') === '300,900,3600,86400';
+  if (isDefault) {
+    return t('Messages finished per transport in the last 5 and 15 minutes, the last hour and the last 24 hours, with the rate and what one worker finished per minute.');
+  }
+  return t('Messages finished per transport in each window (%windows%), with the rate and what one worker finished per minute.', {
+    replacements: { windows: windowSeconds.map(seconds => formatWindowLength(seconds, t)).join(', ') },
+  });
+};
+
 /** The pod part that tells replicas apart (`worker-x-769459868d-dg82v` → `769459868d-dg82v`). */
 export const shortHost = (hostName: string | null | undefined): string =>
   hostName ? hostName.split('-').slice(-2).join('-') : translateText('unknown host');

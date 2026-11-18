@@ -396,6 +396,11 @@ for the follow-up), `WorkersLivePanel` (`totals` for the header line, `monitorin
 (`monitoringEnabled`; above the maximum it turns to the warning colour), the charts, `WorkerHint`, and the cache tag
 `WORKERS_TAG`.
 
+Options (0.3.4): `renderSection(id, section, state)` also gets the screen's state (`WorkersOverviewSectionState`,
+`WorkerTransportSectionState`); `WorkerTransportScreen listMaxTop` (and `maxTop` on the tabs) lifts the 500-row cap of
+"load more" (`Infinity`: none); `workerMessageRunColumns(t)` gives the runs table's columns; `createWorkersApi({ tags:
+{ provides, invalidates } })` joins the host's cache tags.
+
 ### `./translations` (admin screens)
 
 The app translation keys and values with their completeness, the languages and locales, and the entity translation,
@@ -486,6 +491,14 @@ A host hook that asks what a package screen asks shares its cache entry: `buildA
 sort)` (plus `top` / `skip`), `CONTENT_LOCALES_ARG` (or `useActiveLocales(api)` for the rows of `useContentLocales`),
 `ACTIVE_LANGUAGES_ARG`, `ACTIVE_LOCALES_WITH_COUNTRIES_ARG`, `APP_TRANSLATIONS_LANGUAGES_ARG`; the host's own writes
 invalidate the exported tags (`APP_TRANSLATIONS_TAG`, `LANGUAGES_TAG`, `LOCALES_TAG`) to refresh the package screens.
+
+Options (0.3.4): `transformListArgs` (the request before it is sent; keep it stable), `languageFilter` ("Has a value
+in": keys with a value in a language, each row showing that language's values; URL key `language`), `extraResetKey`
+(changes with the host's own filters), `showGenerateAll={false}`, `showCompleteness={false}`, `cardFooter`,
+`rowActions(key, defaultActions)`, `renderCard` with `parts` (`keyLink`, `values`, `actions`, `card`),
+`drawerCreateValue` (e.g. `'new'` for `?create=new`), `editableValueLocale` and `valueActions` in the drawer; a host
+column's `sortKey` is sorted on. `createTranslationsApi({ tags, bulkDelete: { mapResponse } })` joins host cache tags
+and reads the counts of the application's own bulk delete answer.
 
 ### `./issues`
 
@@ -718,6 +731,11 @@ hydration, and applied in the render right after it. A list that mounts on the c
 its first render, so it never renders or requests twice. `useHydrated()` (`./logic`) gives the same switch to host
 code.
 
+A URL change from outside the list (Back / Forward, a link to the same page with other filters, a host write) reaches
+its inputs; the echo of its own write does not (0.3.4). `useNextUrlStateAdapter({ listId, restore: false })` brings no
+saved state back; `savedKeys` (the list's own keys) keeps a drawer's `edit`, another list's filters and host parameters
+out of the saved state.
+
 ## Shell and navigation
 
 `./shell` is the application frame; its content comes from the host. ONE navigation tree (types in `./logic`) feeds
@@ -827,7 +845,7 @@ project's `.claude/skills/`. Idempotent; repoints an existing symlink, never tou
 
 ## Versioning
 
-0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.3"`,
+0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.4"`,
 `pnpm add -E` / `npm install -E`); modules peer on the version they were tested with. Stable releases are published
 under the `latest` dist-tag, pre-releases (`x.y.z-…`) under `next`. Changes per release: [CHANGELOG.md](CHANGELOG.md).
 

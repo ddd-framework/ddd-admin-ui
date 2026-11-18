@@ -2,7 +2,7 @@
 
 import { normalizeDddError } from '@mgamadeus/ddd-web/contract';
 import { Plus, Save, Trash2 } from 'lucide-react';
-import { useContext, useEffect, useId, useMemo, useState } from 'react';
+import { type ReactNode, useContext, useEffect, useId, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
 import { Form } from '../form/Form.tsx';
@@ -159,13 +159,32 @@ interface TranslationValueRowProps {
   localeKey: string;
   countryCode: string | null;
   language: AdminLanguage | undefined;
+  /** Language and country of the value are editable (`AppTranslationKeyDrawer.editableValueLocale`). */
+  localeEditable?: boolean;
+  languages?: readonly AdminLanguage[];
+  locales?: readonly AdminLocale[];
+  /** `appTranslationValueCombination` of every stored value: a move onto another value's combination is refused. */
+  existingCombinations?: ReadonlySet<string>;
+  /** The host's actions of this value, after Save and Delete. */
+  actions?: ReactNode;
 }
 
 /**
  * One stored value: its `locale::style` key (and country), the text, context and style; Save sends the whole value
  * (never an empty text), Delete asks first. A changed row counts as an unsaved change of the drawer.
  */
-const TranslationValueRow = ({ api, value, localeKey, countryCode, language }: TranslationValueRowProps) => {
+const TranslationValueRow = ({
+  api,
+  value,
+  localeKey,
+  countryCode,
+  language,
+  localeEditable = false,
+  languages = [],
+  locales = [],
+  existingCombinations,
+  actions,
+}: TranslationValueRowProps) => {
   const { t } = useTranslate();
   const writeAccess = useWriteAccess();
   const confirm = useConfirm();
@@ -174,11 +193,28 @@ const TranslationValueRow = ({ api, value, localeKey, countryCode, language }: T
   const [translation, setTranslation] = useState(value.translation ?? '');
   const [context, setContext] = useState<AppTranslationContext>(storedContext);
   const [writingStyle, setWritingStyle] = useState<AppTranslationWritingStyle>(storedStyle);
+  const storedLanguageId = value.languageId === null || value.languageId === undefined ? '' : String(value.languageId);
+  const storedCountryId = value.countryId === null || value.countryId === undefined ? ANY_COUNTRY : String(value.countryId);
+  const [languageId, setLanguageId] = useState(storedLanguageId);
+  const [countryId, setCountryId] = useState(storedCountryId);
   const [saveValue, saveState] = api.useUpdateAppTranslationValueMutation();
   const [deleteValue, deleteState] = api.useDeleteAppTranslationValueMutation();
-  const isDirty = translation !== (value.translation ?? '') || context !== storedContext || writingStyle !== storedStyle;
+  const localeChanged = languageId !== storedLanguageId || countryId !== storedCountryId;
+  const isDirty = translation !== (value.translation ?? '') || context !== storedContext || writingStyle !== storedStyle || localeChanged;
   useUnsavedChangesGuard(isDirty, confirm);
   const isEmpty = translation.trim() === '';
+  // a value moved (language, country, style or context) onto a combination another value holds
+  const combination = combinationOf(languageId, countryId, writingStyle, context);
+  const collides =
+    combination !== combinationOf(storedLanguageId, storedCountryId, storedStyle, storedContext) && (existingCombinations?.has(combination) ?? false);
+  const languageOptions = useMemo(
+    () =>
+      languages.flatMap(entry =>
+        entry.id === null || entry.id === undefined ? [] : [{ value: String(entry.id), label: entry.name || entry.languageCode || String(entry.id) }]
+      ),
+    [languages]
+  );
+  const countries = useMemo(() => countryOptionsOf(locales, languageId), [locales, languageId]);
 
   const handleSave = async () => {
     if (!writeAccess.allowed || isEmpty) return;
@@ -187,8 +223,8 @@ const TranslationValueRow = ({ api, value, localeKey, countryCode, language }: T
         appTranslationValue: {
           id: value.id,
           appTranslationKeyId: value.appTranslationKeyId,
-          languageId: value.languageId,
-          countryId: value.countryId,
+          languageId: localeEditable && languageId !== '' ? Number(languageId) : value.languageId,
+          countryId: localeEditable ? (countryId === ANY_COUNTRY ? null : Number(countryId)) : value.countryId,
           translation,
           context,
           writingStyle,
@@ -228,6 +264,44 @@ const TranslationValueRow = ({ api, value, localeKey, countryCode, language }: T
             {countryCode}
           </code>
         )}
+        {localeEditable && (
+          <div className="flex w-full flex-col gap-1.5 sm:w-40" data-slot="app-translation-value-locale">
+            <Combobox
+              options={languageOptions}
+              value={languageId}
+              onChange={next => {
+                setLanguageId(next);
+                setCountryId(ANY_COUNTRY);
+              }}
+              placeholder={t('Language…')}
+              searchPlaceholder={t('Search languages…')}
+              emptyMessage={t('No language found')}
+              aria-label={t('Language of the %locale% value', { replacements: { locale: localeKey } })}
+              disabled={disabled}
+              className="w-full"
+            />
+            <Select
+              value={countryId === ANY_COUNTRY ? ALL_OPTION : countryId}
+              onValueChange={next => setCountryId(next === ALL_OPTION ? ANY_COUNTRY : next)}
+              disabled={disabled || (countries.length === 0 && countryId === ANY_COUNTRY)}
+            >
+              <SelectTrigger size="sm" className="w-full text-xs" aria-label={t('Country of the %locale% value', { replacements: { locale: localeKey } })}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_OPTION}>{t('Every country')}</SelectItem>
+                {countryId !== ANY_COUNTRY && !countries.some(country => country.value === countryId) && (
+                  <SelectItem value={countryId}>{countryCode ?? `#${countryId}`}</SelectItem>
+                )}
+                {countries.map(country => (
+                  <SelectItem key={country.value} value={country.value}>
+                    {country.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
       <div className="min-w-0 flex-1">
         <Textarea
@@ -239,6 +313,7 @@ const TranslationValueRow = ({ api, value, localeKey, countryCode, language }: T
           className="w-full"
         />
         {isEmpty && <p className="mt-1 text-xs text-destructive">{t('A value needs a text; delete it instead.')}</p>}
+        {collides && <p className="mt-1 text-xs text-destructive">{t('The key already has a value for this language, country, style and context.')}</p>}
       </div>
       <ContextAndStyle
         context={context}
@@ -255,7 +330,7 @@ const TranslationValueRow = ({ api, value, localeKey, countryCode, language }: T
           variant="outline"
           size="sm"
           onClick={() => void handleSave()}
-          disabled={disabled || isEmpty}
+          disabled={disabled || isEmpty || collides}
           title={writeAccess.allowed ? undefined : writeAccess.reason}
         >
           <Save aria-hidden />
@@ -273,6 +348,7 @@ const TranslationValueRow = ({ api, value, localeKey, countryCode, language }: T
           <Trash2 aria-hidden />
           {t('Delete', { context: 'action' })}
         </Button>
+        {actions}
       </div>
     </li>
   );
@@ -485,9 +561,11 @@ interface KeyContentProps {
   keyId: string | undefined;
   loadedKey: AppTranslationKey | undefined;
   drawer: EntityDrawer;
+  editableValueLocale: boolean;
+  valueActions?: (value: AppTranslationValue, key: AppTranslationKey) => ReactNode;
 }
 
-const KeyContent = ({ api, keyId, loadedKey, drawer }: KeyContentProps) => {
+const KeyContent = ({ api, keyId, loadedKey, drawer, editableValueLocale, valueActions }: KeyContentProps) => {
   const { t } = useTranslate();
   const writeAccess = useWriteAccess();
   const id = useId();
@@ -689,6 +767,11 @@ const KeyContent = ({ api, keyId, loadedKey, drawer }: KeyContentProps) => {
                       localeKey={appTranslationValueLocaleKey(value, languageCodes)}
                       countryCode={appTranslationValueCountryCode(value, countryCodes)}
                       language={languageById.get(String(value.languageId))}
+                      localeEditable={editableValueLocale}
+                      languages={languages ?? []}
+                      locales={locales ?? []}
+                      existingCombinations={existingCombinations}
+                      actions={valueActions?.(value, loadedKey)}
                     />
                   ))}
                 </ul>
@@ -712,6 +795,13 @@ export interface AppTranslationKeyDrawerProps {
   api: TranslationsApi;
   /** The list's drawer (`useEntityDrawer`): `?edit=<id>` edits a key, `?create=1` creates one. */
   drawer: EntityDrawer;
+  /**
+   * The language and the country of a stored value are editable in its row (default `false`: shown as its key); a move
+   * onto a combination another value of the key holds is refused.
+   */
+  editableValueLocale?: boolean;
+  /** The host's actions of one stored value, after its Save and Delete (copy, open elsewhere). */
+  valueActions?: (value: AppTranslationValue, key: AppTranslationKey) => ReactNode;
 }
 
 /**
@@ -721,7 +811,7 @@ export interface AppTranslationKeyDrawerProps {
  * values on) and a form for a new value (the language's supported styles, only combinations the key lacks). Unsaved
  * rows count for the discard question. Writes follow `WriteAccessProvider`.
  */
-export const AppTranslationKeyDrawer = ({ api, drawer }: AppTranslationKeyDrawerProps) => {
+export const AppTranslationKeyDrawer = ({ api, drawer, editableValueLocale = false, valueActions }: AppTranslationKeyDrawerProps) => {
   const { t } = useTranslate();
   const shown = drawer.shown;
   const keyId = shown?.mode === 'edit' ? shown.id : undefined;
@@ -746,7 +836,15 @@ export const AppTranslationKeyDrawer = ({ api, drawer }: AppTranslationKeyDrawer
       ) : isMissing ? (
         <EntityListEmpty tone="error" message={normalizeDddError(keyQuery.error, t('The translation key could not be loaded.')).message} />
       ) : (
-        <KeyContent key={drawerKey(shown)} api={api} keyId={keyId} loadedKey={loadedKey} drawer={drawer} />
+        <KeyContent
+          key={drawerKey(shown)}
+          api={api}
+          keyId={keyId}
+          loadedKey={loadedKey}
+          drawer={drawer}
+          editableValueLocale={editableValueLocale}
+          valueActions={valueActions}
+        />
       )}
     </FormDrawer>
   );

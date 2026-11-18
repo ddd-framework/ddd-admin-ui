@@ -4,7 +4,10 @@ import {
   type InjectableBaseApi,
   type InjectedEndpointDefinition,
   type InjectedRequest,
+  hostTagTypes,
   injectEndpointsOnce,
+  type InjectedHostTags,
+  withHostTags,
   staticMutationHook,
   staticQueryHook,
   toQueryString,
@@ -78,6 +81,8 @@ export interface TranslationsApi {
    * list then deletes one key per request.
    */
   useBulkDeleteAppTranslationKeysMutation?: ApiMutationHook<AppTranslationKeysBulkDeleteArg, AppTranslationKeysBulkDeleteResponse>;
+  /** The bulk delete's `mapResponse` (`createTranslationsApi({ bulkDelete: { mapResponse } })`): the counts of an answer. */
+  mapBulkDeleteResponse?: (response: AppTranslationKeysBulkDeleteResponse) => AppTranslationKeysBulkDeleteCounts;
 }
 
 /** The ids of a bulk delete. */
@@ -99,6 +104,17 @@ export interface AppTranslationKeysBulkDelete {
   method?: 'POST' | 'DELETE';
   /** The request body for the ids (default `{ appTranslationKeyIds: [...] }`). */
   body?: (appTranslationKeyIds: readonly (string | number)[]) => unknown;
+  /**
+   * Reads the counts from the endpoint's own answer (`{ result: { deleted: 3 } }` → `{ deletedCount: 3 }`); default:
+   * `deletedCount` / `skippedCount` at the top level. Reaches the keys list through `TranslationsApi.mapBulkDeleteResponse`.
+   */
+  mapResponse?: (response: AppTranslationKeysBulkDeleteResponse) => AppTranslationKeysBulkDeleteCounts;
+}
+
+/** The counts of a bulk delete as the keys list reads them. */
+export interface AppTranslationKeysBulkDeleteCounts {
+  deletedCount?: number | null;
+  skippedCount?: number | null;
 }
 
 /** Path segments below `apiPrefix`, as the application's controllers mount them. */
@@ -129,6 +145,8 @@ export interface CreateTranslationsApiOptions {
   paths?: Partial<TranslationsApiPaths>;
   /** The application's bulk delete of keys (`true`: the defaults); adds `useBulkDeleteAppTranslationKeysMutation`. */
   bulkDelete?: AppTranslationKeysBulkDelete | true;
+  /** The host's cache tags joined with the package's: provided by every query, invalidated by every mutation. */
+  tags?: InjectedHostTags;
 }
 
 const listQuery = ({ filters, orderBy, top, skip, select, expand }: TranslationsListArg): string =>
@@ -225,11 +243,11 @@ export const translationsEndpointDefinitions = (apiPrefix: string, paths?: Parti
  * export const translationsApi = createTranslationsApi({ baseApi: adminApi, apiPrefix: '/api/admin/common' });
  * ```
  */
-export const createTranslationsApi = ({ baseApi, apiPrefix, paths, bulkDelete }: CreateTranslationsApiOptions): TranslationsApi => {
+export const createTranslationsApi = ({ baseApi, apiPrefix, paths, bulkDelete, tags }: CreateTranslationsApiOptions): TranslationsApi => {
   const bulkDeleteOptions = bulkDelete === true ? {} : bulkDelete;
   const memoKey = `translations:${trimApiPrefix(apiPrefix)}:${JSON.stringify({ ...DEFAULT_TRANSLATIONS_API_PATHS, ...paths })}${
     bulkDeleteOptions ? `:bulkDelete:${JSON.stringify({ path: bulkDeleteOptions.path, method: bulkDeleteOptions.method })}` : ''
-  }`;
+  }${tags ? `:tags:${JSON.stringify(tags)}` : ''}`;
   const definitions = {
     ...translationsEndpointDefinitions(apiPrefix, paths),
     ...(bulkDeleteOptions
@@ -245,8 +263,8 @@ export const createTranslationsApi = ({ baseApi, apiPrefix, paths, bulkDelete }:
   return injectEndpointsOnce(
     baseApi,
     memoKey,
-    [APP_TRANSLATIONS_TAG, LANGUAGES_TAG, LOCALES_TAG],
-    definitions,
+    [APP_TRANSLATIONS_TAG, LANGUAGES_TAG, LOCALES_TAG, ...hostTagTypes(tags)],
+    withHostTags(definitions, tags),
     hookOf => ({
       useAppTranslationKeysQuery: hookOf('adminUiAppTranslationKeys') as TranslationsApi['useAppTranslationKeysQuery'],
       useAppTranslationKeyQuery: hookOf('adminUiAppTranslationKey') as TranslationsApi['useAppTranslationKeyQuery'],
@@ -267,6 +285,7 @@ export const createTranslationsApi = ({ baseApi, apiPrefix, paths, bulkDelete }:
       ...(bulkDeleteOptions
         ? { useBulkDeleteAppTranslationKeysMutation: hookOf('adminUiBulkDeleteAppTranslationKeys') as TranslationsApi['useBulkDeleteAppTranslationKeysMutation'] }
         : {}),
+      ...(bulkDeleteOptions?.mapResponse ? { mapBulkDeleteResponse: bulkDeleteOptions.mapResponse } : {}),
     })
   );
 };

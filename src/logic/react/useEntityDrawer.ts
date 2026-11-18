@@ -10,6 +10,11 @@ export interface UseEntityDrawerOptions {
   editKey?: string;
   /** URL parameter of the create form (default `create`, value `1`). */
   createKey?: string;
+  /**
+   * The value of the create parameter that opens the create form (default `ENTITY_DRAWER_CREATE_VALUE`, `1`): a host
+   * whose links use `?create=new` passes `'new'`.
+   */
+  createValue?: string;
 }
 
 export interface EntityDrawer {
@@ -41,11 +46,12 @@ export interface EntityDrawer {
   close: () => void;
 }
 
-const CREATE_VALUE = '1';
+/** The default value of the create parameter (`?create=1`). */
+export const ENTITY_DRAWER_CREATE_VALUE = '1';
 
-const stateOf = (editId: string | null, createValue: string | null): EntityDrawerState | null => {
+const stateOf = (editId: string | null, createParameter: string | null, createValue: string): EntityDrawerState | null => {
   if (editId) return { mode: 'edit', id: editId };
-  if (createValue === CREATE_VALUE) return { mode: 'create' };
+  if (createParameter === createValue) return { mode: 'create' };
   return null;
 };
 
@@ -66,10 +72,11 @@ export const useEntityDrawer = ({
   adapter,
   editKey = 'edit',
   createKey = 'create',
+  createValue = ENTITY_DRAWER_CREATE_VALUE,
 }: UseEntityDrawerOptions): EntityDrawer => {
   const editId = adapter.get(editKey);
-  const createValue = adapter.get(createKey);
-  const state = useMemo(() => stateOf(editId, createValue), [editId, createValue]);
+  const createParameter = adapter.get(createKey);
+  const state = useMemo(() => stateOf(editId, createParameter, createValue), [editId, createParameter, createValue]);
 
   const adapterRef = useRef(adapter);
   adapterRef.current = adapter;
@@ -108,8 +115,8 @@ export const useEntityDrawer = ({
 
   const openCreate = useCallback(() => {
     pushedRef.current = true;
-    adapterRef.current.push({ [createKey]: CREATE_VALUE, [editKey]: null });
-  }, [editKey, createKey]);
+    adapterRef.current.push({ [createKey]: createValue, [editKey]: null });
+  }, [editKey, createKey, createValue]);
 
   const close = useCallback(() => {
     if (pushedRef.current) {

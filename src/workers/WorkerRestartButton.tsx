@@ -14,6 +14,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../pri
 import type { WorkersApi } from './api.ts';
 import { isProcessStillLive, shortClassName, shortHost } from './format.ts';
 import type { WorkerProcess } from './types.ts';
+import { WorkerTruncatedText } from './hint.tsx';
 
 export interface WorkerRestartButtonProps {
   api: WorkersApi;
@@ -151,11 +152,11 @@ export const WorkerRestartButton = ({
               {result.processes.length > 0 && (
                 <ul className="max-h-64 divide-y overflow-y-auto rounded-xl bg-tint">
                   {result.processes.map(process => (
-                    <li key={process.processKey ?? String(process.id)} className="space-y-0.5 px-3 py-2" title={process.processKey ?? undefined}>
+                    <li key={process.processKey ?? String(process.id)} className="space-y-0.5 px-3 py-2">
                       <p className="flex items-center justify-between gap-2 font-mono text-xs">
-                        <span className="truncate">
+                        <WorkerTruncatedText full={process.processKey} className="truncate">
                           {t('%host% · pid %pid%', { replacements: { host: shortHost(process.hostName), pid: process.processId ?? '—' } })}
-                        </span>
+                        </WorkerTruncatedText>
                         {liveProcesses &&
                           (isProcessStillLive(process, liveProcesses) ? (
                             <span className="shrink-0 font-sans text-[11px] text-muted-foreground">{t('waiting to stop')}</span>

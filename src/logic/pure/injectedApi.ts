@@ -218,3 +218,35 @@ export const staticMutationHook = <TArg, TData>(answer: (arg: TArg) => TData | P
   const result = [trigger, state] as const;
   return () => result;
 };
+
+/**
+ * The host's cache tags joined with the package's (`createWorkersApi({ tags })`, `createTranslationsApi({ tags })`):
+ * `provides` are added to every query (a host mutation invalidating one refetches the package's lists), `invalidates`
+ * to every mutation (a package write refreshes the host's own data). Their tag types must be in the host api's
+ * `tagTypes` (the injection adds them too).
+ */
+export interface InjectedHostTags {
+  provides?: readonly InjectedTag[];
+  invalidates?: readonly InjectedTag[];
+}
+
+/** The definitions with the host's tags joined in (`InjectedHostTags`); the same object without any. */
+export const withHostTags = <TDefinitions extends Readonly<Record<string, InjectedEndpointDefinition<never>>>>(
+  definitions: TDefinitions,
+  tags: InjectedHostTags | undefined
+): TDefinitions => {
+  if (!tags || ((tags.provides?.length ?? 0) === 0 && (tags.invalidates?.length ?? 0) === 0)) return definitions;
+  const joined: Record<string, InjectedEndpointDefinition<never>> = {};
+  for (const [name, definition] of Object.entries(definitions)) {
+    joined[name] =
+      definition.kind === 'query'
+        ? { ...definition, providesTags: [...(definition.providesTags ?? []), ...(tags.provides ?? [])] }
+        : { ...definition, invalidatesTags: [...(definition.invalidatesTags ?? []), ...(tags.invalidates ?? [])] };
+  }
+  return joined as TDefinitions;
+};
+
+/** The tag types of the host's tags (added to the api's tag types on injection). */
+export const hostTagTypes = (tags: InjectedHostTags | undefined): string[] => [
+  ...new Set([...(tags?.provides ?? []), ...(tags?.invalidates ?? [])].map(tag => (typeof tag === 'string' ? tag : tag.type))),
+];

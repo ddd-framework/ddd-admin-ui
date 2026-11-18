@@ -11,8 +11,8 @@ import {
   toAppTranslationKeyBody,
   toCountryCodeMap,
 } from './adminFormat.ts';
-import { buildAppTranslationKeysBulkDeleteRequest, createTranslationsApi } from './api.ts';
-import { appTranslationKeysOrderBy, buildAppTranslationKeysListArgs, renameUrlStateKeys } from './appTranslationsList.ts';
+import { type AppTranslationKeysBulkDeleteResponse, buildAppTranslationKeysBulkDeleteRequest, createTranslationsApi } from './api.ts';
+import { appTranslationKeysExpand, appTranslationKeysOrderBy, buildAppTranslationKeysListArgs, renameUrlStateKeys } from './appTranslationsList.ts';
 
 const NO_FILTERS = { id: '', key: '', translation: '' };
 
@@ -117,5 +117,35 @@ describe('bulk delete of keys', () => {
       }),
       { url: '/api/appTranslations/keys/delete', method: 'DELETE', body: { ids: ['5'] } }
     );
+  });
+});
+
+describe('keys list options (0.3.4)', () => {
+  it('filters by a language at the root and on the expand', () => {
+    const args = buildAppTranslationKeysListArgs({ ...NO_FILTERS, language: '3' });
+    assert.equal(args.expand, appTranslationKeysExpand('3'));
+    assert.match(args.expand, /^appTranslationValues\(filters=.*languageId.*3.*\)$/);
+    assert.match(args.filters ?? '', /appTranslationValues\.languageId/);
+    assert.deepEqual(buildAppTranslationKeysListArgs({ ...NO_FILTERS, language: ' ' }), { expand: 'appTranslationValues', orderBy: 'id DESC' });
+  });
+
+  it('sorts by a host column key with ties by id', () => {
+    assert.equal(appTranslationKeysOrderBy({ key: 'created', direction: 'desc' }), 'created DESC, id DESC');
+  });
+
+  it('hands the bulk delete answer mapping to the screen and joins the host tags', () => {
+    const mapResponse = (response: AppTranslationKeysBulkDeleteResponse) => ({
+      deletedCount: ((response.result as { deleted?: number } | undefined)?.deleted ?? null) as number | null,
+    });
+    const { api, endpoints } = recordingBaseApi();
+    const translationsApi = createTranslationsApi({
+      baseApi: api,
+      apiPrefix: '/api/admin/common',
+      bulkDelete: { mapResponse },
+      tags: { provides: ['HostKeys'], invalidates: ['HostKeys'] },
+    });
+    assert.equal(translationsApi.mapBulkDeleteResponse, mapResponse);
+    assert.ok((endpoints.adminUiAppTranslationKeys?.providesTags ?? []).includes('HostKeys'));
+    assert.ok((endpoints.adminUiBulkDeleteAppTranslationKeys?.invalidatesTags ?? []).includes('HostKeys'));
   });
 });

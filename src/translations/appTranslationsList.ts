@@ -17,6 +17,9 @@ export const APP_TRANSLATION_KEY_FILTER_KEYS = ['id', 'key', 'translation'] as c
 export type AppTranslationKeyFilterKey = (typeof APP_TRANSLATION_KEY_FILTER_KEYS)[number];
 export type AppTranslationKeyFilterValues = Readonly<Record<AppTranslationKeyFilterKey, string>>;
 
+/** The URL key of the keys list's "has a value in language" filter (`AppTranslationsScreen.languageFilter`): a language id. */
+export const APP_TRANSLATION_KEY_LANGUAGE_FILTER_KEYS = ['language'] as const;
+
 /** The sortable columns of the keys list (`sortKey`). */
 export const APP_TRANSLATION_KEY_SORT_KEYS = ['id', 'key'] as const;
 
@@ -31,11 +34,27 @@ export const buildAppTranslationKeysFilter = (values: AppTranslationKeyFilterVal
     buildContainsFilter('appTranslationValues.translation', sanitizeSearchInput(values.translation))
   );
 
-/** `orderBy` of a sort: `id DESC` (the default), `id ASC`, `key ASC, id ASC` (ties stay stable). */
+/**
+ * `orderBy` of a sort: `id DESC` (the default), `id ASC`, `key ASC, id ASC` (ties stay stable); a host column's own
+ * `sortKey` (a property of the key, `created`) the same way: `created DESC, id DESC`.
+ */
 export const appTranslationKeysOrderBy = (sort: EntityListSort | null | undefined): string => {
   const effective = sort ?? DEFAULT_APP_TRANSLATION_KEY_SORT;
   const direction = effective.direction === 'asc' ? 'ASC' : 'DESC';
-  return effective.key === 'key' ? `key ${direction}, id ${direction}` : `id ${direction}`;
+  return effective.key === 'id' ? `id ${direction}` : `${effective.key} ${direction}, id ${direction}`;
+};
+
+/** The root filter of "has a value in language": keys with at least one value in the language (by language id). */
+export const buildAppTranslationKeysLanguageFilter = (languageId: string | null | undefined): string | undefined =>
+  buildIntEqFilter((languageId ?? '').trim(), 'appTranslationValues.languageId');
+
+/**
+ * The expand of the keys list: the values, cut to one language when the "has a value in language" filter is set
+ * (`appTranslationValues(filters=languageId eq 3)`), so a row shows that language's values only.
+ */
+export const appTranslationKeysExpand = (languageId?: string | null): string => {
+  const valueFilter = buildIntEqFilter((languageId ?? '').trim(), 'languageId');
+  return valueFilter ? `appTranslationValues(filters=${valueFilter})` : 'appTranslationValues';
 };
 
 /**
@@ -43,11 +62,11 @@ export const appTranslationKeysOrderBy = (sort: EntityListSort | null | undefine
  * expanded, the order, the filters. With the default sort the order is `id DESC`, as the screen asked before sorting.
  */
 export const buildAppTranslationKeysListArgs = (
-  values: AppTranslationKeyFilterValues,
+  values: AppTranslationKeyFilterValues & { language?: string },
   sort?: EntityListSort | null
 ): Omit<TranslationsListArg, 'top' | 'skip'> => {
-  const filters = buildAppTranslationKeysFilter(values);
-  return { expand: 'appTranslationValues', orderBy: appTranslationKeysOrderBy(sort), ...(filters ? { filters } : {}) };
+  const filters = combineFilters(buildAppTranslationKeysFilter(values), buildAppTranslationKeysLanguageFilter(values.language));
+  return { expand: appTranslationKeysExpand(values.language), orderBy: appTranslationKeysOrderBy(sort), ...(filters ? { filters } : {}) };
 };
 
 /** The languages of the keys list (the language codes of the values). */
@@ -72,7 +91,8 @@ export const ACTIVE_LOCALES_WITH_COUNTRIES_ARG: TranslationsListArg = {
 
 /**
  * A URL adapter whose keys carry other names in the URL (`{ id: 'keyId' }` keeps the id filter apart from a host's
- * own `id` parameter). Keys without a name stay as they are; `restore` answers under the screen's keys.
+ * own `id` parameter). Keys without a name stay as they are; `restore` answers under the screen's keys and leaves out
+ * a saved parameter under a renamed key's own name (the host's `id` never comes back as the id filter).
  */
 export const renameUrlStateKeys = (adapter: UrlStateAdapter, names: Readonly<Partial<Record<string, string>>>): UrlStateAdapter => {
   const urlKeyOf = (key: string) => names[key] ?? key;
@@ -85,7 +105,15 @@ export const renameUrlStateKeys = (adapter: UrlStateAdapter, names: Readonly<Par
       ? {
           restore: () => {
             const saved = restore();
-            return saved ? Object.fromEntries(Object.entries(saved).map(([key, value]) => [screenKeyOf.get(key) ?? key, value])) : saved;
+            if (!saved) return saved;
+            const restored: Record<string, string> = {};
+            for (const [urlKey, value] of Object.entries(saved)) {
+              const screenKey = screenKeyOf.get(urlKey);
+              if (screenKey !== undefined) restored[screenKey] = value;
+              // a screen key renamed away: its own name in the URL is someone else's parameter
+              else if (names[urlKey] === undefined || names[urlKey] === urlKey) restored[urlKey] = value;
+            }
+            return restored;
           },
         }
       : {}),

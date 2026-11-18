@@ -96,6 +96,7 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
       WorkerKpiTilesSkeleton: 'drawn by WorkersOverviewScreen while the overview loads',
       WorkerChartSyncGroup: DRAWN_BY('WorkersHistoryCharts and WorkerTransportCharts'),
       WorkerHint: DRAWN_BY('WorkerTransportsTable, WorkerMessageClassesTable and WorkerProcessTimeline'),
+      WorkerTruncatedText: DRAWN_BY('WorkerMessageClassesTable, WorkerProcessesTable and the message runs columns'),
       WorkerTransportFacts: DRAWN_BY('WorkerTransportScreen'),
     },
   },

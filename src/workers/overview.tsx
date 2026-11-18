@@ -34,6 +34,7 @@ import {
   shortClassName,
   shortHost,
   throughputWindowOf,
+  sequenceLabelText,
   throughputWindowSeconds,
   windowHeaderText,
   type WorkersWindowCount,
@@ -41,7 +42,7 @@ import {
   waitingStateLabel,
   zipSeries,
 } from './format.ts';
-import { WorkerHint } from './hint.tsx';
+import { WorkerHint, WorkerTruncatedText } from './hint.tsx';
 import { rawStatusValue, WORKER_PROCESS_STATE, WORKER_TRANSPORT_STATE } from './status.ts';
 import type {
   WorkerLoopDefinition,
@@ -123,7 +124,8 @@ export const WorkerKpiTiles = ({ overview }: { overview: WorkersOverview }) => {
   const waiting = totals?.waiting;
   const uncounted = transports.filter(transport => transport.waiting === null || transport.waiting === undefined).length;
   const notMeasured = t('not measured');
-  const windowText = inWindowText(overview.sequenceWindowSeconds ?? 3600, t);
+  const sequenceSeconds = overview.sequenceWindowSeconds ?? 3600;
+  const windowText = inWindowText(sequenceSeconds, t);
   const common = { totals, stepSeconds: overview.stepSeconds };
 
   return (
@@ -140,7 +142,7 @@ export const WorkerKpiTiles = ({ overview }: { overview: WorkersOverview }) => {
             : notMeasured
         }
         icon={Server}
-        spark={measured ? { key: 'processes', color: 'var(--info)', label: t('Worker processes in the last hour') } : undefined}
+        spark={measured ? { key: 'processes', color: 'var(--info)', label: sequenceLabelText('processes', sequenceSeconds, t) } : undefined}
       />
       <KpiTile
         {...common}
@@ -152,7 +154,7 @@ export const WorkerKpiTiles = ({ overview }: { overview: WorkersOverview }) => {
             : t('in every queue')
         }
         icon={Hourglass}
-        spark={{ key: 'waiting', color: 'var(--warning)', label: t('Waiting messages in the last hour') }}
+        spark={{ key: 'waiting', color: 'var(--warning)', label: sequenceLabelText('waiting', sequenceSeconds, t) }}
       />
       <KpiTile
         {...common}
@@ -160,7 +162,7 @@ export const WorkerKpiTiles = ({ overview }: { overview: WorkersOverview }) => {
         value={measured ? formatCount(totals?.inFlight ?? 0) : '—'}
         hint={measured ? t('messages being handled') : notMeasured}
         icon={Activity}
-        spark={measured ? { key: 'inFlight', color: 'var(--primary)', label: t('Messages in work in the last hour') } : undefined}
+        spark={measured ? { key: 'inFlight', color: 'var(--primary)', label: sequenceLabelText('inFlight', sequenceSeconds, t) } : undefined}
       />
       <KpiTile
         {...common}
@@ -168,7 +170,7 @@ export const WorkerKpiTiles = ({ overview }: { overview: WorkersOverview }) => {
         value={measured ? formatCount(handled) : '—'}
         hint={measured ? windowText : notMeasured}
         icon={CircleCheck}
-        spark={measured ? { key: 'handled', color: 'var(--success)', label: t('Handled messages in the last hour') } : undefined}
+        spark={measured ? { key: 'handled', color: 'var(--success)', label: sequenceLabelText('handled', sequenceSeconds, t) } : undefined}
       />
       <KpiTile
         {...common}
@@ -187,7 +189,7 @@ export const WorkerKpiTiles = ({ overview }: { overview: WorkersOverview }) => {
         }
         icon={CircleX}
         iconClassName={failed > 0 ? 'text-destructive' : undefined}
-        spark={measured ? { key: 'failed', color: 'var(--destructive)', label: t('Failed messages in the last hour') } : undefined}
+        spark={measured ? { key: 'failed', color: 'var(--destructive)', label: sequenceLabelText('failed', sequenceSeconds, t) } : undefined}
       />
       <KpiTile
         {...common}
@@ -237,9 +239,9 @@ const LiveProcessRow = ({ process, nowMs }: { process: WorkerProcess; nowMs: num
     <li className="space-y-1 py-2 first:pt-0 last:pb-0">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <StatusBadge value={rawStatusValue<WorkerProcessDisplayState>(process.displayState ?? process.state)} map={WORKER_PROCESS_STATE} />
-        <span className="truncate font-mono text-xs" title={process.processKey ?? undefined}>
+        <WorkerTruncatedText full={process.processKey} className="truncate font-mono text-xs">
           {shortHost(process.hostName)} · {process.processId}
-        </span>
+        </WorkerTruncatedText>
         {runningSince && <span className="text-xs text-muted-foreground">{t('running since %time%', { replacements: { time: runningSince } })}</span>}
         {process.restartRequestedAt && (
           <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -249,13 +251,13 @@ const LiveProcessRow = ({ process, nowMs }: { process: WorkerProcess; nowMs: num
         )}
       </div>
       {process.currentMessageClass ? (
-        <p className="truncate pl-1 text-xs text-muted-foreground" title={process.currentMessageClass}>
+        <WorkerTruncatedText full={process.currentMessageClass} className="block truncate pl-1 text-xs text-muted-foreground">
           {messageSince
             ? t('working on %messageClass% since %since%', {
                 replacements: { messageClass: shortClassName(process.currentMessageClass), since: messageSince },
               })
             : t('working on %messageClass%', { replacements: { messageClass: shortClassName(process.currentMessageClass) } })}
-        </p>
+        </WorkerTruncatedText>
       ) : (
         <p className="pl-1 text-xs text-muted-foreground">{t('idle, waiting for a message')}</p>
       )}
@@ -969,7 +971,7 @@ export const WorkerTransportsTable = ({
               rows={rows}
               valueKey="handled"
               color="var(--success)"
-              label={t('Handled messages in the last hour')}
+              label={sequenceLabelText('handled', sequenceWindowSeconds, t)}
               height={32}
               stepSeconds={stepSeconds}
             />

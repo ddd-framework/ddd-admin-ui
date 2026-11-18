@@ -11,6 +11,11 @@ export type SearchParamUpdates = Readonly<Record<string, string | null>>;
 export interface SearchParamsWriteOptions {
   /** A sessionStorage key that remembers the resulting query (the list's filters key). */
   saveAs?: string;
+  /**
+   * The parameters `saveAs` remembers (the list's own keys); default: the whole resulting query. Writes of one batch
+   * under the same key join their lists; one write without a list saves the whole query.
+   */
+  saveKeys?: readonly string[];
   /** Parameters a write never removes (a host's sticky parameters, e.g. `debug`); setting a value still works. */
   preserve?: readonly string[];
 }
@@ -20,7 +25,8 @@ interface PendingWrite {
   pathname: string | null;
   router: AppRouter | null;
   updates: Record<string, string | null>;
-  saveAs: Set<string>;
+  /** Storage key → the parameters it remembers (`null`: the whole query). */
+  saveAs: Map<string, Set<string> | null>;
   preserve: Set<string>;
   /** A shallow write asked for a history entry (opening a drawer). */
   push: boolean;
@@ -28,6 +34,16 @@ interface PendingWrite {
 }
 
 let pending: PendingWrite | null = null;
+
+/** The part of a query a list remembers: only `keys` when given (in the query's order), else the whole query. */
+export const savedQueryOf = (query: string, keys: ReadonlySet<string> | readonly string[] | null | undefined): string => {
+  if (!keys) return query;
+  const kept = keys instanceof Set ? keys : new Set(keys);
+  const params = new URLSearchParams(query);
+  const saved = new URLSearchParams();
+  for (const [key, value] of params) if (kept.has(key)) saved.append(key, value);
+  return saved.toString();
+};
 
 const mergedQuery = (write: PendingWrite): string => {
   const params = new URLSearchParams(window.location.search);
@@ -47,7 +63,7 @@ export const flushSearchParamsWrites = (): void => {
   pending = null;
   if (!write) return;
   const query = mergedQuery(write);
-  for (const storageKey of write.saveAs) writeStored('session', storageKey, query);
+  for (const [storageKey, keys] of write.saveAs) writeStored('session', storageKey, savedQueryOf(query, keys));
   if (write.shallow || !write.router || write.pathname === null) {
     // Shallow: the live path (base path included), only the query changes; Next keeps `useSearchParams` in step.
     const url = `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`;
@@ -64,7 +80,7 @@ const enqueue = (updates: SearchParamUpdates, options: SearchParamsWriteOptions 
       pathname: null,
       router: null,
       updates: {},
-      saveAs: new Set(),
+      saveAs: new Map(),
       preserve: new Set(),
       push: false,
       shallow: false,
@@ -72,7 +88,11 @@ const enqueue = (updates: SearchParamUpdates, options: SearchParamsWriteOptions 
     queueMicrotask(flushSearchParamsWrites);
   }
   Object.assign(pending.updates, updates);
-  if (options?.saveAs) pending.saveAs.add(options.saveAs);
+  if (options?.saveAs) {
+    const known = pending.saveAs.get(options.saveAs);
+    if (!options.saveKeys || known === null) pending.saveAs.set(options.saveAs, null);
+    else pending.saveAs.set(options.saveAs, new Set([...(known ?? []), ...options.saveKeys]));
+  }
   for (const key of options?.preserve ?? []) pending.preserve.add(key);
   return pending;
 };
