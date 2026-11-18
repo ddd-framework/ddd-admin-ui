@@ -288,14 +288,80 @@ export const cronStatusRank = (status: string): number => {
   return index === -1 ? CRON_STATUS_SEVERITY.length : index;
 };
 
-/** The order of the Crons list: `name` as the API sends them (by name), `severity` the worst status first, then by name. */
+/**
+ * The order of the Crons list: `name` as the API sends them (by name), `severity` the worst status first, within a
+ * status the most recent failure first, then the most recent run, then by name (`compareCronsBySeverity`).
+ */
 export type CronListSort = 'name' | 'severity';
 
-/** The Crons in the given order (a new array). */
-export const sortCrons = <TCron extends Pick<CronOverview, 'name' | 'status'>>(crons: readonly TCron[], sort: CronListSort): TCron[] =>
-  sort === 'severity'
-    ? [...crons].sort((left, right) => cronStatusRank(left.status) - cronStatusRank(right.status) || left.name.localeCompare(right.name))
-    : [...crons];
+/** The fields of a Cron the severity order reads. */
+export type CronSeverityFields = Pick<CronOverview, 'name' | 'status'> &
+  Partial<Pick<CronOverview, 'lastExecution' | 'lastExecutionStartedAt' | 'recentExecutions'>>;
+
+/**
+ * A host's order for `sort="severity"` (`CronsScreen.severityCompare`): gets the package's comparator to fall back on
+ * or to wrap (`(left, right, compare) => hostRank(left) - hostRank(right) || compare(left, right)`).
+ */
+export type CronSeverityCompare<TCron extends CronSeverityFields = CronOverview> = (
+  left: TCron,
+  right: TCron,
+  defaultCompare: (left: TCron, right: TCron) => number
+) => number;
+
+/**
+ * The start of a Cron's most recent failed run (`Y-m-d H:i:s`, server clock), `null` without one: the last run when it
+ * failed, else the newest failed run of `recentExecutions`.
+ */
+export const cronLastFailureAt = (cron: CronSeverityFields): string | null => {
+  const runs = [...(cron.lastExecution ? [cron.lastExecution] : []), ...(cron.recentExecutions?.elements ?? [])];
+  let latest: string | null = null;
+  for (const run of runs) {
+    if (run.executionState !== 'FAILED' || !run.startedAt) continue;
+    if (latest === null || run.startedAt > latest) latest = run.startedAt;
+  }
+  return latest;
+};
+
+/** The start of a Cron's last run (`lastExecutionStartedAt`, else the last run's `startedAt`), `null` without one. */
+export const cronLastRunAt = (cron: CronSeverityFields): string | null => cron.lastExecutionStartedAt || cron.lastExecution?.startedAt || null;
+
+/** Newer first, a missing time last (the server's `Y-m-d H:i:s` sorts as text). */
+const compareNewestFirst = (left: string | null, right: string | null): number =>
+  left === right ? 0 : left === null ? 1 : right === null ? -1 : left > right ? -1 : 1;
+
+/**
+ * The package's severity order of two Crons: the worse status first (`CRON_STATUS_SEVERITY`), then the most recent
+ * failure, then the most recent run, then by name.
+ */
+export const compareCronsBySeverity = (left: CronSeverityFields, right: CronSeverityFields): number =>
+  cronStatusRank(left.status) - cronStatusRank(right.status) ||
+  compareNewestFirst(cronLastFailureAt(left), cronLastFailureAt(right)) ||
+  compareNewestFirst(cronLastRunAt(left), cronLastRunAt(right)) ||
+  left.name.localeCompare(right.name);
+
+/** The Crons in the given order (a new array); `severityCompare` replaces the package's comparator for `severity`. */
+export const sortCrons = <TCron extends CronSeverityFields>(
+  crons: readonly TCron[],
+  sort: CronListSort,
+  severityCompare?: CronSeverityCompare<TCron>
+): TCron[] => {
+  if (sort !== 'severity') return [...crons];
+  const compare: (left: TCron, right: TCron) => number = compareCronsBySeverity;
+  return [...crons].sort(severityCompare ? (left, right) => severityCompare(left, right, compare) : compare);
+};
+
+/**
+ * A refresh interval in ms (`CronsScreen.detailsPollingIntervalMs`): a number, or a function of the shown Cron (fast
+ * while a run is active). Without a loaded Cron the function form answers 0; a negative, fractional or non-finite
+ * answer counts as 0 or is rounded down.
+ */
+export type CronPollingInterval = number | ((cron: CronOverview) => number);
+
+/** The interval in ms for the Cron shown (0 = off). */
+export const resolveCronPollingInterval = (interval: CronPollingInterval | undefined, cron: CronOverview | undefined): number => {
+  const value = typeof interval === 'function' ? (cron ? interval(cron) : 0) : (interval ?? 0);
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
+};
 
 /** The status filter of the Crons list: every status, the ones that need attention, or one status. */
 export type CronStatusFilter = 'ALL' | 'ATTENTION' | 'MISSING_COMMAND' | 'PAUSED' | 'RUNNING' | 'OVERDUE' | 'FAILING' | 'OK';

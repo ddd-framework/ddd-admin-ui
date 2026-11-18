@@ -125,6 +125,9 @@ export {
 export type { FieldTranslations, HydratedTranslations } from './pure/translationState.ts';
 export {
   hostTagTypes,
+  hostTagsMemoKey,
+  resolveHostTagsByEndpoint,
+  resolveHostTagsOf,
   injectEndpointsOnce,
   withHostTags,
   injectedHookName,
@@ -146,6 +149,10 @@ export type {
   InjectedEndpointDefinition,
   InjectedRequest,
   InjectedHostTags,
+  InjectedHostTagsByOperation,
+  InjectedHostTagSelection,
+  InjectedHostTagsOption,
+  InjectedHostTagsResolver,
   InjectedTag,
   StaticQueryFailure,
 } from './pure/injectedApi.ts';

@@ -72,6 +72,7 @@ export {
   DEFAULT_TRANSLATIONS_API_PATHS,
   LANGUAGES_TAG,
   LOCALES_TAG,
+  TRANSLATIONS_API_OPERATIONS,
   translationsEndpointDefinitions,
 } from './api.ts';
 export type {
@@ -82,6 +83,7 @@ export type {
   CreateTranslationsApiOptions,
   StaticTranslationsData,
   TranslationsApi,
+  TranslationsApiOperation,
   TranslationsApiPaths,
 } from './api.ts';
 export {
@@ -93,6 +95,7 @@ export {
   APP_TRANSLATION_KEYS_PAGE_SIZE,
   APP_TRANSLATIONS_LANGUAGES_ARG,
   appTranslationKeysExpand,
+  appTranslationKeysLanguageIds,
   appTranslationKeysOrderBy,
   buildAppTranslationKeysFilter,
   buildAppTranslationKeysLanguageFilter,
@@ -101,7 +104,7 @@ export {
   DEFAULT_APP_TRANSLATION_KEY_SORT,
   renameUrlStateKeys,
 } from './appTranslationsList.ts';
-export type { AppTranslationKeyFilterKey, AppTranslationKeyFilterValues } from './appTranslationsList.ts';
+export type { AppTranslationKeyFilterKey, AppTranslationKeyFilterValues, AppTranslationKeysLanguageSelection } from './appTranslationsList.ts';
 export type * from './adminTypes.ts';
 export {
   APP_TRANSLATION_CONTEXT_OPTIONS,
@@ -126,6 +129,7 @@ export { AppTranslationsScreen } from './AppTranslationsScreen.tsx';
 export type {
   AppTranslationKeyCardParts,
   AppTranslationKeyCardRenderer,
+  AppTranslationKeysCardSortOptions,
   AppTranslationKeysListArgs,
   AppTranslationsScreenProps,
   AppTranslationsUrlParamNames,
@@ -134,6 +138,13 @@ export { AppTranslationKeyDrawer } from './AppTranslationKeyDrawer.tsx';
 export type { AppTranslationKeyDrawerProps } from './AppTranslationKeyDrawer.tsx';
 export { TranslationCompleteness } from './TranslationCompleteness.tsx';
 export type { TranslationCompletenessProps } from './TranslationCompleteness.tsx';
+export { GenerationEstimate, startGenerationPreview } from './GenerationEstimate.tsx';
+export type {
+  AppTranslationsGenerationEstimateRenderer,
+  AppTranslationsGenerationPreviewLoader,
+  AppTranslationsGenerationScope,
+  GenerationEstimateProps,
+} from './GenerationEstimate.tsx';
 export { LanguagesScreen } from './LanguagesScreen.tsx';
 export type { LanguagesScreenProps } from './LanguagesScreen.tsx';
 export { LocalesScreen } from './LocalesScreen.tsx';

@@ -81,6 +81,7 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
     ],
     notShown: {
       AppTranslationKeyDrawer: 'drawn by AppTranslationsScreen when a row or Add opens it',
+      GenerationEstimate: 'drawn in the confirmation before a generation (TranslationCompleteness, AppTranslationsScreen renderGenerationEstimate)',
       TranslatableLanguageMarkdown: 'TranslatableLanguageInput with the markdown editor of TranslatableMarkdown',
     },
   },

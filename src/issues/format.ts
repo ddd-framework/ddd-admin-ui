@@ -228,8 +228,20 @@ export const issueStackText = (event: IssueEventDetail): string => {
     .join('\n');
 };
 
+/**
+ * The labels of environment codes (`IssuesScreen.environmentLabels`): a map (`{ prod: 'Production' }`) or a function
+ * (`code => label`, `undefined` or `''` keeps the code).
+ */
+export type IssueEnvironmentLabels = Readonly<Record<string, string>> | ((code: string) => string | undefined);
+
+/** The host's label of an environment code, `undefined` without one (a map entry or the function's answer, not empty). */
+export const issueEnvironmentHostLabel = (code: string, labels?: IssueEnvironmentLabels): string | undefined => {
+  const label = typeof labels === 'function' ? labels(code) : labels?.[code];
+  return typeof label === 'string' && label !== '' ? label : undefined;
+};
+
 /** The label of an environment code (`environmentLabels` of the screen), else the code. */
-export const issueEnvironmentLabel = (code: string, labels?: Readonly<Record<string, string>>): string => labels?.[code] || code;
+export const issueEnvironmentLabel = (code: string, labels?: IssueEnvironmentLabels): string => issueEnvironmentHostLabel(code, labels) ?? code;
 
 /** The command that prints the same group again, for an agent (`app:issues:show`). */
 export const issueShowCommand = ({ environment, groupHash }: IssueGroupArg): string =>

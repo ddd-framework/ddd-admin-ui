@@ -67,8 +67,20 @@ export {
   recentRunsOf,
   runNowBlockedReason,
   sortCrons,
+  compareCronsBySeverity,
+  cronLastFailureAt,
+  cronLastRunAt,
+  resolveCronPollingInterval,
   toCronCreateBody,
   toCronFormValues,
   toCronStatusFilter,
 } from './format.ts';
-export type { CronFormValues, CronListSort, CronNextRunState, CronStatusFilter } from './format.ts';
+export type {
+  CronFormValues,
+  CronListSort,
+  CronNextRunState,
+  CronPollingInterval,
+  CronSeverityCompare,
+  CronSeverityFields,
+  CronStatusFilter,
+} from './format.ts';

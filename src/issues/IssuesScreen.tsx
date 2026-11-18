@@ -36,6 +36,8 @@ import {
   type IssuesWindowValue,
   resolveIssuesTrendRange,
   toIssuesWindowValue,
+  issueEnvironmentHostLabel,
+  type IssueEnvironmentLabels,
 } from './format.ts';
 import { IssueGroupDrawer, IssueGroupFlags } from './IssueGroupDrawer.tsx';
 import { IssuesTrendCard, IssuesTrendRangeControl, IssuesWindowSwitch } from './IssuesTrendChart.tsx';
@@ -77,8 +79,8 @@ export interface IssuesScreenProps {
   trendAnchorMs?: number;
   /** A "Custom" choice in the window switch: from and to, at most 31 days apart (URL keys `from`, `to`). Default `false`. */
   customTrendRange?: boolean;
-  /** Labels of environment codes (`{ prod: 'Production' }`): the switch, the column and the drawer show them instead of the code. */
-  environmentLabels?: Readonly<Record<string, string>>;
+  /** Labels of environment codes (`{ prod: 'Production' }`, or a function `code => label | undefined`): the switch, the column and the drawer show them instead of the code. */
+  environmentLabels?: IssueEnvironmentLabels;
   /** Page actions at the right edge of the header (a link to the alert settings). */
   headerActions?: ReactNode;
   /**
@@ -233,7 +235,7 @@ export const IssuesScreen = ({
         </div>
       ),
     },
-    ...(isAll ? [{ id: 'environment', header: m('Environment'), width: '120px' as const, cell: (group: IssueGroupSummary) => <span className={environmentLabels?.[group.environment] ? 'text-xs' : 'font-mono text-xs'}>{envLabel(group.environment)}</span> }] : []),
+    ...(isAll ? [{ id: 'environment', header: m('Environment'), width: '120px' as const, cell: (group: IssueGroupSummary) => <span className={issueEnvironmentHostLabel(group.environment, environmentLabels) ? 'text-xs' : 'font-mono text-xs'}>{envLabel(group.environment)}</span> }] : []),
     ...(status === 'ALL'
       ? [{ id: 'status', header: m('Status'), width: '130px' as const, cell: (group: IssueGroupSummary) => <StatusBadge value={(toIssueGroupStatus(group.status) ?? group.status) as IssueGroupStatus} map={ISSUE_GROUP_STATUS} /> }]
       : []),

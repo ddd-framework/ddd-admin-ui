@@ -14,6 +14,13 @@ import type { AppTranslationCompleteness, AppTranslationWritingStyle } from './a
 import { completenessPercent, supportedWritingStylesOf, writingStyleLabel } from './adminFormat.ts';
 import type { TranslationsApi } from './api.ts';
 import { APP_TRANSLATIONS_LANGUAGES_ARG } from './appTranslationsList.ts';
+import {
+  type AppTranslationsGenerationEstimateRenderer,
+  type AppTranslationsGenerationPreviewLoader,
+  type AppTranslationsGenerationScope,
+  GenerationEstimate,
+  startGenerationPreview,
+} from './GenerationEstimate.tsx';
 
 const barClass = (percent: number) => (percent >= 90 ? 'bg-success' : percent >= 50 ? 'bg-warning' : 'bg-destructive');
 
@@ -49,6 +56,13 @@ export interface TranslationCompletenessProps {
    * confirmation (default true); false generates on the click, as before.
    */
   confirmGeneration?: boolean;
+  /**
+   * Loads the host's estimate of a generation when its confirmation opens (`{ kind: 'locale', localeId, writingStyle,
+   * locale }`); the answer goes to `renderGenerationEstimate`. Without it the renderer gets the package's estimate.
+   */
+  loadGenerationPreview?: AppTranslationsGenerationPreviewLoader;
+  /** Host content in the confirmation, below the package's text (a skeleton while `loadGenerationPreview` loads). */
+  renderGenerationEstimate?: AppTranslationsGenerationEstimateRenderer;
 }
 
 /**
@@ -57,7 +71,7 @@ export interface TranslationCompletenessProps {
  * (asynchronous on the backend), after a cost estimate and a confirmation. One generation at a time; the buttons follow
  * `WriteAccessProvider`. Nothing without an active locale.
  */
-export const TranslationCompleteness = ({ api, confirmGeneration = true }: TranslationCompletenessProps) => {
+export const TranslationCompleteness = ({ api, confirmGeneration = true, loadGenerationPreview, renderGenerationEstimate }: TranslationCompletenessProps) => {
   const { t } = useTranslate();
   const writeAccess = useWriteAccess();
   const confirm = useConfirm();
@@ -78,18 +92,31 @@ export const TranslationCompleteness = ({ api, confirmGeneration = true }: Trans
     const style = t(writingStyleLabel(writingStyle));
     try {
       if (confirmGeneration) {
-        const preview = (await generate({ localeId, writingStyle, previewOnly: true }).unwrap()).appTranslationsResult;
+        const scope: AppTranslationsGenerationScope = { kind: 'locale', localeId, writingStyle, locale };
+        // the host's estimate starts with the package's, so both load at once
+        const hostPreview =
+          renderGenerationEstimate && loadGenerationPreview ? startGenerationPreview(() => loadGenerationPreview(scope)) : null;
+        const previewResponse = await generate({ localeId, writingStyle, previewOnly: true }).unwrap();
+        const preview = previewResponse.appTranslationsResult;
         const keys = preview?.translatedKeysCount ?? null;
         const apiCalls = preview?.apiCalls ?? null;
+        const text = [
+          keys === null ? t('The number of missing keys is not known.') : t('{count, plural, one {# key is missing.} other {# keys are missing.}}', { count: keys }),
+          apiCalls === null ? null : t('{count, plural, one {About # AI request.} other {About # AI requests.}}', { count: apiCalls }),
+          t('The generation runs in the background.'),
+        ]
+          .filter(Boolean)
+          .join(' ');
         const confirmed = await confirm({
           title: t('Generate the missing %style% values for %locale%?', { replacements: { style, locale } }),
-          description: [
-            keys === null ? t('The number of missing keys is not known.') : t('{count, plural, one {# key is missing.} other {# keys are missing.}}', { count: keys }),
-            apiCalls === null ? null : t('{count, plural, one {About # AI request.} other {About # AI requests.}}', { count: apiCalls }),
-            t('The generation runs in the background.'),
-          ]
-            .filter(Boolean)
-            .join(' '),
+          description: renderGenerationEstimate ? (
+            <div>
+              <p>{text}</p>
+              <GenerationEstimate preview={hostPreview ?? Promise.resolve(previewResponse)} scope={scope} render={renderGenerationEstimate} />
+            </div>
+          ) : (
+            text
+          ),
           confirmLabel: t('Generate', { context: 'action' }),
         });
         if (!confirmed) return;

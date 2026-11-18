@@ -21,7 +21,7 @@ import { Button } from '../primitives/button.tsx';
 import { ControlHint, Hint } from '../primitives/hint.tsx';
 import { Skeleton } from '../primitives/skeleton.tsx';
 import type { IssuesApi } from './api.ts';
-import { issueEnvironmentLabel, issueShowCommand, parseIssueGroupKey, sortIssueEventsNewestFirst, trendBarsOf } from './format.ts';
+import { type IssueEnvironmentLabels, issueEnvironmentLabel, issueShowCommand, parseIssueGroupKey, sortIssueEventsNewestFirst, trendBarsOf } from './format.ts';
 import { IssueDetailBlock, IssueEventDetails } from './IssueEventDetails.tsx';
 import { IssuesTrendBars } from './IssuesTrendChart.tsx';
 import { ISSUE_GROUP_STATUS, toIssueGroupStatus } from './status.ts';
@@ -130,8 +130,8 @@ export interface IssueGroupDrawerProps {
   onGroupChanged?: (group: IssueGroupSummary) => void;
   /** Each occurrence starts with its summary card (`IssueEventDetails` `summary`). Default `false`. */
   eventSummary?: boolean;
-  /** Labels of environment codes (`{ prod: 'Production' }`), shown instead of the code. */
-  environmentLabels?: Readonly<Record<string, string>>;
+  /** Labels of environment codes (`{ prod: 'Production' }`, or a function `code => label | undefined`), shown instead of the code. */
+  environmentLabels?: IssueEnvironmentLabels;
 }
 
 /**
@@ -190,7 +190,7 @@ const IssueGroupDetailBody = ({
   trendWindow: { from: string; to: string };
   onGroupChanged?: (group: IssueGroupSummary) => void;
   eventSummary: boolean;
-  environmentLabels?: Readonly<Record<string, string>>;
+  environmentLabels?: IssueEnvironmentLabels;
 }) => {
   const { t } = useTranslate();
   const trendQuery = api.useIssuesTrendQuery({ environment: arg.environment, groupHash: arg.groupHash, from: trendWindow.from, to: trendWindow.to });

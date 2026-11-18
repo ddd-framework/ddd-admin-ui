@@ -159,6 +159,9 @@ export type {
 export {
   injectedHookName,
   hostTagTypes,
+  hostTagsMemoKey,
+  resolveHostTagsByEndpoint,
+  resolveHostTagsOf,
   injectEndpointsOnce,
   withHostTags,
   staticMutationHook,
@@ -179,6 +182,10 @@ export type {
   InjectedEndpointDefinition,
   InjectedRequest,
   InjectedHostTags,
+  InjectedHostTagsByOperation,
+  InjectedHostTagSelection,
+  InjectedHostTagsOption,
+  InjectedHostTagsResolver,
   InjectedTag,
   StaticQueryFailure,
 } from './injectedApi.ts';

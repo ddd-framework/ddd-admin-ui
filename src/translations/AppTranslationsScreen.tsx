@@ -13,7 +13,7 @@ import { EntityListBulkBar } from '../list/EntityListBulkBar.tsx';
 import type { EntityListColumn } from '../list/EntityListTable.tsx';
 import { EntityListToolbar } from '../list/EntityListToolbar.tsx';
 import { EntityListViewToggle } from '../list/EntityListViewToggle.tsx';
-import { FilterPanel, FilterSelect, FilterText } from '../list/filters.tsx';
+import { FilterMultiSelect, FilterPanel, FilterSelect, FilterText } from '../list/filters.tsx';
 import { StatusBadge } from '../list/StatusBadge.tsx';
 import type { EntityCardProps, EntityCardRenderer } from '../list/types.ts';
 import type { ListDisplayMode } from '../logic/pure/displayMode.ts';
@@ -35,6 +35,7 @@ import { EntityListPage } from '../page/EntityListPage.tsx';
 import { AddEntityButton, type MoreActionItem, PageToolbar } from '../page/PageToolbar.tsx';
 import { Button } from '../primitives/button.tsx';
 import { Card, CardContent } from '../primitives/card.tsx';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../primitives/select.tsx';
 import { cn } from '../primitives/cn.ts';
 import type { AppTranslationKey, AppTranslationKeysResponse, AppTranslationValue, TranslationsListArg } from './adminTypes.ts';
 import {
@@ -54,12 +55,20 @@ import {
   APP_TRANSLATION_KEY_SORT_KEYS,
   APP_TRANSLATION_KEYS_PAGE_SIZE,
   APP_TRANSLATIONS_LANGUAGES_ARG,
+  appTranslationKeysLanguageIds,
   buildAppTranslationKeysFilter,
   buildAppTranslationKeysListArgs,
   DEFAULT_APP_TRANSLATION_KEY_SORT,
   renameUrlStateKeys,
 } from './appTranslationsList.ts';
 import { AppTranslationKeyDrawer } from './AppTranslationKeyDrawer.tsx';
+import {
+  type AppTranslationsGenerationEstimateRenderer,
+  type AppTranslationsGenerationPreviewLoader,
+  type AppTranslationsGenerationScope,
+  GenerationEstimate,
+  startGenerationPreview,
+} from './GenerationEstimate.tsx';
 import { TranslationCompleteness } from './TranslationCompleteness.tsx';
 
 /** The toolbar search (key) is not a panel filter. */
@@ -96,6 +105,14 @@ export interface AppTranslationKeyCardParts {
 
 /** `AppTranslationsScreen.renderCard`: the card props plus the package's parts (an `EntityCardRenderer` fits too). */
 export type AppTranslationKeyCardRenderer = (props: EntityCardProps<AppTranslationKey> & { parts: AppTranslationKeyCardParts }) => ReactNode;
+
+/**
+ * The sort select of the card view (`AppTranslationsScreen.cardSort`): labels of sort keys (a host column's
+ * `sortKey` → its name); without one a key's label is its column's text header, else the key itself.
+ */
+export interface AppTranslationKeysCardSortOptions {
+  labels?: Readonly<Record<string, string>>;
+}
 
 /** The list arguments as the screen builds them (filters, expand, order), before `transformListArgs`. */
 export type AppTranslationKeysListArgs = Omit<TranslationsListArg, 'top' | 'skip'>;
@@ -263,8 +280,26 @@ export interface AppTranslationsScreenProps {
   /**
    * A "Has a value in" filter in the panel (default `false`): keys with a value in the chosen language (a root filter on
    * the values), each row showing that language's values only (the same filter on the expand). URL key `language`.
+   * `"multiple"`: a multi-select, "Has a value in any of these languages" (`in` on the root filter and the expand; the
+   * URL key holds the ids comma-separated, one id filters as the single variant).
    */
-  languageFilter?: boolean;
+  languageFilter?: boolean | 'multiple';
+  /**
+   * A sort select in the toolbar while the keys show as cards (the card view, and the cards below `md`): the package's
+   * sort keys (ID, Key) and the `sortKey`s of the host's columns, each ascending and descending. Default `false`.
+   */
+  cardSort?: boolean | AppTranslationKeysCardSortOptions;
+  /**
+   * Loads the host's estimate when a generation's confirmation opens (`AppTranslationsGenerationScope`: one locale and
+   * style from the completeness block, or `{ kind: 'all' }`); the answer goes to `renderGenerationEstimate`.
+   */
+  loadGenerationPreview?: AppTranslationsGenerationPreviewLoader;
+  /**
+   * Host content in the confirmation before a generation (completeness block and "Generate all missing"), with a
+   * skeleton while `loadGenerationPreview` loads and the error when it fails. With it "Generate all missing" asks
+   * first too (without it, it starts on the click as before).
+   */
+  renderGenerationEstimate?: AppTranslationsGenerationEstimateRenderer;
   /** Changes with the host's own filters (`extraFilters`): the list window and the selection start over. */
   extraResetKey?: string;
   /** "Generate all missing" in the header (default `true`). */
@@ -339,6 +374,9 @@ export const AppTranslationsScreen = ({
   rowActions,
   transformListArgs,
   languageFilter = false,
+  cardSort = false,
+  loadGenerationPreview,
+  renderGenerationEstimate,
   extraResetKey = '',
   showGenerateAll = true,
   showCompleteness = true,
@@ -362,7 +400,14 @@ export const AppTranslationsScreen = ({
   const listState = useUrlListState(APP_TRANSLATION_KEY_FILTER_KEYS, { adapter: listAdapter, uncounted: UNCOUNTED });
   const sortState = useUrlListState(SORT_KEYS, { adapter: listAdapter, uncounted: SORT_KEYS });
   const languageState = useUrlListState(APP_TRANSLATION_KEY_LANGUAGE_FILTER_KEYS, { adapter: listAdapter });
-  const languageId = languageFilter ? languageState.debounced.language : '';
+  const multipleLanguages = languageFilter === 'multiple';
+  // one id as the single variant sends it; with `multiple` the comma-separated ids of the URL key
+  const languageSelection: string | readonly string[] = !languageFilter
+    ? ''
+    : multipleLanguages
+      ? appTranslationKeysLanguageIds(languageState.debounced.language.split(','))
+      : languageState.debounced.language;
+  const languageId = typeof languageSelection === 'string' ? languageSelection : languageSelection.join(',');
   const { values, debounced, setValue, setValues } = listState;
   // the package's sort keys plus the `sortKey`s of the host's columns (sent as `<sortKey> <direction>, id <direction>`);
   // read from the host's transform of the package columns' shape (their cells are drawn below)
@@ -385,7 +430,7 @@ export const AppTranslationsScreen = ({
   const sortText = formatListSort(debouncedSort);
   // biome-ignore lint/correctness/useExhaustiveDependencies: the filter string, the language and the sort text carry the arguments
   const listArgs = useMemo(() => {
-    const built = buildAppTranslationKeysListArgs({ ...debounced, language: languageId }, debouncedSort);
+    const built = buildAppTranslationKeysListArgs({ ...debounced, language: languageSelection }, debouncedSort);
     return transformListArgs ? transformListArgs(built) : built;
   }, [filterString, sortText, languageId, transformListArgs]);
   const resetKey = `${filterString ?? ''}|${sortText}${languageId ? `|language:${languageId}` : ''}${extraResetKey ? `|${extraResetKey}` : ''}`;
@@ -474,6 +519,21 @@ export const AppTranslationsScreen = ({
 
   const runGenerateAll = async () => {
     if (!writeAccess.allowed) return;
+    if (renderGenerationEstimate) {
+      const scope: AppTranslationsGenerationScope = { kind: 'all' };
+      const preview = loadGenerationPreview ? startGenerationPreview(() => loadGenerationPreview(scope)) : Promise.resolve(undefined);
+      const confirmed = await confirm({
+        title: t('Generate every missing value?'),
+        description: (
+          <div>
+            <p>{t('Every missing value of every active locale and writing style is generated. The generation runs in the background.')}</p>
+            <GenerationEstimate preview={preview} scope={scope} render={renderGenerationEstimate} />
+          </div>
+        ),
+        confirmLabel: t('Generate', { context: 'action' }),
+      });
+      if (!confirmed) return;
+    }
     try {
       const data = await generateAll().unwrap();
       const results = data.appTranslationsResults.elements ?? [];
@@ -546,6 +606,45 @@ export const AppTranslationsScreen = ({
   ];
   const columns = transformColumns ? transformColumns(defaultColumns) : defaultColumns;
 
+  const cardSortLabels = typeof cardSort === 'object' ? (cardSort.labels ?? {}) : {};
+  const sortLabelOf = (sortKey: string): string => {
+    const named = cardSortLabels[sortKey];
+    if (named) return named;
+    const header = columns.find(column => column.sortKey === sortKey)?.header;
+    return typeof header === 'string' && header !== '' ? t(header) : sortKey;
+  };
+  const cardSortValue = formatListSort(sort);
+  const cardSortControl = cardSort ? (
+    <div className={cn('shrink-0', displayMode !== 'grid' && 'md:hidden')} data-slot="app-translation-keys-card-sort">
+      <Select
+        value={cardSortValue}
+        onValueChange={next => {
+          const parsed = parseListSort(next, sortKeys);
+          if (parsed) setSort(parsed);
+        }}
+      >
+        <SelectTrigger size="sm" aria-label={t('Sort by')} className="h-8 w-auto min-w-40 text-[13px] font-bold">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {sortKeys.flatMap(sortKey =>
+            (['asc', 'desc'] as const).map(direction => {
+              const value = formatListSort({ key: sortKey, direction });
+              const label = sortLabelOf(sortKey);
+              return (
+                <SelectItem key={value} value={value}>
+                  {direction === 'asc'
+                    ? t('%label%, ascending', { replacements: { label } })
+                    : t('%label%, descending', { replacements: { label } })}
+                </SelectItem>
+              );
+            })
+          )}
+        </SelectContent>
+      </Select>
+    </div>
+  ) : null;
+
   const cardRenderer: EntityCardRenderer<AppTranslationKey> = props => {
     const { item, onActivate } = props;
     const keyLink = keyLinkOf(item);
@@ -560,8 +659,8 @@ export const AppTranslationsScreen = ({
     if (languageFilter) languageState.clear();
     onClearExtraFilters?.();
   };
-  const languageFilterActive = languageFilter && languageState.values.language !== '';
-  const isFiltered = listState.isActive || (languageFilter && languageState.isActive) || extraActiveFilterCount > 0;
+  const languageFilterActive = Boolean(languageFilter) && languageState.values.language !== '';
+  const isFiltered = listState.isActive || (Boolean(languageFilter) && languageState.isActive) || extraActiveFilterCount > 0;
   const languageOptions = useMemo(
     () =>
       (languagesQuery.data?.languages.elements ?? []).flatMap(language =>
@@ -600,7 +699,11 @@ export const AppTranslationsScreen = ({
           {headerActions}
         </PageToolbar>
       }
-      belowHeader={showCompleteness ? <TranslationCompleteness api={api} /> : undefined}
+      belowHeader={
+        showCompleteness ? (
+          <TranslationCompleteness api={api} loadGenerationPreview={loadGenerationPreview} renderGenerationEstimate={renderGenerationEstimate} />
+        ) : undefined
+      }
       toolbar={
         <EntityListToolbar
           search={{ value: values.key, onChange: value => setValue('key', value), placeholder: t('Search keys…'), 'aria-label': t('Filter by key') }}
@@ -608,7 +711,17 @@ export const AppTranslationsScreen = ({
             <FilterPanel>
               <FilterText label={t('ID')} inputMode="numeric" value={values.id} onChange={value => setValue('id', value)} />
               <FilterText label={t('Translation')} value={values.translation} onChange={value => setValue('translation', value)} placeholder={t('Search translations…')} />
-              {languageFilter && (
+              {multipleLanguages && (
+                <FilterMultiSelect
+                  label={t('Has a value in any of these languages')}
+                  value={languageState.getList('language')}
+                  onChange={next => languageState.setList('language', next)}
+                  options={languageOptions}
+                  allLabel={t('Any language')}
+                  isLoading={languagesQuery.isFetching && !languagesQuery.data}
+                />
+              )}
+              {languageFilter && !multipleLanguages && (
                 <FilterSelect
                   label={t('Has a value in')}
                   value={languageState.values.language}
@@ -623,7 +736,16 @@ export const AppTranslationsScreen = ({
           }
           activeFilterCount={listState.activeFilterCount + (languageFilterActive ? 1 : 0) + extraActiveFilterCount}
           onClearFilters={clearFilters}
-          trailing={toolbarTrailing}
+          trailing={
+            cardSortControl ? (
+              <>
+                {cardSortControl}
+                {toolbarTrailing}
+              </>
+            ) : (
+              toolbarTrailing
+            )
+          }
           viewToggle={<EntityListViewToggle displayMode={displayMode} onDisplayModeChange={setDisplayMode} />}
           bulkBar={
             <EntityListBulkBar selection={selection} onDelete={() => void deleteSelected()} deleteBusy={isDeleting} busy={isDeleting} />

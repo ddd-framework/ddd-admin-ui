@@ -4,9 +4,10 @@ import {
   type InjectableBaseApi,
   type InjectedEndpointDefinition,
   type InjectedRequest,
+  hostTagsMemoKey,
   hostTagTypes,
   injectEndpointsOnce,
-  type InjectedHostTags,
+  type InjectedHostTagsOption,
   withHostTags,
   staticMutationHook,
   staticQueryHook,
@@ -145,9 +146,37 @@ export interface CreateTranslationsApiOptions {
   paths?: Partial<TranslationsApiPaths>;
   /** The application's bulk delete of keys (`true`: the defaults); adds `useBulkDeleteAppTranslationKeysMutation`. */
   bulkDelete?: AppTranslationKeysBulkDelete | true;
-  /** The host's cache tags joined with the package's: provided by every query, invalidated by every mutation. */
-  tags?: InjectedHostTags;
+  /**
+   * The host's cache tags joined with the package's: provided by the queries, invalidated by the mutations. A list
+   * applies to every operation; keyed (`{ provides: { byOperation: { languages: [...] } } }`) or as a function
+   * (`(operation, kind) => tags`) per operation (`TranslationsApiOperation`).
+   */
+  tags?: InjectedHostTagsOption<TranslationsApiOperation>;
 }
+
+/** Endpoint name → operation name (the hook name without `use` and `Query` / `Mutation`), for keyed host tags. */
+export const TRANSLATIONS_API_OPERATIONS = Object.freeze({
+  adminUiAppTranslationKeys: 'appTranslationKeys',
+  adminUiAppTranslationKey: 'appTranslationKey',
+  adminUiUpdateAppTranslationKey: 'updateAppTranslationKey',
+  adminUiDeleteAppTranslationKey: 'deleteAppTranslationKey',
+  adminUiUpdateAppTranslationValue: 'updateAppTranslationValue',
+  adminUiDeleteAppTranslationValue: 'deleteAppTranslationValue',
+  adminUiAppTranslationCompleteness: 'appTranslationCompleteness',
+  adminUiGenerateAppTranslations: 'generateAppTranslations',
+  adminUiGenerateAllAppTranslations: 'generateAllAppTranslations',
+  adminUiLanguages: 'languages',
+  adminUiUpdateLanguage: 'updateLanguage',
+  adminUiImportLanguagesFromConfig: 'importLanguagesFromConfig',
+  adminUiLocales: 'locales',
+  adminUiUpdateLocale: 'updateLocale',
+  adminUiImportLocalesFromConfig: 'importLocalesFromConfig',
+  adminUiTranslateEntities: 'translateEntities',
+  adminUiBulkDeleteAppTranslationKeys: 'bulkDeleteAppTranslationKeys',
+} as const);
+
+/** The operation names of the translations api (`useLanguagesQuery` → `languages`), for keyed host tags. */
+export type TranslationsApiOperation = (typeof TRANSLATIONS_API_OPERATIONS)[keyof typeof TRANSLATIONS_API_OPERATIONS];
 
 const listQuery = ({ filters, orderBy, top, skip, select, expand }: TranslationsListArg): string =>
   toQueryString({ filters, orderBy, top, skip, select, expand });
@@ -247,7 +276,7 @@ export const createTranslationsApi = ({ baseApi, apiPrefix, paths, bulkDelete, t
   const bulkDeleteOptions = bulkDelete === true ? {} : bulkDelete;
   const memoKey = `translations:${trimApiPrefix(apiPrefix)}:${JSON.stringify({ ...DEFAULT_TRANSLATIONS_API_PATHS, ...paths })}${
     bulkDeleteOptions ? `:bulkDelete:${JSON.stringify({ path: bulkDeleteOptions.path, method: bulkDeleteOptions.method })}` : ''
-  }${tags ? `:tags:${JSON.stringify(tags)}` : ''}`;
+  }`;
   const definitions = {
     ...translationsEndpointDefinitions(apiPrefix, paths),
     ...(bulkDeleteOptions
@@ -260,11 +289,12 @@ export const createTranslationsApi = ({ baseApi, apiPrefix, paths, bulkDelete, t
         }
       : {}),
   };
+  const hostTags = tags as InjectedHostTagsOption | undefined;
   return injectEndpointsOnce(
     baseApi,
-    memoKey,
-    [APP_TRANSLATIONS_TAG, LANGUAGES_TAG, LOCALES_TAG, ...hostTagTypes(tags)],
-    withHostTags(definitions, tags),
+    `${memoKey}${hostTagsMemoKey(definitions, hostTags, TRANSLATIONS_API_OPERATIONS)}`,
+    [APP_TRANSLATIONS_TAG, LANGUAGES_TAG, LOCALES_TAG, ...hostTagTypes(hostTags, definitions, TRANSLATIONS_API_OPERATIONS)],
+    withHostTags(definitions, hostTags, TRANSLATIONS_API_OPERATIONS),
     hookOf => ({
       useAppTranslationKeysQuery: hookOf('adminUiAppTranslationKeys') as TranslationsApi['useAppTranslationKeysQuery'],
       useAppTranslationKeyQuery: hookOf('adminUiAppTranslationKey') as TranslationsApi['useAppTranslationKeyQuery'],

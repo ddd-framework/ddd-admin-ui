@@ -3,6 +3,59 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.3.7
+
+Optional props for the translations, crons and issues screens and host cache tags per operation. Everything is
+additive: a caller that sets none of the new props renders as on 0.3.6, except the tie-break of `sort="severity"` on
+`./crons` (see there). The list and form actions snapshots are unchanged.
+
+`./translations`:
+
+- `AppTranslationsScreen languageFilter="multiple"`: "Has a value in any of these languages" as a multi-select; the URL
+  key `language` holds the ids comma-separated; the root filter and the expand use `in`
+  (`appTranslationValues.languageId in ["3","5"]`), one id filters exactly as the single variant. The helpers
+  `buildAppTranslationKeysLanguageFilter`, `appTranslationKeysExpand` and `buildAppTranslationKeysListArgs` take a list
+  of ids too (`AppTranslationKeysLanguageSelection`, `appTranslationKeysLanguageIds`).
+- `cardSort` (`boolean | { labels }`, default `false`): a sort select in the toolbar while the keys show as cards (the
+  card view, and the cards below `md`), with ID, Key and the host columns' `sortKey`s, each ascending and descending;
+  labels from `labels`, else the column's text header, else the key.
+- `renderGenerationEstimate(preview, scope)` and `loadGenerationPreview(scope)` (also on `TranslationCompleteness`):
+  host content in the confirmation before a generation, below the package's text, with a skeleton while the loader
+  runs and the error when it fails (the generation can still be confirmed). Scope `{ kind: 'locale', localeId,
+  writingStyle, locale }` or `{ kind: 'all' }`; without a loader the renderer gets the package's `previewOnly` answer for
+  a locale and `undefined` for all. With the renderer "Generate all missing" asks before it starts (without it, it
+  starts on the click as before). `GenerationEstimate`, `startGenerationPreview` and the types are exported.
+
+`./logic`, `./workers`, `./translations` (api factories):
+
+- `tags` per operation: each side keyed (`{ provides: { byOperation: { languages: ['HostLanguages'] }, others: [...] }
+  }`) or a function `(operation, kind) => tags` (asked once per operation when the api is created; provided by a query,
+  invalidated by a mutation). Operation names are the hook names without `use` and `Query` / `Mutation`
+  (`WorkersApiOperation`, `TranslationsApiOperation`, the maps `WORKERS_API_OPERATIONS`, `TRANSLATIONS_API_OPERATIONS`).
+  The list form keeps applying to every operation. `InjectedHostTags`' sides accept the keyed form (a reader that took
+  them as lists narrows with `Array.isArray`); new `InjectedHostTagsOption`, `InjectedHostTagsByOperation`,
+  `InjectedHostTagSelection`, `InjectedHostTagsResolver`, `resolveHostTagsOf`, `resolveHostTagsByEndpoint`,
+  `hostTagsMemoKey`; `withHostTags` and `hostTagTypes` take an optional operation name map (and the definitions for the
+  function form).
+
+`./crons`:
+
+- `detailsPollingIntervalMs` accepts `number | ((cron) => number)` (`CronPollingInterval`, `resolveCronPollingInterval`;
+  the function reads the loaded Cron, 0 until it has loaded; a negative or non-finite answer is 0).
+- `sort="severity"`: within a status the most recent failure first (the last run, else the newest failed run of
+  `recentExecutions`), then the most recent run, then by name (before: by name only); `compareCronsBySeverity`,
+  `cronLastFailureAt`, `cronLastRunAt`. `severityCompare(left, right, defaultCompare)` replaces the order with the
+  host's (`CronSeverityCompare`); `sortCrons` takes it as a third argument.
+
+`./issues`:
+
+- `environmentLabels` (screen and drawer) accepts `Record<string, string> | ((code) => string | undefined)`
+  (`IssueEnvironmentLabels`, `issueEnvironmentHostLabel`).
+
+Texts: new keys "Has a value in any of these languages", "Sort by", "%label%, ascending", "%label%, descending",
+"Generate every missing value?", "Every missing value of every active locale and writing style is generated. The
+generation runs in the background.", "The estimate could not be loaded.", "Loading the estimate".
+
 ## 0.3.6
 
 Fix for hosts whose colour properties hold channels; no API change. The list and form actions snapshots are unchanged.

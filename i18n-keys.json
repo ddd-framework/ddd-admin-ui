@@ -1,6 +1,6 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
@@ -162,6 +162,22 @@
         "list/filters.tsx"
       ],
       "hint": "Accessible label of the end-date input in a date-range filter. %label% is the filter caption, e.g. \"Ends at\", so the result reads \"Ends at to\"."
+    },
+    {
+      "key": "%label%, ascending",
+      "text": "%label%, ascending",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "Option of the sort dropdown of the translation keys list: sort by the named field in ascending order (A to Z, smallest first). %label% is the field, e.g. ID or Key."
+    },
+    {
+      "key": "%label%, descending",
+      "text": "%label%, descending",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "Option of the sort dropdown of the translation keys list: sort by the named field in descending order (Z to A, largest or newest first). %label% is the field, e.g. ID or Key."
     },
     {
       "key": "%label%: %count%__schema-diff-severity-count",
@@ -2324,6 +2340,14 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): schedule in words: every minute."
     },
     {
+      "key": "Every missing value of every active locale and writing style is generated. The generation runs in the background.",
+      "text": "Every missing value of every active locale and writing style is generated. The generation runs in the background.",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "Text of the confirmation before the AI generation of all missing app translations; the generation continues on the server after the dialog closes."
+    },
+    {
       "key": "Every run of the last 14 days, newest first. Open one for its full output.",
       "text": "Every run of the last 14 days, newest first. Open one for its full output.",
       "files": [
@@ -2740,6 +2764,14 @@
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): tooltip of the 'Generate all missing' button."
     },
     {
+      "key": "Generate every missing value?",
+      "text": "Generate every missing value?",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "Title of the confirmation before the AI generation of all missing app translations (every active locale and writing style)."
+    },
+    {
       "key": "Generate missing formal translations for %locale%",
       "text": "Generate missing formal translations for %locale%",
       "files": [
@@ -2768,6 +2800,7 @@
       "text": "Generate",
       "context": "action",
       "files": [
+        "translations/AppTranslationsScreen.tsx",
         "translations/TranslationCompleteness.tsx"
       ],
       "hint": "App translations admin, completeness per locale: confirm button that starts the AI generation."
@@ -2911,6 +2944,14 @@
         "translations/AppTranslationsScreen.tsx"
       ],
       "hint": "Label of a filter of the translation keys list: show only keys that have a translation in the chosen language."
+    },
+    {
+      "key": "Has a value in any of these languages",
+      "text": "Has a value in any of these languages",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "Label of a multi-select filter of the translation keys list: show only keys that have a translation in at least one of the chosen languages."
     },
     {
       "key": "Hide details",
@@ -3636,6 +3677,14 @@
         "crons/runs.tsx"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): accessible text while the runs list loads."
+    },
+    {
+      "key": "Loading the estimate",
+      "text": "Loading the estimate",
+      "files": [
+        "translations/GenerationEstimate.tsx"
+      ],
+      "hint": "Accessible name of the loading placeholder inside the confirmation before an AI translation generation, while the cost estimate loads."
     },
     {
       "key": "Loading the output…",
@@ -6269,6 +6318,14 @@
       "hint": "Title of the error card shown when a screen crashed."
     },
     {
+      "key": "Sort by",
+      "text": "Sort by",
+      "files": [
+        "translations/AppTranslationsScreen.tsx"
+      ],
+      "hint": "Accessible name of the sort dropdown in the toolbar of the translation keys list, shown while the keys are displayed as cards; it picks the order of the keys."
+    },
+    {
       "key": "Sort by__media-picker",
       "text": "Sort by",
       "context": "media-picker",
@@ -6696,6 +6753,14 @@
         "issues/IssuesScreen.tsx"
       ],
       "hint": "Issues admin screen (errors grouped by root cause): error when the list request failed."
+    },
+    {
+      "key": "The estimate could not be loaded.",
+      "text": "The estimate could not be loaded.",
+      "files": [
+        "translations/GenerationEstimate.tsx"
+      ],
+      "hint": "Error shown inside the confirmation before an AI translation generation when the cost estimate (number of keys, requests) could not be loaded; the generation can still be confirmed."
     },
     {
       "key": "The file is not an image this browser can read",

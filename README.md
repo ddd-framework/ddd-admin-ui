@@ -404,6 +404,11 @@ Options (0.3.4): `renderSection(id, section, state)` also gets the screen's stat
 "load more" (`Infinity`: none); `workerMessageRunColumns(t)` gives the runs table's columns; `createWorkersApi({ tags:
 { provides, invalidates } })` joins the host's cache tags.
 
+Options (0.3.7): `tags` per operation, keyed (`{ provides: { byOperation: { overview: ['HostOverview'] }, others: [...]
+} }`) or as a function (`(operation, kind) => tags`, asked once per operation when the api is created); the operation
+names are the hook names without `use` and `Query` / `Mutation` (`WorkersApiOperation`, `WORKERS_API_OPERATIONS`). The
+list form still applies to every operation.
+
 ### `./translations` (admin screens)
 
 The app translation keys and values with their completeness, the languages and locales, and the entity translation,
@@ -503,6 +508,17 @@ in": keys with a value in a language, each row showing that language's values; U
 column's `sortKey` is sorted on. `createTranslationsApi({ tags, bulkDelete: { mapResponse } })` joins host cache tags
 and reads the counts of the application's own bulk delete answer.
 
+Options (0.3.7): `languageFilter="multiple"` ("Has a value in any of these languages": a multi-select; the URL key
+`language` holds the ids comma-separated, the root filter and the expand use `in`, one id filters as the single
+variant). `cardSort` (default `false`; `{ labels }` names sort keys): a sort select in the toolbar while the keys show
+as cards (the card view, and below `md`), listing ID, Key and the host columns' `sortKey`s, each ascending and
+descending. `renderGenerationEstimate(preview, scope)` draws host content in the confirmation before a generation (the
+completeness block and "Generate all missing", which then asks first too); `loadGenerationPreview(scope)` (scope
+`{ kind: 'locale', localeId, writingStyle, locale }` or `{ kind: 'all' }`) loads what the renderer gets, with a
+skeleton while it loads and the error when it fails; without a loader the renderer gets the package's own estimate of a
+locale (`undefined` for all). `TranslationCompleteness` takes the same two props. `createTranslationsApi({ tags })`
+takes the keyed or function form per operation (`TranslationsApiOperation`, `useLanguagesQuery` → `languages`).
+
 ### `./issues`
 
 The error groups of the issues registry, on Core's `IssuesControllerTrait` (mgamadeus/ddd **3.35.1** or later: the
@@ -560,6 +576,9 @@ Options (0.3.3): `customTrendRange` (a "Custom" from / to window, at most 31 day
 `environmentLabels`, `headerActions`, `pagination="load-more"` (the next 50 append through the list's infinite-scroll
 tail), `eventSummary`; `IssueEventDetails` shows a summary and copy actions for the stack and file:line
 (`copyActions={false}` turns them off). A job's attempt reads "2 of 3" when the payload carries `maxAttempts`.
+
+Options (0.3.7): `environmentLabels` also takes a function (`code => label | undefined`; `undefined` or `''` keeps the
+code), e.g. for environments named by a pattern (`issueEnvironmentLabel(code, labels)` for a host's own view).
 
 ### `./database`
 
@@ -683,6 +702,11 @@ Options (0.3.3): a status filter (URL key `status`, with "Need attention") and a
 polls only while a run is running); `timeZone="viewer"` shows times in the viewer's zone (`serverUtcOffsetMinutes`, else
 estimated from `serverNow` after hydration, rounded to 15 minutes). A stored command that cannot be scheduled stays
 read-only with its reason; names stored before the kebab-case rule save unchanged and are found in either spelling.
+
+Options (0.3.7): `detailsPollingIntervalMs` also takes a function of the shown Cron (`cron => cron.status === 'RUNNING'
+? 2000 : 30000`; 0 until the Cron has loaded). `sort="severity"` breaks a status tie by the most recent failure, then
+the most recent run (newest first), then by name (`compareCronsBySeverity`); `severityCompare(left, right,
+defaultCompare)` replaces that order with the host's (wrap `defaultCompare` to keep it as the fallback).
 
 ## Design studio
 
@@ -848,7 +872,7 @@ project's `.claude/skills/`. Idempotent; repoints an existing symlink, never tou
 
 ## Versioning
 
-0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.6"`,
+0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.7"`,
 `pnpm add -E` / `npm install -E`); modules peer on the version they were tested with. Stable releases are published
 under the `latest` dist-tag, pre-releases (`x.y.z-…`) under `next`. Changes per release: [CHANGELOG.md](CHANGELOG.md).
 

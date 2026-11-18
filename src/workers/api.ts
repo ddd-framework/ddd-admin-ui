@@ -4,9 +4,10 @@ import {
   type InjectableBaseApi,
   type InjectedEndpointDefinition,
   type InjectedRequest,
+  hostTagsMemoKey,
   hostTagTypes,
   injectEndpointsOnce,
-  type InjectedHostTags,
+  type InjectedHostTagsOption,
   withHostTags,
   staticMutationHook,
   staticQueryHook,
@@ -50,9 +51,26 @@ export interface CreateWorkersApiOptions {
   baseApi: InjectableBaseApi;
   /** Where the host mounts `WorkersControllerTrait`, without a trailing slash (`/api/admin/maintenance/workers`). */
   apiPrefix: string;
-  /** The host's cache tags joined with the package's: provided by every query, invalidated by the restart request. */
-  tags?: InjectedHostTags;
+  /**
+   * The host's cache tags joined with the package's: provided by the queries, invalidated by the restart request. A
+   * list applies to every operation; keyed (`{ provides: { byOperation: { overview: [...] }, others: [...] } }`) or as a
+   * function (`(operation, kind) => tags`) per operation (`WorkersApiOperation`).
+   */
+  tags?: InjectedHostTagsOption<WorkersApiOperation>;
 }
+
+/** The operation names of the workers api (the hook names without `use` and `Query` / `Mutation`), for keyed host tags. */
+export type WorkersApiOperation = 'overview' | 'history' | 'transportDetail' | 'messageRuns' | 'processes' | 'restart';
+
+/** Endpoint name → operation name (`WorkersApiOperation`). */
+export const WORKERS_API_OPERATIONS: Readonly<Record<string, WorkersApiOperation>> = Object.freeze({
+  adminUiWorkersOverview: 'overview',
+  adminUiWorkersHistory: 'history',
+  adminUiWorkerTransportDetail: 'transportDetail',
+  adminUiWorkerMessageRuns: 'messageRuns',
+  adminUiWorkerProcesses: 'processes',
+  adminUiWorkersRestart: 'restart',
+});
 
 const windowQuery = ({ from, to, stepSeconds }: WorkersWindowArg): string => toQueryString({ from, to, stepSeconds });
 
@@ -114,12 +132,14 @@ export const workersEndpointDefinitions = (apiPrefix: string) => {
  * export const workersApi = createWorkersApi({ baseApi: adminApi, apiPrefix: '/api/admin/maintenance/workers' });
  * ```
  */
-export const createWorkersApi = ({ baseApi, apiPrefix, tags }: CreateWorkersApiOptions): WorkersApi =>
-  injectEndpointsOnce(
+export const createWorkersApi = ({ baseApi, apiPrefix, tags }: CreateWorkersApiOptions): WorkersApi => {
+  const definitions = workersEndpointDefinitions(apiPrefix);
+  const hostTags = tags as InjectedHostTagsOption | undefined;
+  return injectEndpointsOnce(
     baseApi,
-    `workers:${trimApiPrefix(apiPrefix)}${tags ? `:tags:${JSON.stringify(tags)}` : ''}`,
-    [WORKERS_TAG, ...hostTagTypes(tags)],
-    withHostTags(workersEndpointDefinitions(apiPrefix), tags),
+    `workers:${trimApiPrefix(apiPrefix)}${hostTagsMemoKey(definitions, hostTags, WORKERS_API_OPERATIONS)}`,
+    [WORKERS_TAG, ...hostTagTypes(hostTags, definitions, WORKERS_API_OPERATIONS)],
+    withHostTags(definitions, hostTags, WORKERS_API_OPERATIONS),
     hookOf => ({
     useOverviewQuery: hookOf('adminUiWorkersOverview') as WorkersApi['useOverviewQuery'],
     useHistoryQuery: hookOf('adminUiWorkersHistory') as WorkersApi['useHistoryQuery'],
@@ -129,6 +149,7 @@ export const createWorkersApi = ({ baseApi, apiPrefix, tags }: CreateWorkersApiO
     useRestartMutation: hookOf('adminUiWorkersRestart') as WorkersApi['useRestartMutation'],
     })
   );
+};
 
 /** Fixed answers of a `createStaticWorkersApi`; an operation without one stays loading. */
 export interface StaticWorkersData {

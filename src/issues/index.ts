@@ -26,6 +26,7 @@ export {
   ISSUE_GROUPS_PAGE_SIZE,
   ISSUE_SECTIONS,
   isClientIssueSection,
+  issueEnvironmentHostLabel,
   issueEnvironmentLabel,
   issueFileLineOf,
   issueFrameViewsOf,
@@ -48,4 +49,4 @@ export {
   trendAxisMax,
   trendBarsOf,
 } from './format.ts';
-export type { IssueFrameSegment, IssueFrameView, IssuesTrendBar, IssuesWindowPreset, IssuesWindowValue } from './format.ts';
+export type { IssueEnvironmentLabels, IssueFrameSegment, IssueFrameView, IssuesTrendBar, IssuesWindowPreset, IssuesWindowValue } from './format.ts';

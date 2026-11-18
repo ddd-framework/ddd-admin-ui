@@ -220,33 +220,139 @@ export const staticMutationHook = <TArg, TData>(answer: (arg: TArg) => TData | P
 };
 
 /**
- * The host's cache tags joined with the package's (`createWorkersApi({ tags })`, `createTranslationsApi({ tags })`):
- * `provides` are added to every query (a host mutation invalidating one refetches the package's lists), `invalidates`
- * to every mutation (a package write refreshes the host's own data). Their tag types must be in the host api's
- * `tagTypes` (the injection adds them too).
+ * Host tags per operation (`InjectedHostTags.provides` / `.invalidates` in the keyed form): `byOperation` names the
+ * tags of single operations by their operation name (`WorkersApiOperation`, `TranslationsApiOperation`: the hook's
+ * name without `use` and `Query` / `Mutation`, `useLanguagesQuery` → `languages`); `others` go to every operation
+ * `byOperation` does not name.
  */
-export interface InjectedHostTags {
-  provides?: readonly InjectedTag[];
-  invalidates?: readonly InjectedTag[];
+export interface InjectedHostTagsByOperation<TOperation extends string = string> {
+  byOperation?: Readonly<Partial<Record<TOperation, readonly InjectedTag[]>>>;
+  others?: readonly InjectedTag[];
 }
 
-/** The definitions with the host's tags joined in (`InjectedHostTags`); the same object without any. */
+/** The tags of one side: a list for every operation, or keyed by operation (`InjectedHostTagsByOperation`). */
+export type InjectedHostTagSelection<TOperation extends string = string> = readonly InjectedTag[] | InjectedHostTagsByOperation<TOperation>;
+
+/**
+ * The host's cache tags joined with the package's (`createWorkersApi({ tags })`, `createTranslationsApi({ tags })`):
+ * `provides` are added to the queries (a host mutation invalidating one refetches the package's lists), `invalidates`
+ * to the mutations (a package write refreshes the host's own data). Each side is a list for every operation, or keyed
+ * by operation (`{ byOperation: { languages: ['HostLanguages'] }, others: [...] }`). Their tag types must be in the
+ * host api's `tagTypes` (the injection adds them too).
+ */
+export interface InjectedHostTags<TOperation extends string = string> {
+  provides?: InjectedHostTagSelection<TOperation>;
+  invalidates?: InjectedHostTagSelection<TOperation>;
+}
+
+/**
+ * The host's tags as a function of the operation: provided by a query, invalidated by a mutation (`undefined` or `[]`:
+ * none). Called once per operation when the api is created, never per request.
+ */
+export type InjectedHostTagsResolver<TOperation extends string = string> = (
+  operationName: TOperation,
+  kind: 'query' | 'mutation'
+) => readonly InjectedTag[] | undefined;
+
+/** The `tags` option of the api factories: the object form (`InjectedHostTags`) or a function of the operation. */
+export type InjectedHostTagsOption<TOperation extends string = string> = InjectedHostTags<TOperation> | InjectedHostTagsResolver<TOperation>;
+
+const selectHostTags = (selection: InjectedHostTagSelection | undefined, operationName: string): readonly InjectedTag[] => {
+  if (!selection) return [];
+  if (Array.isArray(selection)) return selection;
+  const keyed = selection as InjectedHostTagsByOperation;
+  const named = keyed.byOperation?.[operationName];
+  return named ?? keyed.others ?? [];
+};
+
+/**
+ * The host's tags of one operation: what a query provides or a mutation invalidates in addition to the package's.
+ * `operationName` is the public name (`languages`); without an operation name map the endpoint name stands for it.
+ */
+export const resolveHostTagsOf = (
+  tags: InjectedHostTagsOption | undefined,
+  operationName: string,
+  kind: 'query' | 'mutation'
+): readonly InjectedTag[] => {
+  if (!tags) return [];
+  if (typeof tags === 'function') return tags(operationName, kind) ?? [];
+  return selectHostTags(kind === 'query' ? tags.provides : tags.invalidates, operationName);
+};
+
+/**
+ * The host's tags of every endpoint (endpoint name → tags), for the memo key and the tag types; endpoints without host
+ * tags are left out.
+ */
+export const resolveHostTagsByEndpoint = (
+  definitions: Readonly<Record<string, InjectedEndpointDefinition<never>>>,
+  tags: InjectedHostTagsOption | undefined,
+  operationNames?: Readonly<Record<string, string>>
+): Record<string, readonly InjectedTag[]> => {
+  const resolved: Record<string, readonly InjectedTag[]> = {};
+  if (!tags) return resolved;
+  for (const [endpointName, definition] of Object.entries(definitions)) {
+    const hostTags = resolveHostTagsOf(tags, operationNames?.[endpointName] ?? endpointName, definition.kind);
+    if (hostTags.length > 0) resolved[endpointName] = hostTags;
+  }
+  return resolved;
+};
+
+/**
+ * The definitions with the host's tags joined in (`InjectedHostTagsOption`); the same object without any.
+ * `operationNames` maps endpoint names to the operation names the keyed and the function form use.
+ */
 export const withHostTags = <TDefinitions extends Readonly<Record<string, InjectedEndpointDefinition<never>>>>(
   definitions: TDefinitions,
-  tags: InjectedHostTags | undefined
+  tags: InjectedHostTagsOption | undefined,
+  operationNames?: Readonly<Record<string, string>>
 ): TDefinitions => {
-  if (!tags || ((tags.provides?.length ?? 0) === 0 && (tags.invalidates?.length ?? 0) === 0)) return definitions;
+  const byEndpoint = resolveHostTagsByEndpoint(definitions, tags, operationNames);
+  if (Object.keys(byEndpoint).length === 0) return definitions;
   const joined: Record<string, InjectedEndpointDefinition<never>> = {};
   for (const [name, definition] of Object.entries(definitions)) {
+    const hostTags = byEndpoint[name] ?? [];
     joined[name] =
-      definition.kind === 'query'
-        ? { ...definition, providesTags: [...(definition.providesTags ?? []), ...(tags.provides ?? [])] }
-        : { ...definition, invalidatesTags: [...(definition.invalidatesTags ?? []), ...(tags.invalidates ?? [])] };
+      hostTags.length === 0
+        ? definition
+        : definition.kind === 'query'
+          ? { ...definition, providesTags: [...(definition.providesTags ?? []), ...hostTags] }
+          : { ...definition, invalidatesTags: [...(definition.invalidatesTags ?? []), ...hostTags] };
   }
   return joined as TDefinitions;
 };
 
-/** The tag types of the host's tags (added to the api's tag types on injection). */
-export const hostTagTypes = (tags: InjectedHostTags | undefined): string[] => [
-  ...new Set([...(tags?.provides ?? []), ...(tags?.invalidates ?? [])].map(tag => (typeof tag === 'string' ? tag : tag.type))),
-];
+const tagTypeOf = (tag: InjectedTag): string => (typeof tag === 'string' ? tag : tag.type);
+
+const selectionTags = (selection: InjectedHostTagSelection | undefined): readonly InjectedTag[] => {
+  if (!selection) return [];
+  if (Array.isArray(selection)) return selection;
+  const keyed = selection as InjectedHostTagsByOperation;
+  return [...Object.values(keyed.byOperation ?? {}).flatMap(list => [...((list as readonly InjectedTag[] | undefined) ?? [])]), ...(keyed.others ?? [])];
+};
+
+/**
+ * The tag types of the host's tags (added to the api's tag types on injection). The function form needs the
+ * definitions (and the operation names) to be asked; without them it lists none.
+ */
+export const hostTagTypes = (
+  tags: InjectedHostTagsOption | undefined,
+  definitions?: Readonly<Record<string, InjectedEndpointDefinition<never>>>,
+  operationNames?: Readonly<Record<string, string>>
+): string[] => {
+  if (!tags) return [];
+  const all =
+    typeof tags === 'function'
+      ? Object.values(definitions ? resolveHostTagsByEndpoint(definitions, tags, operationNames) : {}).flat()
+      : [...selectionTags(tags.provides), ...selectionTags(tags.invalidates)];
+  return [...new Set(all.map(tagTypeOf))];
+};
+
+/**
+ * The memo key part of the host's tags (`''` without any): the resolved tags per endpoint, so the function form and
+ * equal objects share one injection.
+ */
+export const hostTagsMemoKey = (
+  definitions: Readonly<Record<string, InjectedEndpointDefinition<never>>>,
+  tags: InjectedHostTagsOption | undefined,
+  operationNames?: Readonly<Record<string, string>>
+): string => (tags ? `:tags:${JSON.stringify(resolveHostTagsByEndpoint(definitions, tags, operationNames))}` : '');

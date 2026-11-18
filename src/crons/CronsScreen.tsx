@@ -28,6 +28,8 @@ import { CronDetailsDrawer } from './CronDetailsDrawer.tsx';
 import { CronFormDrawer } from './CronFormDrawer.tsx';
 import {
   type CronListSort,
+  type CronPollingInterval,
+  type CronSeverityCompare,
   type CronStatusFilter,
   formatCronDateTime,
   matchesCronStatusFilter,
@@ -111,14 +113,22 @@ export interface CronsScreenProps {
   pollingIntervalMs?: number;
   /** `false` stops the countdowns (a showcase, a test). */
   tick?: boolean;
-  /** The order of the Crons list: `name` (default, as the API sends them) or `severity` (the worst status first). */
+  /**
+   * The order of the Crons list: `name` (default, as the API sends them) or `severity` (the worst status first; within
+   * a status the most recent failure, then the most recent run first, then by name).
+   */
   sort?: CronListSort;
+  /** The host's comparator for `sort="severity"`; gets the package's as its third argument (`compareCronsBySeverity`). */
+  severityCompare?: CronSeverityCompare;
   /** A status filter in the toolbar's Filters panel (URL key `status`; default `true`). */
   statusFilter?: boolean;
   /** A "Cron" filter on the runs of all Crons (URL key `runsCron`; default `true`). */
   runsCronFilter?: boolean;
-  /** Refresh of the open details drawer in ms while it is open (default 0 = off). */
-  detailsPollingIntervalMs?: number;
+  /**
+   * Refresh of the open details drawer in ms while it is open (default 0 = off), or a function of the shown Cron
+   * (`cron => cron.status === 'RUNNING' ? 2000 : 30000`).
+   */
+  detailsPollingIntervalMs?: CronPollingInterval;
   /** Refresh of the timeline in ms while the tab is visible (default 0 = off). */
   timelinePollingIntervalMs?: number;
   /** Refresh of an open run's output while the run is still running, in ms (default 0 = off). */
@@ -147,6 +157,7 @@ export const CronsScreen = ({
   pollingIntervalMs = CRONS_POLL_MS,
   tick = true,
   sort = 'name',
+  severityCompare,
   statusFilter: showStatusFilter = true,
   runsCronFilter = true,
   detailsPollingIntervalMs = 0,
@@ -182,8 +193,8 @@ export const CronsScreen = ({
           // a stored name of another spelling (`Nightly_Cleanup`) is found by its kebab-case form and the other way round
           (normalizedSearch !== '' && normalizeCronName(cron.name).includes(normalizedSearch)))
     );
-    return sortCrons(matching, sort);
-  }, [crons, search, normalizedSearch, statusFilter, sort]);
+    return sortCrons(matching, sort, severityCompare);
+  }, [crons, search, normalizedSearch, statusFilter, sort, severityCompare]);
   const statusOptions = [
     { value: 'ATTENTION', label: t('Need attention') },
     ...Object.entries(CRON_STATUS).map(([value, definition]) => ({ value, label: t(definition.label, { context: definition.context }) })),

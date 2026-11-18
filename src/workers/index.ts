@@ -2,8 +2,8 @@
 // (`createWorkersApi`), their parts, the payload types, the status maps and the pure helpers. Charts are SVG, no peer.
 
 // API
-export { buildWorkersRequests, createStaticWorkersApi, createWorkersApi, WORKERS_TAG, workersEndpointDefinitions } from './api.ts';
-export type { CreateWorkersApiOptions, StaticWorkersData, WorkersApi } from './api.ts';
+export { buildWorkersRequests, createStaticWorkersApi, createWorkersApi, WORKERS_API_OPERATIONS, WORKERS_TAG, workersEndpointDefinitions } from './api.ts';
+export type { CreateWorkersApiOptions, StaticWorkersData, WorkersApi, WorkersApiOperation } from './api.ts';
 export type * from './types.ts';
 
 // Screens

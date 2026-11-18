@@ -3,6 +3,8 @@ import { describe, it } from 'node:test';
 
 import {
   codeContextRows,
+  issueEnvironmentHostLabel,
+  issueEnvironmentLabel,
   issueFrameViewsOf,
   issueGroupKey,
   parseIssueGroupKey,
@@ -57,5 +59,19 @@ describe('issues helpers', () => {
     assert.equal(client[0]?.location, 'src/B.tsx:42:3');
     assert.equal(client[0]?.minifiedLocation, 'chunk.js:1:99');
     assert.equal(client[0]?.highlightLine, 42);
+  });
+});
+
+describe('environment labels (0.3.7)', () => {
+  it('reads a map or a function, the code without a label', () => {
+    assert.equal(issueEnvironmentLabel('prod', { prod: 'Production' }), 'Production');
+    assert.equal(issueEnvironmentLabel('stage', { prod: 'Production' }), 'stage');
+    const byFunction = (code: string) => (code.startsWith('ws-') ? `Workspace ${code.slice(3)}` : code === 'empty' ? '' : undefined);
+    assert.equal(issueEnvironmentLabel('ws-7', byFunction), 'Workspace 7');
+    assert.equal(issueEnvironmentLabel('prod', byFunction), 'prod');
+    assert.equal(issueEnvironmentLabel('empty', byFunction), 'empty');
+    assert.equal(issueEnvironmentHostLabel('prod', byFunction), undefined);
+    assert.equal(issueEnvironmentHostLabel('ws-1', byFunction), 'Workspace 1');
+    assert.equal(issueEnvironmentLabel('prod'), 'prod');
   });
 });

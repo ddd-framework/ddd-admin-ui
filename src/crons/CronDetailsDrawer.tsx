@@ -1,7 +1,7 @@
 'use client';
 
 import { normalizeDddError } from '@mgamadeus/ddd-web/contract';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { FormDrawer } from '../form/FormDrawer.tsx';
 import { useTranslate } from '../i18n/useTranslate.ts';
@@ -13,7 +13,7 @@ import { Card, CardContent } from '../primitives/card.tsx';
 import { Skeleton } from '../primitives/skeleton.tsx';
 import type { CronsApi } from './api.ts';
 import { CronDurationChart } from './charts.tsx';
-import { formatCronCount, formatCronDuration, formatCronRate } from './format.ts';
+import { type CronPollingInterval, formatCronCount, formatCronDuration, formatCronRate, resolveCronPollingInterval } from './format.ts';
 import { CronLastRun, CronNextRun, CronRowActions, CronScheduleText } from './parts.tsx';
 import { CronRunsView } from './runs.tsx';
 import { CRON_STATUS, toCronStatus } from './status.ts';
@@ -31,8 +31,11 @@ export interface CronDetailsDrawerProps {
   onEdit?: (cron: CronOverview) => void;
   /** `false` stops the countdown (a showcase, a test). */
   tick?: boolean;
-  /** Refresh of the Cron's details in ms while the drawer is open (default 0 = off; its runs refresh on their own). */
-  pollingIntervalMs?: number;
+  /**
+   * Refresh of the Cron's details in ms while the drawer is open (default 0 = off; its runs refresh on their own), or a
+   * function of the loaded Cron (0 until it has loaded).
+   */
+  pollingIntervalMs?: CronPollingInterval;
   /** Refresh of an open run's output while it runs, in ms (default 0 = off). */
   outputPollingIntervalMs?: number;
 }
@@ -55,9 +58,16 @@ export const CronDetailsDrawer = ({
   const { t } = useTranslate();
   const { dateTime, viewerTime } = useCronTimeFormat();
   const [result, setResult] = useState<CronExecutionsResultFilter>('ALL');
-  const polling = open && pollingIntervalMs > 0 ? { pollingInterval: pollingIntervalMs } : {};
+  const [polledCron, setPolledCron] = useState<CronOverview | undefined>(undefined);
+  const interval = resolveCronPollingInterval(pollingIntervalMs, polledCron?.id === cronId ? polledCron : undefined);
+  const polling = open && interval > 0 ? { pollingInterval: interval } : {};
   const query = api.useCronQuery({ cronId: cronId ?? 0 }, { skip: cronId === null, ...polling });
   const detail = cronId === null ? undefined : query.currentData;
+  const loadedCron = detail?.cron;
+  // the function form reads the Cron of the last answer (a state, so the next render polls at its interval)
+  useEffect(() => {
+    if (typeof pollingIntervalMs === 'function' && loadedCron !== polledCron) setPolledCron(loadedCron);
+  }, [pollingIntervalMs, loadedCron, polledCron]);
   const cron = detail?.cron;
   const stats = detail?.stats14d;
   return (

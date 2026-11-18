@@ -12,7 +12,14 @@ import {
   toCountryCodeMap,
 } from './adminFormat.ts';
 import { type AppTranslationKeysBulkDeleteResponse, buildAppTranslationKeysBulkDeleteRequest, createTranslationsApi } from './api.ts';
-import { appTranslationKeysExpand, appTranslationKeysOrderBy, buildAppTranslationKeysListArgs, renameUrlStateKeys } from './appTranslationsList.ts';
+import {
+  appTranslationKeysExpand,
+  appTranslationKeysLanguageIds,
+  appTranslationKeysOrderBy,
+  buildAppTranslationKeysLanguageFilter,
+  buildAppTranslationKeysListArgs,
+  renameUrlStateKeys,
+} from './appTranslationsList.ts';
 
 const NO_FILTERS = { id: '', key: '', translation: '' };
 
@@ -147,5 +154,27 @@ describe('keys list options (0.3.4)', () => {
     assert.equal(translationsApi.mapBulkDeleteResponse, mapResponse);
     assert.ok((endpoints.adminUiAppTranslationKeys?.providesTags ?? []).includes('HostKeys'));
     assert.ok((endpoints.adminUiBulkDeleteAppTranslationKeys?.invalidatesTags ?? []).includes('HostKeys'));
+  });
+});
+
+describe('"has a value in" with several languages (0.3.7)', () => {
+  it('sends one id exactly as the single variant', () => {
+    assert.equal(buildAppTranslationKeysLanguageFilter(['3']), buildAppTranslationKeysLanguageFilter('3'));
+    assert.equal(appTranslationKeysExpand([' 3 ']), appTranslationKeysExpand('3'));
+  });
+
+  it('sends several ids as `in` on the root filter and the expand', () => {
+    assert.equal(buildAppTranslationKeysLanguageFilter(['3', '5']), 'appTranslationValues.languageId in ["3","5"]');
+    assert.equal(appTranslationKeysExpand(['3', '5']), 'appTranslationValues(filters=languageId in ["3","5"])');
+    const args = buildAppTranslationKeysListArgs({ ...NO_FILTERS, key: 'save', language: ['3', '5'] });
+    assert.equal(args.filters, "key eq '*save*' and appTranslationValues.languageId in [\"3\",\"5\"]");
+    assert.equal(args.expand, 'appTranslationValues(filters=languageId in ["3","5"])');
+  });
+
+  it('drops empty, non-numeric and repeated ids; none is no filter', () => {
+    assert.deepEqual(appTranslationKeysLanguageIds(['5', '', 'x', ' 5', '3']), ['5', '3']);
+    assert.equal(buildAppTranslationKeysLanguageFilter([]), undefined);
+    assert.equal(buildAppTranslationKeysLanguageFilter(['', 'x']), undefined);
+    assert.equal(appTranslationKeysExpand([]), 'appTranslationValues');
   });
 });
