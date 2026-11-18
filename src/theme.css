@@ -39,6 +39,11 @@
   --text-color-warning: var(--warning-text, var(--warning));
   --text-color-destructive: var(--destructive-text, var(--destructive));
   --text-color-info: var(--info-text, var(--info));
+  /* soft status surfaces (the badges of components.css read them): the soft role, else the status colour at 15 % */
+  --color-success-soft: var(--success-soft, color-mix(in oklab, var(--success) 15%, transparent));
+  --color-warning-soft: var(--warning-soft, color-mix(in oklab, var(--warning) 15%, transparent));
+  --color-destructive-soft: var(--destructive-soft, color-mix(in oklab, var(--destructive) 15%, transparent));
+  --color-info-soft: var(--info-soft, color-mix(in oklab, var(--info) 15%, transparent));
   --color-brand: var(--brand);
   --color-brand-emphasis: var(--brand-emphasis);
   --color-brand-light: var(--brand-light);

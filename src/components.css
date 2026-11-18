@@ -297,22 +297,25 @@
   }
 }
 
-/* Status badges (`StatusBadge`, `data-tone`): the soft surface of the tone, the host's `--<status>-soft`, else exactly
-   the tint of `bg-<status>/15` (the status colour at 15 %). In the utilities layer with a stronger selector than the
-   tint utility, so it holds with or without theme.css; browsers without color-mix() keep the utility's own fallback. */
+/* Status badges (`StatusBadge`, `data-tone`): the soft surface of the tone through the host's theme binding
+   (`--color-<status>-soft`: theme.css binds it to `--<status>-soft`, a host with its own binding binds it its own way,
+   e.g. `hsl(var(--success-soft))`), else exactly the tint of `bg-<status>/15` (the status colour at 15 %). Never the
+   bare property: a host whose properties hold channels would get an invalid declaration and no surface. In the
+   utilities layer with a stronger selector than the tint utility, so it holds with or without theme.css; browsers
+   without color-mix() keep the utility's own fallback. */
 @layer utilities {
   @supports (color: color-mix(in lab, red, red)) {
     [data-slot='badge'][data-tone='success'] {
-      background-color: var(--success-soft, color-mix(in oklab, --theme(--color-success) 15%, transparent));
+      background-color: --theme(--color-success-soft, color-mix(in oklab, --theme(--color-success) 15%, transparent));
     }
     [data-slot='badge'][data-tone='warning'] {
-      background-color: var(--warning-soft, color-mix(in oklab, --theme(--color-warning) 15%, transparent));
+      background-color: --theme(--color-warning-soft, color-mix(in oklab, --theme(--color-warning) 15%, transparent));
     }
     [data-slot='badge'][data-tone='danger'] {
-      background-color: var(--destructive-soft, color-mix(in oklab, --theme(--color-destructive) 15%, transparent));
+      background-color: --theme(--color-destructive-soft, color-mix(in oklab, --theme(--color-destructive) 15%, transparent));
     }
     [data-slot='badge'][data-tone='info'] {
-      background-color: var(--info-soft, color-mix(in oklab, --theme(--color-info) 15%, transparent));
+      background-color: --theme(--color-info-soft, color-mix(in oklab, --theme(--color-info) 15%, transparent));
     }
   }
 }

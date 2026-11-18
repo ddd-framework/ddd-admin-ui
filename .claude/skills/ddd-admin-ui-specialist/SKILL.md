@@ -3,7 +3,7 @@ name: ddd-admin-ui-specialist
 description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries, import matrix, host setup (AdminUiProvider, theme.css, components.css, tokens.json, ddd-admin-ui-check-tokens, -radix, -contrast), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title from one navigation; ./shell-background), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route states, form drawers and dialogs, the save shortcut, useConfirm, write access, locale::style translations, media with image crop, colour fields, key figures (./data), markdown, the admin screens ./workers, ./translations, ./issues, ./database (schema diff), ./crons, status text roles, ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form or admin screen, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast fails or status text is too light, or URL filters get lost."
 metadata:
   author: mgamadeus
-  version: 0.3.5
+  version: 0.3.6
 ---
 
 # ddd-admin-ui specialist
@@ -96,8 +96,10 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
   missing colour role means a utility without a rule, so the element is simply transparent.
 - **Status text roles.** `text-success` … read `--<status>-text` and the badge tints `--<status>-soft` through
   `theme.css`; unset they are the status colour (and its 15 % tint). The contrast check has no package exceptions: a
-  host whose status colours are fills sets the text roles. A host with its own Tailwind binding must bind them itself
-  (`ddd-admin-ui-check-tokens` names a declared role nothing reads).
+  host whose status colours are fills sets the text roles. A host with its own Tailwind binding must bind them itself:
+  `--text-color-<status>` and `--color-<status>-soft` (the status badges read that binding, never the bare property;
+  with channel values `hsl(var(--success-soft))`). `ddd-admin-ui-check-tokens` names a declared role nothing reads and
+  a channel value read as a whole colour.
 - **Schema writes disabled.** A 403 on a schema-diff apply means `APP_SCHEMA_WRITES_DISABLED` on that process, not
   missing rights; `SchemaDiffScreen` shows it and turns read-only. Crons' Run now only queues (the next runner tick
   runs it); a 409 is shown as the server's message.

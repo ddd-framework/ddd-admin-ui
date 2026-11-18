@@ -28,6 +28,7 @@
 #     T1  `next build`; the server page's metadata title is m('Users'), pure helpers render on the server
 #     T5  the production CSS has the package's component rules and utilities; ddd-admin-ui-check-tokens passes on it
 #         ddd-admin-ui-check-contrast passes on it without exceptions (the fixture sets the status text roles)
+#     T5b ddd-admin-ui-check-tokens passes on a host whose colour properties hold channels (own binding, no theme.css)
 #         (browser) the status text roles: StatusBadge text is the host's text role; with the roles unset (a scope with
 #         `initial`) badge text, 15 % tint and callout icon compute exactly the values of 0.2.1
 #         one Radix copy in the host (ddd-admin-ui-check-radix)
@@ -181,6 +182,9 @@ echo "── T5 check-tokens on the built CSS"
 # every built stylesheet in one folder: the check reads them as one stylesheet
 mkdir -p built-css && xargs -I{} cp {} built-css/ < built-css-files.txt
 if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-check-tokens built-css; else pnpm exec ddd-admin-ui-check-tokens built-css; fi
+echo "── T5b check-tokens on a host whose colour properties hold channels (own binding, no theme.css)"
+node check-channel-host.mjs
+if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-check-tokens channel-host/built.css; else pnpm exec ddd-admin-ui-check-tokens channel-host/built.css; fi
 echo "── contrast of the declared pairs on the built CSS (fails on any miss not on an exception list)"
 if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-check-contrast built-css; else pnpm exec ddd-admin-ui-check-contrast built-css; fi
 echo "── one Radix copy"

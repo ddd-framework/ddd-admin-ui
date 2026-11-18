@@ -3,6 +3,21 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.3.6
+
+Fix for hosts whose colour properties hold channels; no API change. The list and form actions snapshots are unchanged.
+
+- `components.css`: the status badges (`[data-slot=badge][data-tone=…]`, since 0.3.3) read the soft surface through
+  the theme binding (`--theme(--color-<status>-soft, <status colour at 15 %>)`) instead of the bare `--<status>-soft`.
+  A host with HSL channels in its properties and its own binding (`--success-soft: 101 82% 87%`) got an invalid
+  declaration, so the badge had no surface, and `ddd-admin-ui-check-tokens` failed on the plain update from 0.3.2.
+  `theme.css` binds `--color-<status>-soft` to `--<status>-soft` (else the status colour at 15 %), so a theme.css host
+  renders as before; a host with its own binding binds `--color-<status>-soft` itself (`hsl(var(--success-soft))`) or
+  gets the 15 % tint. No other package rule reads a colour role bare (the text roles go through
+  `--text-color-<status>`).
+- The consumer test builds a second host with channel values and its own binding and runs `ddd-admin-ui-check-tokens`
+  on it.
+
 ## 0.3.5
 
 Layout fixes; no API change. The list and form actions snapshots are unchanged.

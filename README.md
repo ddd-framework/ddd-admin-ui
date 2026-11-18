@@ -182,9 +182,12 @@ It reads the host's `node_modules` (npm and pnpm layouts) and the folders above 
    .dark { --success-text: var(--success); --warning-text: var(--warning); --destructive-text: var(--destructive); --info-text: var(--info); }
    ```
 
-   `theme.css` binds them (`--text-color-<status>` for the text utilities, the four 15 % tints for the soft surfaces); a
-   host with its own binding points the same utilities at `var(--<status>-text, var(--<status>))` and
-   `var(--<status>-soft, …)`. `ddd-admin-ui-check-tokens` names a text or soft role that is declared but read by no rule.
+   `theme.css` binds them (`--text-color-<status>` for the text utilities; `--color-<status>-soft` and the four 15 %
+   tints for the soft surfaces). The package's rules read them only through that binding (the status badges of
+   `components.css` read `--color-<status>-soft`, else the status colour at 15 %), never the bare property. A host with
+   its own binding binds the same names its own way, e.g. with channel values
+   `--text-color-success: hsl(var(--success-text, var(--success)))` and `--color-success-soft: hsl(var(--success-soft))`;
+   a host that binds no soft role gets the 15 % tint. `ddd-admin-ui-check-tokens` names a text or soft role that is declared but read by no rule.
    The contrast check tests every text role on `card`, on `background` and on its soft surface over a card (an unset
    role by its fallback, named in the output); the package lists no exceptions, so a host whose status colours fail
    as text sets the text roles or writes its own exceptions.
@@ -845,7 +848,7 @@ project's `.claude/skills/`. Idempotent; repoints an existing symlink, never tou
 
 ## Versioning
 
-0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.5"`,
+0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.6"`,
 `pnpm add -E` / `npm install -E`); modules peer on the version they were tested with. Stable releases are published
 under the `latest` dist-tag, pre-releases (`x.y.z-…`) under `next`. Changes per release: [CHANGELOG.md](CHANGELOG.md).
 
