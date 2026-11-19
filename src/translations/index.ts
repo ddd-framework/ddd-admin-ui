@@ -138,7 +138,7 @@ export { AppTranslationKeyDrawer } from './AppTranslationKeyDrawer.tsx';
 export type { AppTranslationKeyDrawerProps } from './AppTranslationKeyDrawer.tsx';
 export { TranslationCompleteness } from './TranslationCompleteness.tsx';
 export type { TranslationCompletenessProps } from './TranslationCompleteness.tsx';
-export { GenerationEstimate, startGenerationPreview } from './GenerationEstimate.tsx';
+export { GenerationEstimate, isGenerationEstimateEmpty, startGenerationPreview } from './GenerationEstimate.tsx';
 export type {
   AppTranslationsGenerationEstimateRenderer,
   AppTranslationsGenerationPreviewLoader,

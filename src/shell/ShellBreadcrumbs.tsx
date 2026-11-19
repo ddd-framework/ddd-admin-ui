@@ -47,7 +47,19 @@ export interface ShellBreadcrumbsProps<TEntity extends string = string> {
   canAccessCrumb?: (crumb: ResolvedCrumb<string>) => boolean;
   /** Where the trail folds; default full from 40rem, the current crumb alone under 14rem. */
   foldWidths?: BreadcrumbFoldWidths;
+  /**
+   * What the fold widths measure: `container` (default) the trail's own width (container queries); `viewport` the
+   * window's width (media queries), for a trail whose box has no stable width of its own.
+   */
+  foldBy?: BreadcrumbFoldBasis;
+  /** Extra classes of every crumb (`<li>`; its maximum width, its text size). */
+  itemClassName?: string;
+  /** The navigation landmark's name (default "breadcrumb"), already translated. */
+  ariaLabel?: string;
 }
+
+/** What the breadcrumbs' fold widths measure. */
+export type BreadcrumbFoldBasis = 'container' | 'viewport';
 
 const ITEM_CLASS = 'min-w-0 max-w-48 lg:max-w-64';
 const LINK_CLASS = 'block truncate rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none';
@@ -75,15 +87,19 @@ const FOLD_CLASS: Record<FoldRole, string> = {
 /** A CSS length as given, without characters that could leave the declaration. */
 const safeLength = (value: string): string => value.replace(/[^\w.%()+\-* ]/g, '');
 
-/** The scoped rules of custom fold widths (the same behaviour as the default classes, at other widths). */
-export const breadcrumbFoldStyles = (scope: string, widths: BreadcrumbFoldWidths): string => {
+/**
+ * The scoped rules of custom fold widths (the same behaviour as the default classes, at other widths); `basis`
+ * `viewport` folds by the window's width (media queries) instead of the trail's (container queries).
+ */
+export const breadcrumbFoldStyles = (scope: string, widths: BreadcrumbFoldWidths, basis: BreadcrumbFoldBasis = 'container'): string => {
   const full = safeLength(widths.full ?? '40rem');
   const currentOnly = safeLength(widths.currentOnly ?? '14rem');
   const at = (role: FoldRole) => `[data-crumbs-fold="${scope.replace(/["\\]/g, '')}"] [data-crumb-fold="${role}"]`;
+  const query = basis === 'viewport' ? '@media' : '@container crumbs';
   return [
     `${at('ellipsis-parent')},${at('ellipsis-separator-parent')},${at('older')},${at('older-separator')}{display:none}`,
-    `@container crumbs (width >= ${full}){${at('ellipsis-older')}{display:none}${at('older')}{display:inline-flex}${at('older-separator')}{display:block}}`,
-    `@container crumbs (width < ${currentOnly}){${at('ellipsis-parent')}{display:inline-flex}${at('ellipsis-separator-parent')}{display:block}${at('parent')}{display:none}}`,
+    `${query} (width >= ${full}){${at('ellipsis-older')}{display:none}${at('older')}{display:inline-flex}${at('older-separator')}{display:block}}`,
+    `${query} (width < ${currentOnly}){${at('ellipsis-parent')}{display:inline-flex}${at('ellipsis-separator-parent')}{display:block}${at('parent')}{display:none}}`,
   ].join('');
 };
 
@@ -192,6 +208,9 @@ export const ShellBreadcrumbs = <TEntity extends string = string>({
   search,
   canAccessCrumb,
   foldWidths,
+  foldBy = 'container',
+  itemClassName,
+  ariaLabel,
 }: ShellBreadcrumbsProps<TEntity>) => {
   const { t } = useTranslate();
   const shell = useShellNavigation();
@@ -210,7 +229,9 @@ export const ShellBreadcrumbs = <TEntity extends string = string>({
   );
   if (crumbs.length === 0) return null;
 
-  const customFold = foldWidths !== undefined;
+  // custom widths and the viewport basis fold through a scoped stylesheet (the default classes are container queries)
+  const customFold = foldWidths !== undefined || foldBy === 'viewport';
+  const itemClass = itemClassName ? cn(ITEM_CLASS, itemClassName) : ITEM_CLASS;
   /** The folding class of a part, or (custom widths) its data attribute. */
   const fold = (role: FoldRole) => (customFold ? { className: undefined, 'data-crumb-fold': role } : { className: FOLD_CLASS[role] });
 
@@ -225,10 +246,11 @@ export const ShellBreadcrumbs = <TEntity extends string = string>({
   return (
     <Breadcrumb
       data-shell-breadcrumbs=""
+      {...(ariaLabel !== undefined ? { 'aria-label': ariaLabel } : {})}
       data-crumbs-fold={customFold ? foldScope : undefined}
       className={cn('@container/crumbs min-w-0 flex-1', className)}
     >
-      {customFold && <style>{breadcrumbFoldStyles(foldScope, foldWidths)}</style>}
+      {customFold && <style>{breadcrumbFoldStyles(foldScope, foldWidths ?? {}, foldBy)}</style>}
       <BreadcrumbList className="flex-nowrap gap-1 sm:gap-1.5">
         {ancestors.length > 0 && (
           <>
@@ -290,7 +312,7 @@ export const ShellBreadcrumbs = <TEntity extends string = string>({
           return (
             <Fragment key={crumb.key}>
               <BreadcrumbItem
-                className={cn(ITEM_CLASS, visibility.className)}
+                className={cn(itemClass, visibility.className)}
                 data-crumb={crumb.kind}
                 data-crumb-fold={visibility['data-crumb-fold']}
                 {...crumbAttributes(crumb)}
@@ -314,7 +336,7 @@ export const ShellBreadcrumbs = <TEntity extends string = string>({
             </Fragment>
           );
         })}
-        <BreadcrumbItem className={ITEM_CLASS} data-crumb={current.kind} {...crumbAttributes(current)}>
+        <BreadcrumbItem className={itemClass} data-crumb={current.kind} {...crumbAttributes(current)}>
           <CrumbView
             crumb={current}
             useEntityLabel={entityHook}

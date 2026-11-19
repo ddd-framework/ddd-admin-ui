@@ -11,6 +11,7 @@
 #         the optional props of 0.3.3 render on the server (options-033-render.mjs)
 #         the optional props of 0.3.4 render on the server (options-034-render.mjs)
 #         the optional props of 0.3.7 render on the server (options-037-render.mjs)
+#         the optional props of 0.3.9 render on the server (options-039-render.mjs)
 #         ./logic/pure loads from CommonJS through its require condition without any dependency (pure-require.cjs)
 #     T4  Node imports of every entry but ./next and ./notify-sonner (those two fail on the missing peer) and a
 #         strict tsc (skipLibCheck false) with moduleResolution bundler and nodenext
@@ -166,6 +167,8 @@ echo "── the optional props of 0.3.4 on the server: workers section state an
 node options-034-render.mjs
 echo "── the optional props of 0.3.7 on the server: several languages, card sort, generation estimate, tags per operation, crons order, environment labels"
 node options-037-render.mjs
+echo "── the optional props of 0.3.9 on the server: table padding and looks, empty state, page flow, shell attributes and link props, breadcrumbs, account, background, language filter options, confirm routing, crons order"
+node options-039-render.mjs
 echo "── shipped i18n manifest"
 if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-i18n-manifest --check; else pnpm exec ddd-admin-ui-i18n-manifest --check; fi
 
@@ -222,6 +225,8 @@ else
   node browser-options-033.mjs "http://127.0.0.1:$PORT"
   echo "── the options of 0.3.7: several languages, card sort, generation estimate (headless browser)"
   node browser-options-037.mjs "http://127.0.0.1:$PORT"
+  echo "── the options of 0.3.9: select-all cell, track selection cell, group row hover, mobile menu description, avatar fallback, reselect, rich confirmation, estimate probe (headless browser)"
+  node browser-options-039.mjs "http://127.0.0.1:$PORT"
   kill $SERVER_PID 2>/dev/null || true
 fi
 

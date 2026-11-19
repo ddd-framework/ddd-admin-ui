@@ -82,7 +82,37 @@ export interface ShellNavDisplay {
    * `false` the heading itself links to the page.
    */
   railGroupPageRow?: boolean;
+  /**
+   * What tints on hover in the row of a group with its own page (a link and a caret button): `label` (default) each
+   * part on its own, `row` the whole row at once.
+   */
+  groupRowHover?: 'label' | 'row';
+  /** Extra classes of a group's toggle: the caret button of a group with its own page, the row button of one without. */
+  groupToggleClassName?: string;
+  /** Extra classes of the current entry's row in the list (after the package's active classes). */
+  activeRowClassName?: string;
+  /** Extra classes of the row of a group that holds the current entry, in the list. */
+  activeGroupClassName?: string;
+  /** Extra classes of one row of the list (entries and groups), by item. A stable function. */
+  rowClassNameFor?: (item: NavigationItem<string>) => string | undefined;
+  /** Extra classes of every entry in a rail flyout (leaves, group pages, heading links). */
+  railFlyoutItemClassName?: string;
+  /** Extra classes of the current entry in a rail flyout. */
+  railFlyoutActiveItemClassName?: string;
+  /** Delay in ms before a rail icon's tooltip opens (default: the provider's `tooltipDelayMs`). */
+  railTooltipDelayMs?: number;
+  /**
+   * Extra props of every in-app link the shell draws through `ShellNavLink` (rows, rail, flyouts, mobile menu,
+   * breadcrumbs, account entries): an object, or a function of the link's `{ key, href }` (a stable function). Passed to
+   * the host's link component (`{ prefetch: false }`); an item's own `linkProps` win. Never on `external` links.
+   */
+  linkProps?: ShellNavLinkPropsOption;
 }
+
+/** `ShellNavDisplay.linkProps` / `AppShell.navLinkProps`: the same props for every link, or per link. */
+export type ShellNavLinkPropsOption =
+  | Readonly<Record<string, unknown>>
+  | ((link: { key: string; href: string }) => Readonly<Record<string, unknown>> | undefined);
 
 /** How the navigation rows are drawn (set by `AppShell` or `ShellNavDisplayProvider`; read by the list, rail and menu). */
 export const ShellNavDisplayContext = createContext<ShellNavDisplay>({ childIconsInList: true });

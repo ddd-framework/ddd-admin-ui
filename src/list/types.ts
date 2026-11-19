@@ -62,6 +62,11 @@ export interface EntityListDataProps<TItem> {
   /** True while a search or filter narrows the list (switches the empty state to "no results" + clear). */
   isSearchActive?: boolean;
   onClearSearch?: () => void;
+  /**
+   * `false`: no built-in empty and no-results block (the host draws its own beside the list); the error and the loading
+   * announcement stay. Default `true`.
+   */
+  showEmptyState?: boolean;
   /** Accessible name of the loading skeleton. */
   loadingMessage?: string;
   error?: ReactNode;

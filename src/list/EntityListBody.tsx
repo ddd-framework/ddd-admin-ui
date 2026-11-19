@@ -32,6 +32,14 @@ export interface EntityListBodyProps<TItem, TExtra extends string = never>
       | 'surface'
       | 'selectAllLabel'
       | 'columnWidthBox'
+      | 'cellPaddingX'
+      | 'sortIconPosition'
+      | 'sortButtonClassName'
+      | 'headerRowClassName'
+      | 'headerCellClassName'
+      | 'tableClassName'
+      | 'skeletonClassName'
+      | 'scroll'
     > {
   displayMode: ListDisplayMode | TExtra;
   columns: EntityListColumn<TItem>[];
@@ -105,6 +113,14 @@ export const EntityListBody = <TItem, TExtra extends string = never>({
   surface,
   selectAllLabel,
   columnWidthBox,
+  cellPaddingX,
+  sortIconPosition,
+  sortButtonClassName,
+  headerRowClassName,
+  headerCellClassName,
+  tableClassName,
+  skeletonClassName,
+  scroll,
   className,
   tableBreakpoint = 'md',
   ...data
@@ -134,6 +150,14 @@ export const EntityListBody = <TItem, TExtra extends string = never>({
     surface,
     selectAllLabel,
     columnWidthBox,
+    cellPaddingX,
+    sortIconPosition,
+    sortButtonClassName,
+    headerRowClassName,
+    headerCellClassName,
+    tableClassName,
+    skeletonClassName,
+    scroll,
   };
   if (isExtraMode(displayMode) && renderExtraView) {
     return (
@@ -142,6 +166,7 @@ export const EntityListBody = <TItem, TExtra extends string = never>({
         renderItems={items => renderExtraView(displayMode, items)}
         skeletonCards={skeletonCards}
         isGridView={false}
+        scroll={scroll}
         className={className}
       />
     );
@@ -159,7 +184,7 @@ export const EntityListBody = <TItem, TExtra extends string = never>({
     );
   }
   if (displayMode === 'grid') {
-    return <EntityListGrid {...data} renderCard={renderCard} skeletonCards={skeletonCards} className={className} />;
+    return <EntityListGrid {...data} renderCard={renderCard} skeletonCards={skeletonCards} scroll={scroll} className={className} />;
   }
   return (
     <>
@@ -176,6 +201,7 @@ export const EntityListBody = <TItem, TExtra extends string = never>({
         renderCard={renderCard}
         skeletonCards={skeletonCards}
         isGridView={false}
+        scroll={scroll}
         className={cn(CARDS_BELOW_CLASS[tableBreakpoint as 'md' | 'lg'], className)}
       />
     </>

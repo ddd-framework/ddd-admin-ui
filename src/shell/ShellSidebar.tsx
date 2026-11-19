@@ -35,6 +35,8 @@ export interface ShellSidebarProps {
   className?: string;
   /** Extra classes of the `<nav>` holding the list or the rail (its padding, its scroll area). */
   navClassName?: string;
+  /** `data-*` attributes of the `<aside>`. */
+  [dataAttribute: `data-${string}`]: string | undefined;
 }
 
 const SIDEBAR_NAV_CLASS = 'min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 pt-2 pb-4';
@@ -100,11 +102,14 @@ export const ShellSidebar = ({
   footer,
   className,
   navClassName,
+  ...rest
 }: ShellSidebarProps) => {
   const { t } = useTranslate();
   const top = collapsed ? railHeader : header;
+  const dataAttributes = Object.fromEntries(Object.entries(rest).filter(([name]) => name.startsWith('data-')));
   return (
     <aside
+      {...dataAttributes}
       id={id}
       data-shell-sidebar=""
       data-collapsed={collapsed || undefined}

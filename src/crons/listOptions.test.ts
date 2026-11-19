@@ -82,7 +82,7 @@ describe('crons list options (0.3.3)', () => {
 });
 
 describe('crons severity order and polling (0.3.7)', () => {
-  it('breaks a status tie by the most recent failure, then the most recent run, then by name', () => {
+  it('with tieBreak "recent" breaks a status tie by the most recent failure, then the most recent run, then by name', () => {
     const crons = [
       { name: 'a-old-failure', status: 'FAILING', lastExecution: { id: 1, cronId: 1, startedAt: '2026-11-17 08:00:00', executionState: 'FAILED' } },
       {
@@ -96,8 +96,13 @@ describe('crons severity order and polling (0.3.7)', () => {
       { name: 'e-ok-older', status: 'OK', lastExecutionStartedAt: '2026-11-18 05:00:00' },
     ];
     assert.deepEqual(
-      sortCrons(crons, 'severity').map(cron => cron.name),
+      sortCrons(crons, 'severity', undefined, { tieBreak: 'recent' }).map(cron => cron.name),
       ['b-new-failure', 'a-old-failure', 'c-ok-recent', 'e-ok-older', 'd-ok-never']
+    );
+    // the default (0.3.9) breaks the tie by name only, so the rows of one status keep their places between refreshes
+    assert.deepEqual(
+      sortCrons(crons, 'severity').map(cron => cron.name),
+      ['a-old-failure', 'b-new-failure', 'c-ok-recent', 'd-ok-never', 'e-ok-older']
     );
     assert.equal(cronLastFailureAt(crons[1]!), '2026-11-18 06:00:00');
     assert.equal(cronLastRunAt(crons[0]!), '2026-11-17 08:00:00');
@@ -114,6 +119,22 @@ describe('crons severity order and polling (0.3.7)', () => {
     assert.deepEqual(sortCrons(crons, 'severity', pinnedFirst).map(cron => cron.name), ['pinned', 'a', 'b']);
     assert.deepEqual(sortCrons(crons, 'name', pinnedFirst).map(cron => cron.name), ['a', 'b', 'pinned']);
     assert.equal(compareCronsBySeverity(crons[0]!, crons[1]!) < 0, true);
+  });
+
+  it('takes the host status order; unknown statuses rank after the listed ones (0.3.9)', () => {
+    const crons = [
+      { name: 'missing', status: 'MISSING_COMMAND' },
+      { name: 'failing', status: 'FAILING' },
+      { name: 'ok', status: 'OK' },
+      { name: 'odd', status: 'SOMETHING_NEW' },
+    ];
+    const order = ['FAILING', 'OVERDUE', 'MISSING_COMMAND', 'RUNNING', 'OK', 'PAUSED'];
+    assert.deepEqual(sortCrons(crons, 'severity', undefined, { statusOrder: order }).map(cron => cron.name), ['failing', 'missing', 'ok', 'odd']);
+    assert.deepEqual(sortCrons(crons, 'severity').map(cron => cron.name), ['missing', 'failing', 'ok', 'odd']);
+    // the host comparator falls back on the configured package comparator
+    type Row = (typeof crons)[number];
+    const passThrough = (left: Row, right: Row, compare: (l: Row, r: Row) => number) => compare(left, right);
+    assert.deepEqual(sortCrons(crons, 'severity', passThrough, { statusOrder: order }).map(cron => cron.name), ['failing', 'missing', 'ok', 'odd']);
   });
 
   it('resolves a polling interval from a number or a function of the Cron', () => {

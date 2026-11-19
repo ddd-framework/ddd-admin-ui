@@ -207,24 +207,48 @@
   [data-list-pin-edges='overlay'] [data-list-pin][data-list-pin-edge]::before {
     content: none;
   }
+  /* Its look comes from optional variables (set on the table's host, its card or `:root`): `--list-edge-width` (the
+     rule, default 1px; 0 drops it), `--list-edge-color` (default the border colour), `--list-edge-shadow-offset` /
+     `--list-edge-shadow-blur` / `--list-edge-shadow-color` (default 4px, 8px, the foreground at 8 %; an offset of 0 and
+     a blur of 0 drop the shadow) and `--list-edge-fade` (a gradient from the table's surface to transparent over the
+     scrolling side, default 0: none). Unset, the overlay draws exactly as before. */
   [data-list-edge-overlay] {
     position: absolute;
-    width: 1px;
+    width: var(--list-edge-width, 1px);
     pointer-events: none;
     z-index: calc(var(--layer-raised) + 2);
     display: none;
-    background-color: --theme(--color-border);
+    background-color: var(--list-edge-color, --theme(--color-border));
   }
   [data-list-overflow-start] > [data-list-edge-overlay='start']:not([hidden]),
   [data-list-overflow-end] > [data-list-edge-overlay='end']:not([hidden]) {
     display: block;
   }
   [data-list-edge-overlay][data-list-edge-shadow='right'] {
-    box-shadow: 4px 0 8px color-mix(in oklab, --theme(--color-foreground) 8%, transparent);
+    box-shadow: var(--list-edge-shadow-offset, 4px) 0 var(--list-edge-shadow-blur, 8px)
+      var(--list-edge-shadow-color, color-mix(in oklab, --theme(--color-foreground) 8%, transparent));
   }
   [data-list-edge-overlay][data-list-edge-shadow='left'] {
-    margin-left: -1px;
-    box-shadow: -4px 0 8px color-mix(in oklab, --theme(--color-foreground) 8%, transparent);
+    margin-left: calc(-1 * var(--list-edge-width, 1px));
+    box-shadow: calc(-1 * var(--list-edge-shadow-offset, 4px)) 0 var(--list-edge-shadow-blur, 8px)
+      var(--list-edge-shadow-color, color-mix(in oklab, --theme(--color-foreground) 8%, transparent));
+  }
+  /* `--list-edge-fade`: the surface fading out over the content beside the edge (none while it is 0). */
+  [data-list-edge-overlay]::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--list-edge-fade, 0px);
+    pointer-events: none;
+  }
+  [data-list-edge-overlay][data-list-edge-shadow='right']::after {
+    left: 100%;
+    background-image: linear-gradient(to right, var(--list-surface, --theme(--color-card)), transparent);
+  }
+  [data-list-edge-overlay][data-list-edge-shadow='left']::after {
+    right: 100%;
+    background-image: linear-gradient(to left, var(--list-surface, --theme(--color-card)), transparent);
   }
 }
 

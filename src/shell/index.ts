@@ -9,9 +9,9 @@ export { LanguageMenu, LanguageMenuItems, LanguageMenuSub } from './LanguageMenu
 export type { LanguageMenuProps, LanguageOption } from './LanguageMenu.tsx';
 export { MarkedNavIcon, NavItemMarks } from './NavItemMarks.tsx';
 export { ShellBreadcrumbs } from './ShellBreadcrumbs.tsx';
-export type { BreadcrumbFoldWidths, ShellBreadcrumbsProps } from './ShellBreadcrumbs.tsx';
+export type { BreadcrumbFoldBasis, BreadcrumbFoldWidths, ShellBreadcrumbsProps } from './ShellBreadcrumbs.tsx';
 export { ShellNavDisplayContext, ShellNavigationContext, useShellNavigation } from './shellContext.ts';
-export type { EntityLabelRequest, EntityLabelResult, ShellNavDisplay, ShellNavigationValue, UseEntityLabel } from './shellContext.ts';
+export type { EntityLabelRequest, EntityLabelResult, ShellNavDisplay, ShellNavigationValue, ShellNavLinkPropsOption, UseEntityLabel } from './shellContext.ts';
 export { ShellNavDisplayProvider } from './ShellNavDisplayProvider.tsx';
 export type { ShellNavDisplayProviderProps } from './ShellNavDisplayProvider.tsx';
 export { ShellDocumentTitle } from './ShellDocumentTitle.tsx';

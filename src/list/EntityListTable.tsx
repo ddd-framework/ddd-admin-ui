@@ -25,6 +25,11 @@ import {
   computeListTracks,
   hasListTracks,
   isContentTrack,
+  isSortIconFirst,
+  listCellPaddingAt,
+  type ListCellPadding,
+  type ListSortIconPosition,
+  resolveListCellPadding,
   type ListColumnAlign,
   type ListColumnPin,
   type ListColumnWidth,
@@ -73,6 +78,8 @@ export interface EntityListColumn<TItem> {
   sortKey?: string;
   /** The first direction when this column becomes sorted (default `'asc'`; e.g. `'desc'` for dates, newest first). */
   sortStart?: ListSortDirection;
+  /** Where this sortable header puts its arrow (default: the table's `sortIconPosition`). */
+  sortIconPosition?: ListSortIconPosition;
 }
 
 export interface EntityListTableProps<TItem> extends EntityListDataProps<TItem> {
@@ -161,6 +168,36 @@ export interface EntityListTableProps<TItem> extends EntityListDataProps<TItem> 
    * cell's padding to the track.
    */
   columnWidthBox?: 'border-box' | 'content-box';
+  /**
+   * The inline padding of the cells in px: a number for every side (the card edge included), or `{ inner, edge }` (the
+   * cells at the card's left and right edge; `edge` defaults to `inner`). Default 16 px, 24 px at the card edge. With
+   * `columnWidthBox="content-box"` the tracks add this padding; the selection column's default width follows the edge
+   * (edge + the 16 px checkbox). Set as `--list-cell-px` / `--list-cell-edge-px` on the table's host.
+   */
+  cellPaddingX?: number | { inner: number; edge?: number };
+  /**
+   * Where a sortable header puts its arrow: `auto` (default) after the label, before it in an end-aligned column;
+   * `start` / `end` always there. A column's own `sortIconPosition` wins.
+   */
+  sortIconPosition?: ListSortIconPosition;
+  /** Extra classes of every sort button in the header (its look: weight, colour, gap). */
+  sortButtonClassName?: string;
+  /** Extra classes of the header row (`<tr>`). */
+  headerRowClassName?: string;
+  /**
+   * Extra classes of every cell of the header row: the column, selection, row index and filler cells alike (their
+   * height, e.g. `h-10`, their text size).
+   */
+  headerCellClassName?: string;
+  /** Extra classes of the `<table>` (its text size; both tables of `stickyHeader="page"`). */
+  tableClassName?: string;
+  /** Extra classes of the column cells' skeleton bars on the first load (their height, their width). */
+  skeletonClassName?: string;
+  /**
+   * `false`: the table sits in the page flow instead of filling and scrolling its card from `md` (no `md:flex-1
+   * md:min-h-0`; it still scrolls sideways). Default `true`.
+   */
+  scroll?: boolean;
 }
 
 /**
@@ -173,6 +210,10 @@ const HEADER_CELL_CLASS =
 /** Roomy rows: 16 px cells, 24 px at the card edge. */
 const BODY_CELL_CLASS = 'px-4 py-3.5 first:pl-6 last:pr-6';
 const SELECT_CELL_CLASS = 'w-10 pr-0';
+/** The selection cell of a table with tracks: the track sizes it, and the checkbox sits centred (no table-cell offset). */
+const SELECT_TRACK_CELL_CLASS = 'pr-0 [&>[role=checkbox]]:translate-y-0';
+/** `cellPaddingX`: the inline padding from the variables the table sets on its host. */
+const CELL_PADDING_CLASS = 'px-(--list-cell-px) first:pl-(--list-cell-edge-px) last:pr-(--list-cell-edge-px)';
 const INDEX_CELL_CLASS = 'pr-0 tabular-nums text-muted-foreground';
 /** Cells of a table with tracks: the text wraps inside its track instead of running into the next column. */
 const TRACK_CELL_CLASS = 'whitespace-normal break-words';
@@ -247,12 +288,14 @@ const SortHeaderButton = ({
   direction,
   onClick,
   iconFirst,
+  className,
 }: {
   label: ReactNode;
   direction: 'asc' | 'desc' | undefined;
   onClick: () => void;
   /** An end-aligned column: the arrow before the label, so the label shares the right edge with the numbers. */
   iconFirst: boolean;
+  className?: string;
 }) => {
   const Icon = direction === 'asc' ? ArrowUp : direction === 'desc' ? ArrowDown : ArrowUpDown;
   const icon = <Icon aria-hidden className={cn('size-3.5 shrink-0', !direction && 'opacity-50')} />;
@@ -262,7 +305,8 @@ const SortHeaderButton = ({
       onClick={onClick}
       className={cn(
         '-mx-1 inline-flex cursor-pointer items-center gap-1.5 rounded-sm px-1 text-left font-bold tracking-[inherit] uppercase outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring',
-        direction && 'text-foreground'
+        direction && 'text-foreground',
+        className
       )}
     >
       {iconFirst && icon}
@@ -298,6 +342,8 @@ interface EntityListTableRowProps<TItem> {
 
 /** Sizes and classes of the selection and row index cells; one object per table (the memoised rows compare it). */
 interface LeadingCells {
+  /** Classes of every body cell (the default padding, or `cellPaddingX`'s). */
+  bodyCellClassName: string;
   selectClassName: string;
   indexClassName: string;
   /** Inline width of the selection cell in a content-sized table (`selectionColumnWidth`). */
@@ -382,7 +428,7 @@ const EntityListTableRowView = <TItem,>({
   const cells = columns.map((column, index) => (
     <TableCell
       key={column.id}
-      className={cn(BODY_CELL_CLASS, column.className, column.cellClassName, cellLayoutClass(layout, column.align))}
+      className={cn(leadingCells.bodyCellClassName, column.className, column.cellClassName, cellLayoutClass(layout, column.align))}
       role={roleIn(layout, 'cell')}
       {...pinProps(layout, leading + index + (fillerBefore !== null && index >= fillerBefore ? 1 : 0), false)}
     >
@@ -407,7 +453,7 @@ const EntityListTableRowView = <TItem,>({
     >
       {selection && (
         <TableCell
-          className={cn(BODY_CELL_CLASS, leadingCells.selectClassName, onSelectCellClick && 'cursor-pointer')}
+          className={cn(leadingCells.bodyCellClassName, leadingCells.selectClassName, onSelectCellClick && 'cursor-pointer')}
           data-row-action-ignore
           role={roleIn(layout, 'cell')}
           onClick={onSelectCellClick}
@@ -430,7 +476,7 @@ const EntityListTableRowView = <TItem,>({
       )}
       {rowNumber !== undefined && (
         <TableCell
-          className={cn(BODY_CELL_CLASS, leadingCells.indexClassName)}
+          className={cn(leadingCells.bodyCellClassName, leadingCells.indexClassName)}
           role={roleIn(layout, 'cell')}
           {...withStyle(pinProps(layout, selection ? 1 : 0, false), leadingCells.indexStyle)}
         >
@@ -540,6 +586,15 @@ export const EntityListTable = <TItem,>({
   surface,
   selectAllLabel,
   columnWidthBox = 'border-box',
+  showEmptyState = true,
+  cellPaddingX,
+  sortIconPosition,
+  sortButtonClassName,
+  headerRowClassName,
+  headerCellClassName,
+  tableClassName,
+  skeletonClassName,
+  scroll = true,
 }: EntityListTableProps<TItem>) => {
   const { t } = useTranslate();
   const hasFilterRow = columns.some(column => column.filter !== undefined);
@@ -557,10 +612,13 @@ export const EntityListTable = <TItem,>({
   }
   const columnPosition = (index: number) => leadingCount + index + (fillerBefore !== null && index >= fillerBefore ? 1 : 0);
   const positionCount = leadingCount + columns.length + (fillerBefore !== null ? 1 : 0);
+  // `cellPaddingX`: the padding of every cell (null: the default classes, 16 px and 24 px at the card edge)
+  const cellPadding: ListCellPadding | null = resolveListCellPadding(cellPaddingX);
+  const paddingSignature = cellPadding ? `${cellPadding.inner}/${cellPadding.edge}` : '';
   // `content-box`: a fixed width and a minimum name the content; the track adds the cell's inline padding
   const contentBoxTrack = (column: EntityListColumn<TItem>, index: number): ListTrack => {
     const position = columnPosition(index);
-    const padding = (position === 0 ? 24 : 16) + (position === positionCount - 1 ? 24 : 16);
+    const padding = listCellPaddingAt(position, positionCount, cellPadding ?? undefined);
     const width = column.width?.endsWith('px') ? `${Number.parseFloat(column.width) + padding}px` : column.width;
     return { width, minWidth: column.minWidth === undefined ? undefined : column.minWidth + padding };
   };
@@ -568,7 +626,7 @@ export const EntityListTable = <TItem,>({
     columnWidthBox === 'content-box' ? contentBoxTrack(column, index) : { width: column.width, minWidth: column.minWidth }
   );
   if (fillerBefore !== null) columnTracks.splice(fillerBefore, 0, { width: '1fr', minWidth: 0 });
-  const selectTrackPx = selectionColumnWidth ?? SELECT_TRACK_PX;
+  const selectTrackPx = selectionColumnWidth ?? (cellPadding ? cellPadding.edge + 16 : SELECT_TRACK_PX);
   const indexPx = indexColumnWidth ?? indexTrackPx(selection !== undefined);
   const tracks: ListTrack[] = [
     ...(selection ? [{ width: `${selectTrackPx}px` }] : []),
@@ -577,16 +635,32 @@ export const EntityListTable = <TItem,>({
   ];
   // the leading cells' classes and (content-sized table) inline widths; one object while they stay the same
   const leadingCells = useMemo<LeadingCells>(
-    () => ({
-      selectClassName: cn(SELECT_CELL_CLASS, selectionCellClassName),
-      indexClassName: cn(INDEX_CELL_CLASS, indexCellClassName),
-      selectStyle: selectionColumnWidth !== undefined && !sized ? { width: selectionColumnWidth, minWidth: selectionColumnWidth } : undefined,
-      indexStyle: indexColumnWidth !== undefined && !sized ? { width: indexColumnWidth, minWidth: indexColumnWidth } : undefined,
-    }),
-    [selectionCellClassName, indexCellClassName, selectionColumnWidth, indexColumnWidth, sized]
+    () => {
+      // the content-sized selection cell's own width when the padding moves the checkbox (edge + 16 px)
+      const selectWidth = selectionColumnWidth ?? (cellPadding && !sized ? cellPadding.edge + 16 : undefined);
+      return {
+        bodyCellClassName: cellPadding ? cn(BODY_CELL_CLASS, CELL_PADDING_CLASS) : BODY_CELL_CLASS,
+        selectClassName: cn(sized ? SELECT_TRACK_CELL_CLASS : SELECT_CELL_CLASS, selectionCellClassName),
+        indexClassName: cn(INDEX_CELL_CLASS, indexCellClassName),
+        selectStyle: selectWidth !== undefined && !sized ? { width: selectWidth, minWidth: selectWidth } : undefined,
+        indexStyle: indexColumnWidth !== undefined && !sized ? { width: indexColumnWidth, minWidth: indexColumnWidth } : undefined,
+      };
+    },
+    // biome-ignore lint/correctness/useExhaustiveDependencies: paddingSignature stands for cellPadding
+    [selectionCellClassName, indexCellClassName, selectionColumnWidth, indexColumnWidth, sized, paddingSignature]
   );
+  // the header cells' base: the default classes, the padding of `cellPaddingX` and the host's `headerCellClassName`
+  const headerCellClass =
+    cellPadding || headerCellClassName ? cn(HEADER_CELL_CLASS, cellPadding && CELL_PADDING_CLASS, headerCellClassName) : HEADER_CELL_CLASS;
+  const filterCellClass = cellPadding ? cn(HEADER_CELL_CLASS, CELL_PADDING_CLASS) : HEADER_CELL_CLASS;
   const overlayEdges = pinEdge === 'overlay';
-  const surfaceStyle = surface ? ({ '--list-surface': surface } as CSSProperties) : undefined;
+  const surfaceStyle =
+    surface || cellPadding
+      ? ({
+          ...(surface ? { '--list-surface': surface } : {}),
+          ...(cellPadding ? { '--list-cell-px': `${cellPadding.inner}px`, '--list-cell-edge-px': `${cellPadding.edge}px` } : {}),
+        } as CSSProperties)
+      : undefined;
   const headerSurfaceClass = surface ? 'bg-(--list-surface)' : undefined;
   const usesLayout = sized || showRowIndex || columns.some(column => column.pin !== undefined);
   const trackSignature = tracks.map(track => `${track.width ?? ''}/${track.minWidth ?? ''}`).join(' ');
@@ -748,6 +822,16 @@ export const EntityListTable = <TItem,>({
     []
   );
 
+  // `selectionHitArea="cell"`: the whole select-all cell toggles every loaded row (the checkbox keeps its own click)
+  const selectAllDisabled = !selection || isLoading || items.length === 0 || selection.disabled === true;
+  const onSelectAllCellClick =
+    selection && selectionHitArea === 'cell' && !selectAllDisabled
+      ? (event: MouseEvent<HTMLTableCellElement>) => {
+          if (event.target instanceof Element && event.target.closest('button')) return;
+          selection.setAllLoadedSelected(selection.allLoadedState !== true);
+        }
+      : undefined;
+
   /** The column cells of a header-like row, with the filler cell in its place. */
   const withFiller = (cells: ReactNode[], filler: ReactNode) => {
     if (fillerBefore !== null) cells.splice(fillerBefore, 0, filler);
@@ -760,11 +844,12 @@ export const EntityListTable = <TItem,>({
       role={roleIn(layout, 'rowgroup')}
       style={sized && headerTopStyle ? headerTopStyle : undefined}
     >
-      <TableRow ref={headerRowRef} className="hover:bg-transparent" role={roleIn(layout, 'row')}>
+      <TableRow ref={headerRowRef} className={headerRowClassName ? cn('hover:bg-transparent', headerRowClassName) : 'hover:bg-transparent'} role={roleIn(layout, 'row')}>
         {selection && (
           <TableHead
-            className={cn(HEADER_CELL_CLASS, headerSurfaceClass, 'top-0', leadingCells.selectClassName)}
+            className={cn(headerCellClass, headerSurfaceClass, 'top-0', leadingCells.selectClassName, onSelectAllCellClick && 'cursor-pointer')}
             onMouseDown={preventShiftSelection}
+            onClick={onSelectAllCellClick}
             {...headerCellProps(0, leadingStyle(headerTopStyle, leadingCells.selectStyle))}
           >
             <SelectAllHeader
@@ -776,7 +861,7 @@ export const EntityListTable = <TItem,>({
         )}
         {showRowIndex && (
           <TableHead
-            className={cn(HEADER_CELL_CLASS, headerSurfaceClass, 'top-0', leadingCells.indexClassName)}
+            className={cn(headerCellClass, headerSurfaceClass, 'top-0', leadingCells.indexClassName)}
             {...headerCellProps(indexPosition, leadingStyle(headerTopStyle, leadingCells.indexStyle))}
           >
             <span aria-hidden>#</span>
@@ -791,7 +876,7 @@ export const EntityListTable = <TItem,>({
             return (
               <TableHead
                 key={column.id}
-                className={cn(HEADER_CELL_CLASS, headerSurfaceClass, 'top-0', column.className, column.headerClassName, cellLayoutClass(layout, column.align))}
+                className={cn(headerCellClass, headerSurfaceClass, 'top-0', column.className, column.headerClassName, cellLayoutClass(layout, column.align))}
                 aria-sort={
                   direction === 'asc' ? 'ascending' : direction === 'desc' ? 'descending' : sortable && markUnsortedHeaders ? 'none' : undefined
                 }
@@ -806,7 +891,8 @@ export const EntityListTable = <TItem,>({
                       onClick={() =>
                         onSortChange(nextListSort(sort, column.sortKey as string, { start: column.sortStart, required: sortRequired }))
                       }
-                      iconFirst={column.align === 'end'}
+                      iconFirst={isSortIconFirst(column.sortIconPosition ?? sortIconPosition, column.align)}
+                      className={sortButtonClassName}
                     />
                   ) : (
                     label
@@ -816,20 +902,20 @@ export const EntityListTable = <TItem,>({
               </TableHead>
             );
           }),
-          <FillerCell key="list-filler" header className={cn(headerSurfaceClass, 'top-0')} />
+          <FillerCell key="list-filler" header className={cn(headerSurfaceClass, 'top-0', headerCellClassName)} />
         )}
       </TableRow>
       {hasFilterRow && (
         <TableRow className="hover:bg-transparent" role={roleIn(layout, 'row')}>
           {selection && (
             <TableHead
-              className={cn(HEADER_CELL_CLASS, headerSurfaceClass, 'top-12 py-2.5', leadingCells.selectClassName)}
+              className={cn(filterCellClass, headerSurfaceClass, 'top-12 py-2.5', leadingCells.selectClassName)}
               {...headerCellProps(0, leadingCells.selectStyle)}
             />
           )}
           {showRowIndex && (
             <TableHead
-              className={cn(HEADER_CELL_CLASS, headerSurfaceClass, 'top-12 py-2.5', leadingCells.indexClassName)}
+              className={cn(filterCellClass, headerSurfaceClass, 'top-12 py-2.5', leadingCells.indexClassName)}
               {...headerCellProps(indexPosition, leadingCells.indexStyle)}
             />
           )}
@@ -838,7 +924,7 @@ export const EntityListTable = <TItem,>({
               <TableHead
                 key={column.id}
                 className={cn(
-                  HEADER_CELL_CLASS,
+                  filterCellClass,
                   headerSurfaceClass,
                   'top-12 py-2.5 font-normal normal-case',
                   column.className,
@@ -865,7 +951,7 @@ export const EntityListTable = <TItem,>({
             <TableRow key={row} className="hover:bg-transparent" aria-hidden role={roleIn(layout, 'row')}>
               {selection && (
                 <TableCell
-                  className={cn(BODY_CELL_CLASS, leadingCells.selectClassName)}
+                  className={cn(leadingCells.bodyCellClassName, leadingCells.selectClassName)}
                   role={roleIn(layout, 'cell')}
                   {...withStyle(pinProps(layout, 0, false), leadingCells.selectStyle)}
                 >
@@ -874,7 +960,7 @@ export const EntityListTable = <TItem,>({
               )}
               {showRowIndex && (
                 <TableCell
-                  className={cn(BODY_CELL_CLASS, leadingCells.indexClassName)}
+                  className={cn(leadingCells.bodyCellClassName, leadingCells.indexClassName)}
                   role={roleIn(layout, 'cell')}
                   {...withStyle(pinProps(layout, indexPosition, false), leadingCells.indexStyle)}
                 >
@@ -885,11 +971,11 @@ export const EntityListTable = <TItem,>({
                 columns.map((column, index) => (
                   <TableCell
                     key={column.id}
-                    className={cn(BODY_CELL_CLASS, column.className, column.cellClassName, cellLayoutClass(layout, column.align))}
+                    className={cn(leadingCells.bodyCellClassName, column.className, column.cellClassName, cellLayoutClass(layout, column.align))}
                     role={roleIn(layout, 'cell')}
                     {...pinProps(layout, columnPosition(index), false)}
                   >
-                    <Skeleton className="h-4 w-full min-w-12" />
+                    <Skeleton className={skeletonClassName ? cn('h-4 w-full min-w-12', skeletonClassName) : 'h-4 w-full min-w-12'} />
                   </TableCell>
                 )),
                 <FillerCell key="list-filler" />
@@ -931,7 +1017,7 @@ export const EntityListTable = <TItem,>({
     </TableBody>
   );
 
-  const tableClass = 'w-full caption-bottom text-sm';
+  const tableClass = tableClassName ? cn('w-full caption-bottom text-sm', tableClassName) : 'w-full caption-bottom text-sm';
   const edgeOverlays = overlayEdges && usesLayout && (
     <>
       <div ref={edgeOriginRef} aria-hidden data-list-edge-origin="" className="pointer-events-none absolute top-0 left-0 size-0" />
@@ -956,6 +1042,7 @@ export const EntityListTable = <TItem,>({
         error={error}
         emptyAction={emptyAction}
         emptyIcon={emptyIcon}
+        showEmptyState={showEmptyState}
       />
       <EntityListLoadMore hasMore={showRows && hasMore} isFetchingMore={isFetchingMore} onLoadMore={onLoadMore} />
     </>
@@ -969,7 +1056,7 @@ export const EntityListTable = <TItem,>({
         data-list-page-header=""
         {...hostAttributes}
         role="table"
-        className={cn('relative md:min-h-0 md:flex-1', className)}
+        className={cn('relative', scroll && 'md:min-h-0 md:flex-1', className)}
         style={surfaceStyle}
         aria-busy={isLoading || isFetchingMore}
       >
@@ -999,7 +1086,7 @@ export const EntityListTable = <TItem,>({
       ref={scrollRef}
       data-entity-list-scroll
       {...hostAttributes}
-      className={cn('relative overflow-auto md:min-h-0 md:flex-1', className)}
+      className={cn('relative overflow-auto', scroll && 'md:min-h-0 md:flex-1', className)}
       style={surfaceStyle}
       aria-busy={isLoading || isFetchingMore}
     >

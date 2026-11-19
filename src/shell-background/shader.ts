@@ -84,6 +84,19 @@ export interface ShaderLook {
   displacementImage?: string;
 }
 
+/** The side (px) a host displacement image is resampled to by default. */
+export const DISPLACEMENT_IMAGE_SIZE = 256;
+
+/**
+ * The side of the texture a host image is resampled to: the nearest power of two (WebGL 1 repeats only those) between
+ * 16 and 2048; absent, non-finite or not positive → `DISPLACEMENT_IMAGE_SIZE`.
+ */
+export const displacementTextureSizeOf = (size: number | undefined): number => {
+  if (size === undefined || !Number.isFinite(size) || size <= 0) return DISPLACEMENT_IMAGE_SIZE;
+  const power = Math.round(Math.log2(size));
+  return 2 ** Math.min(11, Math.max(4, power));
+};
+
 /** The neutral centre of a displacement field: 0.5 per channel (a value of 0.5 moves nothing). */
 export const NEUTRAL_DISPLACEMENT_CENTER: readonly [number, number] = [0.5, 0.5];
 

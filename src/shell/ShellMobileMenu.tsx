@@ -7,7 +7,7 @@ import { type ReactNode, useEffect, useRef } from 'react';
 import { useTranslate } from '../i18n/useTranslate.ts';
 import type { ActiveNavigation, NavigationItem } from '../logic/pure/navigation.ts';
 import { cn } from '../primitives/cn.ts';
-import { Sheet, SheetContent, SheetTitle } from '../primitives/sheet.tsx';
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle } from '../primitives/sheet.tsx';
 import { ShellNavList } from './ShellNavList.tsx';
 
 export interface ShellMenuButtonProps {
@@ -56,6 +56,19 @@ export interface ShellMobileMenuProps {
   className?: string;
   /** Classes of the header row (it is `--nav-h` tall: a host whose banner makes `--nav-h` taller sets `h-14`). */
   headerClassName?: string;
+  /** Classes of the overlay behind the sheet. */
+  overlayClassName?: string;
+  /**
+   * The close button instead of the default one (top end corner): a button element, wrapped so that it closes the
+   * menu; give it an accessible name. `false`: no close button (Escape and the overlay still close).
+   */
+  closeButton?: ReactNode | false;
+  /** Extra classes of the `<nav>` holding the list. */
+  navClassName?: string;
+  /** Extra classes of the footer. */
+  footerClassName?: string;
+  /** A description of the menu for assistive technology, wired as the dialog's `aria-describedby` (not shown). */
+  description?: ReactNode;
 }
 
 /**
@@ -75,6 +88,11 @@ export const ShellMobileMenu = ({
   footer,
   className,
   headerClassName,
+  overlayClassName,
+  closeButton,
+  navClassName,
+  footerClassName,
+  description,
 }: ShellMobileMenuProps) => {
   const { t } = useTranslate();
   const side = Direction.useDirection() === 'rtl' ? 'right' : 'left';
@@ -88,13 +106,27 @@ export const ShellMobileMenu = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent id={id} side={side} aria-describedby={undefined} data-shell-mobile-menu="" className={cn('w-72 gap-0 bg-card p-0 lg:hidden', className)}>
+      <SheetContent
+        id={id}
+        side={side}
+        // without a description the dialog has none (Radix would warn); with one Radix wires it
+        {...(description === undefined || description === null ? { 'aria-describedby': undefined } : {})}
+        data-shell-mobile-menu=""
+        className={cn('w-72 gap-0 bg-card p-0 lg:hidden', className)}
+        overlayClassName={overlayClassName}
+        showCloseButton={closeButton === undefined}
+      >
         <SheetTitle className="sr-only">{t('Navigation')}</SheetTitle>
+        {description !== undefined && description !== null && <SheetDescription className="sr-only">{description}</SheetDescription>}
         {header && <div className={cn('flex h-(--nav-h) shrink-0 items-center gap-2 border-b px-4 pe-12', headerClassName)}>{header}</div>}
-        <nav aria-label={label ?? t('Main', { context: 'navigation' })} className="min-h-0 flex-1 overflow-y-auto px-2 py-4">
+        <nav
+          aria-label={label ?? t('Main', { context: 'navigation' })}
+          className={navClassName ? cn('min-h-0 flex-1 overflow-y-auto px-2 py-4', navClassName) : 'min-h-0 flex-1 overflow-y-auto px-2 py-4'}
+        >
           <ShellNavList items={items} active={active} pathname={pathname} onNavigate={() => onOpenChange(false)} />
         </nav>
-        {footer && <div className="shrink-0 space-y-2 border-t p-3">{footer}</div>}
+        {footer && <div className={footerClassName ? cn('shrink-0 space-y-2 border-t p-3', footerClassName) : 'shrink-0 space-y-2 border-t p-3'}>{footer}</div>}
+        {closeButton !== undefined && closeButton !== false && <SheetClose asChild>{closeButton}</SheetClose>}
       </SheetContent>
     </Sheet>
   );

@@ -263,6 +263,11 @@ const columns: EntityListColumn<Project>[] = [
   24 px at the card edge).
 - **Surface**: a table on another surface than a card (a popover, a tinted panel) passes `surface="var(--color-popover)"`:
   header and pinned cells paint it (`--list-surface`).
+- **Host geometry and looks** (0.3.9): `cellPaddingX` sets the cells' inline padding (content-box tracks add it),
+  `headerRowClassName` / `headerCellClassName` / `tableClassName` / `skeletonClassName` style the parts,
+  `sortIconPosition` and `sortButtonClassName` the sort control, `showEmptyState={false}` leaves the empty block to the
+  host, `scroll={false}` puts the table or grid in the page flow, and the `--list-edge-*` variables shape the overlay
+  edge (width, colour, shadow, fade).
 
 ## 6. Status badges
 

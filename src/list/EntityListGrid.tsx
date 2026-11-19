@@ -26,6 +26,11 @@ export interface EntityListGridProps<TItem> extends EntityListDataProps<TItem> {
    * for the phone fallback that `EntityListBody` renders next to a table (the table keeps its card frame).
    */
   isGridView?: boolean;
+  /**
+   * `false`: the grid sits in the page flow instead of filling and scrolling its card from `md` (no `md:flex-1
+   * md:min-h-0 md:overflow-y-auto`). Default `true`.
+   */
+  scroll?: boolean;
 }
 
 /** Placeholder cards of the first load. */
@@ -70,6 +75,8 @@ export const EntityListGrid = <TItem,>({
   rowAction,
   skeletonCards = 6,
   isGridView = true,
+  scroll = true,
+  showEmptyState = true,
   className,
 }: EntityListGridProps<TItem>) => {
   const showCards = !error && !isLoading && items.length > 0;
@@ -81,7 +88,7 @@ export const EntityListGrid = <TItem,>({
       data-wide-content
       // Marks the list card as a grid: the card frame steps aside so the grid cards sit on the background.
       data-entity-grid={isGridView ? '' : undefined}
-      className={cn('p-4 md:min-h-0 md:flex-1 md:overflow-y-auto', className)}
+      className={cn(scroll ? 'p-4 md:min-h-0 md:flex-1 md:overflow-y-auto' : 'p-4', className)}
       aria-busy={isLoading || isFetchingMore}
     >
       {isLoading && !error && <EntityListGridSkeleton count={skeletonCards} />}
@@ -106,6 +113,7 @@ export const EntityListGrid = <TItem,>({
         error={error}
         emptyAction={emptyAction}
         emptyIcon={emptyIcon}
+        showEmptyState={showEmptyState}
       />
       <EntityListLoadMore hasMore={showCards && hasMore} isFetchingMore={isFetchingMore} onLoadMore={onLoadMore} />
     </div>

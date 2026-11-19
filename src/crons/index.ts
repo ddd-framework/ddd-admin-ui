@@ -82,5 +82,6 @@ export type {
   CronPollingInterval,
   CronSeverityCompare,
   CronSeverityFields,
+  CronSeverityOptions,
   CronStatusFilter,
 } from './format.ts';

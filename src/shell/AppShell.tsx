@@ -18,6 +18,7 @@ import { type BreadcrumbFoldWidths, ShellBreadcrumbs } from './ShellBreadcrumbs.
 import {
   type ShellNavDisplay,
   ShellNavDisplayContext,
+  type ShellNavLinkPropsOption,
   type ShellNavigationValue,
   ShellNavigationContext,
   type UseEntityLabel,
@@ -176,6 +177,49 @@ export interface AppShellProps<TEntity extends string = string> {
   collapsedStorageValues?: SidebarCollapsedStorageValues;
   /** Options of the collapse shortcut (`media`, `ignoreSelector`). */
   collapseShortcutOptions?: ShellShortcutOptions;
+  /**
+   * The element of the content frame: `main` (default) or `div` when the pages bring their own `<main>` (one main
+   * landmark per page). It keeps the id the "Skip to content" link targets either way.
+   */
+  contentElement?: 'main' | 'div';
+  /** `data-*` attributes of the top bar's `<header>`. */
+  topBarAttributes?: Readonly<Record<`data-${string}`, string | undefined>>;
+  /** Classes of the sidebar's `<aside>`. */
+  sidebarClassName?: string;
+  /** `data-*` attributes of the sidebar's `<aside>`. */
+  sidebarAttributes?: Readonly<Record<`data-${string}`, string | undefined>>;
+  /** What tints on hover in a group row with its own page: `label` (default) link and caret apart, `row` the whole row. */
+  navGroupRowHover?: 'label' | 'row';
+  /** Extra classes of a group's toggle (the caret of a group with a page, the row button of one without). */
+  navGroupToggleClassName?: string;
+  /** Extra classes of the current entry's row in the list. */
+  navActiveRowClassName?: string;
+  /** Extra classes of the row of a group holding the current entry, in the list. */
+  navActiveGroupClassName?: string;
+  /** Extra classes of one list row (entries and groups) by item. A stable function. */
+  navRowClassNameFor?: (item: NavigationItem<string>) => string | undefined;
+  /** Extra classes of every entry in a rail flyout. */
+  railFlyoutItemClassName?: string;
+  /** Extra classes of the current entry in a rail flyout. */
+  railFlyoutActiveItemClassName?: string;
+  /** Delay in ms before a rail icon's tooltip opens (default: the provider's `tooltipDelayMs`). */
+  railTooltipDelayMs?: number;
+  /**
+   * Extra props of every in-app link of the shell (rows, rail, flyouts, mobile menu, breadcrumbs, account entries),
+   * passed to the host's link component: `{ prefetch: false }`, or a function of `{ key, href }` (stable). An item's own
+   * `linkProps` win; `external` entries never get them.
+   */
+  navLinkProps?: ShellNavLinkPropsOption;
+  /** Classes of the mobile menu's overlay. */
+  mobileMenuOverlayClassName?: string;
+  /** The mobile menu's close button instead of the default (a button: it closes the menu); `false`: none. */
+  mobileMenuCloseButton?: ReactNode | false;
+  /** Extra classes of the mobile menu's `<nav>`. */
+  mobileMenuNavClassName?: string;
+  /** Extra classes of the mobile menu's footer. */
+  mobileMenuFooterClassName?: string;
+  /** A description of the mobile menu for assistive technology (its `aria-describedby`). */
+  mobileMenuDescription?: ReactNode;
   children: ReactNode;
 }
 
@@ -239,6 +283,24 @@ export const AppShell = <TEntity extends string = string>({
   breadcrumbFoldWidths,
   collapsedStorageValues,
   collapseShortcutOptions,
+  contentElement = 'main',
+  topBarAttributes,
+  sidebarClassName,
+  sidebarAttributes,
+  navGroupRowHover,
+  navGroupToggleClassName,
+  navActiveRowClassName,
+  navActiveGroupClassName,
+  navRowClassNameFor,
+  railFlyoutItemClassName,
+  railFlyoutActiveItemClassName,
+  railTooltipDelayMs,
+  navLinkProps,
+  mobileMenuOverlayClassName,
+  mobileMenuCloseButton,
+  mobileMenuNavClassName,
+  mobileMenuFooterClassName,
+  mobileMenuDescription,
   children,
   ...rootAttributes
 }: AppShellProps<TEntity>) => {
@@ -272,6 +334,15 @@ export const AppShell = <TEntity extends string = string>({
       onOpenGroupKeysChange: onNavOpenGroupKeysChange,
       railFlyoutClassName,
       railGroupPageRow,
+      groupRowHover: navGroupRowHover,
+      groupToggleClassName: navGroupToggleClassName,
+      activeRowClassName: navActiveRowClassName,
+      activeGroupClassName: navActiveGroupClassName,
+      rowClassNameFor: navRowClassNameFor,
+      railFlyoutItemClassName,
+      railFlyoutActiveItemClassName,
+      railTooltipDelayMs,
+      linkProps: navLinkProps,
     }),
     [
       navRowClassName,
@@ -285,6 +356,15 @@ export const AppShell = <TEntity extends string = string>({
       onNavOpenGroupKeysChange,
       railFlyoutClassName,
       railGroupPageRow,
+      navGroupRowHover,
+      navGroupToggleClassName,
+      navActiveRowClassName,
+      navActiveGroupClassName,
+      navRowClassNameFor,
+      railFlyoutItemClassName,
+      railFlyoutActiveItemClassName,
+      railTooltipDelayMs,
+      navLinkProps,
     ]
   );
   const dataAttributes = Object.fromEntries(Object.entries(rootAttributes).filter(([name]) => name.startsWith('data-')));
@@ -331,6 +411,7 @@ export const AppShell = <TEntity extends string = string>({
           end={topBarEnd}
           className={topBarClassName}
           rowClassName={topBarRowClassName}
+          {...topBarAttributes}
         />
         <ShellSidebar
           id={sidebarId}
@@ -345,6 +426,8 @@ export const AppShell = <TEntity extends string = string>({
           railHeader={sidebarRailHeader}
           footer={sidebarFooter}
           navClassName={sidebarNavClassName}
+          className={sidebarClassName}
+          {...sidebarAttributes}
         />
         <ShellMobileMenu
           id={mobileMenuId}
@@ -358,11 +441,22 @@ export const AppShell = <TEntity extends string = string>({
           footer={mobileMenuFooter}
           className={mobileMenuClassName}
           headerClassName={mobileMenuHeaderClassName}
+          overlayClassName={mobileMenuOverlayClassName}
+          closeButton={mobileMenuCloseButton}
+          navClassName={mobileMenuNavClassName}
+          footerClassName={mobileMenuFooterClassName}
+          description={mobileMenuDescription}
         />
         <div data-shell-content="">
-          <main {...contentAttributes} id={mainId} tabIndex={-1} className={cn('w-full outline-none', contentClassName)} style={contentStyle}>
-            {children}
-          </main>
+          {contentElement === 'div' ? (
+            <div {...contentAttributes} id={mainId} tabIndex={-1} className={cn('w-full outline-none', contentClassName)} style={contentStyle}>
+              {children}
+            </div>
+          ) : (
+            <main {...contentAttributes} id={mainId} tabIndex={-1} className={cn('w-full outline-none', contentClassName)} style={contentStyle}>
+              {children}
+            </main>
+          )}
         </div>
         {documentTitle && <ShellDocumentTitle {...documentTitle} />}
       </div>

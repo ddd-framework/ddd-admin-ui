@@ -16,7 +16,7 @@ export {
   validWhen,
 } from './pure/conditions.ts';
 export type { FormCondition, FormRule, ResetWhenRule } from './pure/conditions.ts';
-export { DISCARD_CHANGES_CONFIRM } from './pure/confirm.ts';
+export { DISCARD_CHANGES_CONFIRM, isTextConfirmDescription, routeConfirm } from './pure/confirm.ts';
 export { createConfirmQueue } from './pure/confirmQueue.ts';
 export type { ConfirmQueue, ConfirmQueueEntry } from './pure/confirmQueue.ts';
 export { fromDateInputValue, fromDateTimeInputValue, toDateInputValue, toDateTimeInputValue } from './pure/dateInput.ts';
@@ -24,7 +24,7 @@ export type { DateInputZone } from './pure/dateInput.ts';
 export { withStickyParams } from './pure/stickyParams.ts';
 export { LIST_DISPLAY_MODES, parseListDisplayMode } from './pure/displayMode.ts';
 export type { ListDisplayMode } from './pure/displayMode.ts';
-export type { ConfirmDialogApi, ConfirmOptions } from './pure/confirm.ts';
+export type { ConfirmDialogApi, ConfirmOptions, ConfirmRoutes } from './pure/confirm.ts';
 export { drawerKey } from './pure/entityDrawer.ts';
 export type { EntityDrawerState, EntityDrawerUrlAdapter } from './pure/entityDrawer.ts';
 export { EMPTY_MARKER, formatDate, formatDateTime, formatRelativeTime, isDddDateOnly } from './pure/format.ts';
@@ -68,6 +68,10 @@ export {
   minimumListWidth,
   resolveListPins,
   shouldHonourStartPins,
+  LIST_CELL_PADDING,
+  isSortIconFirst,
+  listCellPaddingAt,
+  resolveListCellPadding,
 } from './pure/listTracks.ts';
 export type {
   ListColumnAlign,
@@ -79,6 +83,8 @@ export type {
   ListPinRequest,
   ListTrack,
   ListTrackLayout,
+  ListCellPadding,
+  ListSortIconPosition,
 } from './pure/listTracks.ts';
 export {
   documentTitleParts,

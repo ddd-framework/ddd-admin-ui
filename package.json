@@ -1,6 +1,6 @@
 {
   "name": "@mgamadeus/ddd-admin-ui",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "Admin UI building blocks for React 19 / Next 16 / Tailwind 4 apps on @mgamadeus/ddd-web: entity lists (table and card grid, filters, selection, bulk actions), page frames and detail shells, form shells with conditional fields and server validation, translatable inputs, media pickers, Next adapters, a provider, and the shadcn-style primitives they are drawn with, plus two stylesheets and two JSON manifests.",
   "keywords": [
     "ddd",
@@ -152,7 +152,7 @@
     "test": "node --experimental-strip-types --no-warnings --test \"src/**/*.test.ts\" \"test/unit/**/*.test.ts\" \"test/check-package/**/*.test.ts\"",
     "check-package": "node scripts/check-package.mjs --dir .",
     "i18n:manifest": "node scripts/build-i18n-manifest.mjs",
-    "test:render": "node test/consumer/fixtures/plain/list-snapshot.mjs && node test/consumer/fixtures/plain/form-actions-snapshot.mjs && node test/consumer/fixtures/plain/write-access.mjs && node test/consumer/fixtures/plain/status-context.mjs && node test/consumer/fixtures/plain/showcase-render.mjs && node test/consumer/fixtures/plain/sticky-links.mjs && node test/consumer/fixtures/plain/screens-render.mjs && node test/consumer/fixtures/plain/issues-render.mjs && node test/consumer/fixtures/plain/database-render.mjs && node test/consumer/fixtures/plain/crons-render.mjs && node test/consumer/fixtures/plain/screens-options-render.mjs && node test/consumer/fixtures/plain/shell-render.mjs && node test/consumer/fixtures/plain/shell-options-render.mjs && node test/consumer/fixtures/plain/options-render.mjs && node test/consumer/fixtures/plain/options-033-render.mjs && node test/consumer/fixtures/plain/options-034-render.mjs && node test/consumer/fixtures/plain/options-037-render.mjs && node test/consumer/fixtures/plain/design-studio-render.mjs && node test/consumer/fixtures/plain/pure-require.cjs",
+    "test:render": "node test/consumer/fixtures/plain/list-snapshot.mjs && node test/consumer/fixtures/plain/form-actions-snapshot.mjs && node test/consumer/fixtures/plain/write-access.mjs && node test/consumer/fixtures/plain/status-context.mjs && node test/consumer/fixtures/plain/showcase-render.mjs && node test/consumer/fixtures/plain/sticky-links.mjs && node test/consumer/fixtures/plain/screens-render.mjs && node test/consumer/fixtures/plain/issues-render.mjs && node test/consumer/fixtures/plain/database-render.mjs && node test/consumer/fixtures/plain/crons-render.mjs && node test/consumer/fixtures/plain/screens-options-render.mjs && node test/consumer/fixtures/plain/shell-render.mjs && node test/consumer/fixtures/plain/shell-options-render.mjs && node test/consumer/fixtures/plain/options-render.mjs && node test/consumer/fixtures/plain/options-033-render.mjs && node test/consumer/fixtures/plain/options-034-render.mjs && node test/consumer/fixtures/plain/options-037-render.mjs && node test/consumer/fixtures/plain/options-039-render.mjs && node test/consumer/fixtures/plain/design-studio-render.mjs && node test/consumer/fixtures/plain/pure-require.cjs",
     "prepack": "pnpm build"
   },
   "engines": {

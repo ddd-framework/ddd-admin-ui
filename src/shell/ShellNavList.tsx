@@ -45,7 +45,14 @@ const NavLeafRow = ({ item, pathname, active, onNavigate, child }: { item: Navig
       item={item}
       onClick={onNavigate}
       aria-current={current ? 'page' : undefined}
-      className={cn(NAV_ROW_CLASS, display.rowClassName, current && NAV_ROW_ACTIVE_CLASS, item.lockedReason && !current && 'text-muted-foreground')}
+      className={cn(
+        NAV_ROW_CLASS,
+        display.rowClassName,
+        current && NAV_ROW_ACTIVE_CLASS,
+        item.lockedReason && !current && 'text-muted-foreground',
+        display.rowClassNameFor?.(item),
+        current && display.activeRowClassName
+      )}
     >
       {Icon ? <Icon aria-hidden className={cn(NAV_ICON_CLASS, child && 'size-4')} /> : child ? null : <span aria-hidden className="size-[1.125rem] shrink-0" />}
       <span className="min-w-0 truncate">{t(item.label)}</span>
@@ -85,17 +92,38 @@ const NavGroupRow = ({
     />
   );
   const icon = Icon ? <Icon aria-hidden data-nav-group-icon="" className={cn(NAV_ICON_CLASS, depth > 0 && 'size-4')} /> : null;
+  // `groupRowHover="row"`: the row tints as one; its link and caret do not tint on their own
+  const rowHover = display.groupRowHover === 'row';
+  const hostRowClass = display.rowClassNameFor?.(group);
+  const activeGroupClass = holdsActive && !isCurrent ? display.activeGroupClassName : undefined;
 
   return (
     <li data-nav-group={group.key}>
       {group.href !== undefined ? (
         // a group with its own page: the label is a link, the caret its own button
-        <div className={cn('flex items-center rounded-lg', holdsActive && !isCurrent && NAV_GROUP_ACTIVE_CLASS)}>
+        <div
+          data-nav-group-row={rowHover ? 'row' : undefined}
+          className={cn(
+            'flex items-center rounded-lg',
+            holdsActive && !isCurrent && NAV_GROUP_ACTIVE_CLASS,
+            rowHover && 'transition-colors duration-150 hover:bg-tint',
+            rowHover && isCurrent && 'hover:bg-tint-strong',
+            activeGroupClass
+          )}
+        >
           <ShellNavLink
-            item={{ key: group.key, href: group.href }}
+            item={{ key: group.key, href: group.href, linkProps: group.linkProps }}
             onClick={onNavigate}
             aria-current={isCurrent ? 'page' : undefined}
-            className={cn(NAV_ROW_CLASS, display.rowClassName, 'flex-1', isCurrent && NAV_ROW_ACTIVE_CLASS)}
+            className={cn(
+              NAV_ROW_CLASS,
+              display.rowClassName,
+              'flex-1',
+              isCurrent && NAV_ROW_ACTIVE_CLASS,
+              rowHover && 'hover:bg-transparent',
+              hostRowClass,
+              isCurrent && display.activeRowClassName
+            )}
           >
             {icon}
             <span className="min-w-0 truncate">{label}</span>
@@ -106,7 +134,11 @@ const NavGroupRow = ({
             aria-controls={listId}
             aria-label={open ? t('Collapse %label%', { replacements: { label } }) : t('Expand %label%', { replacements: { label } })}
             onClick={onToggle}
-            className="ms-1 inline-flex size-8 shrink-0 items-center justify-center rounded-full outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-ring pointer-coarse:size-11"
+            className={cn(
+              'ms-1 inline-flex size-8 shrink-0 items-center justify-center rounded-full outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-ring pointer-coarse:size-11',
+              rowHover && 'hover:bg-transparent',
+              display.groupToggleClassName
+            )}
           >
             {caret}
           </button>
@@ -117,7 +149,14 @@ const NavGroupRow = ({
           aria-expanded={open}
           aria-controls={listId}
           onClick={onToggle}
-          className={cn(NAV_ROW_CLASS, display.rowClassName, holdsActive && NAV_GROUP_ACTIVE_CLASS)}
+          className={cn(
+            NAV_ROW_CLASS,
+            display.rowClassName,
+            holdsActive && NAV_GROUP_ACTIVE_CLASS,
+            hostRowClass,
+            display.groupToggleClassName,
+            holdsActive && display.activeGroupClassName
+          )}
         >
           {icon}
           <span className="min-w-0 flex-1 truncate">{label}</span>

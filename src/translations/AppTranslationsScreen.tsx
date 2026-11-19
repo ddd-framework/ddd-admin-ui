@@ -14,6 +14,7 @@ import type { EntityListColumn } from '../list/EntityListTable.tsx';
 import { EntityListToolbar } from '../list/EntityListToolbar.tsx';
 import { EntityListViewToggle } from '../list/EntityListViewToggle.tsx';
 import { FilterMultiSelect, FilterPanel, FilterSelect, FilterText } from '../list/filters.tsx';
+import type { FilterOption } from '../list/filterOptions.ts';
 import { StatusBadge } from '../list/StatusBadge.tsx';
 import type { EntityCardProps, EntityCardRenderer } from '../list/types.ts';
 import type { ListDisplayMode } from '../logic/pure/displayMode.ts';
@@ -37,7 +38,7 @@ import { Button } from '../primitives/button.tsx';
 import { Card, CardContent } from '../primitives/card.tsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../primitives/select.tsx';
 import { cn } from '../primitives/cn.ts';
-import type { AppTranslationKey, AppTranslationKeysResponse, AppTranslationValue, TranslationsListArg } from './adminTypes.ts';
+import type { AdminLanguage, AppTranslationKey, AppTranslationKeysResponse, AppTranslationValue, TranslationsListArg } from './adminTypes.ts';
 import {
   appTranslationValueCountryCode,
   appTranslationValueLocaleKey,
@@ -67,6 +68,7 @@ import {
   type AppTranslationsGenerationPreviewLoader,
   type AppTranslationsGenerationScope,
   GenerationEstimate,
+  isGenerationEstimateEmpty,
   startGenerationPreview,
 } from './GenerationEstimate.tsx';
 import { TranslationCompleteness } from './TranslationCompleteness.tsx';
@@ -300,6 +302,20 @@ export interface AppTranslationsScreenProps {
    * first too (without it, it starts on the click as before).
    */
   renderGenerationEstimate?: AppTranslationsGenerationEstimateRenderer;
+  /**
+   * Whether "Generate all missing" asks first. Absent: as before (it asks exactly when `renderGenerationEstimate` is
+   * set). `true`: always (the package's text, plus the estimate when a renderer is set); `false`: never. `'auto'`: it
+   * asks unless the renderer answers `null` for `{ kind: 'all' }`. The renderer is probed before the dialog opens:
+   * with `loadGenerationPreview` the estimate is loaded first (the button is busy meanwhile) and the renderer gets its
+   * answer; a failed load asks (the dialog shows the error); without a loader it gets `undefined`, as in the dialog.
+   */
+  confirmGenerateAll?: boolean | 'auto';
+  /**
+   * The options of the language filter (`languageFilter`) from the loaded languages (all of them, `top` 500): keep
+   * the active ones, label them (`de · Deutsch`), order them. Default: every language with an id, labelled by its name.
+   * A stable function.
+   */
+  languageFilterOptions?: (languages: readonly AdminLanguage[]) => FilterOption[];
   /** Changes with the host's own filters (`extraFilters`): the list window and the selection start over. */
   extraResetKey?: string;
   /** "Generate all missing" in the header (default `true`). */
@@ -377,6 +393,8 @@ export const AppTranslationsScreen = ({
   cardSort = false,
   loadGenerationPreview,
   renderGenerationEstimate,
+  confirmGenerateAll,
+  languageFilterOptions,
   extraResetKey = '',
   showGenerateAll = true,
   showCompleteness = true,
@@ -517,19 +535,36 @@ export const AppTranslationsScreen = ({
     }
   };
 
+  const [isProbingGenerateAll, setIsProbingGenerateAll] = useState(false);
   const runGenerateAll = async () => {
     if (!writeAccess.allowed) return;
-    if (renderGenerationEstimate) {
-      const scope: AppTranslationsGenerationScope = { kind: 'all' };
-      const preview = loadGenerationPreview ? startGenerationPreview(() => loadGenerationPreview(scope)) : Promise.resolve(undefined);
+    const scope: AppTranslationsGenerationScope = { kind: 'all' };
+    let ask = confirmGenerateAll === undefined ? renderGenerationEstimate !== undefined : confirmGenerateAll !== false;
+    let preview: Promise<unknown> | null = null;
+    if (ask && renderGenerationEstimate) {
+      preview = loadGenerationPreview ? startGenerationPreview(() => loadGenerationPreview(scope)) : Promise.resolve(undefined);
+      if (confirmGenerateAll === 'auto') {
+        // probe the renderer with the answer the dialog would get: `null` → nothing to confirm
+        setIsProbingGenerateAll(true);
+        try {
+          ask = !(await isGenerationEstimateEmpty(preview, scope, renderGenerationEstimate));
+        } finally {
+          setIsProbingGenerateAll(false);
+        }
+      }
+    }
+    if (ask) {
       const confirmed = await confirm({
         title: t('Generate every missing value?'),
-        description: (
-          <div>
-            <p>{t('Every missing value of every active locale and writing style is generated. The generation runs in the background.')}</p>
-            <GenerationEstimate preview={preview} scope={scope} render={renderGenerationEstimate} />
-          </div>
-        ),
+        description:
+          renderGenerationEstimate && preview ? (
+            <div>
+              <p>{t('Every missing value of every active locale and writing style is generated. The generation runs in the background.')}</p>
+              <GenerationEstimate preview={preview} scope={scope} render={renderGenerationEstimate} />
+            </div>
+          ) : (
+            t('Every missing value of every active locale and writing style is generated. The generation runs in the background.')
+          ),
         confirmLabel: t('Generate', { context: 'action' }),
       });
       if (!confirmed) return;
@@ -661,13 +696,13 @@ export const AppTranslationsScreen = ({
   };
   const languageFilterActive = Boolean(languageFilter) && languageState.values.language !== '';
   const isFiltered = listState.isActive || (Boolean(languageFilter) && languageState.isActive) || extraActiveFilterCount > 0;
-  const languageOptions = useMemo(
-    () =>
-      (languagesQuery.data?.languages.elements ?? []).flatMap(language =>
-        language.id === null || language.id === undefined ? [] : [{ value: String(language.id), label: language.name || language.languageCode || String(language.id) }]
-      ),
-    [languagesQuery.data]
-  );
+  const languageOptions = useMemo(() => {
+    const languages = languagesQuery.data?.languages.elements ?? [];
+    if (languageFilterOptions) return languageFilterOptions(languages);
+    return languages.flatMap(language =>
+      language.id === null || language.id === undefined ? [] : [{ value: String(language.id), label: language.name || language.languageCode || String(language.id) }]
+    );
+  }, [languagesQuery.data, languageFilterOptions]);
   const addAction = (
     <AddEntityButton entity={m('Translation key')} onClick={drawer.openCreate} />
   );
@@ -689,7 +724,8 @@ export const AppTranslationsScreen = ({
               type="button"
               variant="outline"
               onClick={() => void runGenerateAll()}
-              disabled={!writeAccess.allowed || generateAllState.isLoading}
+              disabled={!writeAccess.allowed || generateAllState.isLoading || isProbingGenerateAll}
+              aria-busy={isProbingGenerateAll || undefined}
               title={writeAccess.allowed ? t('Generate every missing value for every active locale and writing style') : writeAccess.reason}
             >
               <Sparkles aria-hidden />

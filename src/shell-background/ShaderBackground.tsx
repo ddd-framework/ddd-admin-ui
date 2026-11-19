@@ -1,8 +1,8 @@
 'use client';
 
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 
-import { type Rgb, type ShaderLook, type ShaderPalette, type ShaderTint, tintShaderPalette } from './shader.ts';
+import { displacementTextureSizeOf, type Rgb, type ShaderLook, type ShaderPalette, type ShaderTint, tintShaderPalette } from './shader.ts';
 
 const ShaderCanvas = lazy(() => import('./ShaderCanvas.tsx').then(module => ({ default: module.ShaderCanvas })));
 
@@ -16,6 +16,9 @@ export const SHADER_BACKGROUND_PROPERTIES = {
 } as const;
 
 const FALLBACK: Rgb = [255, 255, 255];
+
+/** The attributes of `<html>` and `<body>` whose change re-reads the palette (a theme switch). */
+export const SHADER_BACKGROUND_OBSERVED_ATTRIBUTES: readonly string[] = ['class', 'style', 'data-theme'];
 
 /** Any CSS colour the browser understands → channels, by painting one pixel. `null` when it is not a colour. */
 const toRgb = (value: string): Rgb | null => {
@@ -83,7 +86,25 @@ export interface ShaderBackgroundProps {
   displacementImage?: string;
   /** Holds the current frame (no animation) while `true`. */
   paused?: boolean;
+  /**
+   * Side in px a `displacementImage` is resampled to (default 256; rounded to a power of two between 16 and 2048). A
+   * larger texture keeps a detailed image's grain.
+   */
+  displacementImageSize?: number;
+  /**
+   * What shows until a `displacementImage` has loaded: `noise` (default) the generated field, `none` nothing (the page
+   * background), or a CSS colour on the layer. An image that cannot be read falls back to the generated field.
+   */
+  displacementImagePlaceholder?: 'noise' | 'none' | (string & {});
+  /**
+   * The attributes of `<html>` and `<body>` whose change re-reads the palette (default
+   * `SHADER_BACKGROUND_OBSERVED_ATTRIBUTES`: `class`, `style`, `data-theme`); a host theme switch on another attribute
+   * (`data-mode`) adds it. A stable array.
+   */
+  observeAttributes?: readonly string[];
   className?: string;
+  /** `data-*` attributes of the layer. */
+  [dataAttribute: `data-${string}`]: string | undefined;
 }
 
 /**
@@ -106,8 +127,20 @@ export const ShaderBackground = ({
   displacementZeroMean,
   displacementImage,
   paused = false,
+  displacementImageSize,
+  displacementImagePlaceholder = 'noise',
+  observeAttributes = SHADER_BACKGROUND_OBSERVED_ATTRIBUTES,
   className,
+  ...rest
 }: ShaderBackgroundProps) => {
+  const dataAttributes = Object.fromEntries(Object.entries(rest).filter(([name]) => name.startsWith('data-')));
+  const waitForImage = displacementImage !== undefined && displacementImagePlaceholder !== 'noise';
+  const placeholderColor = waitForImage && displacementImagePlaceholder !== 'none' ? displacementImagePlaceholder : undefined;
+  // the colour placeholder stays until the canvas has drawn its first frame (a new image starts over)
+  const [drawnImage, setDrawnImage] = useState<string | null>(null);
+  const onFirstDraw = useCallback(() => setDrawnImage(displacementImage ?? null), [displacementImage]);
+  const showPlaceholderColor = placeholderColor !== undefined && drawnImage !== displacementImage;
+  const observedKey = observeAttributes.join(',');
   const look: ShaderLook | undefined =
     displacementScale === undefined &&
     displacementCells === undefined &&
@@ -142,16 +175,35 @@ export const ShaderBackground = ({
     };
     update();
     const observer = new MutationObserver(update);
-    for (const element of [document.documentElement, document.body]) observer.observe(element, { attributes: true, attributeFilter: ['class', 'style', 'data-theme'] });
+    for (const element of [document.documentElement, document.body]) observer.observe(element, { attributes: true, attributeFilter: [...observeAttributes] });
     return () => observer.disconnect();
-    // the tint arrives as channels; compare them by value
-  }, [darkProp, primary?.join(','), secondary?.join(',')]);
+    // the tint arrives as channels, the attributes as a list; compare them by value
+    // biome-ignore lint/correctness/useExhaustiveDependencies: observedKey stands for observeAttributes
+  }, [darkProp, primary?.join(','), secondary?.join(','), observedKey]);
 
   return (
-    <div ref={hostRef} aria-hidden data-shell-background="" className={className ?? 'pointer-events-none fixed inset-0 -z-10'}>
+    <div
+      {...dataAttributes}
+      ref={hostRef}
+      aria-hidden
+      data-shell-background=""
+      className={className ?? 'pointer-events-none fixed inset-0 -z-10'}
+      // only while a canvas is on its way (no colour without WebGL or with reduced motion: the page background shows)
+      style={showPlaceholderColor && state && !reducedMotion ? { backgroundColor: placeholderColor } : undefined}
+    >
       {state && !reducedMotion && (
         <Suspense fallback={null}>
-          <ShaderCanvas palette={state.palette} dark={state.dark} idleAfterMs={idleAfterMs} look={look} paused={paused} className="size-full" />
+          <ShaderCanvas
+            palette={state.palette}
+            dark={state.dark}
+            idleAfterMs={idleAfterMs}
+            look={look}
+            paused={paused}
+            imageSize={displacementImageSize === undefined ? undefined : displacementTextureSizeOf(displacementImageSize)}
+            waitForImage={waitForImage}
+            onFirstDraw={placeholderColor !== undefined ? onFirstDraw : undefined}
+            className="size-full"
+          />
         </Suspense>
       )}
     </div>

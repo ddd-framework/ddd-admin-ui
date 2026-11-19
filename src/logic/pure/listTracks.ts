@@ -222,3 +222,38 @@ export const resolveListPins = (columns: readonly ListPinRequest[], measure: Lis
   if (firstEnd !== -1) (placements[firstEnd] as ListPinPlacement).edge = true;
   return { placements, startPinsHonoured };
 };
+
+/** The inline padding (px) of a list table's cells: `inner` on every side, `edge` at the card's left and right edge. */
+export interface ListCellPadding {
+  inner: number;
+  edge: number;
+}
+
+/** The default cell padding: 16 px, 24 px at the card edge. */
+export const LIST_CELL_PADDING: ListCellPadding = { inner: 16, edge: 24 };
+
+/**
+ * The cell padding a table's `cellPaddingX` asks for: a number for every side (the card edge included), `{ inner, edge }`
+ * (edge defaults to inner), `null` when unset (the default classes apply). Negative or non-finite values count as 0.
+ */
+export const resolveListCellPadding = (value: number | { inner: number; edge?: number } | undefined): ListCellPadding | null => {
+  if (value === undefined) return null;
+  const clean = (length: number | undefined) => (length !== undefined && Number.isFinite(length) && length > 0 ? length : 0);
+  if (typeof value === 'number') return { inner: clean(value), edge: clean(value) };
+  const inner = clean(value.inner);
+  return { inner, edge: value.edge === undefined ? inner : clean(value.edge) };
+};
+
+/**
+ * The inline padding a content-box track adds at `position` of `count` positions: the edge padding on the first and the
+ * last position, the inner padding elsewhere, per side.
+ */
+export const listCellPaddingAt = (position: number, count: number, padding: ListCellPadding = LIST_CELL_PADDING): number =>
+  (position === 0 ? padding.edge : padding.inner) + (position === count - 1 ? padding.edge : padding.inner);
+
+/** Where a sortable header puts its arrow: before the label for `start`, after it for `end`, `auto` by the alignment. */
+export type ListSortIconPosition = 'start' | 'end' | 'auto';
+
+/** Whether the sort arrow goes before the label (`auto`: an end-aligned column, so the label shares the numbers' edge). */
+export const isSortIconFirst = (position: ListSortIconPosition | undefined, align: ListColumnAlign | undefined): boolean =>
+  position === 'start' || ((position === undefined || position === 'auto') && align === 'end');

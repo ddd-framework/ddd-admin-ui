@@ -87,6 +87,10 @@ export {
   minimumListWidth,
   resolveListPins,
   shouldHonourStartPins,
+  LIST_CELL_PADDING,
+  isSortIconFirst,
+  listCellPaddingAt,
+  resolveListCellPadding,
 } from './listTracks.ts';
 export type {
   ListColumnAlign,
@@ -98,6 +102,8 @@ export type {
   ListPinRequest,
   ListTrack,
   ListTrackLayout,
+  ListCellPadding,
+  ListSortIconPosition,
 } from './listTracks.ts';
 export {
   documentTitleParts,

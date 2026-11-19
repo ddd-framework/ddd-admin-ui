@@ -245,6 +245,9 @@ It reads the host's `node_modules` (npm and pnpm layouts) and the folders above 
    pending calls `false`; `requirePhrase` keeps the confirm button off until a phrase is typed). Without a provider
    every call answers `false` and warns once outside production. A host with its own service passes it as the
    provider's `confirm`; `useConfirm()` then calls it and the package dialog does not render.
+   `confirmWithPhrase` and (0.3.9) `confirmWithRichDescription` (`'package'` or a service) take the confirmations a
+   text-only service cannot show: a typed phrase, and a description that is a node (an element, a list, a generation
+   estimate) instead of text.
 
    Blocks that ask before a step open the package's confirm dialog (`useConfirmDialog`). A host
    with its own confirmation service passes it as `confirm` (`(options: ConfirmOptions) => Promise<boolean>`, a stable
@@ -258,6 +261,22 @@ It reads the host's `node_modules` (npm and pnpm layouts) and the folders above 
    with the library's module, and a bundler that cannot import CSS from `node_modules` adds
    `@import '@uiw/react-md-editor/markdown-editor.css'`. If the editor cannot be loaded at run time, the field is a plain
    text area.
+
+## List tables
+
+How list, detail and form screens are composed: [STANDARDS.md](STANDARDS.md) (wide tables: section 5).
+
+Options (0.3.9) of `EntityListTable` (and `EntityListBody`): `cellPaddingX` (`number | { inner, edge }`, px: the
+cells' inline padding instead of 16 px / 24 px at the card edge; `columnWidthBox="content-box"` tracks add it, the
+selection column's default width follows the edge), `showEmptyState={false}` (no built-in empty and no-results block;
+also on `EntityListGrid`; the error stays), `sortIconPosition` (`'start' | 'end' | 'auto'`, also per column),
+`sortButtonClassName`, `headerRowClassName`, `headerCellClassName` (every header cell, filler and leading cells
+included), `tableClassName`, `skeletonClassName`, `scroll={false}` (table, page-sticky host and grid sit in the page
+flow: no `md:flex-1 md:min-h-0`, the grid no `md:overflow-y-auto`). With `selectionHitArea="cell"` the select-all cell
+is a target too. In a table with tracks the selection cell takes its track (`selectionColumnWidth`) and the checkbox
+sits centred (before: a fixed `w-10` cell and the 2 px table-cell offset). The scroll edge of `pinEdge="overlay"` reads
+the optional variables `--list-edge-width`, `--list-edge-color`, `--list-edge-shadow-offset`, `--list-edge-shadow-blur`,
+`--list-edge-shadow-color` and `--list-edge-fade` (a gradient from the surface over the scrolled content; default 0).
 
 ## Server and client
 
@@ -519,6 +538,13 @@ skeleton while it loads and the error when it fails; without a loader the render
 locale (`undefined` for all). `TranslationCompleteness` takes the same two props. `createTranslationsApi({ tags })`
 takes the keyed or function form per operation (`TranslationsApiOperation`, `useLanguagesQuery` → `languages`).
 
+Options (0.3.9): `confirmGenerateAll` (`boolean | 'auto'`): absent, "Generate all missing" asks exactly when
+`renderGenerationEstimate` is set (as before); `true` always asks, `false` never; `'auto'` asks unless the renderer
+answers `null` for `{ kind: 'all' }`: the renderer is probed before the dialog opens (with `loadGenerationPreview` the
+estimate loads first and the button is busy meanwhile; a failed load asks and shows the error).
+`languageFilterOptions(languages) => FilterOption[]` builds the options of the language filter from the loaded
+languages (keep the active ones, label them `de · Deutsch`; a stable function); `isGenerationEstimateEmpty` is exported.
+
 ### `./issues`
 
 The error groups of the issues registry, on Core's `IssuesControllerTrait` (mgamadeus/ddd **3.35.1** or later: the
@@ -708,6 +734,12 @@ Options (0.3.7): `detailsPollingIntervalMs` also takes a function of the shown C
 the most recent run (newest first), then by name (`compareCronsBySeverity`); `severityCompare(left, right,
 defaultCompare)` replaces that order with the host's (wrap `defaultCompare` to keep it as the fallback).
 
+Options (0.3.9): `sort="severity"` breaks a status tie by name again (the rows of one status keep their places between
+refreshes); `severityTieBreak="recent"` restores the order of 0.3.7 / 0.3.8 (most recent failure, then most recent run
+first). `severityStatusOrder` (default `CRON_STATUS_SEVERITY`: missing command, failing, overdue, running, ok, paused)
+ranks the statuses, e.g. failing before a missing command. `compareCronsBySeverity(left, right, options)` and
+`sortCrons(crons, sort, severityCompare, options)` take the same `CronSeverityOptions`.
+
 ## Design studio
 
 `./design-studio` exports `designStudioComponents`, the `components` value the provider of
@@ -841,6 +873,26 @@ const useEntityLabel: UseEntityLabel<'item'> = ({ id }) => { const query = useIt
   `afterEntries`, entry `before`; `LanguageMenu` `icon`, `iconVisibility`, `contentClassName`, `heading`,
   `renderOption`. `ShaderBackground` `displacementScale={[x, y]}`, `displacementZeroMean`, `displacementImage`
   (same-origin or served with CORS), `paused`.
+- **Options (0.3.9)**: `contentElement="div"` (pages that bring their own `<main>`; the skip link's target stays),
+  `topBarAttributes`, `sidebarAttributes` (`data-*`) and `sidebarClassName` (also `data-*` on `ShellSidebar`).
+  Rows: `navGroupRowHover="row"` (a group row with its own page tints as a whole, not link and caret apart),
+  `navGroupToggleClassName`, `navActiveRowClassName`, `navActiveGroupClassName`, `navRowClassNameFor(item)`; rail:
+  `railFlyoutItemClassName`, `railFlyoutActiveItemClassName`, `railTooltipDelayMs` (on `ShellNavDisplayProvider`:
+  `groupRowHover`, `groupToggleClassName`, `activeRowClassName`, `activeGroupClassName`, `rowClassNameFor`, the rail
+  names as they are, `linkProps`). Links: `navLinkProps` (an object or `({ key, href }) => props`, e.g.
+  `{ prefetch: false }`) and an item's own `linkProps` reach the host's link component on every in-app link of the
+  shell (rows, rail, flyouts, mobile menu, breadcrumbs, account entries; an item's `linkProps` on its rows), never on
+  `external` entries; no second link provider. Mobile menu: `mobileMenuOverlayClassName`, `mobileMenuCloseButton` (a
+  button that closes it; `false`: none), `mobileMenuNavClassName`, `mobileMenuFooterClassName`,
+  `mobileMenuDescription` (its `aria-describedby`); the same without the prefix on `ShellMobileMenu`.
+  `ShellBreadcrumbs` `itemClassName`, `ariaLabel`, `foldBy="viewport"` (the fold widths measure the window: media
+  queries); pass it as `breadcrumbs={<ShellBreadcrumbs … />}`. `AccountMenu` `triggerAriaLabel`, `initials`,
+  `avatarFallbackOnError` (a failing image shows the initials; `fallbackOnError` on `AccountAvatar`), entry
+  `className`; `LanguageMenu` / `LanguageMenuSub` `optionClassName`, `checkClassName`, `allowReselect` (`onChange` for
+  the current language too). `ShaderBackground` `displacementImageSize` (the texture a host image is resampled to, a
+  power of two from 16 to 2048, default 256), `displacementImagePlaceholder` (`noise` as before, `none`, or a CSS colour
+  until the image has loaded), `observeAttributes` (default `class`, `style`, `data-theme` on `<html>` and `<body>`) and
+  `data-*` on the layer.
 
 ## Texts
 
@@ -872,7 +924,7 @@ project's `.claude/skills/`. Idempotent; repoints an existing symlink, never tou
 
 ## Versioning
 
-0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.8"`,
+0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.9"`,
 `pnpm add -E` / `npm install -E`); modules peer on the version they were tested with. Stable releases are published
 under the `latest` dist-tag, pre-releases (`x.y.z-…`) under `next`. Changes per release: [CHANGELOG.md](CHANGELOG.md).
 

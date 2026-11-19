@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronDown } from 'lucide-react';
-import { Fragment, type ReactNode } from 'react';
+import { Fragment, type ReactNode, useEffect, useRef, useState } from 'react';
 
 import { useTranslate } from '../i18n/useTranslate.ts';
 import type { NavigationIcon } from '../logic/pure/navigation.ts';
@@ -32,6 +32,8 @@ export interface AccountMenuEntry {
   separatorBefore?: boolean;
   /** Menu content right before this entry (after its separator): a heading, a status line. */
   before?: ReactNode;
+  /** Extra classes of this entry (after the menu's `itemClassName`). */
+  className?: string;
 }
 
 export interface AccountMenuProps {
@@ -66,6 +68,12 @@ export interface AccountMenuProps {
   itemClassName?: string;
   /** Menu content after the entries, before `children`. */
   afterEntries?: ReactNode;
+  /** The trigger's accessible name, already translated, instead of "Account menu of <name>". */
+  triggerAriaLabel?: string;
+  /** The default avatar's letters instead of the ones taken from `name` (`MG`). */
+  initials?: string;
+  /** An `avatarUrl` that fails to load shows the initials instead of an empty circle (default `false`). */
+  avatarFallbackOnError?: boolean;
 }
 
 const initialsOf = (name: string): string => {
@@ -83,23 +91,50 @@ export const AccountAvatar = ({
   avatarUrl,
   icon,
   className,
+  initials,
+  fallbackOnError = false,
 }: {
   name: string;
   avatarUrl?: string | null;
   /** Drawn instead of the initials when there is no image (a 16 px icon). */
   icon?: ReactNode;
   className?: string;
-}) => (
-  <span
-    aria-hidden
-    className={cn(
-      'inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-light text-xs font-semibold text-brand-ink',
-      className
-    )}
-  >
-    {avatarUrl ? <img src={avatarUrl} alt="" className="size-full object-cover" /> : (icon ?? initialsOf(name))}
-  </span>
-);
+  /** The letters instead of the ones taken from `name`. */
+  initials?: string;
+  /** An image that fails to load shows `icon` / the initials instead (default `false`). */
+  fallbackOnError?: boolean;
+}) => {
+  // the URL that failed: a new URL is tried again
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const showImage = Boolean(avatarUrl) && !(fallbackOnError && failedUrl === avatarUrl);
+  const imageRef = useRef<HTMLImageElement>(null);
+  // an image that failed before hydration fired its error before React listened: read its state after mount
+  useEffect(() => {
+    const image = imageRef.current;
+    if (fallbackOnError && image && avatarUrl && image.complete && image.naturalWidth === 0) setFailedUrl(avatarUrl);
+  }, [fallbackOnError, avatarUrl]);
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        'inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-light text-xs font-semibold text-brand-ink',
+        className
+      )}
+    >
+      {showImage ? (
+        <img
+          ref={imageRef}
+          src={avatarUrl as string}
+          alt=""
+          className="size-full object-cover"
+          onError={fallbackOnError ? () => setFailedUrl(avatarUrl ?? null) : undefined}
+        />
+      ) : (
+        (icon ?? initials ?? initialsOf(name))
+      )}
+    </span>
+  );
+};
 
 /** Avatar, name and description in a row (the menu's header; a mobile menu footer). */
 export const AccountSummary = ({
@@ -108,6 +143,8 @@ export const AccountSummary = ({
   avatarUrl,
   avatar,
   avatarClassName,
+  initials,
+  avatarFallbackOnError,
 }: {
   name: string;
   description?: ReactNode;
@@ -116,9 +153,13 @@ export const AccountSummary = ({
   avatar?: ReactNode;
   /** Classes of the default avatar. */
   avatarClassName?: string;
+  /** The default avatar's letters instead of the ones taken from `name`. */
+  initials?: string;
+  /** A failing `avatarUrl` shows the initials. */
+  avatarFallbackOnError?: boolean;
 }) => (
   <div className="flex min-w-0 items-center gap-3">
-    {avatar ?? <AccountAvatar name={name} avatarUrl={avatarUrl} className={avatarClassName} />}
+    {avatar ?? <AccountAvatar name={name} avatarUrl={avatarUrl} className={avatarClassName} initials={initials} fallbackOnError={avatarFallbackOnError} />}
     <div className="min-w-0">
       <p className="truncate text-sm font-semibold">{name}</p>
       {description && <p className="truncate text-xs text-muted-foreground">{description}</p>}
@@ -148,6 +189,9 @@ export const AccountMenu = ({
   header,
   itemClassName,
   afterEntries,
+  triggerAriaLabel,
+  initials,
+  avatarFallbackOnError,
 }: AccountMenuProps) => {
   const { t } = useTranslate();
   if (!name) return <>{fallback ?? null}</>;
@@ -155,7 +199,7 @@ export const AccountMenu = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        aria-label={t('Account menu of %name%', { replacements: { name } })}
+        aria-label={triggerAriaLabel ?? t('Account menu of %name%', { replacements: { name } })}
         data-shell-account-menu=""
         className={cn(
           'inline-flex h-10 shrink-0 items-center gap-2 rounded-full p-1 text-sm font-medium text-foreground transition-colors outline-none hover:bg-tint focus-visible:ring-2 focus-visible:ring-ring',
@@ -163,7 +207,7 @@ export const AccountMenu = ({
           className
         )}
       >
-        {avatar ?? <AccountAvatar name={name} avatarUrl={avatarUrl} className={avatarClassName} />}
+        {avatar ?? <AccountAvatar name={name} avatarUrl={avatarUrl} className={avatarClassName} initials={initials} fallbackOnError={avatarFallbackOnError} />}
         {full && <span className="hidden max-w-48 truncate sm:inline">{name}</span>}
         {full && <ChevronDown aria-hidden className="hidden size-4 text-muted-foreground sm:block" />}
       </DropdownMenuTrigger>
@@ -172,7 +216,15 @@ export const AccountMenu = ({
           <>
             <DropdownMenuLabel className="py-2 font-normal">
               {header ?? (
-                <AccountSummary name={name} description={description} avatarUrl={avatarUrl} avatar={avatar} avatarClassName={avatarClassName} />
+                <AccountSummary
+                  name={name}
+                  description={description}
+                  avatarUrl={avatarUrl}
+                  avatar={avatar}
+                  avatarClassName={avatarClassName}
+                  initials={initials}
+                  avatarFallbackOnError={avatarFallbackOnError}
+                />
               )}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -181,6 +233,7 @@ export const AccountMenu = ({
         {beforeEntries}
         {entries.map(entry => {
           const Icon = entry.icon;
+          const entryClassName = entry.className ? cn(itemClassName, entry.className) : itemClassName;
           const content = (
             <>
               {Icon && <Icon aria-hidden />}
@@ -192,11 +245,11 @@ export const AccountMenu = ({
               {entry.separatorBefore && <DropdownMenuSeparator />}
               {entry.before}
               {entry.href !== undefined ? (
-                <DropdownMenuItem asChild variant={entry.variant} disabled={entry.disabled} onSelect={entry.onSelect} className={itemClassName}>
+                <DropdownMenuItem asChild variant={entry.variant} disabled={entry.disabled} onSelect={entry.onSelect} className={entryClassName}>
                   <ShellNavLink item={{ key: entry.key, href: entry.href, external: entry.external }} data-nav-key={undefined} data-account-entry={entry.key}>{content}</ShellNavLink>
                 </DropdownMenuItem>
               ) : (
-                <DropdownMenuItem variant={entry.variant} disabled={entry.disabled} onSelect={entry.onSelect} data-account-entry={entry.key} className={itemClassName}>
+                <DropdownMenuItem variant={entry.variant} disabled={entry.disabled} onSelect={entry.onSelect} data-account-entry={entry.key} className={entryClassName}>
                   {content}
                 </DropdownMenuItem>
               )}

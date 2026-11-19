@@ -3,6 +3,98 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.3.9
+
+Optional props for hosts that moved their list table, admin frame and app translations screens onto the package. A
+caller that sets none of the new props renders as on 0.3.8, with two exceptions: the default tie-break of
+`sort="severity"` on `./crons` (**behaviour change**, see there) and the selection cell of a table with column tracks
+(a fix, see `./list`). The list and form actions snapshots are unchanged.
+
+`./list`:
+
+- `EntityListTable` (and `EntityListBody`): `cellPaddingX` (`number | { inner, edge? }`, px): the inline padding of
+  every cell instead of 16 px / 24 px at the card edge, through `--list-cell-px` / `--list-cell-edge-px` on the
+  table's host; `columnWidthBox="content-box"` tracks add that padding and the selection column's default width follows
+  the edge (edge + 16 px). Helpers `resolveListCellPadding`, `listCellPaddingAt`, `LIST_CELL_PADDING` (`./logic`).
+  No `columnGap`: a gap between tracks would show the scrolled content between pinned cells.
+- `showEmptyState={false}` on the table, the grid and the body: no built-in empty and no-results block (the error and
+  the loading announcement stay).
+- `sortIconPosition` (`'start' | 'end' | 'auto'`, default `auto`: before the label in an end-aligned column, as
+  before; also per column) and `sortButtonClassName`; `isSortIconFirst` (`./logic`).
+- `headerRowClassName` (the header `<tr>`), `headerCellClassName` (every cell of the header row: columns, selection,
+  row index and the filler alike, e.g. its height), `tableClassName`, `skeletonClassName`.
+- `scroll={false}` (table, body, grid): the table, its page-sticky host and the grid sit in the page flow (no
+  `md:flex-1 md:min-h-0`, the grid no `md:overflow-y-auto`); the table still scrolls sideways.
+- `selectionHitArea="cell"`: the select-all header cell is a target too (a press beside the checkbox selects or clears
+  every loaded row).
+- Fix, tables with column tracks only: the selection cell is sized by its track (`selectionColumnWidth` now widens the
+  cell, not only the track; it kept `w-10`) and the checkbox sits centred (the table-cell `translate-y-[2px]` offset is
+  dropped in the grid rows). Content-sized tables are unchanged.
+- `pinEdge="overlay"`: the edge reads the optional variables `--list-edge-width`, `--list-edge-color`,
+  `--list-edge-shadow-offset`, `--list-edge-shadow-blur`, `--list-edge-shadow-color` and `--list-edge-fade` (a gradient
+  from the table's surface to transparent over the scrolled content); unset it draws as before. Listed in `tokens.json`
+  (optional).
+
+`./shell`:
+
+- `AppShell contentElement="div"` (pages that bring their own `<main>`); `topBarAttributes`, `sidebarAttributes`
+  (`data-*`), `sidebarClassName`; `ShellSidebar` takes `data-*`.
+- Navigation rows: `navGroupRowHover="row"` (a group with its own page tints as one row instead of link and caret
+  apart), `navGroupToggleClassName`, `navActiveRowClassName`, `navActiveGroupClassName`, `navRowClassNameFor(item)`;
+  rail: `railFlyoutItemClassName`, `railFlyoutActiveItemClassName`, `railTooltipDelayMs`. `ShellNavDisplay` /
+  `ShellNavDisplayProvider` carry them (`groupRowHover`, `groupToggleClassName`, `activeRowClassName`,
+  `activeGroupClassName`, `rowClassNameFor`, the rail names, `linkProps`).
+- Link props: `navLinkProps` (an object or `({ key, href }) => props`, `ShellNavLinkPropsOption`) and `linkProps` on a
+  navigation item reach the host's link component (`{ prefetch: false }`) on every in-app link `ShellNavLink` draws;
+  never on `external` entries.
+- `ShellMobileMenu` (and `AppShell` with the `mobileMenu` prefix): `overlayClassName`, `closeButton` (a button that
+  closes the menu; `false`: none), `navClassName`, `footerClassName`, `description` (wired as `aria-describedby`; without
+  it the menu stays undescribed as before). `SheetContent` takes `overlayClassName`.
+- `ShellBreadcrumbs`: `itemClassName`, `ariaLabel`, `foldBy="viewport"` (fold by the window's width, media queries;
+  `BreadcrumbFoldBasis`).
+- `AccountMenu`: `triggerAriaLabel`, `initials`, `avatarFallbackOnError` (a failing image shows the initials;
+  `AccountAvatar fallbackOnError`, `initials`), entry `className`. `LanguageMenu` / `LanguageMenuSub` /
+  `LanguageMenuItems`: `optionClassName`, `checkClassName`, `allowReselect`.
+
+`./shell-background`:
+
+- `ShaderBackground`: `displacementImageSize` (the texture a host image is resampled to; a power of two from 16 to 2048,
+  default 256; `displacementTextureSizeOf`, `DISPLACEMENT_IMAGE_SIZE`), `displacementImagePlaceholder` (`noise`
+  default, `none`, or a CSS colour on the layer until the image is drawn; an unreadable image falls back to the
+  generated field), `observeAttributes` (default `SHADER_BACKGROUND_OBSERVED_ATTRIBUTES`: `class`, `style`,
+  `data-theme`), `data-*` on the layer.
+
+`./translations`:
+
+- `AppTranslationsScreen confirmGenerateAll` (`boolean | 'auto'`): absent as before (asks exactly when
+  `renderGenerationEstimate` is set); `true` always, `false` never; `'auto'` asks unless the renderer answers `null`
+  for `{ kind: 'all' }`. The renderer runs inside the dialog, so `'auto'` probes it before opening: with
+  `loadGenerationPreview` the estimate is loaded first (the button is disabled and `aria-busy` meanwhile) and the
+  renderer gets its answer; a failed load asks and shows the error. `isGenerationEstimateEmpty` exported.
+- `languageFilterOptions(languages) => FilterOption[]`: the language filter's options from the loaded languages
+  (restrict to the active ones, label `code · name`).
+
+`./provider`, `./logic`:
+
+- `AdminUiProvider confirmWithRichDescription` (`'package'` or a service): with a host `confirm`, a confirmation whose
+  description is not text (an element, a list) goes there instead of the text-only host service (a phrase confirmation
+  still goes to `confirmWithPhrase` first). `isTextConfirmDescription`, `routeConfirm`, `ConfirmRoutes`.
+
+`./crons`:
+
+- **Behaviour change**: `sort="severity"` breaks a status tie by name only again, as before 0.3.7: the 0.3.7 tie-break
+  by the most recent failure / run made rows of one status swap places between refreshes. `severityTieBreak="recent"`
+  restores the 0.3.7 / 0.3.8 order. `compareCronsBySeverity(left, right, options?)` and `sortCrons(crons, sort,
+  severityCompare?, options?)` follow the same default (`CronSeverityOptions`); a host calling them without options
+  gets the name tie-break.
+- `severityStatusOrder` (default `CRON_STATUS_SEVERITY`, unchanged: missing command, failing, overdue, running, ok,
+  paused) ranks the statuses, e.g. failing before a missing command; `cronStatusRank(status, order?)`.
+
+Tests: unit tests for the padding, sort arrow, texture size, confirmation routing and crons options; the server render
+`options-039-render.mjs` (in `test:render` and the consumer run) and the browser run `browser-options-039.mjs`
+(`app/options-039`: select-all cell, track selection cell, group row hover, mobile menu description, avatar fallback,
+reselect, confirmation routing, the estimate probe).
+
 ## 0.3.8
 
 Fix for hosts that bind their colours in a JS config; no API change.

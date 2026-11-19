@@ -38,7 +38,7 @@ const RailLeaf = ({ item, active, side }: { item: NavigationLeaf<string>; active
   const marks = useNavMarkText(item);
   const label = t(item.label);
   return (
-    <Tooltip>
+    <Tooltip delayDuration={display.railTooltipDelayMs}>
       <TooltipTrigger asChild>
         <ShellNavLink
           item={item}
@@ -65,10 +65,19 @@ const RailLeaf = ({ item, active, side }: { item: NavigationLeaf<string>; active
 /** A flyout heading that links to its group's own page (`railGroupPageRow={false}`). */
 const FlyoutHeadingLink = ({ group, active }: { group: NavigationGroup<string>; active: ActiveNavigation<string> | null }) => {
   const { t } = useTranslate();
+  const display = useContext(ShellNavDisplayContext);
   const current = active?.item.key === group.key;
   return (
-    <DropdownMenuItem asChild className={cn('text-xs font-medium text-muted-foreground', current && 'bg-tint-strong font-semibold text-foreground')}>
-      <ShellNavLink item={{ key: group.key, href: group.href as string }} aria-current={current ? 'page' : undefined}>
+    <DropdownMenuItem
+      asChild
+      className={cn(
+        'text-xs font-medium text-muted-foreground',
+        current && 'bg-tint-strong font-semibold text-foreground',
+        display.railFlyoutItemClassName,
+        current && display.railFlyoutActiveItemClassName
+      )}
+    >
+      <ShellNavLink item={{ key: group.key, href: group.href as string, linkProps: group.linkProps }} aria-current={current ? 'page' : undefined}>
         <span className="truncate">{t(group.label)}</span>
       </ShellNavLink>
     </DropdownMenuItem>
@@ -95,8 +104,16 @@ const FlyoutEntries = ({ items, active }: { items: readonly NavigationItem<strin
           <DropdownMenuSeparator />
           <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">{t(item.label)}</DropdownMenuLabel>
           {item.href !== undefined && (
-            <DropdownMenuItem asChild className={cn('gap-3 text-foreground', active?.item.key === item.key && 'bg-tint-strong font-semibold')}>
-              <ShellNavLink item={{ key: item.key, href: item.href }} aria-current={active?.item.key === item.key ? 'page' : undefined}>
+            <DropdownMenuItem
+              asChild
+              className={cn(
+                'gap-3 text-foreground',
+                active?.item.key === item.key && 'bg-tint-strong font-semibold',
+                display.railFlyoutItemClassName,
+                active?.item.key === item.key && display.railFlyoutActiveItemClassName
+              )}
+            >
+              <ShellNavLink item={{ key: item.key, href: item.href, linkProps: item.linkProps }} aria-current={active?.item.key === item.key ? 'page' : undefined}>
                 <span className="truncate">{t(item.label)}</span>
               </ShellNavLink>
             </DropdownMenuItem>
@@ -108,7 +125,16 @@ const FlyoutEntries = ({ items, active }: { items: readonly NavigationItem<strin
     const current = active?.item.key === item.key;
     const Icon = item.icon;
     return (
-      <DropdownMenuItem key={item.key} asChild className={cn('gap-3 text-foreground', current && 'bg-tint-strong font-semibold focus:bg-tint-strong')}>
+      <DropdownMenuItem
+        key={item.key}
+        asChild
+        className={cn(
+          'gap-3 text-foreground',
+          current && 'bg-tint-strong font-semibold focus:bg-tint-strong',
+          display.railFlyoutItemClassName,
+          current && display.railFlyoutActiveItemClassName
+        )}
+      >
         <ShellNavLink item={item} aria-current={current ? 'page' : undefined}>
           {Icon && <Icon aria-hidden className={cn('size-4 [stroke-width:1.75]', current && 'text-brand')} />}
           <span className="min-w-0 truncate">{t(item.label)}</span>
@@ -205,8 +231,16 @@ const RailGroup = ({ group, active, side }: { group: NavigationGroup<string>; ac
           <>
             <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">{t(group.label)}</DropdownMenuLabel>
             {group.href !== undefined && (
-              <DropdownMenuItem asChild className={cn('gap-3 text-foreground', active?.item.key === group.key && 'bg-tint-strong font-semibold')}>
-                <ShellNavLink item={{ key: group.key, href: group.href }} aria-current={active?.item.key === group.key ? 'page' : undefined}>
+              <DropdownMenuItem
+                asChild
+                className={cn(
+                  'gap-3 text-foreground',
+                  active?.item.key === group.key && 'bg-tint-strong font-semibold',
+                  display.railFlyoutItemClassName,
+                  active?.item.key === group.key && display.railFlyoutActiveItemClassName
+                )}
+              >
+                <ShellNavLink item={{ key: group.key, href: group.href, linkProps: group.linkProps }} aria-current={active?.item.key === group.key ? 'page' : undefined}>
                   <span className="truncate">{t(group.label)}</span>
                 </ShellNavLink>
               </DropdownMenuItem>

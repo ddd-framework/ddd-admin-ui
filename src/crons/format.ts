@@ -282,21 +282,39 @@ export const isLegacyCronName = (name: string): boolean => name !== '' && !isCro
 /** The statuses from the worst to the best: what needs a hand first, a paused Cron last. */
 export const CRON_STATUS_SEVERITY: readonly string[] = ['MISSING_COMMAND', 'FAILING', 'OVERDUE', 'RUNNING', 'OK', 'PAUSED'];
 
-/** The rank of a status in `CRON_STATUS_SEVERITY` (an unknown status after the known ones). */
-export const cronStatusRank = (status: string): number => {
-  const index = CRON_STATUS_SEVERITY.indexOf(status);
-  return index === -1 ? CRON_STATUS_SEVERITY.length : index;
+/** The rank of a status in `order` (default `CRON_STATUS_SEVERITY`; an unknown status after the known ones). */
+export const cronStatusRank = (status: string, order: readonly string[] = CRON_STATUS_SEVERITY): number => {
+  const index = order.indexOf(status);
+  return index === -1 ? order.length : index;
 };
 
 /**
  * The order of the Crons list: `name` as the API sends them (by name), `severity` the worst status first, within a
- * status the most recent failure first, then the most recent run, then by name (`compareCronsBySeverity`).
+ * status by name (`compareCronsBySeverity`; `CronSeverityOptions.tieBreak: 'recent'` puts the most recent failure and
+ * run first instead).
  */
 export type CronListSort = 'name' | 'severity';
 
 /** The fields of a Cron the severity order reads. */
 export type CronSeverityFields = Pick<CronOverview, 'name' | 'status'> &
   Partial<Pick<CronOverview, 'lastExecution' | 'lastExecutionStartedAt' | 'recentExecutions'>>;
+
+/**
+ * How the package's severity order ranks and breaks ties (`CronsScreen.severityStatusOrder` / `severityTieBreak`).
+ */
+export interface CronSeverityOptions {
+  /**
+   * The statuses from the worst to the best (default `CRON_STATUS_SEVERITY`: missing command, failing, overdue,
+   * running, ok, paused); a status not in the list ranks after the listed ones.
+   */
+  statusOrder?: readonly string[];
+  /**
+   * Within one status: `name` (default) by name only, so rows of one status keep their places between refreshes;
+   * `recent` the most recent failure first (the last run, else the newest failed run of `recentExecutions`), then the
+   * most recent run, then by name (the default of 0.3.7 and 0.3.8).
+   */
+  tieBreak?: 'name' | 'recent';
+}
 
 /**
  * A host's order for `sort="severity"` (`CronsScreen.severityCompare`): gets the package's comparator to fall back on
@@ -330,23 +348,29 @@ const compareNewestFirst = (left: string | null, right: string | null): number =
   left === right ? 0 : left === null ? 1 : right === null ? -1 : left > right ? -1 : 1;
 
 /**
- * The package's severity order of two Crons: the worse status first (`CRON_STATUS_SEVERITY`), then the most recent
- * failure, then the most recent run, then by name.
+ * The package's severity order of two Crons: the worse status first (`options.statusOrder`, default
+ * `CRON_STATUS_SEVERITY`), then by name; with `tieBreak: 'recent'` the most recent failure, then the most recent run
+ * come before the name.
  */
-export const compareCronsBySeverity = (left: CronSeverityFields, right: CronSeverityFields): number =>
-  cronStatusRank(left.status) - cronStatusRank(right.status) ||
-  compareNewestFirst(cronLastFailureAt(left), cronLastFailureAt(right)) ||
-  compareNewestFirst(cronLastRunAt(left), cronLastRunAt(right)) ||
+export const compareCronsBySeverity = (left: CronSeverityFields, right: CronSeverityFields, options: CronSeverityOptions = {}): number =>
+  cronStatusRank(left.status, options.statusOrder) - cronStatusRank(right.status, options.statusOrder) ||
+  (options.tieBreak === 'recent'
+    ? compareNewestFirst(cronLastFailureAt(left), cronLastFailureAt(right)) || compareNewestFirst(cronLastRunAt(left), cronLastRunAt(right))
+    : 0) ||
   left.name.localeCompare(right.name);
 
-/** The Crons in the given order (a new array); `severityCompare` replaces the package's comparator for `severity`. */
+/**
+ * The Crons in the given order (a new array); `severityCompare` replaces the package's comparator for `severity`
+ * (it gets the package's, configured by `options`, as its third argument).
+ */
 export const sortCrons = <TCron extends CronSeverityFields>(
   crons: readonly TCron[],
   sort: CronListSort,
-  severityCompare?: CronSeverityCompare<TCron>
+  severityCompare?: CronSeverityCompare<TCron>,
+  options?: CronSeverityOptions
 ): TCron[] => {
   if (sort !== 'severity') return [...crons];
-  const compare: (left: TCron, right: TCron) => number = compareCronsBySeverity;
+  const compare = (left: TCron, right: TCron): number => compareCronsBySeverity(left, right, options);
   return [...crons].sort(severityCompare ? (left, right) => severityCompare(left, right, compare) : compare);
 };
 

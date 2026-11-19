@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { displacementMean, displacementPixels, displacementScaleOf, NEUTRAL_DISPLACEMENT_CENTER, SHADER_MOTION } from './shader.ts';
+import {
+  DISPLACEMENT_IMAGE_SIZE,
+  displacementMean,
+  displacementPixels,
+  displacementScaleOf,
+  displacementTextureSizeOf,
+  NEUTRAL_DISPLACEMENT_CENTER,
+  SHADER_MOTION,
+} from './shader.ts';
 
 describe('displacement field', () => {
   it('measures the channel mean of RGBA bytes', () => {
@@ -26,5 +34,18 @@ describe('displacement field', () => {
     assert.deepEqual(displacementScaleOf(undefined), [SHADER_MOTION.displaceScale, SHADER_MOTION.displaceScale]);
     assert.deepEqual(displacementScaleOf({ displacementScale: 1 }), [1, 1]);
     assert.deepEqual(displacementScaleOf({ displacementScale: [0.4, 1.2] }), [0.4, 1.2]);
+  });
+});
+
+describe('displacementTextureSizeOf (0.3.9)', () => {
+  it('rounds to a power of two between 16 and 2048, default 256', () => {
+    assert.equal(displacementTextureSizeOf(undefined), DISPLACEMENT_IMAGE_SIZE);
+    assert.equal(displacementTextureSizeOf(0), 256);
+    assert.equal(displacementTextureSizeOf(Number.NaN), 256);
+    assert.equal(displacementTextureSizeOf(512), 512);
+    assert.equal(displacementTextureSizeOf(700), 512);
+    assert.equal(displacementTextureSizeOf(800), 1024);
+    assert.equal(displacementTextureSizeOf(4), 16);
+    assert.equal(displacementTextureSizeOf(100000), 2048);
   });
 });

@@ -11,6 +11,10 @@ import {
   resolveListPins,
   shouldHonourStartPins,
   listTrackLayoutTemplate,
+  isSortIconFirst,
+  LIST_CELL_PADDING,
+  listCellPaddingAt,
+  resolveListCellPadding,
 } from './listTracks.ts';
 
 describe('hasListTracks', () => {
@@ -181,5 +185,32 @@ describe('content tracks', () => {
     const layout = computeListTracks(tracks, 500);
     const pins = resolveListPins([{}, { pin: 'end' }], { widths: layout.widths, visibleWidth: 500, scrollWidth: layout.scrollWidth });
     assert.deepEqual(pins.placements[1], { side: 'end', offset: 0, edge: true });
+  });
+});
+
+describe('cell padding and sort arrow (0.3.9)', () => {
+  it('resolves cellPaddingX', () => {
+    assert.equal(resolveListCellPadding(undefined), null);
+    assert.deepEqual(resolveListCellPadding(12), { inner: 12, edge: 12 });
+    assert.deepEqual(resolveListCellPadding({ inner: 8 }), { inner: 8, edge: 8 });
+    assert.deepEqual(resolveListCellPadding({ inner: 8, edge: 20 }), { inner: 8, edge: 20 });
+    assert.deepEqual(resolveListCellPadding(-4), { inner: 0, edge: 0 });
+    assert.deepEqual(resolveListCellPadding({ inner: Number.NaN, edge: 10 }), { inner: 0, edge: 10 });
+  });
+
+  it('adds the edge padding on the first and last position, the inner one elsewhere', () => {
+    assert.equal(listCellPaddingAt(0, 3), LIST_CELL_PADDING.edge + LIST_CELL_PADDING.inner);
+    assert.equal(listCellPaddingAt(1, 3), 32);
+    assert.equal(listCellPaddingAt(2, 3), 40);
+    assert.equal(listCellPaddingAt(0, 1), 48);
+    assert.equal(listCellPaddingAt(1, 3, { inner: 0, edge: 12 }), 0);
+    assert.equal(listCellPaddingAt(0, 3, { inner: 6, edge: 12 }), 18);
+  });
+
+  it('places the sort arrow by position or alignment', () => {
+    assert.equal(isSortIconFirst(undefined, 'end'), true);
+    assert.equal(isSortIconFirst('auto', 'start'), false);
+    assert.equal(isSortIconFirst('end', 'end'), false);
+    assert.equal(isSortIconFirst('start', undefined), true);
   });
 });

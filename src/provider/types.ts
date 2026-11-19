@@ -86,6 +86,13 @@ export interface AdminUiProviderProps {
    */
   confirmWithPhrase?: 'package' | ((options: ConfirmOptions) => Promise<boolean>);
   /**
+   * With `confirm`: who answers a confirmation whose description is not text (an element, a fragment: a generation
+   * estimate, a list), for a host service that shows text only and would drop it. `'package'`: the package dialog; a
+   * function: that service. Absent: `confirm` answers every confirmation, as before. A phrase confirmation goes to
+   * `confirmWithPhrase` first when both are set.
+   */
+  confirmWithRichDescription?: 'package' | ((options: ConfirmOptions) => Promise<boolean>);
+  /**
    * The `Intl` locale date cells format in (`de-CH`, `en-US`) when it differs from the UI language's; a cell's own
    * `locale` wins. Absent: the UI language.
    */

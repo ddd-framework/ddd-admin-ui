@@ -31,6 +31,32 @@ export interface ConfirmDialogApi {
   dialog: ReactNode;
 }
 
+/**
+ * Whether a confirmation's description is text a text-only host service can show: absent, a string or a number.
+ * Anything else (an element, a fragment, an array) is a node (`AdminUiProvider.confirmWithRichDescription`).
+ */
+export const isTextConfirmDescription = (description: ConfirmOptions['description']): boolean =>
+  description === undefined || description === null || typeof description === 'string' || typeof description === 'number';
+
+/** The services `AdminUiProvider` routes a confirmation to (the host's, and the ones for phrases and node descriptions). */
+export interface ConfirmRoutes<TConfirm> {
+  host: TConfirm;
+  /** Confirmations with `requirePhrase` (`confirmWithPhrase`). */
+  phrase?: TConfirm;
+  /** Confirmations whose description is not text (`confirmWithRichDescription`). */
+  richDescription?: TConfirm;
+}
+
+/**
+ * Who answers one confirmation: a phrase confirmation goes to `phrase` (when set), a node description to
+ * `richDescription` (when set), everything else to `host`.
+ */
+export const routeConfirm = <TConfirm>(options: ConfirmOptions, routes: ConfirmRoutes<TConfirm>): TConfirm => {
+  if (options.requirePhrase !== undefined && routes.phrase) return routes.phrase;
+  if (routes.richDescription && !isTextConfirmDescription(options.description)) return routes.richDescription;
+  return routes.host;
+};
+
 let warnedMissingConfirmProvider = false;
 
 /**

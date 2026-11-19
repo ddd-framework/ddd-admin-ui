@@ -44,6 +44,22 @@ export const startGenerationPreview = (load: () => Promise<unknown>): Promise<un
   return started;
 };
 
+/**
+ * Whether the renderer has nothing to show for a generation: it answers `null` for the settled preview. A failed load is
+ * never empty (the confirmation shows the error). Used by `confirmGenerateAll="auto"` before the dialog opens.
+ */
+export const isGenerationEstimateEmpty = async (
+  preview: Promise<unknown>,
+  scope: AppTranslationsGenerationScope,
+  render: AppTranslationsGenerationEstimateRenderer
+): Promise<boolean> => {
+  try {
+    return render(await preview, scope) === null;
+  } catch {
+    return false;
+  }
+};
+
 type EstimateState = { status: 'loading' } | { status: 'ready'; preview: unknown } | { status: 'error'; error: unknown };
 
 export interface GenerationEstimateProps {

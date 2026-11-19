@@ -57,6 +57,12 @@ export interface LanguageMenuProps {
   heading?: ReactNode | false;
   /** The content of one choice instead of the native name and the English name (the check stays). */
   renderOption?: (language: LanguageOption, checked: boolean) => ReactNode;
+  /** Extra classes of every language row (a menu item). */
+  optionClassName?: string;
+  /** Extra classes of the check mark (shown on the current language, hidden on the others). */
+  checkClassName?: string;
+  /** `onChange` also runs for the current language (a host that re-applies or re-saves it). Default `false`. */
+  allowReselect?: boolean;
 }
 
 const PILL_CLASS =
@@ -69,7 +75,13 @@ export const LanguageMenuItems = ({
   onChange,
   isPending,
   renderOption,
-}: Pick<LanguageMenuProps, 'languages' | 'current' | 'onChange' | 'isPending' | 'renderOption'>) => (
+  optionClassName,
+  checkClassName,
+  allowReselect = false,
+}: Pick<
+  LanguageMenuProps,
+  'languages' | 'current' | 'onChange' | 'isPending' | 'renderOption' | 'optionClassName' | 'checkClassName' | 'allowReselect'
+>) => (
   <>
     {languages.map(language => {
       const checked = language.code === current;
@@ -80,9 +92,9 @@ export const LanguageMenuItems = ({
           aria-checked={checked}
           disabled={isPending}
           onSelect={() => {
-            if (!checked) onChange(language.code);
+            if (!checked || allowReselect) onChange(language.code);
           }}
-          className="justify-between gap-3"
+          className={optionClassName ? cn('justify-between gap-3', optionClassName) : 'justify-between gap-3'}
         >
           {renderOption ? (
             renderOption(language, checked)
@@ -94,7 +106,7 @@ export const LanguageMenuItems = ({
               )}
             </span>
           )}
-          <Check aria-hidden className={cn('size-4', checked ? 'opacity-100' : 'opacity-0')} />
+          <Check aria-hidden className={cn('size-4', checked ? 'opacity-100' : 'opacity-0', checkClassName)} />
         </DropdownMenuItem>
       );
     })}
@@ -124,6 +136,9 @@ export const LanguageMenu = ({
   contentClassName,
   heading,
   renderOption,
+  optionClassName,
+  checkClassName,
+  allowReselect,
 }: LanguageMenuProps) => {
   const { t } = useTranslate();
   if (hideWhenSingle && languages.length < 2 && !children) return null;
@@ -154,7 +169,16 @@ export const LanguageMenu = ({
         }
       >
         {heading !== false && <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">{heading ?? t('Language')}</DropdownMenuLabel>}
-        <LanguageMenuItems languages={languages} current={current} onChange={onChange} isPending={isPending} renderOption={renderOption} />
+        <LanguageMenuItems
+          languages={languages}
+          current={current}
+          onChange={onChange}
+          isPending={isPending}
+          renderOption={renderOption}
+          optionClassName={optionClassName}
+          checkClassName={checkClassName}
+          allowReselect={allowReselect}
+        />
         {children}
         {note && <div className="max-w-60 px-2 py-1.5 text-xs text-muted-foreground">{note}</div>}
       </DropdownMenuContent>
@@ -174,6 +198,9 @@ export const LanguageMenuSub = ({
   contentClassName,
   heading,
   renderOption,
+  optionClassName,
+  checkClassName,
+  allowReselect,
 }: Omit<LanguageMenuProps, 'children' | 'hideWhenSingle' | 'className' | 'triggerAriaLabel' | 'iconVisibility'>) => {
   const { t } = useTranslate();
   return (
@@ -194,7 +221,16 @@ export const LanguageMenuSub = ({
         {heading !== undefined && heading !== false && (
           <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">{heading}</DropdownMenuLabel>
         )}
-        <LanguageMenuItems languages={languages} current={current} onChange={onChange} isPending={isPending} renderOption={renderOption} />
+        <LanguageMenuItems
+          languages={languages}
+          current={current}
+          onChange={onChange}
+          isPending={isPending}
+          renderOption={renderOption}
+          optionClassName={optionClassName}
+          checkClassName={checkClassName}
+          allowReselect={allowReselect}
+        />
         {note && <div className="max-w-60 px-2 py-1.5 text-xs text-muted-foreground">{note}</div>}
       </DropdownMenuSubContent>
     </DropdownMenuSub>

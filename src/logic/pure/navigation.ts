@@ -76,6 +76,11 @@ interface NavigationItemBase {
   crumbLink?: boolean;
   /** `true`: no crumb for this item (a silent level, a home entry the trail does not name). */
   crumbHidden?: boolean;
+  /**
+   * Extra props of this item's in-app links (sidebar row, rail, flyout, mobile menu), passed to the host's link
+   * component (`{ prefetch: false }` for a Next link); over the shell's `navLinkProps`. Not on an `external` entry.
+   */
+  linkProps?: Readonly<Record<string, unknown>>;
 }
 
 /** An entry that opens a page. */

@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
 import { setTranslations } from '../i18n/store.ts';
-import type { ConfirmOptions } from '../logic/pure/confirm.ts';
+import { type ConfirmOptions, routeConfirm } from '../logic/pure/confirm.ts';
 import { createConfirmQueue } from '../logic/pure/confirmQueue.ts';
 import { setNotificationAdapter } from '../logic/pure/notify.ts';
 import { ConfirmContext } from '../logic/react/useConfirm.ts';
@@ -55,20 +55,23 @@ export const AdminUiProvider = ({
   usePathname,
   confirm: hostConfirm,
   confirmWithPhrase,
+  confirmWithRichDescription,
   formatLocale,
   textLimits,
 }: AdminUiProviderProps) => {
   const [confirmQueue] = useState(() => createConfirmQueue<ConfirmOptions>());
   const phraseConfirm = confirmWithPhrase === 'package' ? confirmQueue.request : confirmWithPhrase;
+  const richConfirm = confirmWithRichDescription === 'package' ? confirmQueue.request : confirmWithRichDescription;
   const confirm = useMemo(
     () =>
-      hostConfirm && phraseConfirm
-        ? (options: ConfirmOptions) => (options.requirePhrase !== undefined ? phraseConfirm(options) : hostConfirm(options))
+      hostConfirm && (phraseConfirm || richConfirm)
+        ? (options: ConfirmOptions) => routeConfirm(options, { host: hostConfirm, phrase: phraseConfirm, richDescription: richConfirm })(options)
         : (hostConfirm ?? confirmQueue.request),
-    [hostConfirm, phraseConfirm, confirmQueue]
+    [hostConfirm, phraseConfirm, richConfirm, confirmQueue]
   );
-  // the package dialog renders when it answers anything: always without a host service, phrase calls with 'package'
-  const renderPackageDialog = !hostConfirm || confirmWithPhrase === 'package';
+  // the package dialog renders when it answers anything: always without a host service, phrase or node-description
+  // calls with 'package'
+  const renderPackageDialog = !hostConfirm || confirmWithPhrase === 'package' || confirmWithRichDescription === 'package';
 
   // A layout effect: registered before any child's ordinary effect can raise a toast.
   useLayoutEffect(() => {

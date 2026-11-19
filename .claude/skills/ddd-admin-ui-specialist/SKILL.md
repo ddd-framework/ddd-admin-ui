@@ -3,7 +3,7 @@ name: ddd-admin-ui-specialist
 description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries, import matrix, host setup (AdminUiProvider, theme.css, components.css, tokens.json, ddd-admin-ui-check-tokens, -radix, -contrast), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title from one navigation; ./shell-background), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route states, form drawers and dialogs, the save shortcut, useConfirm, write access, locale::style translations, media with image crop, colour fields, key figures (./data), markdown, the admin screens ./workers, ./translations, ./issues, ./database (schema diff), ./crons, status text roles, ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form or admin screen, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast fails or status text is too light, or URL filters get lost."
 metadata:
   author: mgamadeus
-  version: 0.3.8
+  version: 0.3.9
 ---
 
 # ddd-admin-ui specialist
@@ -47,6 +47,7 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | tabs only for offered locales; the edited key per field (FORMAL, else INFORMAL) | `useEntityTranslations({ offeredTabsOnly, editedKeyPerField })` | logic |
 | Shift-click ranges, a header that sticks to the page over a sideways scroller, a table that fills its card | `useRowSelection({ rangeSelection })`, `EntityListTable` `selectionHitArea`, `stickyHeader="page"`, `fillWidth` | logic, list |
 | one seamless scroll edge, sized select / `#` columns, a table on a popover, widths without padding | `EntityListTable` `pinEdge="overlay"`, `selectionColumnWidth` / `indexColumnWidth`, `surface`, `columnWidthBox="content-box"` | list |
+| the host's cell padding, header / table classes, no built-in empty block, a table in the page flow | `EntityListTable` `cellPaddingX`, `headerRowClassName` / `headerCellClassName` / `tableClassName`, `showEmptyState={false}`, `scroll={false}`; edge look via `--list-edge-*` | list |
 | crumbs, list sort or tracks in a worker, a Node script or a CommonJS test | `./logic/pure` (no React, no ddd-web; `require` works) | logic/pure |
 | a media reference | `FormMediaItemField` (+ the host's `MediaItemPickerDialog`) | media |
 | a confirmation from screen code | `useConfirm()` → `confirm(options)` (the provider draws it; `requirePhrase` for a typed name) | logic |
@@ -145,7 +146,9 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 - **FormActions placement**: inside a dialog that is not a `FormDrawer` the plain row comes by itself; `auto` moves the
   pill into the slot closest above the form when the page mounts one (else as before); `row` never moves.
 - **Confirmations** ask through `useConfirm()`: no dialog to render; without `AdminUiProvider` every call answers
-  `false` (one warning outside production). A host service goes into the provider's `confirm`.
+  `false` (one warning outside production). A host service goes into the provider's `confirm`; a text-only service
+  drops a node description (a generation estimate) unless `confirmWithRichDescription="package"` routes those to the
+  package dialog (`confirmWithPhrase` the same for typed phrases).
 - **Write access is a presentation aid.** `WriteAccessProvider` disables `FormSubmitButton`, `FormDialog`'s submit, the
   bulk bar's actions and `AddEntityButton` as a button (never a link); a nested provider only narrows (it may add the
   reason an outer denial lacks). Handlers keep their guard and the server its check.

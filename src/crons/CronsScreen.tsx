@@ -115,9 +115,16 @@ export interface CronsScreenProps {
   tick?: boolean;
   /**
    * The order of the Crons list: `name` (default, as the API sends them) or `severity` (the worst status first; within
-   * a status the most recent failure, then the most recent run first, then by name).
+   * a status by name, or with `severityTieBreak="recent"` the most recent failure, then the most recent run first).
    */
   sort?: CronListSort;
+  /** `sort="severity"`: the statuses from the worst to the best (default `CRON_STATUS_SEVERITY`). A stable array. */
+  severityStatusOrder?: readonly string[];
+  /**
+   * `sort="severity"` within one status: `name` (default) by name, so rows keep their places between refreshes; `recent`
+   * the most recent failure, then the most recent run first (the default of 0.3.7 and 0.3.8).
+   */
+  severityTieBreak?: 'name' | 'recent';
   /** The host's comparator for `sort="severity"`; gets the package's as its third argument (`compareCronsBySeverity`). */
   severityCompare?: CronSeverityCompare;
   /** A status filter in the toolbar's Filters panel (URL key `status`; default `true`). */
@@ -158,6 +165,8 @@ export const CronsScreen = ({
   tick = true,
   sort = 'name',
   severityCompare,
+  severityStatusOrder,
+  severityTieBreak = 'name',
   statusFilter: showStatusFilter = true,
   runsCronFilter = true,
   detailsPollingIntervalMs = 0,
@@ -193,8 +202,8 @@ export const CronsScreen = ({
           // a stored name of another spelling (`Nightly_Cleanup`) is found by its kebab-case form and the other way round
           (normalizedSearch !== '' && normalizeCronName(cron.name).includes(normalizedSearch)))
     );
-    return sortCrons(matching, sort, severityCompare);
-  }, [crons, search, normalizedSearch, statusFilter, sort, severityCompare]);
+    return sortCrons(matching, sort, severityCompare, { statusOrder: severityStatusOrder, tieBreak: severityTieBreak });
+  }, [crons, search, normalizedSearch, statusFilter, sort, severityCompare, severityStatusOrder, severityTieBreak]);
   const statusOptions = [
     { value: 'ATTENTION', label: t('Need attention') },
     ...Object.entries(CRON_STATUS).map(([value, definition]) => ({ value, label: t(definition.label, { context: definition.context }) })),
