@@ -8,6 +8,7 @@ import type { TranslatableLocale } from '../logic/pure/locales.ts';
 import { useLocaleName } from '../logic/react/useLocaleName.ts';
 import { m, useTranslate } from '../i18n/index.ts';
 import type { TranslationTaskProgress } from '../logic/react/useTranslationRunner.ts';
+import { markerCountOf, TranslationChipMarker, TranslationMarkerSummary } from './translationMarkers.tsx';
 
 export interface TranslationControlsProps {
   /** Every tab of the form; the default locale is the source and never a target. */
@@ -22,6 +23,17 @@ export interface TranslationControlsProps {
   progress: TranslationTaskProgress[];
   isRunning: boolean;
   disabled?: boolean;
+  /** The form has unsaved changes: the button reads "Save and translate" (for a host that saves before it translates). */
+  isDirty?: boolean;
+  /**
+   * A count per target, by full key (`fr::FORMAL`) or bare language (`fr`): drawn on the chip with an icon and listed
+   * in a summary line (e.g. texts whose source changed after their translation). Absent or `0`: no marker.
+   */
+  localeMarkers?: Readonly<Record<string, number>>;
+  /** What a marker means (screen-reader text of the chip's marker); default "Source changed after the translation". */
+  markerLabel?: string;
+  /** The start of the summary line; default "The source text changed after the translation:". `null`: no summary line. */
+  markerSummaryLabel?: string | null;
 }
 
 /** Status words of one locale's translation task (context `translation-status`: `Done` here is no button). */
@@ -49,6 +61,10 @@ export const TranslationControls = ({
   progress,
   isRunning,
   disabled = false,
+  isDirty = false,
+  localeMarkers,
+  markerLabel,
+  markerSummaryLabel,
 }: TranslationControlsProps) => {
   const { t } = useTranslate();
   const localeName = useLocaleName();
@@ -83,13 +99,14 @@ export const TranslationControls = ({
             className="h-auto min-h-8 max-w-full py-1.5 text-left whitespace-normal"
           >
             {isRunning ? <Loader2 className="animate-spin" aria-hidden /> : <Languages aria-hidden />}
-            {isRunning ? t('Translating…') : t('Translate to selected locales')}
+            {isRunning ? t('Translating…') : isDirty ? t('Save and translate') : t('Translate to selected locales')}
           </Button>
         </div>
       </div>
       <div className="flex flex-wrap gap-1">
         {targets.map(locale => {
           const isSelected = selected.includes(locale.key);
+          const count = markerCountOf(localeMarkers, locale.key);
           return (
             <button
               key={locale.key}
@@ -100,14 +117,23 @@ export const TranslationControls = ({
               onClick={() => toggle(locale.key)}
               className={cn(
                 'rounded-md px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-50',
+                count > 0 && 'inline-flex items-center gap-1',
                 isSelected ? 'bg-secondary text-secondary-foreground ring-1 ring-ring' : 'bg-muted text-muted-foreground'
               )}
             >
               {locale.label}
+              {count > 0 && <TranslationChipMarker count={count} label={markerLabel ?? t('Source changed after the translation')} />}
             </button>
           );
         })}
       </div>
+      {markerSummaryLabel !== null && localeMarkers && (
+        <TranslationMarkerSummary
+          targets={targets}
+          markers={localeMarkers}
+          label={markerSummaryLabel ?? t('The source text changed after the translation:')}
+        />
+      )}
       {progress.length > 0 && (
         <ul className="flex flex-wrap gap-1.5" aria-live="polite">
           {progress.map(item => (

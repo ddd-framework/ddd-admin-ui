@@ -1,9 +1,9 @@
 ---
 name: ddd-admin-ui-specialist
-description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries, import matrix, host setup (AdminUiProvider, theme.css, components.css, tokens.json, ddd-admin-ui-check-tokens, -radix, -contrast), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title; ./shell-background), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route states, form drawers and dialogs, the save shortcut, useConfirm, write access, agent hooks (data-row-key, navigation guard), locale::style translations, image crop, colour fields, key figures (./data), markdown, the admin screens ./workers, ./translations, ./issues, ./database (schema diff), ./crons, status text roles, ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form or admin screen, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast or status text fails, or URL filters get lost."
+description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries, import matrix, host setup (AdminUiProvider, theme.css, components.css, tokens.json, check-tokens, -radix, -contrast), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route states, form drawers and dialogs, useConfirm, write access, agent hooks (data-row-key, navigation guard), locale::style translations (delta saves, background progress), image crop, colour fields, key figures, markdown, the admin screens ./workers, ./translations, ./issues, ./database, ./crons, status text roles, ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form or admin screen, a save deletes a background translation, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast or status text fails, or URL filters get lost."
 metadata:
   author: mgamadeus
-  version: 0.3.11
+  version: 0.3.12
 ---
 
 # ddd-admin-ui specialist
@@ -74,6 +74,8 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | app translations, languages, locales, import from configuration | `createTranslationsApi({ baseApi, apiPrefix, bulkDelete? })` + `AppTranslationsScreen` (slots: `headerActions`, `moreActions`, `toolbarTrailing`, `columns`, `extraFilters`, `renderCard`, `useListQuery`) / `LanguagesScreen` / `LocalesScreen` / `ConfigImportCard` | translations |
 | a host hook on the same cache entry as a package screen | `buildAppTranslationKeysListArgs`, `CONTENT_LOCALES_ARG` / `useActiveLocales`, the exported tags | translations |
 | an Add button in a list's empty state | `EntityListBody emptyAction` | list |
+| delta saves of a translatable form, rebase on a newer copy | `useEntityTranslations({ translationSaveMode: 'delta' })` → `buildSavePayload`, `omitScalars`, `rebase`, `getBaseline`; pure: `buildDeltaTranslationInfos`, `rebaseTranslations` | logic |
+| a translation that runs on the server: progress rows, no cancel, Dismiss, "Save and translate", per-locale markers | `BackgroundTranslationControls rows={translationProgressRowsOf(parts)}` (`onDismiss`, `isDirty`, `localeMarkers`, `failureReasonLabels`) | translations, logic |
 | AI translation of an entity form, content locales from the active locales | `useEntityTranslator(api)` (several drafts per request: `useEntitiesTranslator`) + `useTranslationRunner`, `useContentLocales(api)` | translations, logic |
 | an import from configuration of a host kind (countries) | `ConfigImportCard kind="countries" operation={…} texts={…}` | translations |
 | the error groups of the issues registry (environments, status tabs, trend, occurrences, resolve / ignore / reopen) | `createIssuesApi({ baseApi, apiPrefix })` + `IssuesScreen` (`urlStateAdapter`, `drawerUrlAdapter`) | issues |
@@ -120,6 +122,14 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
   copy); a new studio slot means updating `contract.ts`, the map and the render test together.
 - **Translation keys.** Keys are full `locale::style` (`de::FORMAL`, `de::INFORMAL`). Never collapse them to the
   language: the payload of `useEntityTranslations` sends every loaded key back; a cleared text removes its key.
+- **Translation saves use delta mode.** `useEntityTranslations({ translationSaveMode: 'delta' })`, then
+  `buildSavePayload(texts)` (only the changed keys, a cleared one as `null`, `replaceExistingTranslations: false`),
+  `omitScalars(body, keepRequired)` and `rebase(newerEntity, texts)` on every newer copy (save answer, reload after a
+  background run). Why: a replace save sends the store as loaded and the server replaces the column, so a text stored
+  while the form was open (a background translation, another editor) is deleted by the next save; in merge mode a key
+  not sent stays. Never send the plain value of a nullable translatable field next to merge mode (a NULL clears the
+  column on MariaDB, not on PostgreSQL). The default stays `'replace'` (forms built before 0.3.12 send plain values);
+  a create form has no baseline and sends every non-blank key, which is right for a new record.
 - **URL state.** Build requests from `list.debounced`, never `list.values`. All writes (filters, view, drawer) go
   through the one URL writer, so writes in the same tick merge; never `router.replace` the search parameters by hand.
   Screens reading search parameters render inside `<Suspense>`.
@@ -261,7 +271,10 @@ if (await confirm({ title: `Delete ${site.name}?`, confirmVariant: 'destructive'
 ### Translations and media in one form
 
 ```tsx
-const tabs = useEntityTranslations({ fields: ['name'], locales: ['en::FORMAL', 'de::FORMAL'], defaultLocale: 'en::FORMAL' });
+const tabs = useEntityTranslations({ fields: ['name'], locales: ['en::FORMAL', 'de::FORMAL'], defaultLocale: 'en::FORMAL',
+  translationSaveMode: 'delta' });
+// save: tabs.omitScalars(body, ['name']) + translationInfos: tabs.buildSavePayload(values.translations)
+// newer copy (answer, reload): const { stored, values, hasDelta } = tabs.rebase(entity, form.getValues('translations'))
 
 <Form form={form} onSubmit={save}>
   <FormErrors error={submitError} />

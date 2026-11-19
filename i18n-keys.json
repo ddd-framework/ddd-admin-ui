@@ -1,6 +1,6 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
@@ -187,6 +187,14 @@
         "database/SchemaDiffScreen.tsx"
       ],
       "hint": "Schema diff admin screen (database changes between the code's entities and the live database): badge with a severity name and how many tables have it (e.g. 'Mixed: 2'). Keep the order label then number."
+    },
+    {
+      "key": "%language% ({count, plural, one {# text} other {# texts}})",
+      "text": "%language% ({count, plural, one {# text} other {# texts}})",
+      "files": [
+        "translations/translationMarkers.tsx"
+      ],
+      "hint": "One entry of the summary line under the language chips of the AI translation panel: a language (short label such as FR) and how many of its texts are marked (for example, their source text changed after the translation)."
     },
     {
       "key": "%minutes% min",
@@ -1962,6 +1970,7 @@
       "text": "Dismiss",
       "files": [
         "crons/parts.tsx",
+        "translations/BackgroundTranslationControls.tsx",
         "translations/TranslationControls.tsx"
       ],
       "hint": "Button in the AI translation panel that hides the finished progress list of the last translation run. Imperative."
@@ -2012,6 +2021,7 @@
       "text": "Done",
       "context": "translation-status",
       "files": [
+        "translations/BackgroundTranslationControls.tsx",
         "translations/TranslationControls.tsx"
       ],
       "hint": "Status badge of one language in the translation progress list: the translation finished successfully."
@@ -2536,6 +2546,7 @@
       "text": "Failed",
       "context": "translation-status",
       "files": [
+        "translations/BackgroundTranslationControls.tsx",
         "translations/TranslationControls.tsx"
       ],
       "hint": "Status badge label (short pill) in lists, cards and detail views, describing the state of a push notification or mail delivery attempt. Keep it short, like a status word. Also used for other status families."
@@ -5839,6 +5850,15 @@
       "hint": "Heading of the panel that shows the SQL creating every database table (developer tool)."
     },
     {
+      "key": "Save and translate",
+      "text": "Save and translate",
+      "files": [
+        "translations/BackgroundTranslationControls.tsx",
+        "translations/TranslationControls.tsx"
+      ],
+      "hint": "Button in the AI translation panel of an admin form while the form has unsaved changes: it saves the form first, then starts the translation of the stored texts. Imperative."
+    },
+    {
       "key": "Save changes",
       "text": "Save changes",
       "files": [
@@ -6344,6 +6364,15 @@
       "hint": "Fallback label of the sort dropdown button in the media picker dialog, shown when no sort option is currently selected."
     },
     {
+      "key": "Source changed after the translation",
+      "text": "Source changed after the translation",
+      "files": [
+        "translations/BackgroundTranslationControls.tsx",
+        "translations/TranslationControls.tsx"
+      ],
+      "hint": "Screen-reader text of a small marker on a language chip in the AI translation panel: texts of this language were translated before their source text was last changed."
+    },
+    {
       "key": "Stack",
       "text": "Stack",
       "files": [
@@ -6616,6 +6645,15 @@
         "translations/AppTranslationKeyDrawer.tsx"
       ],
       "hint": "App translations admin, drawer of one translation key: description of the delete confirmation; %locale% is a content locale key like de::INFORMAL."
+    },
+    {
+      "key": "The AI budget is used up__translation-failure",
+      "text": "The AI budget is used up",
+      "context": "translation-failure",
+      "files": [
+        "translations/BackgroundTranslationControls.tsx"
+      ],
+      "hint": "Reason shown in the AI translation panel why texts of one language were not translated: the AI usage budget has no room left."
     },
     {
       "key": "The Cron and its whole run history are deleted. This cannot be undone.",
@@ -7073,6 +7111,24 @@
       "hint": "Issues admin screen, one occurrence of an error in the details drawer: the store of the client's source maps failed; %error% is the reason."
     },
     {
+      "key": "The source text changed after the translation:",
+      "text": "The source text changed after the translation:",
+      "files": [
+        "translations/BackgroundTranslationControls.tsx",
+        "translations/TranslationControls.tsx"
+      ],
+      "hint": "Start of a note under the language chips of the AI translation panel, followed by a list of languages with a count of texts; the source text was edited after these translations were made."
+    },
+    {
+      "key": "The source text is gone__translation-failure",
+      "text": "The source text is gone",
+      "context": "translation-failure",
+      "files": [
+        "translations/BackgroundTranslationControls.tsx"
+      ],
+      "hint": "Reason shown in the AI translation panel why texts of one language were not translated: the text to translate from no longer exists."
+    },
+    {
       "key": "The statements that create the whole schema from the entities, without the excluded tables. Shown only, never run.",
       "text": "The statements that create the whole schema from the entities, without the excluded tables. Shown only, never run.",
       "files": [
@@ -7140,6 +7196,24 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): error of the timeline."
     },
     {
+      "key": "The translation failed__translation-failure",
+      "text": "The translation failed",
+      "context": "translation-failure",
+      "files": [
+        "translations/BackgroundTranslationControls.tsx"
+      ],
+      "hint": "Reason shown in the AI translation panel why texts of one language were not translated, when the server names no specific reason."
+    },
+    {
+      "key": "The translation got stuck__translation-failure",
+      "text": "The translation got stuck",
+      "context": "translation-failure",
+      "files": [
+        "translations/BackgroundTranslationControls.tsx"
+      ],
+      "hint": "Reason shown in the AI translation panel why texts of one language were not translated: the background job stopped reporting progress."
+    },
+    {
       "key": "The translation key could not be loaded.",
       "text": "The translation key could not be loaded.",
       "files": [
@@ -7154,6 +7228,24 @@
         "translations/AppTranslationsScreen.tsx"
       ],
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): error when the table could not be loaded."
+    },
+    {
+      "key": "The translation service did not answer__translation-failure",
+      "text": "The translation service did not answer",
+      "context": "translation-failure",
+      "files": [
+        "translations/BackgroundTranslationControls.tsx"
+      ],
+      "hint": "Reason shown in the AI translation panel why texts of one language were not translated: the external translation service returned an error or timed out."
+    },
+    {
+      "key": "The translation service left texts out__translation-failure",
+      "text": "The translation service left texts out",
+      "context": "translation-failure",
+      "files": [
+        "translations/BackgroundTranslationControls.tsx"
+      ],
+      "hint": "Reason shown in the AI translation panel why texts of one language were not translated: the translation service answered without some of the requested texts."
     },
     {
       "key": "The transport could not be loaded.",
@@ -7598,6 +7690,7 @@
       "key": "Translate to",
       "text": "Translate to",
       "files": [
+        "translations/BackgroundTranslationControls.tsx",
         "translations/TranslationControls.tsx"
       ],
       "hint": "Form label above the language chips in the AI translation panel of an admin form; the chips are the target languages."
@@ -7606,6 +7699,7 @@
       "key": "Translate to selected locales",
       "text": "Translate to selected locales",
       "files": [
+        "translations/BackgroundTranslationControls.tsx",
         "translations/TranslationControls.tsx"
       ],
       "hint": "Button in the AI translation panel that starts translating the texts into all language chips the user selected. Imperative."
@@ -7615,6 +7709,7 @@
       "text": "Translating",
       "context": "translation-status",
       "files": [
+        "translations/BackgroundTranslationControls.tsx",
         "translations/TranslationControls.tsx"
       ],
       "hint": "Status badge of one language in the translation progress list: the translation request is running right now."
@@ -8006,6 +8101,7 @@
       "text": "Waiting",
       "context": "translation-status",
       "files": [
+        "translations/BackgroundTranslationControls.tsx",
         "translations/TranslationControls.tsx"
       ],
       "hint": "Short form of the status 'Waiting for Customer', on a compact status button in the support ticket sidebar. Keep it to one short word."
@@ -9137,6 +9233,14 @@
         "database/SchemaDiffScreen.tsx"
       ],
       "hint": "Schema diff admin screen (database changes between the code's entities and the live database): badge with the number of tables with a pending change."
+    },
+    {
+      "key": "{count, plural, one {# text} other {# texts}}",
+      "text": "{count, plural, one {# text} other {# texts}}",
+      "files": [
+        "translations/translationMarkers.tsx"
+      ],
+      "hint": "Screen-reader text after the marker of a language chip in the AI translation panel: how many texts of the language are marked."
     },
     {
       "key": "{count, plural, one {# validation error} other {# validation errors}}",

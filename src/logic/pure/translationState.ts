@@ -6,12 +6,14 @@ import {
   type TranslationsStore,
 } from '@mgamadeus/ddd-web/contract';
 
+import { TRANSLATION_INFOS_OBJECT_TYPE } from './translationDelta.ts';
+
+export { TRANSLATION_INFOS_OBJECT_TYPE };
+
 /**
  * The pure half of `useEntityTranslations` (no React): hydration, payload and merge of a translations store, keyed
  * by the FULL `locale::style` key throughout. Kept separate so the lossless round trip can be checked without a DOM.
  */
-
-export const TRANSLATION_INFOS_OBJECT_TYPE = 'DDD\\Domain\\Base\\Entities\\Translatable\\TranslationInfos';
 
 export type FieldTranslations<F extends string> = Record<F, PropertyTranslations>;
 

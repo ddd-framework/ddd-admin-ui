@@ -8,6 +8,7 @@ import { toTranslatableLocale, useEntityTranslations } from '../../logic/index.t
 import { Textarea } from '../../primitives/index.ts';
 import {
   AppTranslationsScreen,
+  BackgroundTranslationControls,
   ConfigImportCard,
   createStaticTranslationsApi,
   FormTranslatableInput,
@@ -66,7 +67,8 @@ const renderEditor = ({ id, value, onChange, disabled }: { id?: string; value: s
 );
 
 const BoundFields = () => {
-  const tabs = useEntityTranslations({ fields: FIELDS, locales: LOCALE_KEYS, defaultLocale: 'en::FORMAL' });
+  // delta saves: only the changed keys travel, so texts stored meanwhile (a background translation) survive the save
+  const tabs = useEntityTranslations({ fields: FIELDS, locales: LOCALE_KEYS, defaultLocale: 'en::FORMAL', translationSaveMode: 'delta' });
   const form = useForm<TranslatedValues>({
     defaultValues: { translations: { title: { 'en::FORMAL': 'Hello' }, body: { 'en::FORMAL': 'Some **markdown**.' } } },
   });
@@ -152,6 +154,23 @@ export const TranslationsShowcase = () => {
           onDismiss={() => {}}
           progress={[{ locale: 'de::FORMAL', status: 'done' }]}
           isRunning={false}
+        />
+      </Sample>
+      <Sample title="BackgroundTranslationControls (progress rows of a server-side translation, markers, unsaved changes)">
+        <BackgroundTranslationControls
+          className="w-full"
+          locales={LOCALES}
+          defaultLocale="en::FORMAL"
+          selected={selected}
+          onSelectedChange={setSelected}
+          onTranslate={() => {}}
+          onDismiss={() => {}}
+          isDirty
+          rows={[
+            { locale: 'de', status: 'done', failures: [] },
+            { locale: 'fr', status: 'failed', failures: [{ reason: 'PROVIDER_ERROR', propertyNames: ['body'], detail: 'HTTP 503' }] },
+          ]}
+          localeMarkers={{ de: 2 }}
         />
       </Sample>
     </Samples>

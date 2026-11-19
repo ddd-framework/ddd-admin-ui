@@ -130,6 +130,39 @@ export {
 } from './pure/translationState.ts';
 export type { FieldTranslations, HydratedTranslations } from './pure/translationState.ts';
 export {
+  buildDeltaTranslationInfos,
+  buildTranslationDeltaStore,
+  hasTranslationDelta,
+  omitTranslatableScalars,
+  rebaseEditedValue,
+  rebaseTranslations,
+  storedTranslationTexts,
+} from './pure/translationDelta.ts';
+export type {
+  DeltaTranslationInfos,
+  FieldTexts,
+  RebasedTranslations,
+  TranslationDeltaStore,
+  TranslationSaveMode,
+  TranslationTextsByField,
+} from './pure/translationDelta.ts';
+export {
+  endedTranslationPartIds,
+  hasOpenTranslationPart,
+  isOpenTranslationPart,
+  isOpenTranslationRow,
+  parseTranslationFailureMessage,
+  translationLanguageCodeOf,
+  translationLanguageCodesOf,
+  translationProgressRowsOf,
+} from './pure/backgroundTranslation.ts';
+export type {
+  BackgroundTranslationFailure,
+  BackgroundTranslationPart,
+  BackgroundTranslationRow,
+  BackgroundTranslationStatus,
+} from './pure/backgroundTranslation.ts';
+export {
   hostTagTypes,
   hostTagsMemoKey,
   resolveHostTagsByEndpoint,
@@ -175,7 +208,12 @@ export { ENTITY_DRAWER_CREATE_VALUE, useEntityDrawer } from './react/useEntityDr
 export type { EntityDrawer, UseEntityDrawerOptions } from './react/useEntityDrawer.ts';
 export { useEntityTranslations } from './react/useEntityTranslations.ts';
 export { useHydrated } from './react/useHydrated.ts';
-export type { TranslationTabs, UseEntityTranslationsOptions, UseEntityTranslationsReturn } from './react/useEntityTranslations.ts';
+export type {
+  RebasedFormTranslations,
+  TranslationTabs,
+  UseEntityTranslationsOptions,
+  UseEntityTranslationsReturn,
+} from './react/useEntityTranslations.ts';
 export { useFormDirty } from './react/useFormDirty.ts';
 export type { UseFormDirtyOptions } from './react/useFormDirty.ts';
 export { useGrowingWindowList } from './react/useGrowingWindowList.ts';

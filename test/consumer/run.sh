@@ -13,6 +13,7 @@
 #         the optional props of 0.3.7 render on the server (options-037-render.mjs)
 #         the optional props of 0.3.9 render on the server (options-039-render.mjs)
 #         the agent attributes and list state of 0.3.10 render on the server (options-0310-render.mjs)
+#         delta saves, background translation controls and locale markers of 0.3.12 (options-0312-render.mjs)
 #         ./logic/pure loads from CommonJS through its require condition without any dependency (pure-require.cjs)
 #     T4  Node imports of every entry but ./next and ./notify-sonner (those two fail on the missing peer) and a
 #         strict tsc (skipLibCheck false) with moduleResolution bundler and nodenext
@@ -58,6 +59,7 @@
 #         typed-phrase confirmation, the 403 and 409 states, 390 px with a throttled CPU, no hydration warning
 #         (browser) the shell: one navigation for sidebar, breadcrumbs and title, active entry, rights predicate,
 #         collapse (button, `[`, stored and restored after hydration), rail flyout, mobile menu, folding breadcrumbs, RTL
+#         (browser) delta saves (0.3.12): a background write while a form is open survives its save; rebase
 #     T7  (browser) a select inside a dialog inside a sheet, and inside a host overlay at z-index 10000 with
 #         --layer-popover: 10001, is clickable (with a negative control at the default layer)
 #   link-skills  `ddd-admin-ui link-skills` links the shipped skill
@@ -172,6 +174,8 @@ echo "── the optional props of 0.3.9 on the server: table padding and looks,
 node options-039-render.mjs
 echo "── the additions of 0.3.10 on the server: row keys on rows and cards, agent secret and skip attributes, list state, navigation guard"
 node options-0310-render.mjs
+echo "── the additions of 0.3.12 on the server: delta saves of translatable texts, rebase, background translation controls, locale markers"
+node options-0312-render.mjs
 echo "── shipped i18n manifest"
 if [ "$PM" = npm ]; then npx --no-install ddd-admin-ui-i18n-manifest --check; else pnpm exec ddd-admin-ui-i18n-manifest --check; fi
 
@@ -231,6 +235,8 @@ else
   echo "── the options of 0.3.9: select-all cell, track selection cell, group row hover, mobile menu description, avatar fallback, reselect, rich confirmation, estimate probe (headless browser)"
   node browser-options-039.mjs "http://127.0.0.1:$PORT"
   node browser-overlay-guard.mjs "http://127.0.0.1:$PORT"
+  echo "── delta saves of translatable texts: a background write survives the save, rebase (headless browser)"
+  node browser-translation-delta.mjs "http://127.0.0.1:$PORT"
   kill $SERVER_PID 2>/dev/null || true
 fi
 

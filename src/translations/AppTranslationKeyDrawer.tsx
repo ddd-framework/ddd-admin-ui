@@ -2,7 +2,7 @@
 
 import { normalizeDddError } from '@mgamadeus/ddd-web/contract';
 import { Plus, Save, Trash2 } from 'lucide-react';
-import { type ReactNode, useContext, useEffect, useId, useMemo, useState } from 'react';
+import { type ReactNode, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
 import { Form } from '../form/Form.tsx';
@@ -17,6 +17,7 @@ import { EmptyValue } from '../list/EmptyValue.tsx';
 import { EntityListEmpty } from '../list/EntityListEmpty.tsx';
 import { drawerKey } from '../logic/pure/entityDrawer.ts';
 import { notify } from '../logic/pure/notify.ts';
+import { rebaseEditedValue } from '../logic/pure/translationDelta.ts';
 import { useConfirm } from '../logic/react/useConfirm.ts';
 import type { EntityDrawer } from '../logic/react/useEntityDrawer.ts';
 import { useFormDirty } from '../logic/react/useFormDirty.ts';
@@ -197,6 +198,20 @@ const TranslationValueRow = ({
   const storedCountryId = value.countryId === null || value.countryId === undefined ? ANY_COUNTRY : String(value.countryId);
   const [languageId, setLanguageId] = useState(storedLanguageId);
   const [countryId, setCountryId] = useState(storedCountryId);
+  // A newer stored copy of the value (a background generation, another user, the answer of the own save): what the
+  // user did not touch takes it, what the user changed stays. Without this the row kept the text it was mounted with,
+  // and its next save wrote that older text over the newer one.
+  const storedText = value.translation ?? '';
+  const storedRef = useRef({ storedText, storedContext, storedStyle, storedLanguageId, storedCountryId });
+  useEffect(() => {
+    const previous = storedRef.current;
+    storedRef.current = { storedText, storedContext, storedStyle, storedLanguageId, storedCountryId };
+    setTranslation(current => rebaseEditedValue(previous.storedText, current, storedText));
+    setContext(current => rebaseEditedValue(previous.storedContext, current, storedContext));
+    setWritingStyle(current => rebaseEditedValue(previous.storedStyle, current, storedStyle));
+    setLanguageId(current => rebaseEditedValue(previous.storedLanguageId, current, storedLanguageId));
+    setCountryId(current => rebaseEditedValue(previous.storedCountryId, current, storedCountryId));
+  }, [storedText, storedContext, storedStyle, storedLanguageId, storedCountryId]);
   const [saveValue, saveState] = api.useUpdateAppTranslationValueMutation();
   const [deleteValue, deleteState] = api.useDeleteAppTranslationValueMutation();
   const localeChanged = languageId !== storedLanguageId || countryId !== storedCountryId;
@@ -578,7 +593,8 @@ const KeyContent = ({ api, keyId, loadedKey, drawer, editableValueLocale, valueA
   const baseline = useMemo(() => (loadedKey ? toKeyForm(loadedKey) : EMPTY_KEY_FORM), [loadedKey]);
   const form = useForm<KeyFormValues>({ mode: 'onTouched', defaultValues: baseline });
   useEffect(() => {
-    form.reset(baseline);
+    // a newer copy of the key: untouched fields take it, fields the user changed keep the user's value
+    form.reset(baseline, { keepDirtyValues: true });
   }, [baseline, form]);
   const confirm = useConfirm();
   useUnsavedChangesGuard(useFormDirty(form), confirm, { form, label: loadedKey?.key });

@@ -1,8 +1,9 @@
 // The dependency-free entry: the pure helpers of ./logic that need neither React nor @mgamadeus/ddd-web (navigation and
 // crumbs, list sort and tracks, URL list state, sticky parameters, date inputs and presets, colour values, image crop
-// geometry, text limits, write access, the injected api helpers). Loads in server code, workers and tests; also built
-// as CommonJS (`require('@mgamadeus/ddd-admin-ui/logic/pure')`). Texts it resolves go through the package's text store
-// (`translateText`); a CommonJS caller has its own copy of that store, so it passes `t` where a helper takes one.
+// geometry, text limits, write access, the injected api helpers, delta saves and background translation progress).
+// Loads in server code, workers and tests; also built as CommonJS (`require('@mgamadeus/ddd-admin-ui/logic/pure')`).
+// Texts it resolves go through the package's text store (`translateText`); a CommonJS caller has its own copy of that
+// store, so it passes `t` where a helper takes one.
 
 export {
   formatHexColor,
@@ -242,5 +243,39 @@ export type {
   EntityListState,
   EntityListStateInput,
 } from './listState.ts';
+export {
+  buildDeltaTranslationInfos,
+  buildTranslationDeltaStore,
+  hasTranslationDelta,
+  omitTranslatableScalars,
+  rebaseEditedValue,
+  rebaseTranslations,
+  storedTranslationTexts,
+  TRANSLATION_INFOS_OBJECT_TYPE,
+} from './translationDelta.ts';
+export type {
+  DeltaTranslationInfos,
+  FieldTexts,
+  RebasedTranslations,
+  TranslationDeltaStore,
+  TranslationSaveMode,
+  TranslationTextsByField,
+} from './translationDelta.ts';
+export {
+  endedTranslationPartIds,
+  hasOpenTranslationPart,
+  isOpenTranslationPart,
+  isOpenTranslationRow,
+  parseTranslationFailureMessage,
+  translationLanguageCodeOf,
+  translationLanguageCodesOf,
+  translationProgressRowsOf,
+} from './backgroundTranslation.ts';
+export type {
+  BackgroundTranslationFailure,
+  BackgroundTranslationPart,
+  BackgroundTranslationRow,
+  BackgroundTranslationStatus,
+} from './backgroundTranslation.ts';
 export { translateText } from '../../i18n/store.ts';
 export type { TranslateFn, TranslateOptions } from '../../i18n/store.ts';

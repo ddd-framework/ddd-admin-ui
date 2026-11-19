@@ -36,6 +36,8 @@ export { TranslatableMarkdown } from './TranslatableMarkdown.tsx';
 export type { MarkdownEditorRenderArgs, TranslatableMarkdownProps } from './TranslatableMarkdown.tsx';
 export { TranslationControls } from './TranslationControls.tsx';
 export type { TranslationControlsProps } from './TranslationControls.tsx';
+export { BackgroundTranslationControls } from './BackgroundTranslationControls.tsx';
+export type { BackgroundTranslationControlsProps } from './BackgroundTranslationControls.tsx';
 /** @deprecated moved to logic/pure/translationState — the re-export is removed in a later minor */
 export {
   blankTranslations,

@@ -28,7 +28,7 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./list` | entity list card, toolbar, search, filters, table, grid, load-more, status badge, cells, multi-select, combobox, bulk bar, column factories (`textColumn`, `moneyColumn`, `actionsColumn`, …), the toolbar's filter toggle, count and clear as blocks | logic, i18n, primitives |
 | `./page` | page header and frame, `EntityListPage`, detail shell and header, tabs, section header, definition list, page toolbar, editable card, status callout, entity metadata, route states (`RouteError`, `RouteLoading`), `MaintenanceActionCard` | logic, i18n, primitives; from list only `EmptyValue`, `EntityListEmpty`, `EntityListCard` |
 | `./form` | `Form`, `FormField`, `FormSection`, `FormActions`, `FormDrawer`, `FormDialog`, `FormHeader`, `FormWrapper`, `FormJumpBar`, `FormErrors`, `FormSubmitButton`, `useConfirmDialog`, `ColorValueField` | logic, i18n, primitives; from page only `DetailHeader`, `EntityMetadata` |
-| `./translations` | `TranslatableInput`, `TranslatableMarkdown` (editor injected), their form-bound variants, `TranslationControls`, `focusFirstOverLimitTranslation`; the admin screens on the host's api (`createTranslationsApi`): `AppTranslationsScreen` with `AppTranslationKeyDrawer` and `TranslationCompleteness`, `LanguagesScreen`, `LocalesScreen`, `ConfigImportCard`, `useEntityTranslator`, `useContentLocales` | logic, i18n, primitives, list, page; from form only `fieldLabels`, `useConfirmDialog`, `Form`, `FormActions`, `FormDrawer`, `FormField`, `FormSubmitButton` |
+| `./translations` | `TranslatableInput`, `TranslatableMarkdown` (editor injected), their form-bound variants, `TranslationControls`, `BackgroundTranslationControls`, `focusFirstOverLimitTranslation`; the admin screens on the host's api (`createTranslationsApi`): `AppTranslationsScreen` with `AppTranslationKeyDrawer` and `TranslationCompleteness`, `LanguagesScreen`, `LocalesScreen`, `ConfigImportCard`, `useEntityTranslator`, `useContentLocales` | logic, i18n, primitives, list, page; from form only `fieldLabels`, `useConfirmDialog`, `Form`, `FormActions`, `FormDrawer`, `FormField`, `FormSubmitButton` |
 | `./workers` | the screens of the worker monitoring on the host's api (`createWorkersApi`): `WorkersOverviewScreen`, `WorkerTransportScreen` and their parts (tiles, live panel, throughput and transport tables, history charts as SVG, message runs, processes, restart request), the status maps, the payload types | logic, i18n, primitives, list, page |
 | `./issues` | the screen of the issues registry on the host's api (`createIssuesApi`): `IssuesScreen` and its parts (the trend as SVG bars, the window switch, the group drawer with occurrences, frames, causes, job and client blocks, the status actions), `ISSUE_GROUP_STATUS`, the payload types | logic, i18n, primitives, list, page; from form only `FormDrawer` |
 | `./database` | the schema diff screen on the host's api (`createDatabaseApi`): `SchemaDiffScreen`, `SchemaDiffCard`, the generated-code previews (`GeneratedCodePanel`, `CodeBlock`), the status maps `DB_TABLE_CHANGE_TYPE` / `DB_DIFF_SEVERITY`, the diff helpers, the payload types | logic, i18n, primitives, list, page |
@@ -377,6 +377,78 @@ const { resolveCrumbs, resolveDocumentTitle } = require('@mgamadeus/ddd-admin-ui
 (the browser's clock) or `'utc'`: `toDateInputValue(date, zone)` / `fromDateInputValue(text, zone)` and
 `toDateTimeInputValue` / `fromDateTimeInputValue` (`./logic`). Empty or invalid gives `''` / `null`; no arithmetic. A
 local time skipped when the clocks go forward resolves an hour later, a repeated one to its first occurrence.
+
+## Translatable texts: delta saves and background translation
+
+A replace save (`buildPayload` / `buildChangedPayload` of `useEntityTranslations`, `replaceExistingTranslations: true`)
+sends the whole store as the form loaded it, and the server replaces the column. A text stored while the form was open
+(a background translation, another user) is deleted by that save. A **delta save** sends only the `locale::style` keys
+the user changed since the baseline (the store of the last load or save answer), a cleared key as `null`, with
+`replaceExistingTranslations: false`; the server merges it key by key, so everything else it stored stays.
+
+```tsx
+const tabs = useEntityTranslations({ fields: FIELDS, locales, defaultLocale: 'en::FORMAL', translationSaveMode: 'delta' });
+
+useEffect(() => { if (entity) form.reset({ ...valuesOf(entity), translations: tabs.hydrate(entity) }); }, [entity]);
+
+const save = async (values: Values) => {
+  const body = tabs.omitScalars({ id, ...plainValuesOf(values) }, ['name']);   // keep a #[NotNull] name only
+  const translationInfos = tabs.buildSavePayload(values.translations);       // undefined: no text changed
+  const saved = await update({ ...body, ...(translationInfos ? { translationInfos } : {}) }).unwrap();
+  const { stored, values: rebased, hasDelta } = tabs.rebase(saved, form.getValues('translations'));
+  form.resetField('translations', { defaultValue: stored });
+  if (hasDelta) form.setValue('translations', rebased, { shouldDirty: true });
+};
+```
+
+| `useEntityTranslations` | Does |
+|---|---|
+| `translationSaveMode` (`'replace'` default, `'delta'`) | what `buildSavePayload` builds and whether `omitScalars` drops the plain values |
+| `getBaseline()` | the non-blank texts of the last `hydrate` / `rebase` / `commit`; `null` before the first (a create form) |
+| `buildDeltaPayload(texts)` | the changed keys (a cleared one as `null`) in merge mode, in every save mode |
+| `hasDelta(texts)`, `buildSavePayload(texts)` | a change against the baseline; the payload of the save mode, `undefined` without a change |
+| `omitScalars(body, keep?)` | delta mode: the body without the plain values of the translatable fields (`keep`: a required one) |
+| `rebase(newerEntity, texts)` | a newer copy arrived: untouched keys take its texts, touched keys stay as typed and stay in the next delta; the newer store is the baseline and its keys become tabs. Returns `{ stored, values, hasDelta }` |
+| `commit(texts)` | after a save without an answer to rebase on: the saved texts are the baseline |
+
+Server facts the delta mode relies on (merge mode of mgamadeus/ddd): a `null` for one key removes that key; all keys
+`null` leave `{}`; `""` is stored as `""` (the package never sends it: a blank text counts as removed); a field left out
+of the payload keeps its column. **Do not send the plain value of a nullable translatable field next to merge mode**:
+a NULL there clears the column on MariaDB and leaves it on PostgreSQL (`omitScalars` drops it; send a `#[NotNull]`
+one with the text of the locale it is stored under). The pure forms are in `./logic/pure`: `buildTranslationDeltaStore`,
+`buildDeltaTranslationInfos`, `hasTranslationDelta`, `rebaseTranslations`, `storedTranslationTexts`,
+`omitTranslatableScalars`, `rebaseEditedValue` (one edited value: the newer stored one unless the user changed it).
+
+**Default.** `translationSaveMode` stays `'replace'`: forms built on 0.3.11 send the plain value of each translatable
+field (`defaultValue(translations, field)`) next to `translationInfos`, which is safe only in replace mode (a nullable
+one sent empty as NULL would clear the column on MariaDB), and delta mode needs a server with merge mode (current
+mgamadeus/ddd). The mode only drives `buildSavePayload` and `omitScalars`; `buildPayload` and `buildChangedPayload` are
+unchanged. Delta is the recommendation for every form whose record can change while it is open; the package's own
+screens send no translations store (app translation values are saved one row at a time and take a newer stored value
+on rows the user did not touch).
+
+**Translations that run on the server.** `BackgroundTranslationControls` (`./translations`) draws the progress the host
+reads from its api (polling its runs) instead of running requests itself: target chips, the start button ("Save and
+translate" while `isDirty`: the server translates the stored texts, so the host saves first), one row per language
+(`rows`: `pending`, `running`, `done`, `failed` with `failures` of reason, properties and detail), an optional
+`onDismiss` once nothing runs, no cancel. `translationProgressRowsOf(parts)` folds run parts (`QUEUED`, `RUNNING`,
+`COMPLETED`, `FAILED`; a failure message `REASON: property, property (detail)`) into those rows;
+`endedTranslationPartIds(parts)` tells the host when to reload the record and `rebase` the form. `failureReasonLabels`
+words the host's own reason codes.
+
+```tsx
+<BackgroundTranslationControls
+  locales={tabs.locales} defaultLocale={tabs.defaultLocale} selected={selected} onSelectedChange={setSelected}
+  onTranslate={saveThenQueue} isBusy={isQueueing || isSaving} isDirty={form.formState.isDirty}
+  rows={translationProgressRowsOf(parts)} onDismiss={dismissEndedRuns}
+  localeMarkers={{ fr: 2 }}            // e.g. texts whose source changed after the translation, per language or key
+/>
+```
+
+`localeMarkers` (by full key or bare language; also on `TranslationControls`) draws an icon with the count on the chip
+and a summary line ("The source text changed after the translation: FR (2 texts)"); `markerLabel` and
+`markerSummaryLabel` (`null`: no line) word them. `TranslationControls` also takes `isDirty` for the "Save and
+translate" label. Rows and markers carry `data-translation-status` and `data-translation-marker` (`tokens.json`).
 
 ## Screens on the host's API
 
@@ -993,7 +1065,7 @@ project's `.claude/skills/`. Idempotent; repoints an existing symlink, never tou
 
 ## Versioning
 
-0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.11"`,
+0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.12"`,
 `pnpm add -E` / `npm install -E`); modules peer on the version they were tested with. Stable releases are published
 under the `latest` dist-tag, pre-releases (`x.y.z-…`) under `next`. Changes per release: [CHANGELOG.md](CHANGELOG.md).
 

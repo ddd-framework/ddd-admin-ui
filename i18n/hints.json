@@ -1130,5 +1130,16 @@
   "Generate every missing value?": "Title of the confirmation before the AI generation of all missing app translations (every active locale and writing style).",
   "Every missing value of every active locale and writing style is generated. The generation runs in the background.": "Text of the confirmation before the AI generation of all missing app translations; the generation continues on the server after the dialog closes.",
   "The estimate could not be loaded.": "Error shown inside the confirmation before an AI translation generation when the cost estimate (number of keys, requests) could not be loaded; the generation can still be confirmed.",
-  "Loading the estimate": "Accessible name of the loading placeholder inside the confirmation before an AI translation generation, while the cost estimate loads."
+  "Loading the estimate": "Accessible name of the loading placeholder inside the confirmation before an AI translation generation, while the cost estimate loads.",
+  "%language% ({count, plural, one {# text} other {# texts}})": "One entry of the summary line under the language chips of the AI translation panel: a language (short label such as FR) and how many of its texts are marked (for example, their source text changed after the translation).",
+  "Save and translate": "Button in the AI translation panel of an admin form while the form has unsaved changes: it saves the form first, then starts the translation of the stored texts. Imperative.",
+  "Source changed after the translation": "Screen-reader text of a small marker on a language chip in the AI translation panel: texts of this language were translated before their source text was last changed.",
+  "The source text changed after the translation:": "Start of a note under the language chips of the AI translation panel, followed by a list of languages with a count of texts; the source text was edited after these translations were made.",
+  "{count, plural, one {# text} other {# texts}}": "Screen-reader text after the marker of a language chip in the AI translation panel: how many texts of the language are marked.",
+  "The AI budget is used up__translation-failure": "Reason shown in the AI translation panel why texts of one language were not translated: the AI usage budget has no room left.",
+  "The source text is gone__translation-failure": "Reason shown in the AI translation panel why texts of one language were not translated: the text to translate from no longer exists.",
+  "The translation failed__translation-failure": "Reason shown in the AI translation panel why texts of one language were not translated, when the server names no specific reason.",
+  "The translation got stuck__translation-failure": "Reason shown in the AI translation panel why texts of one language were not translated: the background job stopped reporting progress.",
+  "The translation service did not answer__translation-failure": "Reason shown in the AI translation panel why texts of one language were not translated: the external translation service returned an error or timed out.",
+  "The translation service left texts out__translation-failure": "Reason shown in the AI translation panel why texts of one language were not translated: the translation service answered without some of the requested texts."
 }

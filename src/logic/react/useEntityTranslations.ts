@@ -14,6 +14,15 @@ import {
   mergeTranslatedStore,
   translationsChanged,
 } from '../pure/translationState.ts';
+import {
+  buildDeltaTranslationInfos,
+  type DeltaTranslationInfos,
+  hasTranslationDelta,
+  omitTranslatableScalars,
+  rebaseTranslations,
+  storedTranslationTexts,
+  type TranslationSaveMode,
+} from '../pure/translationDelta.ts';
 
 export interface UseEntityTranslationsOptions<F extends string> {
   /** The `#[Translatable]` properties this form edits: a module-level `as const` tuple (stable identity). */
@@ -57,6 +66,24 @@ export interface UseEntityTranslationsOptions<F extends string> {
   activeLocale?: string | null;
   /** Called with the chosen tab's key (with or without a controlled `activeLocale`). */
   onActiveLocaleChange?: (key: string) => void;
+  /**
+   * What `buildSavePayload` builds (default `'replace'`, the payload of `buildChangedPayload`). `'delta'`: only the
+   * keys changed since the baseline, a cleared key as `null`, `replaceExistingTranslations: false`, so a text written
+   * while the form was open (a background translation, another user) survives the save. Needs a server with merge
+   * mode (mgamadeus/ddd: current Core) and a body without the plain values of nullable translatable fields
+   * (`omitScalars`). `buildPayload`, `buildChangedPayload` and `buildDeltaPayload` build their own form in every mode.
+   */
+  translationSaveMode?: TranslationSaveMode;
+}
+
+/** What `rebase` returns: the texts to put into the form. */
+export interface RebasedFormTranslations<F extends string> {
+  /** The newer store as hydrated: the form's clean value (`form.resetField('translations', { defaultValue: stored })`). */
+  stored: FieldTranslations<F>;
+  /** The newer store with every key the user changed as the user left it (`form.setValue(…, { shouldDirty: true })`). */
+  values: FieldTranslations<F>;
+  /** Whether `values` still differs from the new baseline (the user's changes); `false`: show `stored`, the form is clean. */
+  hasDelta: boolean;
 }
 
 /** The tab state every translatable field of one form shares (pass it to `FormTranslatableInput`). */
@@ -80,9 +107,10 @@ export interface UseEntityTranslationsReturn<F extends string> extends Translati
    */
   hydrate: (entity: unknown) => FieldTranslations<F>;
   /**
-   * The `translationInfos` of the save, from the form's `translations` value: every non-blank `field × locale::style`
-   * plus the remembered store of other fields, so `replaceExistingTranslations: true` deletes nothing the user did
-   * not clear.
+   * The `translationInfos` of a replace save, from the form's `translations` value: every non-blank `field ×
+   * locale::style` plus the remembered store of other fields, `replaceExistingTranslations: true`. It deletes nothing
+   * the form knew of and the user did not clear, but a text stored after the last `hydrate` / `rebase` (a background
+   * translation) is replaced away: prefer `translationSaveMode: 'delta'` with `buildSavePayload`.
    */
   buildPayload: (translations: FieldTranslations<F>) => TranslationInfos;
   /**
@@ -90,6 +118,40 @@ export interface UseEntityTranslationsReturn<F extends string> extends Translati
    * partial update leaves `translationInfos` out when nothing changed.
    */
   buildChangedPayload: (translations: FieldTranslations<F>) => TranslationInfos | undefined;
+  /** The save mode of this form (`translationSaveMode`, default `'replace'`). */
+  translationSaveMode: TranslationSaveMode;
+  /**
+   * The baseline: the non-blank texts of the last `hydrate`, `rebase` or `commit` (the store of the last load or save
+   * answer); `null` before the first (a create form). A copy: changing it changes nothing.
+   */
+  getBaseline: () => FieldTranslations<F> | null;
+  /**
+   * The `translationInfos` of a delta save: the keys of `fields` that differ from the baseline (a blank baseline
+   * before a hydration), a cleared one as `null`, `replaceExistingTranslations: false`. Keys of other fields and
+   * unchanged keys are never sent, so the server keeps whatever it stored meanwhile.
+   */
+  buildDeltaPayload: (translations: FieldTranslations<F>) => DeltaTranslationInfos;
+  /** Whether any key of `fields` differs from the baseline (blank texts count as absent). */
+  hasDelta: (translations: FieldTranslations<F>) => boolean;
+  /**
+   * The payload of the form's save mode, `undefined` when no text changed (leave `translationInfos` out): `'delta'` →
+   * `buildDeltaPayload`, `'replace'` → `buildChangedPayload`.
+   */
+  buildSavePayload: (translations: FieldTranslations<F>) => TranslationInfos | DeltaTranslationInfos | undefined;
+  /**
+   * The entity body without the plain values of the translatable fields in delta mode (`keep`: fields whose plain
+   * value must travel, a `#[NotNull]` name); in replace mode the body as it is. A copy.
+   */
+  omitScalars: <T extends Readonly<Record<string, unknown>>>(body: T, keep?: readonly F[]) => T;
+  /** After a successful save: the saved texts are the baseline until the answer or a reload arrives (`rebase`). */
+  commit: (saved: FieldTranslations<F>) => void;
+  /**
+   * A newer copy of the record arrived (the save answer, a reload after a background translation ended): reads it like
+   * `hydrate` (new keys become tabs, the store of other fields is kept), keys the user did not touch since the
+   * baseline take the newer text, touched keys keep the user's text and stay in the next delta, and the newer store
+   * becomes the baseline. Pure towards the form: write the result yourself.
+   */
+  rebase: (newerEntity: unknown, current: FieldTranslations<F>) => RebasedFormTranslations<F>;
   /** Merges translated texts (an AI result) into `current`, filling blank entries only, skipping blank incoming texts (pure; `setValue` it). */
   mergeTranslated: (current: FieldTranslations<F>, store: TranslationsStore) => FieldTranslations<F>;
   /** A field's text in the default locale (the plain property's value). */
@@ -118,6 +180,7 @@ export const useEntityTranslations = <F extends string>({
   editedKeyPerField = false,
   activeLocale: controlledLocale,
   onActiveLocaleChange,
+  translationSaveMode = 'replace',
 }: UseEntityTranslationsOptions<F>): UseEntityTranslationsReturn<F> => {
   /** Store entries of translatable properties this form does not edit: sent back unchanged. */
   const passthroughRef = useRef<TranslationsStore>({});
@@ -158,17 +221,26 @@ export const useEntityTranslations = <F extends string>({
 
   const empty = useCallback(() => blankTranslations(fields), [fields]);
 
-  const hydrate = useCallback(
+  /** Reads a stored copy of the record: remembers the other fields' store and adds its keys as tabs. */
+  const readStored = useCallback(
     (entity: unknown) => {
       const hydrated = hydrateTranslations(entity, fields, defaultLocale);
       passthroughRef.current = hydrated.passthrough;
-      hydratedRef.current = hydrated.translations;
       const keys = new Set<string>();
       for (const field of fields) for (const key of Object.keys(hydrated.translations[field])) keys.add(key);
-      setStoredKeys([...keys]);
+      setStoredKeys(previous => (previous.length === keys.size && previous.every(key => keys.has(key)) ? previous : [...keys]));
       return hydrated.translations;
     },
     [fields, defaultLocale]
+  );
+
+  const hydrate = useCallback(
+    (entity: unknown) => {
+      const translations = readStored(entity);
+      hydratedRef.current = storedTranslationTexts(translations, fields);
+      return translations;
+    },
+    [readStored, fields]
   );
 
   const buildPayload = useCallback(
@@ -183,6 +255,55 @@ export const useEntityTranslations = <F extends string>({
         ? buildTranslationInfos(translations, passthroughRef.current, fields, defaultLocale)
         : undefined,
     [fields, defaultLocale]
+  );
+
+  const getBaseline = useCallback(
+    () => (hydratedRef.current === null ? null : storedTranslationTexts(hydratedRef.current, fields)),
+    [fields]
+  );
+
+  const buildDeltaPayload = useCallback(
+    (translations: FieldTranslations<F>) => buildDeltaTranslationInfos(hydratedRef.current ?? blankTranslations(fields), translations, fields),
+    [fields]
+  );
+
+  const hasDelta = useCallback(
+    (translations: FieldTranslations<F>) => hasTranslationDelta(hydratedRef.current ?? blankTranslations(fields), translations, fields),
+    [fields]
+  );
+
+  const buildSavePayload = useCallback(
+    (translations: FieldTranslations<F>) => {
+      if (translationSaveMode === 'delta') return hasDelta(translations) ? buildDeltaPayload(translations) : undefined;
+      return buildChangedPayload(translations);
+    },
+    [translationSaveMode, hasDelta, buildDeltaPayload, buildChangedPayload]
+  );
+
+  const omitScalars = useCallback(
+    <T extends Readonly<Record<string, unknown>>>(body: T, keep: readonly F[] = []) =>
+      translationSaveMode === 'delta' ? omitTranslatableScalars(body, fields, keep) : body,
+    [translationSaveMode, fields]
+  );
+
+  const commit = useCallback(
+    (saved: FieldTranslations<F>) => {
+      hydratedRef.current = storedTranslationTexts(saved, fields);
+    },
+    [fields]
+  );
+
+  const rebase = useCallback(
+    (newerEntity: unknown, current: FieldTranslations<F>): RebasedFormTranslations<F> => {
+      const baseline = hydratedRef.current ?? blankTranslations(fields);
+      const stored = readStored(newerEntity);
+      const rebased = rebaseTranslations(baseline, current, stored, fields);
+      hydratedRef.current = rebased.baseline;
+      const values = { ...stored };
+      for (const field of fields) values[field] = rebased.values[field] ?? {};
+      return { stored, values, hasDelta: hasTranslationDelta(rebased.baseline, rebased.values, fields) };
+    },
+    [readStored, fields]
   );
 
   const mergeTranslated = useCallback(
@@ -211,6 +332,14 @@ export const useEntityTranslations = <F extends string>({
     hydrate,
     buildPayload,
     buildChangedPayload,
+    translationSaveMode,
+    getBaseline,
+    buildDeltaPayload,
+    hasDelta,
+    buildSavePayload,
+    omitScalars,
+    commit,
+    rebase,
     mergeTranslated,
     defaultValue,
     hasContent,

@@ -3,6 +3,57 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.3.12
+
+Delta saves of translatable texts and controls for translations that run on the server. Everything is additive: the
+default save mode stays `'replace'`, so a host that sets nothing new sends the same payloads as on 0.3.11. The list and
+form actions snapshots are unchanged. README › "Translatable texts: delta saves and background translation".
+
+The problem: a form's save of a translatable field sent `replaceExistingTranslations: true` with the whole store as it
+was loaded, and the server replaced the column. A text a background translation (or another user) stored while the
+form was open was deleted by the form's next save.
+
+`./logic`:
+
+- `useEntityTranslations` gains `translationSaveMode` (`'delta' | 'replace'`, default `'replace'`), `getBaseline()`
+  (the texts of the last load or save answer), `buildDeltaPayload(texts)` (only the keys changed since the baseline, a
+  cleared key as `null`, `replaceExistingTranslations: false`), `hasDelta(texts)`, `buildSavePayload(texts)` (the
+  payload of the save mode, `undefined` without a change), `omitScalars(body, keep?)` (delta mode: no plain value of a
+  translatable field; a NULL next to merge mode clears the column on MariaDB only), `commit(texts)` and
+  `rebase(newerEntity, texts)` (untouched keys take the newer text and move into the baseline, touched keys stay in the
+  delta; returns `{ stored, values, hasDelta }`; the newer keys become tabs).
+- Pure, also in `./logic/pure`: `buildTranslationDeltaStore`, `buildDeltaTranslationInfos`, `hasTranslationDelta`,
+  `rebaseTranslations`, `storedTranslationTexts`, `omitTranslatableScalars`, `rebaseEditedValue`, and the progress of
+  a server-side translation: `translationProgressRowsOf` (parts → one row per language: running, pending, failed,
+  done), `parseTranslationFailureMessage`, `hasOpenTranslationPart`, `isOpenTranslationPart`, `isOpenTranslationRow`,
+  `endedTranslationPartIds`, `translationLanguageCodeOf`, `translationLanguageCodesOf`; types
+  `DeltaTranslationInfos`, `TranslationDeltaStore`, `TranslationSaveMode`, `BackgroundTranslationRow`,
+  `BackgroundTranslationFailure`, `BackgroundTranslationPart`, `BackgroundTranslationStatus`, `RebasedFormTranslations`.
+  `TRANSLATION_INFOS_OBJECT_TYPE` is also exported from `./logic/pure`.
+
+`./translations`:
+
+- `BackgroundTranslationControls`: the translation controls driven by the host's progress rows (`pending`, `running`,
+  `done`, `failed` with reason, properties and detail; `failureReasonLabels` for the host's reason codes), no cancel,
+  an optional "Dismiss" once nothing runs, "Save and translate" while `isDirty`, `disabledReason` as text. The chips
+  carry no native `title` (the locale's name is screen-reader text).
+- `TranslationControls` and `BackgroundTranslationControls`: `localeMarkers` (a count per locale key or language, e.g.
+  texts whose source changed after the translation) draws a marker with the count on the chip and a summary line;
+  `markerLabel`, `markerSummaryLabel` (`null`: no line). `TranslationControls` takes `isDirty` for the "Save and
+  translate" label. Without the new props it renders as on 0.3.11.
+- `AppTranslationKeyDrawer`: a value row takes a newer stored copy of its value (a background generation, another
+  user) for every part the user did not change; it kept the text it was mounted with, and its next save wrote that
+  older text over the newer one. The key form keeps the user's changed fields when a newer copy of the key arrives
+  (`reset(…, { keepDirtyValues: true })`) instead of discarding them.
+- The showcase's bound translatable form uses delta mode; a `BackgroundTranslationControls` sample.
+
+New data attributes (`tokens.json`): `data-translation-status` on a progress row, `data-translation-marker` (the
+count) and `data-translation-marker-summary`. New texts with hints in `i18n/hints.json` (`i18n-keys.json` regenerated).
+
+Tests: unit tests of the delta, the rebase, the null / empty / omitted cases on a model of the server's merge mode and
+of the progress rows; `options-0312-render.mjs` (server render of the hook and both controls); a browser check
+(`app/translation-delta`): a background write while the form is open survives its save, and a reload rebases the form.
+
 ## 0.3.11
 
 Fix of the navigation guard of 0.3.10; no API change. The list and form actions snapshots are unchanged.
