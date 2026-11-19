@@ -57,6 +57,7 @@ const CollapseToggle =({ collapsed, onToggle, controls, shortcut }: { collapsed:
           aria-controls={controls}
           aria-keyshortcuts={shortcut ?? undefined}
           data-shell-collapse-toggle=""
+          data-agent-skip=""
           className={cn(NAV_ROW_CLASS, 'text-muted-foreground hover:text-foreground', collapsed && 'mx-auto w-11 justify-center px-0')}
         >
           <Icon aria-hidden className={cn(NAV_ICON_CLASS, 'rtl:-scale-x-100')} />

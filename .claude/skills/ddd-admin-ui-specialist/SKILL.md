@@ -1,9 +1,9 @@
 ---
 name: ddd-admin-ui-specialist
-description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries, import matrix, host setup (AdminUiProvider, theme.css, components.css, tokens.json, ddd-admin-ui-check-tokens, -radix, -contrast), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title from one navigation; ./shell-background), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route states, form drawers and dialogs, the save shortcut, useConfirm, write access, locale::style translations, media with image crop, colour fields, key figures (./data), markdown, the admin screens ./workers, ./translations, ./issues, ./database (schema diff), ./crons, status text roles, ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form or admin screen, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast fails or status text is too light, or URL filters get lost."
+description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries, import matrix, host setup (AdminUiProvider, theme.css, components.css, tokens.json, ddd-admin-ui-check-tokens, -radix, -contrast), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title; ./shell-background), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route states, form drawers and dialogs, the save shortcut, useConfirm, write access, agent hooks (data-row-key, navigation guard), locale::style translations, image crop, colour fields, key figures (./data), markdown, the admin screens ./workers, ./translations, ./issues, ./database (schema diff), ./crons, status text roles, ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form or admin screen, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast or status text fails, or URL filters get lost."
 metadata:
   author: mgamadeus
-  version: 0.3.9
+  version: 0.3.10
 ---
 
 # ddd-admin-ui specialist
@@ -87,6 +87,8 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | a text-only host confirm service plus typed-phrase confirmations | `AdminUiProvider confirmWithPhrase="package"` (or a function); `ConfirmDialogView` | provider, form |
 | status text legible on a host whose status colours are fills | set `--success-text`, `--warning-text`, `--destructive-text`, `--info-text` (light and dark); badges keep `StatusBadge` | theme.css, tokens.json |
 | a maintenance action (run, pending, last outcome) | `MaintenanceActionCard` | page |
+| an agent or test reading the screen: row keys, list state, unsaved forms, may it navigate | `data-row-key` on rows and cards, `onListStateChange` + `activeFilters`; `useUnsavedChangesGuard(…, { form, label })` + `getDirtyForms()`; `useNavigationGuard().canNavigate()` | list, logic |
+| mark regions for an agent: anchor, secret value, chrome | `data-agent-anchor` (host), `data-agent-secret` (`Input type="password"` sets it), `data-agent-skip` (package chrome sets it) | README › Screen state for agents |
 
 ## Rules that fail silently
 
@@ -169,6 +171,14 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
   `badgeStyle="unstyled"`, `translate={false}`, timings as `--segmented-control-*` variables on `style`; the indicator
   follows the option box.
 - **Layers**: the package's dialogs open at `--layer-overlay` (50); a host with a higher overlay scale raises it.
+- **Navigation guard.** `canNavigate()` refuses while a form reports unsaved changes (`useUnsavedChangesGuard`,
+  `FormDialog isDirty`), then while a package `DialogContent` / `SheetContent` / `FormDrawer` is mounted (the mobile
+  menu is not counted). A form only appears in `getDirtyForms()` with its fields when it passes `{ form }` (or
+  `dirtyFieldNames`) to the guard; without options it is listed with a generated id and no fields. Overlays a host
+  draws with another library are invisible to it.
+- **Agent attributes.** `data-agent-skip` marks chrome, not disabled controls; `data-agent-secret` is on password
+  inputs only: a host field holding a key or token sets it itself. `data-row-key` is set on the element a card
+  renderer returns; a card component that drops `data-*` props sets `data-row-key={rowKey}` itself.
 - **Server vs client.** Hooks and context live in files with `'use client'`; pure helpers (`m`, `formatDateTime`,
   `defineStatusMap`, schemas, conditions) may be called in server code and `metadata`.
 

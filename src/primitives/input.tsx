@@ -7,6 +7,8 @@ import { FIELD_FOCUS_CLASS, FIELD_RADIUS_CLASS, FIELD_SURFACE_CLASS } from "./fi
  * a single-input dialog as a login form): `data-1p-ignore` (1Password), `data-lpignore`
  * (LastPass), `data-bwignore` (Bitwarden), `data-form-type="other"` (Dashlane). Only real credential fields opt back in
  * with `passwordManager` (the login form).
+ *
+ * A `type="password"` field carries `data-agent-secret` (an agent reading the screen never reads its value out).
  */
 function Input({
   className,
@@ -22,6 +24,7 @@ function Input({
       type={type}
       data-slot="input"
       {...passwordManagerIgnore}
+      {...(type === "password" ? { "data-agent-secret": "" } : {})}
       className={cn(
         // Shape by role: the 12 px field, card fill, quiet edge, strong edge on hover, 2 px focus ring.
         "h-9 w-full min-w-0 px-3 py-1 text-base selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:pointer-events-none md:text-sm",

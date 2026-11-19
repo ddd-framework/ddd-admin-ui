@@ -7,6 +7,8 @@ import {
   type ReactNode,
   type SyntheticEvent,
   useContext,
+  useEffect,
+  useId,
   useRef,
   useState,
 } from 'react';
@@ -16,6 +18,8 @@ import { useTranslate } from '../i18n/index.ts';
 import { ConfirmContext } from '../logic/react/useConfirm.ts';
 import { UnsavedChangesContext, useDiscardChangesConfirm } from '../logic/react/useUnsavedChangesGuard.ts';
 import { useWriteAccess } from '../logic/react/writeAccess.ts';
+import { dirtyFormFieldNames } from '../logic/pure/formValues.ts';
+import { setDirtyFormEntry } from '../logic/pure/navigationGuard.ts';
 import {
   Button,
   Dialog,
@@ -52,7 +56,11 @@ interface FormDialogBaseProps {
    * every close request is ignored. A promise returned by `onSubmit` counts as pending too, until it settles.
    */
   isPending: boolean;
-  /** Unsaved changes: a close request asks "Discard changes?" first (the provider's `useConfirm`, else its own dialog). */
+  /**
+   * Unsaved changes: a close request asks "Discard changes?" first (the provider's `useConfirm`, else its own dialog).
+   * While open and dirty the dialog is listed by `getDirtyForms()` / `canNavigate()` (`./logic`): its title as label
+   * when that is text, the changed fields with `form`.
+   */
   isDirty?: boolean;
   /** The submit button is off (nothing to save yet, a blocker of the screen). */
   submitDisabled?: boolean;
@@ -169,6 +177,25 @@ export const FormDialog = <TFieldValues extends FieldValues = FieldValues, TTran
   const writeBlocked = !ignoreWriteAccess && !writeAccess.allowed;
 
   useSaveShortcut(() => ({ form: open ? formRef.current : null, actions: footerRef.current }));
+
+  // listed by the navigation guard while open with unsaved changes (the result state never asks, so it is not listed)
+  const registrationId = useId();
+  const formRefForNames = useRef(props.form);
+  formRefForNames.current = props.form;
+  const dirtyLabel = typeof title === 'string' ? title : undefined;
+  const listedDirty = open && isDirty && !showsResult;
+  useEffect(() => {
+    if (!listedDirty) return;
+    setDirtyFormEntry(registrationId, {
+      formId: registrationId,
+      label: dirtyLabel,
+      getDirtyFieldNames: () => {
+        const form = formRefForNames.current;
+        return form ? dirtyFormFieldNames(form.getValues(), form.control._defaultValues) : [];
+      },
+    });
+    return () => setDirtyFormEntry(registrationId, null);
+  }, [listedDirty, registrationId, dirtyLabel]);
 
   const requestClose = async () => {
     if (busy) return;

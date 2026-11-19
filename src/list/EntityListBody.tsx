@@ -7,6 +7,8 @@ import { EntityListGrid } from './EntityListGrid.tsx';
 import { type EntityListColumn, EntityListTable, type EntityListTableProps } from './EntityListTable.tsx';
 import type { EntityCardRenderer, EntityListDataProps, ListDisplayMode } from './types.ts';
 import type { EntityListSelection } from '../logic/react/useRowSelection.ts';
+import { buildEntityListState } from '../logic/pure/listState.ts';
+import { useListStateReport } from '../logic/react/useListStateReport.ts';
 
 export interface EntityListBodyProps<TItem, TExtra extends string = never>
   extends EntityListDataProps<TItem>,
@@ -123,12 +125,30 @@ export const EntityListBody = <TItem, TExtra extends string = never>({
   scroll,
   className,
   tableBreakpoint = 'md',
+  onListStateChange,
+  activeFilters,
   ...data
 }: EntityListBodyProps<TItem, TExtra>) => {
-  if (isExtraMode(displayMode) && renderOwnView) {
-    const ownView = renderOwnView(displayMode);
-    if (ownView !== undefined) return ownView;
-  }
+  // one report for the body (its table and phone cards draw the same rows); the views below report nothing
+  const ownView = isExtraMode(displayMode) && renderOwnView ? renderOwnView(displayMode) : undefined;
+  const showsTable =
+    ownView === undefined &&
+    !(isExtraMode(displayMode) && renderExtraView) &&
+    (!renderCard || displayMode !== 'grid');
+  useListStateReport(onListStateChange, () =>
+    buildEntityListState({
+      view: displayMode,
+      items: ownView === undefined ? data.items : [],
+      getRowKey: data.getRowKey,
+      isItemSelected: showsTable ? selection?.isItemSelected : undefined,
+      columnIds: showsTable ? columns.map(column => column.id) : [],
+      activeFilters,
+      sort: sort ?? null,
+      isLoading: ownView === undefined && data.isLoading === true,
+      hasError: ownView === undefined && Boolean(data.error),
+    })
+  );
+  if (ownView !== undefined) return ownView;
   const tableProps = {
     sort,
     onSortChange,

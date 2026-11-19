@@ -29,6 +29,7 @@ export const ShellMenuButton = ({ open, onOpenChange, controls, className }: She
       aria-expanded={open}
       aria-controls={open ? controls : undefined}
       data-shell-menu-button=""
+      data-agent-skip=""
       onClick={() => onOpenChange(!open)}
       className={cn(
         'inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-tint hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring lg:hidden',
@@ -112,6 +113,8 @@ export const ShellMobileMenu = ({
         // without a description the dialog has none (Radix would warn); with one Radix wires it
         {...(description === undefined || description === null ? { 'aria-describedby': undefined } : {})}
         data-shell-mobile-menu=""
+        // navigation chrome: a navigation closes it, so the navigation guard does not count it as an open overlay
+        overlayKind={null}
         className={cn('w-72 gap-0 bg-card p-0 lg:hidden', className)}
         overlayClassName={overlayClassName}
         showCloseButton={closeButton === undefined}

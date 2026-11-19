@@ -114,6 +114,7 @@ export const SearchField = ({
           type="button"
           onClick={clear}
           aria-label={t('Clear search')}
+          data-agent-skip=""
           className={cn(
             'absolute top-1/2 z-(--layer-raised) grid -translate-y-1/2 place-items-center rounded-full bg-tint-strong text-muted-foreground transition-colors hover:bg-foreground/15 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
             sizeClasses.clear

@@ -16,6 +16,7 @@ export * from './table.tsx';
 export * from './tooltip.tsx';
 export * from './command.tsx';
 export * from './dialog.tsx';
+export type { OverlayPresenceKind } from './overlayPresence.ts';
 export * from './popover.tsx';
 export * from './dropdown-menu.tsx';
 export * from './select.tsx';

@@ -581,7 +581,7 @@ const KeyContent = ({ api, keyId, loadedKey, drawer, editableValueLocale, valueA
     form.reset(baseline);
   }, [baseline, form]);
   const confirm = useConfirm();
-  useUnsavedChangesGuard(useFormDirty(form), confirm);
+  useUnsavedChangesGuard(useFormDirty(form), confirm, { form, label: loadedKey?.key });
   // Cancel asks when anything in the drawer is unsaved: the key form or a value row
   const unsavedChanges = useContext(UnsavedChangesContext);
   const discardConfirm = useDiscardChangesConfirm();

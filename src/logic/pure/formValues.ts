@@ -69,3 +69,27 @@ export const omitFormPaths = (values: unknown, paths: readonly string[]): unknow
   }
   return out;
 };
+
+/**
+ * The changed fields of a form as dotted paths (`name`, `address.city`, `translations.name.de::FORMAL`), under the
+ * rules of `formValuesEqual`: nested plain objects are followed down to the changed leaf, an array or any other value
+ * is one field. Empty exactly when the values equal the baseline. `ignore` leaves paths out (as in `useFormDirty`).
+ */
+export const dirtyFormFieldNames = (values: unknown, baseline: unknown, ignore: readonly string[] = []): string[] => {
+  const names: string[] = [];
+  const walk = (left: unknown, right: unknown, path: string) => {
+    const leftObject = isPlainObject(left);
+    const rightObject = isPlainObject(right);
+    if ((leftObject || rightObject) && (leftObject || isAbsent(left)) && (rightObject || isAbsent(right))) {
+      const leftRecord = leftObject ? left : {};
+      const rightRecord = rightObject ? right : {};
+      for (const key of new Set([...Object.keys(leftRecord), ...Object.keys(rightRecord)])) {
+        walk(leftRecord[key], rightRecord[key], path === '' ? key : `${path}.${key}`);
+      }
+      return;
+    }
+    if (!formValuesEqual(left, right)) names.push(path);
+  };
+  walk(omitFormPaths(values, ignore), omitFormPaths(baseline, ignore), '');
+  return names;
+};

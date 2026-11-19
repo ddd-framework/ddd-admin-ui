@@ -278,6 +278,75 @@ sits centred (before: a fixed `w-10` cell and the 2 px table-cell offset). The s
 the optional variables `--list-edge-width`, `--list-edge-color`, `--list-edge-shadow-offset`, `--list-edge-shadow-blur`,
 `--list-edge-shadow-color` and `--list-edge-fade` (a gradient from the surface over the scrolled content; default 0).
 
+## Screen state for agents and tests
+
+A host tool that reads the screen, navigates or highlights elements (an agent embedded in the admin, an end-to-end
+test) gets stable hooks from the package (0.3.10). All of it is additive: a host that uses none of it renders as before.
+
+**Row keys.** Every row of `EntityListTable` and every card of `EntityListGrid` (also the phone cards of
+`EntityListBody`) carries `data-row-key="<getRowKey(item)>"`, the key the list uses for React and the selection. A card
+gets it on the element `renderCard` returns (a DOM element, or a component that passes `data-*` props to its root);
+the renderer also receives `rowKey`, for a card component that sets it itself. A fragment or text card gets none.
+
+**List state.** `onListStateChange(state)` on `EntityListBody`, `EntityListTable` and `EntityListGrid` is called after
+the first render and after every change of what the list shows, never on the server; `EntityListBody` reports once for
+its views. `activeFilters` (e.g. `list.debounced`) is passed through into the state's `filters` (empty values dropped).
+
+```ts
+interface EntityListState {
+  view: string;                    // 'table' | 'grid' | the list's own view (displayMode)
+  rowKeys: string[];               // the loaded rows in order; [] while loading or on an error
+  selectedRowKeys: string[];       // the selected rows (table selection)
+  columnIds: string[];             // the table's columns; [] in the card grid and own views
+  filters: Record<string, string>; // the non-empty activeFilters
+  sort: EntityListSort | null;     // the table's sort
+  isLoading: boolean;
+  hasError: boolean;
+}
+```
+
+`buildEntityListState` and `useListStateReport(onChange, buildState)` (`./logic`) report a host's own view the same way.
+
+**Unsaved changes.** `useUnsavedChangesGuard(isDirty, confirm, options?)` takes `{ formId?, label?, form?, ignore?,
+dirtyFieldNames? }`: with `form` (react-hook-form) the changed fields are read when someone asks, compared like
+`useFormDirty` (`dirtyFormFieldNames(values, baseline, ignore?)`, dotted paths). The registry of a `FormDrawer`
+(`UnsavedChangesRegistry`) gained `getDirtyForms()` (optional on the interface, so a host's own registry still
+compiles; `setDirty` takes an optional third argument with the details); `hasUnsavedChanges()` is unchanged.
+`FormDialog isDirty` lists the dialog too (its title as label when that is text, the fields with `form`).
+
+```ts
+interface DirtyForm { formId: string; label?: string; dirtyFieldNames: string[] }
+```
+
+**Navigation guard.** `useNavigationGuard()` returns `{ canNavigate, getDirtyForms, getOpenOverlays }` (stable; the
+same functions are exported from `./logic` for code outside React). Ask before a navigation of the host's own:
+
+```ts
+const guard = useNavigationGuard();
+const decision = guard.canNavigate();   // { allowed, reason?: 'unsaved-changes' | 'dialog-open', dirtyForms, openOverlays }
+if (!decision.allowed) return refuse(decision);
+router.push(href);
+```
+
+Unsaved changes refuse first, then an open package overlay. Overlays report themselves through a registry, not the
+DOM: `DialogContent` (kind `dialog`: `FormDialog`, confirmations, the command palette, host dialogs built on the
+primitive), `SheetContent` (`sheet`) and `FormDrawer` (`drawer`), while mounted (Radix mounts the content only while
+open, until its close animation ends). The shell's mobile menu is not counted (a navigation closes it); `overlayKind`
+on `DialogContent` / `SheetContent` sets the kind or `null` (not counted); a `forceMount` content is never counted.
+`canNavigate({ ignoreOverlayKinds: ['drawer'] })` lets a master-detail drawer through. The store lives on
+`globalThis`, so two copies of the package on one page share it.
+
+**Attribute convention.** Three attributes for agent tools, read by the host, never styled:
+
+| Attribute | Meaning | Set by |
+|---|---|---|
+| `data-agent-anchor="<name>"` | a stable anchor of a region (`orders-list`, `customer-summary`) the agent may name, scroll to or highlight | the host |
+| `data-agent-secret` | the element's value is never read out (passwords, keys, tokens, generated secrets) | `Input type="password"`; the host on its own secret fields and displays |
+| `data-agent-skip` | the subtree is chrome, not content (skip it when reading the screen; its controls still work) | the package on: `Skeleton`, the `EntityListViewToggle` switch, the clear button of `SearchField`, `EntityListBulkBar`, the ✕ of `FormDrawer`, the sidebar's collapse toggle, `ShellMenuButton`, the `Toaster` region (`./notify-sonner`) |
+
+The package has no password, key or token field component of its own; a host field for such a value sets
+`data-agent-secret` itself (`<Input data-agent-secret="" … />` on a field that is not `type="password"`).
+
 ## Server and client
 
 Every file that calls a hook, `createContext` or `react-dom` starts with `'use client'`; barrels and `./logic`'s pure
@@ -924,7 +993,7 @@ project's `.claude/skills/`. Idempotent; repoints an existing symlink, never tou
 
 ## Versioning
 
-0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.9"`,
+0.x: each minor may break. Pin the exact version while the package is in 0.x (`"@mgamadeus/ddd-admin-ui": "0.3.10"`,
 `pnpm add -E` / `npm install -E`); modules peer on the version they were tested with. Stable releases are published
 under the `latest` dist-tag, pre-releases (`x.y.z-…`) under `next`. Changes per release: [CHANGELOG.md](CHANGELOG.md).
 

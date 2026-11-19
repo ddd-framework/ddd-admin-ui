@@ -106,7 +106,7 @@ const CronForm = ({ api, cron, onClose, onSaved }: CronFormProps) => {
     form.reset(baseline);
   }, [baseline, form]);
   const confirm = useConfirm();
-  const { confirmDiscard } = useUnsavedChangesGuard(useFormDirty(form), confirm);
+  const { confirmDiscard } = useUnsavedChangesGuard(useFormDirty(form), confirm, { form, label: cron?.name });
   const [createCron, createState] = api.useCreateCronMutation();
   const [updateCron, updateState] = api.useUpdateCronMutation();
   const [submitError, setSubmitError] = useState<FormSubmitError | null>(null);

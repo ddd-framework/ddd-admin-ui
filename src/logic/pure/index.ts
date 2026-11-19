@@ -207,5 +207,40 @@ export type {
   DateRange,
   DateRangePreset,
 } from './dateRangePresets.ts';
+export {
+  dirtyFormFieldNames,
+  formValuesEqual,
+  isBlankFormValue,
+} from './formValues.ts';
+export {
+  canNavigate,
+  decideNavigation,
+  describeDirtyForm,
+  getDirtyForms,
+  getOpenOverlays,
+  setDirtyFormEntry,
+  setOpenOverlay,
+  subscribeUiActivity,
+  UI_ACTIVITY_KEY,
+  uiActivityState,
+} from './navigationGuard.ts';
+export type {
+  CanNavigateOptions,
+  DirtyForm,
+  DirtyFormEntry,
+  NavigationBlockReason,
+  NavigationDecision,
+  OpenOverlay,
+  OverlayKind,
+  UiActivityState,
+} from './navigationGuard.ts';
+export {
+  buildEntityListState,
+  sameEntityListState,
+} from './listState.ts';
+export type {
+  EntityListState,
+  EntityListStateInput,
+} from './listState.ts';
 export { translateText } from '../../i18n/store.ts';
 export type { TranslateFn, TranslateOptions } from '../../i18n/store.ts';

@@ -3,6 +3,59 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.3.10
+
+Stable hooks for a host's tools that read the screen, navigate or highlight elements (an agent embedded in the admin,
+an end-to-end test). Everything is additive: a host that sets nothing new renders and behaves as on 0.3.9. The list and
+form actions snapshots change by the new data attributes only (`data-row-key` on rows and cards, `data-agent-skip` on
+skeletons and the bulk bar). README › "Screen state for agents and tests".
+
+`./list`:
+
+- Every row of `EntityListTable` and every card of `EntityListGrid` (also the phone cards of `EntityListBody`) carries
+  `data-row-key="<getRowKey(item)>"`. A card gets it on the element `renderCard` returns (unless it sets its own; a
+  fragment or text card gets none); the renderer also receives `rowKey` (`EntityCardProps.rowKey`).
+- `onListStateChange(state)` on `EntityListBody`, `EntityListTable`, `EntityListGrid` (`EntityListDataProps`): after
+  the first render and after every change, never on the server; the body reports once for its views. `EntityListState`
+  `{ view, rowKeys, selectedRowKeys, columnIds, filters, sort, isLoading, hasError }`; `activeFilters` (e.g.
+  `list.debounced`) fills `filters` (empty values dropped).
+
+`./logic`:
+
+- `buildEntityListState`, `sameEntityListState`, `useListStateReport(onChange, buildState)` (a host's own view);
+  `EntityListState`, `EntityListStateInput`.
+- `useUnsavedChangesGuard(isDirty, confirm, options?)`: `UnsavedChangesGuardOptions` `{ formId?, label?, form?, ignore?,
+  dirtyFieldNames? }`; with `form` the changed fields are read when asked, compared like `useFormDirty`
+  (`dirtyFormFieldNames(values, baseline, ignore?)`, dotted paths).
+- `UnsavedChangesRegistry.getDirtyForms?()` (optional on the interface, always present on the package's registry) and
+  an optional third argument of `setDirty` (`DirtyFormDetails`); `hasUnsavedChanges()` is unchanged. `DirtyForm`
+  `{ formId, label?, dirtyFieldNames }`.
+- `useNavigationGuard()` → `{ canNavigate(options?), getDirtyForms(), getOpenOverlays() }`; the same functions outside
+  React (`canNavigate`, `getDirtyForms`, `getOpenOverlays`, `subscribeUiActivity`, `decideNavigation`).
+  `NavigationDecision` `{ allowed, reason?: 'unsaved-changes' | 'dialog-open', dirtyForms, openOverlays }`: unsaved
+  changes refuse first, then an open package overlay; `ignoreOverlayKinds` lets kinds through. The page-wide store
+  lives on `globalThis` (`UI_ACTIVITY_KEY`), shared by two copies of the package. Also in `./logic/pure`.
+
+`./form`, `./primitives`, `./shell`:
+
+- `FormDialog isDirty` lists the open dialog in `getDirtyForms()` (title as label when it is text, fields with `form`).
+  `CronFormDrawer` and the app translation key drawer pass their form and label to the guard.
+- `DialogContent` (kind `dialog`) and `SheetContent` (kind `sheet`) report themselves while mounted; `overlayKind`
+  (`OverlayPresenceKind | null`) sets the kind or turns it off; a `forceMount` content never reports. `FormDrawer`
+  reports `drawer`; the shell's mobile menu does not report (a navigation closes it).
+
+Attribute convention (listed in `tokens.json` `dataAttributes`): `data-agent-anchor` (set by the host on regions),
+`data-agent-secret` (never read the value out), `data-agent-skip` (the subtree is chrome, not content).
+
+- `data-agent-secret`: `Input type="password"`. The package has no other password, key or token field.
+- `data-agent-skip`: `Skeleton`, the `EntityListViewToggle` fieldset, the clear button of `SearchField`,
+  `EntityListBulkBar`, the ✕ of `FormDrawer`, the sidebar's collapse toggle, `ShellMenuButton`, the `Toaster` region
+  (`./notify-sonner`).
+
+Tests: unit tests for the dirty-form listing, the field names, the navigation decision and the list state; the server
+render `options-0310-render.mjs` (in `test:render` and the consumer run): row keys on rows and cards, the secret and
+skip attributes, no list report on the server, the navigation guard.
+
 ## 0.3.9
 
 Optional props for hosts that moved their list table, admin frame and app translations screens onto the package. A

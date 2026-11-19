@@ -6,6 +6,7 @@ import { useTranslate } from "../i18n/index.ts"
 import { XIcon } from "lucide-react"
 import { Dialog as SheetPrimitive } from "radix-ui"
 
+import { type OverlayPresenceKind, useOverlayPresence } from "./overlayPresence.ts"
 import { usePortalContainer } from "./portal.tsx"
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
@@ -53,14 +54,21 @@ function SheetContent({
   side = "right",
   showCloseButton = true,
   overlayClassName,
+  overlayKind = "sheet",
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
   /** Extra classes of the overlay behind the sheet. */
   overlayClassName?: string
+  /**
+   * How the open sheet is reported to the navigation guard (`useNavigationGuard`, `./logic`); `null`: not reported.
+   * Default `sheet` (`FormDrawer`: `drawer`). A `forceMount` content is never reported.
+   */
+  overlayKind?: OverlayPresenceKind | null
 }) {
   const { t } = useTranslate()
+  useOverlayPresence(props.forceMount ? null : overlayKind)
   return (
     <SheetPortal>
       <SheetOverlay className={overlayClassName} />

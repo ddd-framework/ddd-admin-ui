@@ -21,6 +21,8 @@ import { EntityListLoadMore } from './EntityListLoadMore.tsx';
 import { EntityListStatus } from './EntityListStatus.tsx';
 import type { EntityListDataProps, RowActionResolver } from './types.ts';
 import { type EntityListSort, type ListSortDirection, nextListSort } from '../logic/pure/listSort.ts';
+import { buildEntityListState } from '../logic/pure/listState.ts';
+import { useListStateReport } from '../logic/react/useListStateReport.ts';
 import {
   computeListTracks,
   hasListTracks,
@@ -445,6 +447,7 @@ const EntityListTableRowView = <TItem,>({
         keyboard && 'focus-visible:bg-muted/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring',
         className
       )}
+      data-row-key={rowKey}
       data-state={selected ? 'selected' : undefined}
       data-list-row-hover={hoverOnlyWithAction && !action ? 'none' : undefined}
       role={roleIn(layout, 'row')}
@@ -595,8 +598,23 @@ export const EntityListTable = <TItem,>({
   tableClassName,
   skeletonClassName,
   scroll = true,
+  onListStateChange,
+  activeFilters,
 }: EntityListTableProps<TItem>) => {
   const { t } = useTranslate();
+  useListStateReport(onListStateChange, () =>
+    buildEntityListState({
+      view: 'table',
+      items,
+      getRowKey,
+      isItemSelected: selection?.isItemSelected,
+      columnIds: columns.map(column => column.id),
+      activeFilters,
+      sort: sort ?? null,
+      isLoading,
+      hasError: Boolean(error),
+    })
+  );
   const hasFilterRow = columns.some(column => column.filter !== undefined);
   const showRows = !error && !isLoading && items.length > 0;
 

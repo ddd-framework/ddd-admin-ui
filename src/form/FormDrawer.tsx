@@ -92,6 +92,7 @@ export const FormDrawer = ({
         <SheetContent
           side="right"
           showCloseButton={false}
+          overlayKind="drawer"
           className={
             sideBySide
               ? cn('flex w-full flex-col gap-0 overflow-hidden bg-card p-0 sm:max-w-[460px]', nonModalClassName)
@@ -104,7 +105,14 @@ export const FormDrawer = ({
         >
           <SheetHeader className="flex shrink-0 flex-row items-start gap-3 space-y-0 border-b p-6 text-left">
             <SheetClose asChild>
-              <Button type="button" variant="ghost" size="icon-sm" className="shrink-0" aria-label={t('Close', { context: 'drawer-close-button' })}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="shrink-0"
+                aria-label={t('Close', { context: 'drawer-close-button' })}
+                data-agent-skip=""
+              >
                 <XIcon />
               </Button>
             </SheetClose>

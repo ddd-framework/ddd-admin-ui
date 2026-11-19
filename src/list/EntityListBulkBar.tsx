@@ -226,6 +226,7 @@ export const EntityListBulkBar = ({
     <div
       role="toolbar"
       aria-label={t('Bulk actions')}
+      data-agent-skip=""
       className={cn(
         'glass-bar flex flex-wrap items-center gap-2 rounded-xl px-3 py-1.5 shadow-[var(--surface-shadow)]',
         className

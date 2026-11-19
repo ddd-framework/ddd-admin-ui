@@ -80,6 +80,7 @@ export const EntityListViewToggle = <TExtra extends string = never>({
   return (
     <TooltipProvider delayDuration={300}>
       <fieldset
+        data-agent-skip=""
         className={cn(
           'h-8 shrink-0 items-center gap-0.5 rounded-full bg-tint p-0.5',
           hasExtraViews ? 'inline-flex' : breakpoint.toggle,

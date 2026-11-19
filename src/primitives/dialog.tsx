@@ -7,6 +7,7 @@ import { XIcon } from "lucide-react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { Button } from "./button.tsx"
+import { type OverlayPresenceKind, useOverlayPresence } from "./overlayPresence.ts"
 import { usePortalContainer } from "./portal.tsx"
 
 function Dialog({
@@ -55,13 +56,20 @@ function DialogContent({
   children,
   showCloseButton = true,
   overlayProps,
+  overlayKind = "dialog",
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
   /** Props of the overlay behind the content (handlers, `data-*`, classes). */
   overlayProps?: React.ComponentProps<typeof DialogPrimitive.Overlay>
+  /**
+   * How the open dialog is reported to the navigation guard (`useNavigationGuard`, `./logic`); `null`: not reported.
+   * Default `dialog`. A `forceMount` content is never reported (it stays mounted while closed).
+   */
+  overlayKind?: OverlayPresenceKind | null
 }) {
   const { t } = useTranslate()
+  useOverlayPresence(props.forceMount ? null : overlayKind)
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay {...overlayProps} />

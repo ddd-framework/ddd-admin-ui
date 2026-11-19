@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import type { EntityListState } from '../logic/pure/listState.ts';
+
 /** @deprecated moved to logic/pure/displayMode — the re-export is removed in a later minor */
 export { LIST_DISPLAY_MODES, parseListDisplayMode } from '../logic/pure/displayMode.ts';
 /** @deprecated moved to logic/pure/displayMode — the re-export is removed in a later minor */
@@ -30,6 +32,11 @@ export type RowActionResolver<TItem> = (item: TItem) => (() => void) | null;
 export interface EntityCardProps<TItem> {
   item: TItem;
   onActivate?: (() => void) | null;
+  /**
+   * The row's key (`getRowKey`). The grid sets it as `data-row-key` on the element the renderer returns; a card
+   * component that does not pass `data-*` props to its root sets `data-row-key={rowKey}` there itself.
+   */
+  rowKey?: string;
 }
 
 /**
@@ -73,4 +80,12 @@ export interface EntityListDataProps<TItem> {
   /** Whole-row / whole-card click; a card and its row always run the same action. */
   rowAction?: RowActionResolver<TItem>;
   className?: string;
+  /**
+   * Called after the first render and after every change of what the list shows (rows, selection, columns, sort,
+   * `activeFilters`, view; `EntityListState`), never on the server. `EntityListBody` reports once for its views
+   * (not once per table and phone cards). Need not be stable.
+   */
+  onListStateChange?: (state: EntityListState) => void;
+  /** The list's filter values, passed into `onListStateChange`'s `filters` (e.g. `list.debounced`); empty values dropped. */
+  activeFilters?: Readonly<Record<string, string | null | undefined>>;
 }

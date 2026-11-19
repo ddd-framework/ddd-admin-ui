@@ -1,6 +1,9 @@
 'use client';
 
-import { Fragment, type ReactNode } from 'react';
+import { cloneElement, Fragment, isValidElement, type ReactElement, type ReactNode } from 'react';
+
+import { buildEntityListState } from '../logic/pure/listState.ts';
+import { useListStateReport } from '../logic/react/useListStateReport.ts';
 
 import { Skeleton } from '../primitives/index.ts';
 import { cn } from '../primitives/cn.ts';
@@ -32,6 +35,17 @@ export interface EntityListGridProps<TItem> extends EntityListDataProps<TItem> {
    */
   scroll?: boolean;
 }
+
+/**
+ * The card with `data-row-key`: set on the element the renderer returns (a DOM element, or a component that passes
+ * `data-*` props to its root) unless it sets its own; a fragment or text stays as it is.
+ */
+const withRowKey = (card: ReactNode, rowKey: string): ReactNode => {
+  if (!isValidElement(card) || card.type === Fragment) return card;
+  const props = card.props as Record<string, unknown>;
+  if (props['data-row-key'] !== undefined) return card;
+  return cloneElement(card as ReactElement<Record<string, unknown>>, { 'data-row-key': rowKey });
+};
 
 /** Placeholder cards of the first load. */
 export const EntityListGridSkeleton = ({ count = 6 }: { count?: number }) => (
@@ -78,8 +92,13 @@ export const EntityListGrid = <TItem,>({
   scroll = true,
   showEmptyState = true,
   className,
+  onListStateChange,
+  activeFilters,
 }: EntityListGridProps<TItem>) => {
   const showCards = !error && !isLoading && items.length > 0;
+  useListStateReport(onListStateChange, () =>
+    buildEntityListState({ view: 'grid', items, getRowKey, activeFilters, isLoading, hasError: Boolean(error) })
+  );
 
   return (
     <div
@@ -95,11 +114,14 @@ export const EntityListGrid = <TItem,>({
       {showCards && renderItems?.(items)}
       {showCards && !renderItems && renderCard && (
         <div className={GRID_CLASS}>
-          {items.map(item => (
-            <Fragment key={getRowKey(item)}>
-              {renderCard({ item, onActivate: rowAction ? rowAction(item) : undefined })}
-            </Fragment>
-          ))}
+          {items.map(item => {
+            const rowKey = getRowKey(item);
+            return (
+              <Fragment key={rowKey}>
+                {withRowKey(renderCard({ item, onActivate: rowAction ? rowAction(item) : undefined, rowKey }), rowKey)}
+              </Fragment>
+            );
+          })}
         </div>
       )}
       <EntityListStatus

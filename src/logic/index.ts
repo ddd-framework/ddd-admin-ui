@@ -28,7 +28,7 @@ export type { ConfirmDialogApi, ConfirmOptions, ConfirmRoutes } from './pure/con
 export { drawerKey } from './pure/entityDrawer.ts';
 export type { EntityDrawerState, EntityDrawerUrlAdapter } from './pure/entityDrawer.ts';
 export { EMPTY_MARKER, formatDate, formatDateTime, formatRelativeTime, isDddDateOnly } from './pure/format.ts';
-export { formValuesEqual, isBlankFormValue } from './pure/formValues.ts';
+export { dirtyFormFieldNames, formValuesEqual, isBlankFormValue } from './pure/formValues.ts';
 export { localeDisplayName, mergeLocaleKeys, toTranslatableLocale } from './pure/locales.ts';
 export type { TranslatableLocale } from './pure/locales.ts';
 export { INTERACTIVE_SELECTOR } from './pure/rowActivation.ts';
@@ -196,7 +196,39 @@ export type {
   TranslationTaskStatus,
 } from './react/useTranslationRunner.ts';
 export { UnsavedChangesContext, useUnsavedChangesBoundary, useUnsavedChangesGuard } from './react/useUnsavedChangesGuard.ts';
-export type { ConfirmFn, UnsavedChangesRegistry } from './react/useUnsavedChangesGuard.ts';
+export type {
+  ConfirmFn,
+  DirtyFormDetails,
+  UnsavedChangesGuardOptions,
+  UnsavedChangesRegistry,
+} from './react/useUnsavedChangesGuard.ts';
+export { buildEntityListState, sameEntityListState } from './pure/listState.ts';
+export type { EntityListState, EntityListStateInput } from './pure/listState.ts';
+export { useListStateReport } from './react/useListStateReport.ts';
+export { useNavigationGuard } from './react/useNavigationGuard.ts';
+export type { NavigationGuard } from './react/useNavigationGuard.ts';
+export {
+  canNavigate,
+  decideNavigation,
+  describeDirtyForm,
+  getDirtyForms,
+  getOpenOverlays,
+  setDirtyFormEntry,
+  setOpenOverlay,
+  subscribeUiActivity,
+  UI_ACTIVITY_KEY,
+  uiActivityState,
+} from './pure/navigationGuard.ts';
+export type {
+  CanNavigateOptions,
+  DirtyForm,
+  DirtyFormEntry,
+  NavigationBlockReason,
+  NavigationDecision,
+  OpenOverlay,
+  OverlayKind,
+  UiActivityState,
+} from './pure/navigationGuard.ts';
 export { useWriteAccess, WriteAccessContext, WriteAccessProvider } from './react/writeAccess.ts';
 export type { WriteAccessProviderProps } from './react/writeAccess.ts';
 export { useMemoryUrlState } from './react/useMemoryUrlState.ts';
