@@ -1,6 +1,6 @@
 'use client';
 
-import { cloneElement, Fragment, isValidElement, type ReactElement, type ReactNode } from 'react';
+import { cloneElement, Fragment, isValidElement, type ReactElement, type ReactNode, useEffect, useRef } from 'react';
 
 import { buildEntityListState } from '../logic/pure/listState.ts';
 import { useListStateReport } from '../logic/react/useListStateReport.ts';
@@ -45,6 +45,26 @@ const withRowKey = (card: ReactNode, rowKey: string): ReactNode => {
   const props = card.props as Record<string, unknown>;
   if (props['data-row-key'] !== undefined) return card;
   return cloneElement(card as ReactElement<Record<string, unknown>>, { 'data-row-key': rowKey });
+};
+
+let warnedCardsWithoutRowKey = false;
+
+/**
+ * Development only, once per page: the cards rendered but none carries `data-row-key` — the card component does not
+ * pass `data-*` props to its DOM root, so agents and tests cannot find a card by its row. The fix is in the card
+ * (spread the props, or set `data-row-key={rowKey}` from `EntityCardProps.rowKey`).
+ */
+const useWarnCardsWithoutRowKey = (cardGrid: { current: HTMLDivElement | null }, cardCount: number): void => {
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production' || warnedCardsWithoutRowKey || cardCount === 0) return;
+    const gridElement = cardGrid.current;
+    if (!gridElement || gridElement.childElementCount === 0 || gridElement.querySelector('[data-row-key]')) return;
+    warnedCardsWithoutRowKey = true;
+    console.warn(
+      '[ddd-admin-ui] EntityListGrid: no rendered card carries data-row-key. The card component drops unknown data-* props; ' +
+        'spread them onto its root or set data-row-key from EntityCardProps.rowKey.'
+    );
+  }, [cardGrid, cardCount]);
 };
 
 /** Placeholder cards of the first load. */
@@ -96,6 +116,8 @@ export const EntityListGrid = <TItem,>({
   activeFilters,
 }: EntityListGridProps<TItem>) => {
   const showCards = !error && !isLoading && items.length > 0;
+  const cardGrid = useRef<HTMLDivElement | null>(null);
+  useWarnCardsWithoutRowKey(cardGrid, showCards && !renderItems && renderCard ? items.length : 0);
   useListStateReport(onListStateChange, () =>
     buildEntityListState({ view: 'grid', items, getRowKey, activeFilters, isLoading, hasError: Boolean(error) })
   );
@@ -113,7 +135,7 @@ export const EntityListGrid = <TItem,>({
       {isLoading && !error && <EntityListGridSkeleton count={skeletonCards} />}
       {showCards && renderItems?.(items)}
       {showCards && !renderItems && renderCard && (
-        <div className={GRID_CLASS}>
+        <div ref={cardGrid} className={GRID_CLASS}>
           {items.map(item => {
             const rowKey = getRowKey(item);
             return (

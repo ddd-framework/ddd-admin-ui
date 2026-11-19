@@ -230,6 +230,7 @@ else
   node browser-options-037.mjs "http://127.0.0.1:$PORT"
   echo "── the options of 0.3.9: select-all cell, track selection cell, group row hover, mobile menu description, avatar fallback, reselect, rich confirmation, estimate probe (headless browser)"
   node browser-options-039.mjs "http://127.0.0.1:$PORT"
+  node browser-overlay-guard.mjs "http://127.0.0.1:$PORT"
   kill $SERVER_PID 2>/dev/null || true
 fi
 

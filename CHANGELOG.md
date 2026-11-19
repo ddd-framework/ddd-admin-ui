@@ -3,6 +3,20 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.3.11
+
+Fix of the navigation guard of 0.3.10; no API change. The list and form actions snapshots are unchanged.
+
+- `./primitives`: `DialogContent` and `SheetContent` reported themselves as open overlays from the wrapper component,
+  which renders while the dialog is closed when a host keeps `<Dialog><DialogContent/></Dialog>` mounted (only Radix's
+  inner content unmounts). Every mounted but closed dialog or sheet then counted as open, and `canNavigate()` answered
+  `{ allowed: false, reason: 'dialog-open' }` with nothing on screen. The report now comes from an element inside the
+  Radix content (`OverlayPresenceMarker`), which exists only while the overlay is open or closing.
+- `./list`: in development, `EntityListGrid` warns once per page when cards render but none carries `data-row-key`
+  (the card component drops unknown `data-*` props; spread them onto its root or set `data-row-key` from
+  `EntityCardProps.rowKey`).
+- The consumer test has a browser check of the guard against a dialog and a sheet kept mounted while closed.
+
 ## 0.3.10
 
 Stable hooks for a host's tools that read the screen, navigate or highlight elements (an agent embedded in the admin,

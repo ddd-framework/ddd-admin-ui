@@ -49,3 +49,14 @@ export const useOverlayPresence = (kind: OverlayPresenceKind | null): void => {
     };
   }, [registrationId, kind]);
 };
+
+/**
+ * Renders nothing and reports `kind` while it is mounted. Placed INSIDE a Radix content element, which Radix mounts
+ * only while the overlay is open (and until its close animation ends): a dialog or sheet a host keeps mounted while
+ * closed is then never reported. The wrapper component around the content renders while closed too, so it must not
+ * report itself.
+ */
+export const OverlayPresenceMarker = ({ kind }: { kind: OverlayPresenceKind | null }): null => {
+  useOverlayPresence(kind);
+  return null;
+};

@@ -6,7 +6,7 @@ import { useTranslate } from "../i18n/index.ts"
 import { XIcon } from "lucide-react"
 import { Dialog as SheetPrimitive } from "radix-ui"
 
-import { type OverlayPresenceKind, useOverlayPresence } from "./overlayPresence.ts"
+import { OverlayPresenceMarker, type OverlayPresenceKind } from "./overlayPresence.ts"
 import { usePortalContainer } from "./portal.tsx"
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
@@ -68,7 +68,6 @@ function SheetContent({
   overlayKind?: OverlayPresenceKind | null
 }) {
   const { t } = useTranslate()
-  useOverlayPresence(props.forceMount ? null : overlayKind)
   return (
     <SheetPortal>
       <SheetOverlay className={overlayClassName} />
@@ -88,6 +87,7 @@ function SheetContent({
         )}
         {...props}
       >
+        <OverlayPresenceMarker kind={props.forceMount ? null : overlayKind} />
         {children}
         {showCloseButton && (
           <SheetPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-secondary">

@@ -7,7 +7,7 @@ import { XIcon } from "lucide-react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { Button } from "./button.tsx"
-import { type OverlayPresenceKind, useOverlayPresence } from "./overlayPresence.ts"
+import { OverlayPresenceMarker, type OverlayPresenceKind } from "./overlayPresence.ts"
 import { usePortalContainer } from "./portal.tsx"
 
 function Dialog({
@@ -69,7 +69,6 @@ function DialogContent({
   overlayKind?: OverlayPresenceKind | null
 }) {
   const { t } = useTranslate()
-  useOverlayPresence(props.forceMount ? null : overlayKind)
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay {...overlayProps} />
@@ -81,6 +80,7 @@ function DialogContent({
         )}
         {...props}
       >
+        <OverlayPresenceMarker kind={props.forceMount ? null : overlayKind} />
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close
