@@ -3,6 +3,18 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.3.8
+
+Fix for hosts that bind their colours in a JS config; no API change.
+
+- `./list` (and every package table: issues, crons, workers, translations): the rule under the header of
+  `EntityListTable` read `var(--color-border)` bare (`shadow-[inset_0_-1px_0_var(--color-border)]`). A host that binds
+  its colours in a JS config (`@config`) defines no `--color-*` properties, so the rule was missing. The header cells
+  now carry `shadow-list-header-rule`, a utility of `components.css` that reads the border colour through the theme
+  (`--theme(--color-border)`). The list snapshot changes by that class name only.
+- The consumer test's second host (channel values) now binds its colours in a JS config, like such a host, and fails
+  on any `var(--color-…)` in the built CSS that the CSS never defines.
+
 ## 0.3.7
 
 Optional props for the translations, crons and issues screens and host cache tags per operation. Everything is

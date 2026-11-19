@@ -44,6 +44,13 @@
   line-height: 1.4;
 }
 
+/* The rule under a list table's header (`EntityListTable` header cells): an inset shadow, since a border would scroll
+   away with `border-collapse`. The colour goes through the host's theme binding, never a bare `var(--color-border)`:
+   a host that binds its colours in a JS config has no such property. */
+@utility shadow-list-header-rule {
+  box-shadow: inset 0 -1px 0 --theme(--color-border);
+}
+
 @utility animate-shimmer {
   animation: shimmer 2s infinite;
 }

@@ -1,8 +1,9 @@
 // T5b, a host whose colour properties hold HSL channels (`--card: 0 0% 100%`) and that binds the colour roles itself
-// instead of importing theme.css (`--color-card: hsl(var(--card))`), soft surfaces and text roles included. Its
+// instead of importing theme.css (`card: 'hsl(var(--card))'` in a JS config), soft surfaces and text roles included. Its
 // stylesheet is derived from app/globals.css (same roles, hex colours turned into channels), built with Tailwind and
 // components.css into channel-host/built.css; run.sh then runs ddd-admin-ui-check-tokens on it. A package rule that
-// reads a colour role bare (`var(--success-soft)`) instead of through the binding fails that check here.
+// reads a colour role bare (`var(--success-soft)`) instead of through the binding fails that check here; a package
+// class that reads a theme colour as a bare custom property (never defined by a JS config) fails below.
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import * as path from 'node:path';
@@ -49,27 +50,34 @@ const blocks = [...globals.matchAll(/(:root|\.dark)\s*\{([^}]*)\}/g)].map(([, se
 });
 for (const status of ['success', 'warning', 'destructive', 'info']) channelRoles.add(`${status}-soft`);
 
-// the host's own binding: channel roles through hsl(), the others (rgb with alpha) as they are
-const binding = roles
-  .filter(role => !role.endsWith('-text'))
-  .map(role => `  --color-${role}: ${channelRoles.has(role) ? `hsl(var(--${role}))` : `var(--${role})`};`);
-for (const status of ['success', 'warning', 'destructive', 'info']) binding.push(`  --text-color-${status}: hsl(var(--${status}-text, var(--${status})));`);
+// the host's own binding, in a JS config (`@config`, like a host that kept its Tailwind 3 config): channel roles
+// through hsl(), the others (rgb with alpha) as they are; a JS config defines no `--color-*` properties
+const colors = Object.fromEntries(
+  roles.filter(role => !role.endsWith('-text')).map(role => [role, channelRoles.has(role) ? `hsl(var(--${role}))` : `var(--${role})`]),
+);
+const textColor = Object.fromEntries(
+  ['success', 'warning', 'destructive', 'info'].map(status => [status, `hsl(var(--${status}-text, var(--${status})))`]),
+);
+const config = {
+  theme: {
+    extend: {
+      colors,
+      textColor,
+      borderRadius: { sm: 'calc(var(--radius) - 4px)', md: 'calc(var(--radius) - 2px)', lg: 'var(--radius)', xl: 'calc(var(--radius) + 4px)' },
+      boxShadow: { 'surface-raised': 'var(--surface-shadow-raised)' },
+    },
+  },
+};
 
 const source = `@import 'tailwindcss';
 @import '@mgamadeus/ddd-admin-ui/components.css';
+@config './tailwind.config.mjs';
 @custom-variant dark (&:is(.dark *));
-@theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-${binding.join('\n')}
-  --shadow-surface-raised: var(--surface-shadow-raised);
-}
 ${blocks.join('\n')}
 `;
 
 fs.mkdirSync('channel-host', { recursive: true });
+fs.writeFileSync(path.join('channel-host', 'tailwind.config.mjs'), `export default ${JSON.stringify(config, null, 2)};\n`);
 const from = path.resolve('channel-host', 'host.css');
 fs.writeFileSync(from, source);
 const result = await postcss([tailwindPostcss()]).process(source, { from, to: path.resolve('channel-host', 'built.css') });
@@ -77,3 +85,9 @@ fs.writeFileSync(path.join('channel-host', 'built.css'), result.css);
 const badgeRule = result.css.match(/\[data-slot=['"]?badge['"]?\]\[data-tone=['"]?success['"]?\]\s*\{[^}]*\}/)?.[0] ?? '';
 console.log(`ok      T5b channel host built (${channelRoles.size} channel roles); success badge: ${badgeRule.replace(/\s+/g, ' ') || 'rule not found'}`);
 if (!badgeRule) process.exit(1);
+// a package class that reads a theme colour as a bare custom property works only on a host that emits `--color-*`
+// properties; this host binds in a JS config, so every `var(--color-x)` must have a `--color-x:` definition
+const undefinedThemeReads = [...new Set([...result.css.matchAll(/var\((--color-[a-z0-9-]+)/g)].map(match => match[1]))]
+  .filter(name => !new RegExp(`${name}\\s*:`).test(result.css));
+console.log(`${undefinedThemeReads.length === 0 ? 'ok     ' : 'FAILED '} T5b no bare read of an undefined theme colour${undefinedThemeReads.length ? ` — ${undefinedThemeReads.join(', ')}` : ''}`);
+if (undefinedThemeReads.length > 0) process.exit(1);

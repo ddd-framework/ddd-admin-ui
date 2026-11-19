@@ -146,7 +146,7 @@ export interface EntityListTableProps<TItem> extends EntityListDataProps<TItem> 
   /** Extra classes of the row index column's header and body cells. */
   indexCellClassName?: string;
   /**
-   * The colour header cells and pinned cells paint (a CSS colour, e.g. `var(--color-popover)` for a table on a
+   * The colour header cells and pinned cells paint (a CSS colour, e.g. the host's popover colour for a table on a
    * popover). Default: the card colour. Set as `--list-surface` on the table's scroll container.
    */
   surface?: string;
@@ -166,10 +166,10 @@ export interface EntityListTableProps<TItem> extends EntityListDataProps<TItem> 
 /**
  * Column labels in the section-label voice: small, heavy, uppercase, tracked out. Every header cell is sticky
  * and paints the card surface, so rows scrolling under it stay hidden; the inset shadow is the rule under the header
- * (a border would scroll away with `border-collapse`).
+ * (a border would scroll away with `border-collapse`; `shadow-list-header-rule` of components.css, through the theme).
  */
 const HEADER_CELL_CLASS =
-  'sticky z-(--layer-raised) h-12 bg-card px-4 text-[11.5px] font-bold tracking-[0.08em] text-muted-foreground uppercase shadow-[inset_0_-1px_0_var(--color-border)] first:pl-6 last:pr-6';
+  'sticky z-(--layer-raised) h-12 bg-card px-4 text-[11.5px] font-bold tracking-[0.08em] text-muted-foreground uppercase shadow-list-header-rule first:pl-6 last:pr-6';
 /** Roomy rows: 16 px cells, 24 px at the card edge. */
 const BODY_CELL_CLASS = 'px-4 py-3.5 first:pl-6 last:pr-6';
 const SELECT_CELL_CLASS = 'w-10 pr-0';
