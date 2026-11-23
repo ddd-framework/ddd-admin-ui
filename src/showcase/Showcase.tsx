@@ -18,7 +18,6 @@ import { TranslationAdminShowcase, TranslationsShowcase } from './sections/Trans
 import { WorkersShowcase } from './sections/WorkersShowcase.tsx';
 import { IssuesShowcase } from './sections/IssuesShowcase.tsx';
 import { DatabaseShowcase } from './sections/DatabaseShowcase.tsx';
-import { CloudDriveShowcase } from './sections/CloudDriveShowcase.tsx';
 import { FilesShowcase } from './sections/FilesShowcase.tsx';
 import { CronsShowcase } from './sections/CronsShowcase.tsx';
 import { SandboxShowcase } from './sections/SandboxShowcase.tsx';
@@ -53,7 +52,7 @@ export interface ShowcaseProps {
   loadMarkdown?: MarkdownLoader;
   /**
    * Leave out package sections by id (`primitives`, `list`, `page`, `form`, `translations`, `markdown`, `media`,
-   * `workers`, `issues`, `database`, `clouddrive`, `files`, `crons`, `sandbox`, `glass`, `data`, `shell`, `notify-sonner`, `next`).
+   * `workers`, `issues`, `database`, `files`, `crons`, `sandbox`, `glass`, `data`, `shell`, `notify-sonner`, `next`).
    */
   omit?: readonly string[];
   className?: string;
@@ -89,7 +88,6 @@ const packageSections = (
   { id: 'workers', title: './workers', description: 'The worker monitoring screens: overview, transport, runs, processes (SVG charts).', content: <WorkersShowcase /> },
   { id: 'issues', title: './issues', description: 'The issues screen: error groups, trend, details drawer, resolve / ignore / reopen.', content: <IssuesShowcase /> },
   { id: 'database', title: './database', description: 'The schema diff screen: per-table and bulk apply, generated SQL and model code.', content: <DatabaseShowcase /> },
-  { id: 'clouddrive', title: './clouddrive', description: 'The drive screen: the file manager on the drive with the grouped space picker, versions, history and the trash.', content: <CloudDriveShowcase /> },
   {
     id: 'files',
     title: './files',

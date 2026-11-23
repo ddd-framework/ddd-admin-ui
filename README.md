@@ -32,7 +32,6 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./workers` | the screens of the worker monitoring on the host's api (`createWorkersApi`): `WorkersOverviewScreen`, `WorkerTransportScreen` and their parts (tiles, live panel, throughput and transport tables, history charts as SVG, message runs, processes, restart request), the status maps, the payload types | logic, i18n, primitives, list, page |
 | `./issues` | the screen of the issues registry on the host's api (`createIssuesApi`): `IssuesScreen` and its parts (the trend as SVG bars, the window switch, the group drawer with occurrences, frames, causes, job and client blocks, the status actions), `ISSUE_GROUP_STATUS`, the payload types | logic, i18n, primitives, list, page; from form only `FormDrawer` |
 | `./database` | the schema diff screen on the host's api (`createDatabaseApi`): `SchemaDiffScreen`, `SchemaDiffCard`, the generated-code previews (`GeneratedCodePanel`, `CodeBlock`), the status maps `DB_TABLE_CHANGE_TYPE` / `DB_DIFF_SEVERITY`, the diff helpers, the payload types | logic, i18n, primitives, list, page |
-| `./clouddrive` | the drive on the host's api (`createCloudDriveApi`, `mgamadeus/ddd-clouddrive` ≥ 0.1.0-rc.10, `CloudDriveControllerTrait`): `CloudDriveScreen` (the `./files` file manager on the drive: grouped, searchable space picker, folders, direct upload to the store with multipart, preview, versions with restore, history, malware status, the agents' unsaved changes, filters and orders, trash with purge and empty for managers), `useCloudDriveFileAdapter`, `CloudDriveSpacePicker`, the mappers, `sendDriveUpload`, the payload types | logic, i18n, primitives, page, form, files |
 | `./files` | the generic file manager on the host's adapter (`FileManagerAdapter` with optional capabilities): `FileManager` (folder tree, grid / table, search and filters, upload tray with progress, drag and drop moves, details drawer with preview, versions and activity, trash, links, moves into other areas), its parts (`FolderTree`, `FileCard`, `FileDrawer`, `FilePreview`, `MoveDialog`, `LinkTargetsDialog`, `UploadTray`, `QuotaPill`, …), `useFileUploadQueue`, `uploadWithProgress`, `createStaticFileManagerAdapter`, the view models | logic, i18n, primitives, list, page, form |
 | `./crons` | the Crons screen on the host's api (`createCronsApi`): `CronsScreen` and its parts (summary tiles, runner banner, Crons table with countdown and run strip, row actions, details drawer with the duration chart, runs with their output, timeline, create / edit form with the schedule preview), `useCronActions`, the status maps `CRON_STATUS`, `CRON_EXECUTION_RESULT`, the payload types | logic, i18n, primitives, list, page, form, data |
 | `./sandbox` | the agents' workspaces on the host's api (`createSandboxesApi`, `mgamadeus/ddd-agents` ≥ 0.1.32, `AgentSandboxesControllerTrait`): `SandboxesScreen` (state, last activity, disk and memory against their limits, mount mode, runner, owner, conversations, start / offload / end) and `SandboxDetailScreen` (files read only with the safe preview, unsaved changes, processes and jobs with kill, commands with exit code and output tails, conversations, session log, audit; reset with a typed name; a reason while a turn runs), `useSandboxActions`, `SandboxFilePreview`, the payload types | logic, i18n, primitives, list, page, form, files |
@@ -43,7 +42,7 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./provider` | `AdminUiProvider` (also the dialog behind `useConfirm`), `useAdminUi`, `defaultStorageKey` | logic, i18n, primitives; types only from media and translations |
 | `./next` | Next.js adapters: `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useNextPathname`, `useListViewParam`, the one URL writer (`queueSearchParamsWrite`) | logic, provider; the only entry importing `next/*` |
 | `./notify-sonner` | `sonnerNotifications` (the notification adapter on `sonner`) and its `Toaster` | logic; the only entry importing `sonner` |
-| `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE`; the sample payloads of the screens (`showcaseWorkersData`, `showcaseTranslationsData`, `showcaseIssuesData`, `showcaseDatabaseData`, `showcaseCloudDriveData`, `showcaseFilesData`, `showcaseCronsData`, `showcaseSandboxesData`) | logic, i18n, primitives, list, page, form, translations, media, glass, data, workers, issues, database, clouddrive, files, crons, sandbox, shell, shell-background; never `./next`, `./notify-sonner` or `./markdown` (its section loads through `loadMarkdown`) |
+| `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE`; the sample payloads of the screens (`showcaseWorkersData`, `showcaseTranslationsData`, `showcaseIssuesData`, `showcaseDatabaseData`, `showcaseFilesData`, `showcaseCronsData`, `showcaseSandboxesData`) | logic, i18n, primitives, list, page, form, translations, media, glass, data, workers, issues, database, files, crons, sandbox, shell, shell-background; never `./next`, `./notify-sonner` or `./markdown` (its section loads through `loadMarkdown`) |
 | `./data` | key figures: `MetricTile` (label, value, delta, hint, sparkline slot, skeleton), `MetricTileSkeleton`, `MetricGrid`, `DeltaText`, `NoteList`, the delta helpers `resolveDelta`, `relativeChange`, `deltaDirectionOf`, `deltaToneOf` | logic, i18n, primitives |
 | `./markdown` | `MarkdownEditor`, `MarkdownPreview` (sanitised), `renderMarkdownEditor` (the `renderEditor` slot of `./translations` and `AdminUiProvider.renderMarkdownEditor`); loads `@uiw/react-md-editor` and `rehype-sanitize` after hydration | logic, i18n, primitives; translations type-only; the only entry reaching its optional peers |
 | `./design-studio` | `designStudioComponents`: the `components` of `@mgamadeus/ddd-design-studio`'s provider, every slot mapped to the block of the same name; the slot types (`DesignStudioComponentsContract`, structural copy) | primitives, list, page, glass; never imports the studio |
@@ -957,48 +956,10 @@ export const FilesPage = ({ areas }) => (
 - **Drag and drop** is the browser's own (no library); keyboard and touch use the Move dialog.
 - `createStaticFileManagerAdapter(showcaseFilesData)` answers fixed payloads (writes refused) for reviews and tests.
 
-### `./clouddrive`
+### The cloud drive screen
 
-The drive of `mgamadeus/ddd-clouddrive` (≥ 0.1.0-rc.10) in the file manager of `./files`. The host mounts
-`CloudDriveControllerTrait` and injects the endpoints once:
-
-```tsx
-export const cloudDriveApi = createCloudDriveApi({ baseApi: adminApi, apiPrefix: '/api/admin/common/cloudDrive' });
-
-<CloudDriveScreen
-  api={cloudDriveApi}
-  urlStateAdapter={useNextUrlStateAdapter({ listId: 'drive' })}
-  drawerUrlAdapter={useNextDrawerUrlAdapter()}
-  loadPdfJs={loadPdfJs}
-/>
-```
-
-- **Spaces:** the picker lists `GET /spaces/list` items by `groupLabel` (ungrouped first), searchable, showing
-  `displayName` (the server's `DriveSpacesService::buildSpaceDisplayName()` / `buildSpaceGroupLabel()` set them). The
-  quota pill reads the space's `quota`; writes follow its `canWrite`, purge and empty trash appear only with
-  `canManage`.
-- **Own screen:** `useCloudDriveFileAdapter({ api, spaceId })` returns the `FileManagerAdapter` for one space (trash,
-  versions with restore, activity, filters, working copy, malware status); pass it to `FileManager` with
-  `renderAreaPicker={props => <CloudDriveSpacePicker {...props} />}`. The pure mappers (`driveFileViewOf`,
-  `driveFolderViewsOf`, `driveChildrenArgOf`, …) and `buildCloudDriveFileActions` are exported for own adapters.
-- **Lists** grow by 100 per "more" up to 1000 rows (one request each, so a write's refetch keeps every row current).
-  A search or a filter lists the whole space (`recursive`).
-- **URL and deep links:** the screen keeps `space`, `path` (`/a/b`), `file`, `fileTab`, `tab`, `view`, `q`, the filters
-  and `sort` in the URL (`CLOUD_DRIVE_URL_KEYS`); Back, Forward, reload and a shared link restore the view. `?node=<id>`
-  (`CLOUD_DRIVE_NODE_KEY`), `initialNodeId` and `initialFolderNodeId` open a node by id (its space, folder and details)
-  and turn into `space` + `path` + `file`. The path bar resolves `drive/<id>` and workspace paths through
-  `GET /spaces/{id}/resolve` (ddd-clouddrive ≥ rc.14) and switches space when the answer names another one.
-- **Partners:** `createCloudDriveApi({ baseApi, apiPrefix: '/api/partner/cloudDrive', audience: 'shared' })` on a
-  partner mount (`getDriveAudience()` SHARED): no purge, no empty trash, no space settings or maintenance; a write-locked
-  space reads only, with a notice. Accesses show the client address only when the server sends it (staff readers).
-- **Accesses:** the drawer's Changes / Accesses switch reads `GET /nodes/{id}/events?eventGroup=changes|accesses`
-  (ddd-clouddrive ≥ rc.11; viewed = a preview, downloaded = an original). Previews ask `purpose=INLINE`, downloads
-  `DOWNLOAD`; list pictures are the server's thumbnail URLs and never recorded.
-- **Previews and the bucket's CORS:** the drive never sends bytes through PHP. Raster images show from the short-lived
-  `INLINE` URL as `<img>`; text and PDF previews fetch the `DOWNLOAD` URL from the browser (`fetch`, pdf.js), so the
-  store's CORS must allow `GET` from the admin's origin (without it the preview fails and the download still works).
-  SVG, HTML and other types are never rendered.
-- **Older servers:** without the rc.10 list items the screen says which version it needs.
+The drive screen of `mgamadeus/ddd-clouddrive` is the npm package `@mgamadeus/ddd-clouddrive` (`./screen`), built on
+`./files`; it was the entry `./clouddrive` until 0.5.x.
 
 ### `./sandbox`
 

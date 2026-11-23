@@ -9,7 +9,6 @@ export type { ShowcaseEntryCoverage } from './coverage.ts';
 export { SHOWCASE_NOW_MS, showcaseTranslationsData, showcaseWorkersData } from './fixtures.ts';
 export { showcaseIssuesData } from './issuesFixtures.ts';
 export { showcaseDatabaseData } from './databaseFixtures.ts';
-export { showcaseCloudDriveData } from './cloudDriveFixtures.ts';
 export { showcaseFilesData } from './filesFixtures.ts';
 export { showcaseCronsData } from './cronsFixtures.ts';
 export { showcaseSandboxesData } from './sandboxFixtures.ts';

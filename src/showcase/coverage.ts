@@ -116,12 +116,6 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
     shown: ['CodeBlock', 'GeneratedCodePanel', 'SchemaDiffCard', 'SchemaDiffScreen'],
     notShown: {},
   },
-  clouddrive: {
-    shown: ['CloudDriveScreen'],
-    notShown: {
-      CloudDriveSpacePicker: 'drawn by CloudDriveScreen (renderAreaPicker)',
-    },
-  },
   files: {
     shown: ['FileFamilyIcon', 'FileManager', 'QuotaPill'],
     notShown: {

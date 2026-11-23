@@ -13,6 +13,7 @@ import {
   folderSubtreeIds,
   type FolderView,
   formatBytes,
+  personWithOnBehalfOf,
   sameFileId,
 } from './fileView.ts';
 import { bulkLinkChanges, initialLinkStates, linkSetOf } from './linkSelection.ts';
@@ -25,6 +26,14 @@ const folders: FolderView[] = [
 ];
 
 describe('file view helpers', () => {
+  it('draws a person with the account they acted for', () => {
+    const t = (text: string, options?: { replacements?: Record<string, string | number> }) =>
+      text.replace('%name%', String(options?.replacements?.name ?? ''));
+    assert.equal(personWithOnBehalfOf('Staff', 'Partner GmbH', t), 'Staff (on behalf: Partner GmbH)');
+    assert.equal(personWithOnBehalfOf('Ann', null, t), 'Ann');
+    assert.equal(personWithOnBehalfOf(null, 'Partner GmbH', t), null);
+  });
+
   it('compares ids as text', () => {
     assert.equal(sameFileId(2, '2'), true);
     assert.equal(sameFileId(null, null), true);

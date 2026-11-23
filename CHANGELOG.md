@@ -3,6 +3,14 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.6.0
+
+- Removed: the entry `./clouddrive`. The drive screen of `mgamadeus/ddd-clouddrive` is now the npm package
+  `@mgamadeus/ddd-clouddrive`, released with the Composer module: import `createCloudDriveApi` and the payload types
+  from `@mgamadeus/ddd-clouddrive`, and `CloudDriveScreen`, `CloudDriveSpacePicker`, `useCloudDriveFileAdapter`, the
+  file actions and the mapping helpers from `@mgamadeus/ddd-clouddrive/screen` (unchanged API). The showcase drops its
+  drive section and `showcaseCloudDriveData`. `./files` stays the generic file manager.
+
 ## 0.5.5
 
 Who created a folder, the on-behalf account in the list, and trashed folders in the trash; additive.
