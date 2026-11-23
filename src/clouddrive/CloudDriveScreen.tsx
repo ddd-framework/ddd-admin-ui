@@ -2,7 +2,7 @@
 
 import { normalizeDddError } from '@mgamadeus/ddd-web/contract';
 import { File, Folder, FolderPlus, RotateCcw, Trash2, Upload } from 'lucide-react';
-import { type ChangeEvent, type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type ChangeEvent, type FormEvent, Fragment, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
 import { FormDialog } from '../form/FormDialog.tsx';
 import { useTranslate } from '../i18n/useTranslate.ts';
@@ -231,12 +231,14 @@ export const CloudDriveScreen = ({ api, title, initialSpaceId, initialFolderNode
             )}
           </BreadcrumbItem>
           {path.map((step, index) => (
-            <BreadcrumbItem key={`${step.id}`}>
+            <Fragment key={`${step.id}`}>
               <BreadcrumbSeparator />
-              {index === path.length - 1 ? <BreadcrumbPage>{step.name}</BreadcrumbPage> : (
-                <BreadcrumbLink asChild><button type="button" onClick={() => setPath(steps => steps.slice(0, index + 1))}>{step.name}</button></BreadcrumbLink>
-              )}
-            </BreadcrumbItem>
+              <BreadcrumbItem>
+                {index === path.length - 1 ? <BreadcrumbPage>{step.name}</BreadcrumbPage> : (
+                  <BreadcrumbLink asChild><button type="button" onClick={() => setPath(steps => steps.slice(0, index + 1))}>{step.name}</button></BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+            </Fragment>
           ))}
         </BreadcrumbList>
       </Breadcrumb>
