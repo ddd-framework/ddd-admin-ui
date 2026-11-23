@@ -156,6 +156,8 @@ echo "── ./issues, ./database and ./crons screens on the static apis (server
 node issues-render.mjs
 node database-render.mjs
 node crons-render.mjs
+echo "── the ./files manager on the static adapter (capabilities decide the controls, write access)"
+node files-render.mjs
 echo "── the screen options of 0.3.3 on the server: issues range and summary, schema diff guards, cron filters and times"
 node screens-options-render.mjs
 echo "── the shell on the server: one navigation for sidebar, breadcrumbs and title; rights predicate; no background reach"

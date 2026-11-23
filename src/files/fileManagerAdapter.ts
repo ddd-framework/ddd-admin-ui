@@ -1,0 +1,276 @@
+import type {
+  FileAreaKey,
+  FileAreaRefView,
+  FileAreaView,
+  FileDetailView,
+  FileDownloadView,
+  FileFamily,
+  FileItemId,
+  FileLinkRef,
+  FileMovePreviewView,
+  FileView,
+  FolderView,
+  LinkTargetsView,
+} from './fileView.ts';
+import type { UploadProgressCallbacks } from './uploadWithProgress.ts';
+
+/**
+ * The seam between the file manager and one API. The blocks of this entry see only the view models of `fileView.ts`.
+ *
+ * Reads are React hooks (`use…`): the manager calls each exactly once per render, unconditionally, so **the adapter
+ * object — capabilities included — must keep its identity** for the life of the manager (a module constant, or
+ * `useMemo` with stable dependencies). Writes come from `useActions()`, a hook, so an adapter can bind RTK Query mutation
+ * triggers; each action resolves when the request succeeded and rejects with the request's error (the manager shows
+ * `normalizeDddError(error).message`). The adapter owns cache invalidation; the manager never refetches by hand.
+ *
+ * Everything beyond browsing, uploading, renaming, moving inside the area, folders and the trash move is a capability:
+ * a control appears only when its capability (and the actions it needs) is there.
+ */
+export interface FileManagerAdapter {
+  /** The area: switch, quota, usage, per-file limit, allow-list. */
+  useArea: (areaKey: FileAreaKey) => FileQueryState<FileAreaView>;
+  /** Every folder of the area, flat. */
+  useFolders: (areaKey: FileAreaKey) => FileQueryState<readonly FolderView[]>;
+  /** The list with the manager's query; `null` = skip (the trash is shown). */
+  useFiles: (query: FileListQuery | null) => FileListState;
+  /** One file for the drawer (versions, activity, hash); `null` = skip. */
+  useFile: (fileId: FileItemId | null) => FileQueryState<FileDetailView>;
+  /** Every write of the manager, bound to the API's mutations. */
+  useActions: () => FileManagerActions;
+  /** The optional features this API offers. */
+  capabilities?: FileManagerCapabilities;
+}
+
+/** The optional features of an adapter. Absent = the manager offers no control for it. */
+export interface FileManagerCapabilities {
+  /** Trashed files: a Trash node, restore (`restoreFiles`), final delete (`purgeFiles`), empty (`emptyTrash`). */
+  trash?: FileTrashCapability;
+  /** The drawer lists the versions; Replace (`uploadVersion`), Restore (`restoreVersion`), Delete older (`deleteOlderVersions`). */
+  versions?: FileVersionsCapability;
+  /** The drawer lists the file's events (`FileDetailView.events`). */
+  activity?: FileActivityCapability;
+  /** Links of files to targets of the host (chips, link dialog, linked / unlinked filters, link tabs). */
+  links?: FileLinksCapability;
+  /** Moves into other areas (`moveItems`, `previewMove`): a target-area picker and drops on other areas' roots. */
+  moveAcrossAreas?: FileMoveAcrossAreasCapability;
+  /** The list filters and orders the backend supports (absent: name search only, ordered by name). */
+  filters?: FileFiltersCapability;
+  /** Files with uncommitted changes of a working copy carry a badge (`FileView.hasWorkingCopyChanges`). */
+  workingCopy?: FileWorkingCopyCapability;
+  /** The malware check: scan states and their badges (absent: the states are shown only when not released). */
+  malwareScan?: { enabled: boolean };
+}
+
+export interface FileTrashCapability {
+  /** The area's trash; `null` = skip (the trash is not shown). */
+  useTrash: (query: FileTrashQuery | null) => FileListState;
+}
+
+export interface FileVersionsCapability {
+  /** Extension a replacement must have: `same` (default) or `any`. */
+  replacementExtension?: 'same' | 'any';
+}
+
+export interface FileActivityCapability {
+  /** How many events the drawer lists (default 20). */
+  limit?: number;
+}
+
+/** One kind of link target the host offers (`project`, `customer`, …). */
+export interface FileLinkKind {
+  kind: string;
+  /** Singular, already translated or a text the host's store translates (`Project`). */
+  label: string;
+  /** Plural for the filters (`Projects`); default the label. */
+  pluralLabel?: string;
+}
+
+export interface FileLinksCapability {
+  /** The target kinds, in the order the filters and the dialog show them. */
+  kinds: readonly FileLinkKind[];
+  /** The targets the link dialog and the filters offer; `null` = skip. */
+  useLinkTargets: (query: LinkTargetsQuery | null) => FileQueryState<LinkTargetsView>;
+  /** A sentence under the link dialog's title (what a link does in the host). */
+  dialogDescription?: string;
+}
+
+export interface FileMoveAcrossAreasCapability {
+  /** The areas files and folders may move to; called only while the move dialog is open. */
+  useMoveTargetAreas: () => FileQueryState<readonly FileAreaRefView[]>;
+}
+
+export interface FileFiltersCapability {
+  family?: boolean;
+  /** Created from / to. */
+  created?: boolean;
+  uploadedByMe?: boolean;
+  /** Orders the list may be sorted by (the first is the default). */
+  orders?: readonly FileListOrder[];
+}
+
+export interface FileWorkingCopyCapability {
+  /** The badge text (default "Unsaved changes"). */
+  label?: string;
+  /** Its explanation (tooltip). */
+  description?: string;
+}
+
+/** A read hook's result (the subset of an RTK Query result the manager needs). */
+export interface FileQueryState<TData> {
+  data: TData | undefined;
+  /** First load, no data yet. */
+  isLoading: boolean;
+  /** Any request in flight (also a background refetch). */
+  isFetching?: boolean;
+  isError: boolean;
+}
+
+/** A growing list window. */
+export interface FileListState {
+  items: readonly FileView[];
+  isLoading: boolean;
+  /** A background refetch with rows on screen. */
+  isRefetching?: boolean;
+  isFetchingMore: boolean;
+  hasMore: boolean;
+  loadMore: () => void;
+  isError: boolean;
+}
+
+export type FileListOrder = 'name' | 'created' | 'size';
+
+/**
+ * The list query of the manager. Folder scope: a folder id, `'root'`, or `undefined` = every folder of the area (search,
+ * filters, a link tab).
+ */
+export interface FileListQuery {
+  areaKey: FileAreaKey;
+  folderId?: FileItemId | 'root';
+  /** Name search; already trimmed. */
+  q?: string;
+  family?: FileFamily;
+  /** Files linked to this target (capability `links`). */
+  linkTarget?: FileLinkRef;
+  /** Only files without any link. */
+  unlinked?: boolean;
+  /** Only files with at least one link. */
+  linked?: boolean;
+  uploadedByMe?: boolean;
+  /** Created on or after this day (`YYYY-MM-DD`, the viewer's calendar day). */
+  createdFrom?: string;
+  /** Created on or before this day (`YYYY-MM-DD`). */
+  createdTo?: string;
+  orderBy?: FileListOrder;
+  orderDirection?: 'asc' | 'desc';
+}
+
+export interface FileTrashQuery {
+  areaKey: FileAreaKey;
+}
+
+export interface LinkTargetsQuery {
+  areaKey: FileAreaKey;
+  q?: string;
+}
+
+/** One upload: the target and the file. */
+export interface FileUploadInput {
+  areaKey: FileAreaKey;
+  /** `null` = the area's root. */
+  folderId: FileItemId | null;
+  file: File;
+  description?: string;
+  /** Links set on the new file (a link tab's target). */
+  links: readonly FileLinkRef[];
+}
+
+/** Only the named fields. */
+export interface FilePatch {
+  name?: string;
+  description?: string;
+  folderId?: FileItemId | null;
+}
+
+/** Several files' links changed at once: only the changes. */
+export interface FileBulkLinksInput {
+  fileIds: readonly FileItemId[];
+  add: readonly FileLinkRef[];
+  remove: readonly FileLinkRef[];
+}
+
+/** One file's complete link set. */
+export interface FileLinkSet {
+  links: readonly FileLinkRef[];
+}
+
+export interface FolderCreateInput {
+  areaKey: FileAreaKey;
+  parentFolderId: FileItemId | null;
+  name: string;
+}
+
+export interface FolderPatch {
+  name?: string;
+  /** `null` = move to the area's root. */
+  parentFolderId?: FileItemId | null;
+}
+
+/** Files and / or folders into a folder of an area (another area for capability `moveAcrossAreas`). */
+export interface FileMoveInput {
+  fileIds: readonly FileItemId[];
+  folderIds: readonly FileItemId[];
+  targetAreaKey: FileAreaKey;
+  /** `null` = the target area's root. */
+  folderId: FileItemId | null;
+}
+
+export interface FileMoveResult {
+  movedFiles: number;
+  movedFolders: number;
+  /** Links removed because their target is not part of the target area. */
+  removedLinks?: number;
+}
+
+export interface FolderDeleteResult {
+  trashedFiles: number;
+  deletedFolders: number;
+}
+
+export interface FileDownloadOptions {
+  /** A specific version; default the current one. */
+  versionId?: FileItemId;
+  /** `inline` only for JPEG / PNG / GIF / WebP and PDF (the server refuses it otherwise). */
+  disposition: 'inline' | 'attachment';
+  /** `PREVIEW` = what the drawer shows (a rendition when the server made one); default `ORIGINAL`. */
+  variant?: 'ORIGINAL' | 'PREVIEW';
+}
+
+/** The writes of the manager; the optional ones belong to a capability. */
+export interface FileManagerActions {
+  /** One upload with progress (`uploadWithProgress` or a direct upload to a store). Resolves with the new file. */
+  upload: (input: FileUploadInput, callbacks: UploadProgressCallbacks) => Promise<FileView>;
+  /** A download / preview link (through the release gate). */
+  getDownload: (fileId: FileItemId, options: FileDownloadOptions) => Promise<FileDownloadView>;
+  patchFile: (fileId: FileItemId, patch: FilePatch) => Promise<unknown>;
+  /** Files into a folder of the open area. */
+  moveFiles: (fileIds: readonly FileItemId[], folderId: FileItemId | null) => Promise<unknown>;
+  /** Into the trash (with capability `trash`) or deleted (without it). */
+  trashFiles: (fileIds: readonly FileItemId[]) => Promise<unknown>;
+  createFolder: (input: FolderCreateInput) => Promise<FolderView>;
+  patchFolder: (folderId: FileItemId, patch: FolderPatch) => Promise<unknown>;
+  deleteFolder: (folderId: FileItemId) => Promise<FolderDeleteResult>;
+  // trash
+  restoreFiles?: (fileIds: readonly FileItemId[]) => Promise<unknown>;
+  purgeFiles?: (fileIds: readonly FileItemId[]) => Promise<unknown>;
+  emptyTrash?: (areaKey: FileAreaKey) => Promise<unknown>;
+  // versions
+  uploadVersion?: (fileId: FileItemId, file: File, callbacks: UploadProgressCallbacks) => Promise<FileView>;
+  restoreVersion?: (fileId: FileItemId, versionId: FileItemId) => Promise<unknown>;
+  deleteOlderVersions?: (fileId: FileItemId) => Promise<unknown>;
+  // links
+  setLinks?: (fileId: FileItemId, links: FileLinkSet) => Promise<unknown>;
+  bulkLinks?: (input: FileBulkLinksInput) => Promise<unknown>;
+  // moves into other areas and folder moves in one request
+  moveItems?: (input: FileMoveInput) => Promise<FileMoveResult>;
+  previewMove?: (input: FileMoveInput) => Promise<FileMovePreviewView>;
+}

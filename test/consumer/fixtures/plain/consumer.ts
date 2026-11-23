@@ -155,3 +155,9 @@ export const databaseScreen = SchemaDiffScreen;
 export const cronsApi: CronsApi = createStaticCronsApi({});
 export const cronsScreenProps: CronsScreenProps = { api: cronsApi, pollingIntervalMs: 0 };
 export const cronsScreen = CronsScreen;
+
+// ./files: the generic file manager on a static adapter (strict types of the adapter, capabilities and props)
+import { createStaticFileManagerAdapter, FileManager, type FileManagerAdapter, type FileManagerProps } from '@mgamadeus/ddd-admin-ui/files';
+export const filesAdapter: FileManagerAdapter = createStaticFileManagerAdapter({ areas: [{ areaKey: 1 }], folders: [], files: [] });
+export const filesProps: FileManagerProps = { adapter: filesAdapter, areas: [{ key: 1, name: 'Area' }], variant: 'embedded' };
+export const fileManager = FileManager;

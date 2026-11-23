@@ -28,6 +28,14 @@
       "hint": "Drive screen (cloud drive of the admin): error toast: the upload found a newer version of the file and wrote nothing; %reason% is the server's reason."
     },
     {
+      "key": "%add% to add · %remove% to remove on all %count% files",
+      "text": "%add% to add · %remove% to remove on all %count% files",
+      "files": [
+        "files/LinkTargetsDialog.tsx"
+      ],
+      "hint": "File manager, dialog to edit the links of files (checkbox list of link targets of the application). %add% is a number; %count% is a number; %remove% is a number."
+    },
+    {
       "key": "%additive% additive, %mixed% mixed and %destructive% destructive diffs run against the live database in one request.",
       "text": "%additive% additive, %mixed% mixed and %destructive% destructive diffs run against the live database in one request.",
       "files": [
@@ -132,6 +140,14 @@
       "hint": "Error toast after a bulk action where some rows failed. %done% is a verb like Deleted, %succeeded% e.g. 3, %total% e.g. 5, %noun% like tracks, %failed% e.g. 2."
     },
     {
+      "key": "%done% uploaded · %problems% not uploaded",
+      "text": "%done% uploaded · %problems% not uploaded",
+      "files": [
+        "files/UploadTray.tsx"
+      ],
+      "hint": "File manager, upload tray (floating panel listing the running uploads). %done% is a number; %problems% is a number."
+    },
+    {
       "key": "%entity% not found or current authenticated Account is not authorized to access it",
       "text": "%entity% not found or current authenticated Account is not authorized to access it",
       "files": [
@@ -146,6 +162,15 @@
         "crons/parts.tsx"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): hint under the tile with the number of runs of the last 24 hours: how many of them failed."
+    },
+    {
+      "key": "%files% and %folders%",
+      "text": "%files% and %folders%",
+      "files": [
+        "files/FileManager.tsx",
+        "files/MoveAcrossAreasDialog.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %files% is a phrase like \"3 files\"; %folders% is a phrase like \"2 folders\"."
     },
     {
       "key": "%from%–%to% of %total%",
@@ -170,6 +195,14 @@
         "workers/WorkerRestartButton.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): one worker process in the restart result; %host% is the machine or pod name, %pid% the process id."
+    },
+    {
+      "key": "%kind%: %name%",
+      "text": "%kind%: %name%",
+      "files": [
+        "files/FileLinkChips.tsx"
+      ],
+      "hint": "File manager, link chips of a file (links to targets of the application, e.g. projects). %kind% is the type of a link target (e.g. \"Project\"); %name% is a file or folder name."
     },
     {
       "key": "%label% (%count%)",
@@ -237,6 +270,30 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): the length of a time window in minutes, e.g. “15 min”; used inside other texts such as “Last %window%”."
     },
     {
+      "key": "%moved% moved to %target%",
+      "text": "%moved% moved to %target%",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %moved% is a phrase like \"3 files and 1 folder\"; %target% is a folder or area name."
+    },
+    {
+      "key": "%moved% moved to %target% — %links% removed",
+      "text": "%moved% moved to %target% — %links% removed",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %links% is a phrase like \"2 links\"; %moved% is a phrase like \"3 files and 1 folder\"; %target% is a folder or area name."
+    },
+    {
+      "key": "%name% could not be downloaded",
+      "text": "%name% could not be downloaded",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %name% is a file or folder name."
+    },
+    {
       "key": "%name% is active",
       "text": "%name% is active",
       "files": [
@@ -259,6 +316,22 @@
         "crons/useCronActions.ts"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): toast after 'Run now': the job is queued and the runner starts it within a minute (it does not run yet)."
+    },
+    {
+      "key": "%name% uploaded",
+      "text": "%name% uploaded",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %name% is a file or folder name."
+    },
+    {
+      "key": "%name% uploaded — it is being checked",
+      "text": "%name% uploaded — it is being checked",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %name% is a file or folder name."
     },
     {
       "key": "%name%: %message%",
@@ -301,6 +374,22 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile hint: the failed share of the jobs of the last hour; %percent% is a number."
     },
     {
+      "key": "%percent% % used",
+      "text": "%percent% % used",
+      "files": [
+        "files/QuotaPill.tsx"
+      ],
+      "hint": "File manager, storage pill (used storage of the file area). %percent% is a percentage number."
+    },
+    {
+      "key": "%percent% % · %loaded% of %total%",
+      "text": "%percent% % · %loaded% of %total%",
+      "files": [
+        "files/UploadTray.tsx"
+      ],
+      "hint": "File manager, upload tray (floating panel listing the running uploads). %loaded% is the uploaded size so far; %percent% is a percentage number; %total% is the file size."
+    },
+    {
       "key": "%progress% %nouns%… %done%/%total%",
       "text": "%progress% %nouns%… %done%/%total%",
       "files": [
@@ -341,6 +430,14 @@
       "hint": "Issues admin screen, one occurrence of an error in the details drawer: how long after it was dispatched the failed worker message ran; %seconds% is a number of seconds."
     },
     {
+      "key": "%shown% of {count, plural, one {# page} other {# pages}}",
+      "text": "%shown% of {count, plural, one {# page} other {# pages}}",
+      "files": [
+        "files/PdfPreview.tsx"
+      ],
+      "hint": "File manager, PDF preview (pages drawn as images). ICU plural; # is the number. %shown% is a number."
+    },
+    {
       "key": "%size% MB",
       "text": "%size% MB",
       "files": [
@@ -349,12 +446,28 @@
       "hint": "Schema diff admin screen (database changes between the code's entities and the live database): size of a database table in megabytes; %size% is a number."
     },
     {
+      "key": "%size% used",
+      "text": "%size% used",
+      "files": [
+        "files/QuotaPill.tsx"
+      ],
+      "hint": "File manager, storage pill (used storage of the file area). %size% is a file size like \"1.5 MB\"."
+    },
+    {
       "key": "%stopped% of %asked% stopped",
       "text": "%stopped% of %asked% stopped",
       "files": [
         "workers/WorkerRestartButton.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): restart result dialog: how many of the processes asked to restart have stopped so far; both are numbers."
+    },
+    {
+      "key": "%summary% · %size% including older versions",
+      "text": "%summary% · %size% including older versions",
+      "files": [
+        "files/MoveAcrossAreasDialog.tsx"
+      ],
+      "hint": "File manager, confirmation dialog of a move into another file area. %size% is a file size like \"1.5 MB\"; %summary% is a phrase like \"3 files and 1 folder\"."
     },
     {
       "key": "%thrown% thrown · %caught% caught",
@@ -405,6 +518,22 @@
       "hint": "Issues admin screen (errors grouped by root cause): caption of the trend chart; %total% is the number of error events in the window, %step% the bucket size (e.g. 'per hour'). The counts are not exact."
     },
     {
+      "key": "%type% files have no preview here. Download it to open it.",
+      "text": "%type% files have no preview here. Download it to open it.",
+      "files": [
+        "files/FilePreview.tsx"
+      ],
+      "hint": "File manager, file preview in the details drawer. %type% is a kind of file like \"Spreadsheet\"."
+    },
+    {
+      "key": "%used% of %quota%",
+      "text": "%used% of %quota%",
+      "files": [
+        "files/QuotaPill.tsx"
+      ],
+      "hint": "File manager, storage pill (used storage of the file area). %quota% is the storage limit; %used% is the used storage."
+    },
+    {
       "key": "%used% of %quota% used · %files% files",
       "text": "%used% of %quota% used · %files% files",
       "files": [
@@ -453,6 +582,22 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): process timeline tooltip, after the end time of a lost process: the end is the last time it reported, not a reported stop."
     },
     {
+      "key": "(not visible to you)",
+      "text": "(not visible to you)",
+      "files": [
+        "files/MoveAcrossAreasDialog.tsx"
+      ],
+      "hint": "File manager, confirmation dialog of a move into another file area."
+    },
+    {
+      "key": "(on behalf: %name%)",
+      "text": "(on behalf: %name%)",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %name% is a file or folder name."
+    },
+    {
       "key": "(plural)",
       "text": "(plural)",
       "files": [
@@ -467,6 +612,14 @@
         "translations/AppTranslationsScreen.tsx"
       ],
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): button under the first values of a key in the list that shows the other %count% values."
+    },
+    {
+      "key": ".%extension% files are not allowed here.",
+      "text": ".%extension% files are not allowed here.",
+      "files": [
+        "files/uploadPrecheck.ts"
+      ],
+      "hint": "File manager, check before an upload starts (shown in the upload tray as the reason a file was refused). %extension% is a file extension like \"pdf\"."
     },
     {
       "key": "24 h",
@@ -509,12 +662,52 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): option of the timeline window switch: the last 7 days."
     },
     {
+      "key": "A dash means only some of the files have that link; one click links all of them.",
+      "text": "A dash means only some of the files have that link; one click links all of them.",
+      "files": [
+        "files/LinkTargetsDialog.tsx"
+      ],
+      "hint": "File manager, dialog to edit the links of files (checkbox list of link targets of the application)."
+    },
+    {
+      "key": "A folder cannot move into itself.",
+      "text": "A folder cannot move into itself.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "A link labels the file; it does not share it.",
+      "text": "A link labels the file; it does not share it.",
+      "files": [
+        "files/LinkTargetsDialog.tsx"
+      ],
+      "hint": "File manager, dialog to edit the links of files (checkbox list of link targets of the application)."
+    },
+    {
       "key": "A new app translation key, stored in the database.",
       "text": "A new app translation key, stored in the database.",
       "files": [
         "translations/AppTranslationKeyDrawer.tsx"
       ],
       "hint": "App translations admin, drawer of one translation key: subtitle of the drawer while creating a new key."
+    },
+    {
+      "key": "A new current version is made from it; the newer versions stay in the history.",
+      "text": "A new current version is made from it; the newer versions stay in the history.",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "A new version is being checked",
+      "text": "A new version is being checked",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
     },
     {
       "key": "A restart was requested; a live process has not stopped for it yet",
@@ -550,6 +743,22 @@
       "hint": "App translations admin, drawer of one translation key: message under a value whose text was emptied (it cannot be saved empty)."
     },
     {
+      "key": "A working copy holds changes that are not saved yet.",
+      "text": "A working copy holds changes that are not saved yet.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "A working copy holds changes to this file that are not saved yet. The file shows the last saved state.",
+      "text": "A working copy holds changes to this file that are not saved yet. The file shows the last saved state.",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
       "key": "Account",
       "text": "Account",
       "files": [
@@ -574,11 +783,20 @@
       "hint": "Error message from the server when a user account cannot be loaded: it does not exist or the signed-in user may not see it."
     },
     {
+      "key": "Actions for the folder %name%",
+      "text": "Actions for the folder %name%",
+      "files": [
+        "files/FolderTree.tsx"
+      ],
+      "hint": "File manager, folder tree in the side panel. %name% is a file or folder name."
+    },
+    {
       "key": "Actions__table-column",
       "text": "Actions",
       "context": "table-column",
       "files": [
         "crons/parts.tsx",
+        "files/FileManager.tsx",
         "list/ActionsHeaderText.tsx",
         "list/columns.tsx",
         "translations/AppTranslationsScreen.tsx",
@@ -628,6 +846,15 @@
         "crons/parts.tsx"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): label of the summary tile with the number of switched-on jobs."
+    },
+    {
+      "key": "Activity__file-history",
+      "text": "Activity",
+      "context": "file-history",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file history."
     },
     {
       "key": "Add %entity%",
@@ -731,6 +958,14 @@
       "hint": "Issues admin screen (errors grouped by root cause): option of the environment switch that shows the errors of every environment together."
     },
     {
+      "key": "All files",
+      "text": "All files",
+      "files": [
+        "files/FolderTree.tsx"
+      ],
+      "hint": "File manager, folder tree in the side panel."
+    },
+    {
       "key": "All sections",
       "text": "All sections",
       "files": [
@@ -763,6 +998,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): throughput table: the row of every queue together."
     },
     {
+      "key": "All types",
+      "text": "All types",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
       "key": "All__cron-run-filter",
       "text": "All",
       "context": "cron-run-filter",
@@ -788,6 +1031,14 @@
         "issues/IssuesScreen.tsx"
       ],
       "hint": "Issues admin screen (errors grouped by root cause): status tab with every error group, whatever its status."
+    },
+    {
+      "key": "Already in the target folder: %names%. Rename or move them first.",
+      "text": "Already in the target folder: %names%. Rename or move them first.",
+      "files": [
+        "files/MoveAcrossAreasDialog.tsx"
+      ],
+      "hint": "File manager, confirmation dialog of a move into another file area. %names% is a list of file names."
     },
     {
       "key": "Also stored, kept as is: %keys%",
@@ -830,6 +1081,32 @@
         "translations/AppTranslationsScreen.tsx"
       ],
       "hint": "First option of the \"Has a value in\" filter of the translation keys list: no language filter (keys with or without values in any language)."
+    },
+    {
+      "key": "Any__filter-option",
+      "text": "Any",
+      "context": "filter-option",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: filter option."
+    },
+    {
+      "key": "Anyone",
+      "text": "Anyone",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Anything__filter-option",
+      "text": "Anything",
+      "context": "filter-option",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: filter option."
     },
     {
       "key": "App",
@@ -948,6 +1225,39 @@
       "hint": "Issues admin screen (errors grouped by root cause): tooltip of an event count in the list: the number is approximate."
     },
     {
+      "key": "Archive",
+      "text": "Archive",
+      "files": [
+        "files/fileView.ts"
+      ],
+      "hint": "File manager, kind of file (type column, filter, details)."
+    },
+    {
+      "key": "Archives are not opened in the browser. Download it to unpack it.",
+      "text": "Archives are not opened in the browser. Download it to unpack it.",
+      "files": [
+        "files/FilePreview.tsx"
+      ],
+      "hint": "File manager, file preview in the details drawer."
+    },
+    {
+      "key": "Area settings",
+      "text": "Area settings",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Area__move-dialog-field",
+      "text": "Area",
+      "context": "move-dialog-field",
+      "files": [
+        "files/MoveDialog.tsx"
+      ],
+      "hint": "File manager, move dialog (pick the target folder, optionally another file area). Context: move dialog field."
+    },
+    {
       "key": "Arguments",
       "text": "Arguments",
       "files": [
@@ -980,6 +1290,30 @@
       "hint": "Accessible name of the choice of crop shapes (free, square, 16:9, round)."
     },
     {
+      "key": "At most %max% characters",
+      "text": "At most %max% characters",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %max% is a number."
+    },
+    {
+      "key": "At most %max% characters including .%extension%",
+      "text": "At most %max% characters including .%extension%",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %extension% is a file extension like \"pdf\"; %max% is a number."
+    },
+    {
+      "key": "At most %max% characters.",
+      "text": "At most %max% characters.",
+      "files": [
+        "files/FolderNameDialog.tsx"
+      ],
+      "hint": "File manager, dialog to create or rename a folder. %max% is a number."
+    },
+    {
       "key": "At the rate of the last %window%",
       "text": "At the rate of the last %window%",
       "files": [
@@ -995,6 +1329,14 @@
         "workers/transport.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): column header: which delivery attempt of the job this run was."
+    },
+    {
+      "key": "Audio",
+      "text": "Audio",
+      "files": [
+        "files/fileView.ts"
+      ],
+      "hint": "File manager, kind of file (type column, filter, details)."
     },
     {
       "key": "Auto-translate",
@@ -1095,6 +1437,23 @@
       "hint": "Status badge of a worker transport (queue): jobs wait while every process works."
     },
     {
+      "key": "Being checked__file-scan-status",
+      "text": "Being checked",
+      "context": "file-scan-status",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip). Context: file scan status."
+    },
+    {
+      "key": "Blocked by the malware check",
+      "text": "Blocked by the malware check",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
       "key": "Breadcrumbs",
       "text": "Breadcrumbs",
       "files": [
@@ -1140,10 +1499,30 @@
       "key": "Cancel",
       "text": "Cancel",
       "files": [
+        "files/FolderNameDialog.tsx",
+        "files/LinkTargetsDialog.tsx",
+        "files/MoveAcrossAreasDialog.tsx",
+        "files/MoveDialog.tsx",
         "media/ImageCropDialog.tsx",
         "translations/TranslationControls.tsx"
       ],
       "hint": "Button at the bottom of the world form that discards the entries and returns to the world list; asks for confirmation if there are unsaved changes."
+    },
+    {
+      "key": "Cancel %name%",
+      "text": "Cancel %name%",
+      "files": [
+        "files/UploadTray.tsx"
+      ],
+      "hint": "File manager, upload tray (floating panel listing the running uploads). %name% is a file or folder name."
+    },
+    {
+      "key": "Cancel upload",
+      "text": "Cancel upload",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
     {
       "key": "Cancel__confirm-dialog",
@@ -1193,6 +1572,15 @@
       "hint": "Status badge label (short pill) in lists, cards and detail views, describing the state of a partner contract. Keep it short, like a status word."
     },
     {
+      "key": "Cancelled__upload-status",
+      "text": "Cancelled",
+      "context": "upload-status",
+      "files": [
+        "files/UploadTray.tsx"
+      ],
+      "hint": "File manager, upload tray (floating panel listing the running uploads). Context: upload status."
+    },
+    {
       "key": "Caught",
       "text": "Caught",
       "files": [
@@ -1234,6 +1622,32 @@
         "database/SchemaDiffCard.tsx"
       ],
       "hint": "Small badge on a database table in the schema comparison: this table's pending change differs from what was shown before the last reload."
+    },
+    {
+      "key": "Check failed__file-scan-status",
+      "text": "Check failed",
+      "context": "file-scan-status",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip). Context: file scan status."
+    },
+    {
+      "key": "Checked and released",
+      "text": "Checked and released",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "Checked__file-scan-status",
+      "text": "Checked",
+      "context": "file-scan-status",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip). Context: file scan status."
     },
     {
       "key": "Checking the schedule…",
@@ -1343,6 +1757,23 @@
       "hint": "Issues admin screen, one occurrence of an error in the details drawer: heading of the block about the app, browser and device that reported the error."
     },
     {
+      "key": "Close uploads",
+      "text": "Close uploads",
+      "files": [
+        "files/UploadTray.tsx"
+      ],
+      "hint": "File manager, upload tray (floating panel listing the running uploads)."
+    },
+    {
+      "key": "Close__action",
+      "text": "Close",
+      "context": "action",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: action."
+    },
+    {
       "key": "Close__dialog-close-button",
       "text": "Close",
       "context": "dialog-close-button",
@@ -1393,6 +1824,14 @@
         "shell/ShellNavList.tsx"
       ],
       "hint": "Accessible name of the small arrow button next to a navigation group in the sidebar while the group is open: it hides the group's entries. %label% is the group's name."
+    },
+    {
+      "key": "Collapse %name%",
+      "text": "Collapse %name%",
+      "files": [
+        "files/FolderTree.tsx"
+      ],
+      "hint": "File manager, folder tree in the side panel. %name% is a file or folder name."
     },
     {
       "key": "Collapse %title%",
@@ -1528,6 +1967,14 @@
       "hint": "App translations admin, drawer of one translation key: accessible name of the filter for singular or plural values."
     },
     {
+      "key": "Continue",
+      "text": "Continue",
+      "files": [
+        "files/MoveDialog.tsx"
+      ],
+      "hint": "File manager, move dialog (pick the target folder, optionally another file area)."
+    },
+    {
       "key": "Copied",
       "text": "Copied",
       "files": [
@@ -1544,6 +1991,14 @@
         "issues/IssueGroupDrawer.tsx"
       ],
       "hint": "Issues admin screen, details drawer of one error group: toast after the group was copied to the clipboard for an AI coding agent."
+    },
+    {
+      "key": "Copied in",
+      "text": "Copied in",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
     {
       "key": "Copy %label%",
@@ -1569,6 +2024,14 @@
         "page/EntityMetadata.tsx"
       ],
       "hint": "Accessible label (screen reader and tooltip) of the small button that copies the record ID to the clipboard, shown in the metadata block of every detail screen. %id% is the record ID, for example 4711 or a UUID. Imperative tone."
+    },
+    {
+      "key": "Copy SHA-256",
+      "text": "Copy SHA-256",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
     {
       "key": "Copy file and line",
@@ -1662,6 +2125,14 @@
       "hint": "Issues admin screen, details drawer of one error group: note under the event count of a group."
     },
     {
+      "key": "Counts every kept version, uploads being checked and the trash.",
+      "text": "Counts every kept version, uploads being checked and the trash.",
+      "files": [
+        "files/QuotaPill.tsx"
+      ],
+      "hint": "File manager, storage pill (used storage of the file area)."
+    },
+    {
       "key": "Create",
       "text": "Create",
       "files": [
@@ -1676,6 +2147,14 @@
         "crons/CronFormDrawer.tsx"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): submit button of the create form."
+    },
+    {
+      "key": "Create folder",
+      "text": "Create folder",
+      "files": [
+        "files/FolderNameDialog.tsx"
+      ],
+      "hint": "File manager, dialog to create or rename a folder."
     },
     {
       "key": "Create table__schema-diff-change",
@@ -1720,6 +2199,25 @@
       "hint": "Label in the metadata block of a detail screen, placed before the date and time the record was created, for example 'Created 12 Nov 2026, 10:15'. Keep it short."
     },
     {
+      "key": "Created__file-date",
+      "text": "Created",
+      "context": "file-date",
+      "files": [
+        "files/FileDrawer.tsx",
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file date."
+    },
+    {
+      "key": "Created__file-event",
+      "text": "Created",
+      "context": "file-event",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file event."
+    },
+    {
       "key": "Creates or updates every configured row, matched by its key.",
       "text": "Creates or updates every configured row, matched by its key.",
       "files": [
@@ -1744,6 +2242,14 @@
         "translations/LocalesScreen.tsx"
       ],
       "hint": "Import of the configured languages or locales (maintenance action): description of the locales import."
+    },
+    {
+      "key": "Creating…",
+      "text": "Creating…",
+      "files": [
+        "files/FolderNameDialog.tsx"
+      ],
+      "hint": "File manager, dialog to create or rename a folder. Label of a button while the action runs."
     },
     {
       "key": "Cron",
@@ -1800,6 +2306,15 @@
         "workers/transport.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): column header: the job a process handles now."
+    },
+    {
+      "key": "Current__file-version",
+      "text": "Current",
+      "context": "file-version",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file version."
     },
     {
       "key": "Custom schedule",
@@ -1868,12 +2383,31 @@
       "hint": "Locales admin screen (language + country combinations): column header and switch: the locale is the default one of its language."
     },
     {
+      "key": "Delete",
+      "text": "Delete",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
       "key": "Delete %name%",
       "text": "Delete %name%",
       "files": [
-        "crons/parts.tsx"
+        "crons/parts.tsx",
+        "files/FileDrawer.tsx",
+        "files/FileItemActions.tsx"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): accessible name of the delete button of a job."
+    },
+    {
+      "key": "Delete %name% permanently",
+      "text": "Delete %name% permanently",
+      "files": [
+        "files/FileDrawer.tsx",
+        "files/FileItemActions.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %name% is a file or folder name."
     },
     {
       "key": "Delete %name%?",
@@ -1884,12 +2418,54 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): title of the delete confirmation."
     },
     {
+      "key": "Delete failed",
+      "text": "Delete failed",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Delete folder",
+      "text": "Delete folder",
+      "files": [
+        "files/FileManager.tsx",
+        "files/FolderTree.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
       "key": "Delete key",
       "text": "Delete key",
       "files": [
         "translations/AppTranslationKeyDrawer.tsx"
       ],
       "hint": "App translations admin, drawer of one translation key: button that deletes the key with all its values (asks first)."
+    },
+    {
+      "key": "Delete older versions (%count%, %size%)",
+      "text": "Delete older versions (%count%, %size%)",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %count% is a number; %size% is a file size like \"1.5 MB\"."
+    },
+    {
+      "key": "Delete permanently",
+      "text": "Delete permanently",
+      "files": [
+        "files/FileItemActions.tsx",
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager, the icon buttons of one file (download, move, links, delete; restore in the trash)."
+    },
+    {
+      "key": "Delete the folder “%name%”?",
+      "text": "Delete the folder “%name%”?",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Title of a confirmation dialog. %name% is a file or folder name."
     },
     {
       "key": "Delete the key %key%",
@@ -1917,16 +2493,83 @@
       "hint": "App translations admin, drawer of one translation key: title of the confirmation before one translated value of the key is deleted."
     },
     {
+      "key": "Delete “%name%” permanently?",
+      "text": "Delete “%name%” permanently?",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Title of a confirmation dialog. %name% is a file or folder name."
+    },
+    {
+      "key": "Delete “%name%”?",
+      "text": "Delete “%name%”?",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Title of a confirmation dialog. %name% is a file or folder name."
+    },
+    {
       "key": "Delete__action",
       "text": "Delete",
       "context": "action",
       "files": [
         "crons/parts.tsx",
         "crons/useCronActions.ts",
+        "files/FileDrawer.tsx",
+        "files/FileItemActions.tsx",
+        "files/FileManager.tsx",
         "translations/AppTranslationKeyDrawer.tsx",
         "translations/AppTranslationsScreen.tsx"
       ],
       "hint": "Button that deletes (an action, verb), in the app translations admin."
+    },
+    {
+      "key": "Deleted %date%",
+      "text": "Deleted %date%",
+      "files": [
+        "files/FileCard.tsx"
+      ],
+      "hint": "File manager, file card in the grid. %date% is a date."
+    },
+    {
+      "key": "Deleted %date% by %user%",
+      "text": "Deleted %date% by %user%",
+      "files": [
+        "files/FileCard.tsx"
+      ],
+      "hint": "File manager, file card in the grid. %date% is a date; %user% is a person's name."
+    },
+    {
+      "key": "Deleted %date% by %user%.",
+      "text": "Deleted %date% by %user%.",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %date% is a date; %user% is a person's name."
+    },
+    {
+      "key": "Deleted %date% by %user%. It is removed for good on %purgeDate% unless it is restored.",
+      "text": "Deleted %date% by %user%. It is removed for good on %purgeDate% unless it is restored.",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %date% is a date; %purgeDate% is the date of the final deletion; %user% is a person's name."
+    },
+    {
+      "key": "Deleted %date%.",
+      "text": "Deleted %date%.",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %date% is a date."
+    },
+    {
+      "key": "Deleted %date%. It is removed for good on %purgeDate% unless it is restored.",
+      "text": "Deleted %date%. It is removed for good on %purgeDate% unless it is restored.",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %date% is a date; %purgeDate% is the date of the final deletion."
     },
     {
       "key": "Deleted %name%",
@@ -1937,6 +2580,46 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): toast after deleting a job."
     },
     {
+      "key": "Deleted by",
+      "text": "Deleted by",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Deleted files stay here for %days% days, then they are removed for good.",
+      "text": "Deleted files stay here for %days% days, then they are removed for good.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %days% is a number of days."
+    },
+    {
+      "key": "Deleted files stay in the trash and can be restored from there.",
+      "text": "Deleted files stay in the trash and can be restored from there.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Deleted files stay in the trash for %days% days and can be restored until then.",
+      "text": "Deleted files stay in the trash for %days% days and can be restored until then.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %days% is a number of days."
+    },
+    {
+      "key": "Deleted permanently",
+      "text": "Deleted permanently",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
       "key": "Deleted__bulk-done",
       "text": "Deleted",
       "context": "bulk-done",
@@ -1944,6 +2627,15 @@
         "translations/AppTranslationsScreen.tsx"
       ],
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): first word of the summary after a bulk delete, e.g. “Deleted 3 keys”."
+    },
+    {
+      "key": "Deleted__file-date",
+      "text": "Deleted",
+      "context": "file-date",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: file date."
     },
     {
       "key": "Deleting__bulk-progress",
@@ -1963,6 +2655,23 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): label of the description field of a job."
     },
     {
+      "key": "Description changed",
+      "text": "Description changed",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "Description__file-description",
+      "text": "Description",
+      "context": "file-description",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file description."
+    },
+    {
       "key": "Destructive__schema-diff-severity",
       "text": "Destructive",
       "context": "schema-diff-severity",
@@ -1970,6 +2679,22 @@
         "database/status.ts"
       ],
       "hint": "Schema diff admin screen (database changes between the code's entities and the live database): severity badge: the change drops or narrows something; data is lost or rewritten."
+    },
+    {
+      "key": "Details",
+      "text": "Details",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "Details changed",
+      "text": "Details changed",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
     {
       "key": "Dev only",
@@ -2056,6 +2781,14 @@
       "hint": "App translations admin, drawer of one translation key: checkbox: the key is skipped by the automatic (AI) translation."
     },
     {
+      "key": "Document",
+      "text": "Document",
+      "files": [
+        "files/fileView.ts"
+      ],
+      "hint": "File manager, kind of file (type column, filter, details)."
+    },
+    {
       "key": "Done__dialog-action",
       "text": "Done",
       "context": "dialog-action",
@@ -2078,9 +2811,28 @@
       "key": "Download",
       "text": "Download",
       "files": [
-        "database/GeneratedCode.tsx"
+        "database/GeneratedCode.tsx",
+        "files/FileManager.tsx"
       ],
       "hint": "Button that saves generated code (SQL, PHP) as a file."
+    },
+    {
+      "key": "Download %name%",
+      "text": "Download %name%",
+      "files": [
+        "files/FileItemActions.tsx"
+      ],
+      "hint": "File manager, the icon buttons of one file (download, move, links, delete; restore in the trash). %name% is a file or folder name."
+    },
+    {
+      "key": "Download__action",
+      "text": "Download",
+      "context": "action",
+      "files": [
+        "files/FileDrawer.tsx",
+        "files/FileItemActions.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: action."
     },
     {
       "key": "Drag the frame to move it and its handles to resize it; scroll or pinch to zoom.",
@@ -2099,6 +2851,14 @@
       "hint": "Drive screen (cloud drive of the admin): page title of the file storage screen."
     },
     {
+      "key": "Drop files to upload them to %target%",
+      "text": "Drop files to upload them to %target%",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %target% is a folder or area name."
+    },
+    {
       "key": "Drop table__schema-diff-change",
       "text": "Drop table",
       "context": "schema-diff-change",
@@ -2106,6 +2866,14 @@
         "database/status.ts"
       ],
       "hint": "Schema diff admin screen (database changes between the code's entities and the live database): badge: the table exists only in the database and will be deleted."
+    },
+    {
+      "key": "Drop to move here",
+      "text": "Drop to move here",
+      "files": [
+        "files/FolderCard.tsx"
+      ],
+      "hint": "File manager, folder card in the grid."
     },
     {
       "key": "Dropped: it is not tried again (or waits in the failure transport).",
@@ -2151,6 +2919,15 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): section title of the duration chart in the job's details."
     },
     {
+      "key": "EMPTY__confirm-phrase",
+      "text": "EMPTY",
+      "context": "confirm-phrase",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: confirm phrase."
+    },
+    {
       "key": "Each one stops after its current message and is started again. Its stop shows as “Restart requested” under Processes.",
       "text": "Each one stops after its current message and is started again. Its stop shows as “Restart requested” under Processes.",
       "files": [
@@ -2166,6 +2943,40 @@
         "crons/parts.tsx"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): accessible name of the edit button and title of the edit drawer of a job."
+    },
+    {
+      "key": "Edit links",
+      "text": "Edit links",
+      "files": [
+        "files/FileDrawer.tsx",
+        "files/FileItemActions.tsx",
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "Edit the links of %name%",
+      "text": "Edit the links of %name%",
+      "files": [
+        "files/FileItemActions.tsx"
+      ],
+      "hint": "File manager, the icon buttons of one file (download, move, links, delete; restore in the trash). %name% is a file or folder name."
+    },
+    {
+      "key": "Edit the links of {count, plural, one {# file} other {# files}}",
+      "text": "Edit the links of {count, plural, one {# file} other {# files}}",
+      "files": [
+        "files/LinkTargetsDialog.tsx"
+      ],
+      "hint": "File manager, dialog to edit the links of files (checkbox list of link targets of the application). ICU plural; # is the number."
+    },
+    {
+      "key": "Edit the links of “%name%”",
+      "text": "Edit the links of “%name%”",
+      "files": [
+        "files/LinkTargetsDialog.tsx"
+      ],
+      "hint": "File manager, dialog to edit the links of files (checkbox list of link targets of the application). %name% is a file or folder name."
     },
     {
       "key": "Edit__action",
@@ -2184,6 +2995,22 @@
         "translations/TranslatableField.tsx"
       ],
       "hint": "Small line under a translatable text field in an admin form naming the language whose text the field currently edits. %language% is the spelled-out language name, e.g. German or German · Informal."
+    },
+    {
+      "key": "Empty the trash",
+      "text": "Empty the trash",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Empty the trash of %root%?",
+      "text": "Empty the trash of %root%?",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Title of a confirmation dialog. %root% is the name of the file area."
     },
     {
       "key": "Ended and reported its stop__worker-process-state",
@@ -2225,6 +3052,14 @@
         "crons/CronFormDrawer.tsx"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): error under the empty schedule field."
+    },
+    {
+      "key": "Enter a name",
+      "text": "Enter a name",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
     {
       "key": "Enter the key.",
@@ -2390,6 +3225,14 @@
       "hint": "Schema diff admin screen (database changes between the code's entities and the live database): success toast when no table change is left."
     },
     {
+      "key": "Every file in this trash is removed for good — also files others deleted. This cannot be undone.",
+      "text": "Every file in this trash is removed for good — also files others deleted. This cannot be undone.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
       "key": "Every live process stops after its current message and is started again with the current code and settings. A process inside a long job finishes that job first; nothing is scaled and no message is lost.",
       "text": "Every live process stops after its current message and is started again with the current code and settings. A process inside a long job finishes that job first; nothing is scaled and no message is lost.",
       "files": [
@@ -2438,12 +3281,28 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): description of the history charts section."
     },
     {
+      "key": "Existing files can still be downloaded.",
+      "text": "Existing files can still be downloaded.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
       "key": "Expand %label%",
       "text": "Expand %label%",
       "files": [
         "shell/ShellNavList.tsx"
       ],
       "hint": "Accessible name of the small arrow button next to a navigation group in the sidebar while the group is closed: it shows the group's entries. %label% is the group's name."
+    },
+    {
+      "key": "Expand %name%",
+      "text": "Expand %name%",
+      "files": [
+        "files/FolderTree.tsx"
+      ],
+      "hint": "File manager, folder tree in the side panel. %name% is a file or folder name."
     },
     {
       "key": "Expand sidebar",
@@ -2460,6 +3319,14 @@
         "page/PageToolbar.tsx"
       ],
       "hint": "Sample text of the outline button specimen in the UI showcase; imperative, exports a list as a spreadsheet. Maintenance UI showcase screen, Buttons section."
+    },
+    {
+      "key": "Facts",
+      "text": "Facts",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
     {
       "key": "Failed",
@@ -2642,6 +3509,48 @@
       "hint": "Drive screen (cloud drive of the admin): column header: the size of a file in bytes, KB, MB (not dimensions)."
     },
     {
+      "key": "File updated",
+      "text": "File updated",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "File__drawer-title",
+      "text": "File",
+      "context": "drawer-title",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: drawer title."
+    },
+    {
+      "key": "Files in the folder keep their links.",
+      "text": "Files in the folder keep their links.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Files without an extension are not allowed here.",
+      "text": "Files without an extension are not allowed here.",
+      "files": [
+        "files/uploadPrecheck.ts"
+      ],
+      "hint": "File manager, check before an upload starts (shown in the upload tray as the reason a file was refused)."
+    },
+    {
+      "key": "Files__files-label",
+      "text": "Files",
+      "context": "files-label",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: files label."
+    },
+    {
       "key": "Filter by key",
       "text": "Filter by key",
       "files": [
@@ -2757,12 +3666,97 @@
       "hint": "Issues admin screen (errors grouped by root cause): tooltip of the status 'Resolved' of an error group."
     },
     {
+      "key": "Folder deleted",
+      "text": "Folder deleted",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Folder moved to %target%",
+      "text": "Folder moved to %target%",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %target% is a folder or area name."
+    },
+    {
       "key": "Folder name",
       "text": "Folder name",
       "files": [
         "clouddrive/CloudDriveScreen.tsx"
       ],
       "hint": "Drive screen (cloud drive of the admin): input of the new-folder dialog."
+    },
+    {
+      "key": "Folder path",
+      "text": "Folder path",
+      "files": [
+        "files/FileBreadcrumbs.tsx"
+      ],
+      "hint": "File manager, breadcrumb path of the open folder."
+    },
+    {
+      "key": "Folder renamed",
+      "text": "Folder renamed",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Folder “%name%” created",
+      "text": "Folder “%name%” created",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %name% is a file or folder name."
+    },
+    {
+      "key": "Folder “%name%” moved to %target%",
+      "text": "Folder “%name%” moved to %target%",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %name% is a file or folder name; %target% is a folder or area name."
+    },
+    {
+      "key": "Folder__file-location",
+      "text": "Folder",
+      "context": "file-location",
+      "files": [
+        "files/FileDrawer.tsx",
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file location."
+    },
+    {
+      "key": "Folder__file-type",
+      "text": "Folder",
+      "context": "file-type",
+      "files": [
+        "files/FileManager.tsx",
+        "files/FolderCard.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: file type."
+    },
+    {
+      "key": "Folders",
+      "text": "Folders",
+      "files": [
+        "files/FileManager.tsx",
+        "files/FolderTree.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Folders nest at most %max% levels deep.",
+      "text": "Folders nest at most %max% levels deep.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %max% is a number."
     },
     {
       "key": "Foreign key",
@@ -2812,6 +3806,14 @@
         "media/ImageCropDialog.tsx"
       ],
       "hint": "Crop shape without a fixed aspect ratio."
+    },
+    {
+      "key": "Frees %size%. The current version stays; this cannot be undone.",
+      "text": "Frees %size%. The current version stays; this cannot be undone.",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %size% is a file size like \"1.5 MB\"."
     },
     {
       "key": "From__trend-window",
@@ -3045,6 +4047,14 @@
       "hint": "Schema diff admin screen (database changes between the code's entities and the live database): button that folds the list of changes and the SQL of a table."
     },
     {
+      "key": "Hide upload list",
+      "text": "Hide upload list",
+      "files": [
+        "files/UploadTray.tsx"
+      ],
+      "hint": "File manager, upload tray (floating panel listing the running uploads)."
+    },
+    {
       "key": "Hint: %hint%",
       "text": "Hint: %hint%",
       "files": [
@@ -3150,6 +4160,14 @@
       "hint": "Issues admin screen (errors grouped by root cause): status of an error group (and its tab): silenced for good."
     },
     {
+      "key": "Image",
+      "text": "Image",
+      "files": [
+        "files/fileView.ts"
+      ],
+      "hint": "File manager, kind of file (type column, filter, details)."
+    },
+    {
       "key": "Import from configuration",
       "text": "Import from configuration",
       "files": [
@@ -3223,6 +4241,14 @@
         "translations/LocalesScreen.tsx"
       ],
       "hint": "Languages and locales admin: the import button while the import runs."
+    },
+    {
+      "key": "In the trash",
+      "text": "In the trash",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
     {
       "key": "In work now",
@@ -3333,6 +4359,22 @@
         "issues/IssueEventDetails.tsx"
       ],
       "hint": "Issues admin screen, one occurrence of an error in the details drawer: what happens to a failed worker message that is retried."
+    },
+    {
+      "key": "Its %files% and those of %folders% move to the trash; the folders are removed.",
+      "text": "Its %files% and those of %folders% move to the trash; the folders are removed.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %files% is a phrase like \"3 files\"; %folders% is a phrase like \"2 folders\"."
+    },
+    {
+      "key": "Its %files% move to the trash; the folder is removed.",
+      "text": "Its %files% move to the trash; the folder is removed.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %files% is a phrase like \"3 files\"."
     },
     {
       "key": "Its current message runs longer than the busy limit__worker-process-state",
@@ -3468,6 +4510,23 @@
         "translations/AppTranslationKeyDrawer.tsx"
       ],
       "hint": "App translations admin, drawer of one translation key: placeholder of the language picker (choose a language)."
+    },
+    {
+      "key": "Larger than the limit of %limit% per file.",
+      "text": "Larger than the limit of %limit% per file.",
+      "files": [
+        "files/uploadPrecheck.ts"
+      ],
+      "hint": "File manager, check before an upload starts (shown in the upload tray as the reason a file was refused). %limit% is the size limit per file."
+    },
+    {
+      "key": "Largest first__file-order",
+      "text": "Largest first",
+      "context": "file-order",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: file order."
     },
     {
       "key": "Last %minutes% min",
@@ -3617,6 +4676,42 @@
       "hint": "Issues admin screen, one occurrence of an error in the details drawer: label of the log level of the event (ERROR, CRITICAL, …)."
     },
     {
+      "key": "Linked to",
+      "text": "Linked to",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Linked__file-event",
+      "text": "Linked",
+      "context": "file-event",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file event."
+    },
+    {
+      "key": "Linked__file-link-filter",
+      "text": "Linked",
+      "context": "file-link-filter",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: file link filter."
+    },
+    {
+      "key": "Links__file-links",
+      "text": "Links",
+      "context": "file-links",
+      "files": [
+        "files/FileDrawer.tsx",
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file links."
+    },
+    {
       "key": "Live processes",
       "text": "Live processes",
       "files": [
@@ -3666,6 +4761,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): section title: what is happening right now."
     },
     {
+      "key": "Load more",
+      "text": "Load more",
+      "files": [
+        "files/PdfPreview.tsx"
+      ],
+      "hint": "File manager, PDF preview (pages drawn as images)."
+    },
+    {
       "key": "Loading",
       "text": "Loading",
       "files": [
@@ -3696,6 +4799,14 @@
         "issues/IssuesScreen.tsx"
       ],
       "hint": "Issues admin screen (errors grouped by root cause): accessible status while the list loads."
+    },
+    {
+      "key": "Loading files",
+      "text": "Loading files",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
     },
     {
       "key": "Loading image…",
@@ -3770,12 +4881,28 @@
       "hint": "Accessible name of the loading placeholder inside the confirmation before an AI translation generation, while the cost estimate loads."
     },
     {
+      "key": "Loading the file",
+      "text": "Loading the file",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
       "key": "Loading the output…",
       "text": "Loading the output…",
       "files": [
         "crons/runs.tsx"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): dialog description while the run's output loads."
+    },
+    {
+      "key": "Loading the trash",
+      "text": "Loading the trash",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
     },
     {
       "key": "Loading translation keys",
@@ -3878,6 +5005,31 @@
       "hint": "Accessible name of the main navigation (the sidebar and the mobile menu), read by screen readers as a landmark: 'Main navigation'."
     },
     {
+      "key": "Malware check",
+      "text": "Malware check",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "Malware check failed",
+      "text": "Malware check failed",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "Malware detected__file-scan-status",
+      "text": "Malware detected",
+      "context": "file-scan-status",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip). Context: file scan status."
+    },
+    {
       "key": "Marked resolved",
       "text": "Marked resolved",
       "files": [
@@ -3893,6 +5045,23 @@
         "workers/transport.tsx"
       ],
       "hint": "Workers admin chart: series name: the maximum."
+    },
+    {
+      "key": "Me__file-uploader-filter",
+      "text": "Me",
+      "context": "file-uploader-filter",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: file uploader filter."
+    },
+    {
+      "key": "Media files have no player here. Download the file to play it.",
+      "text": "Media files have no player here. Download the file to play it.",
+      "files": [
+        "files/FilePreview.tsx"
+      ],
+      "hint": "File manager, file preview in the details drawer."
     },
     {
       "key": "Memory peak",
@@ -4160,12 +5329,69 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): description of the transports table."
     },
     {
+      "key": "Move",
+      "text": "Move",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
       "key": "Move \"%name%\" to the trash?",
       "text": "Move \"%name%\" to the trash?",
       "files": [
         "clouddrive/CloudDriveScreen.tsx"
       ],
       "hint": "Drive screen (cloud drive of the admin): title of the confirmation before a file or folder goes to the trash; %name% is its name."
+    },
+    {
+      "key": "Move %item% to another area?",
+      "text": "Move %item% to another area?",
+      "files": [
+        "files/MoveAcrossAreasDialog.tsx"
+      ],
+      "hint": "File manager, confirmation dialog of a move into another file area. Title of a confirmation dialog. %item% names what is moved (a file name in quotes, \"3 files\" or \"the folder …\")."
+    },
+    {
+      "key": "Move %name%",
+      "text": "Move %name%",
+      "files": [
+        "files/FileItemActions.tsx"
+      ],
+      "hint": "File manager, the icon buttons of one file (download, move, links, delete; restore in the trash). %name% is a file or folder name."
+    },
+    {
+      "key": "Move here",
+      "text": "Move here",
+      "files": [
+        "files/MoveDialog.tsx"
+      ],
+      "hint": "File manager, move dialog (pick the target folder, optionally another file area)."
+    },
+    {
+      "key": "Move the file",
+      "text": "Move the file",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "Move the folder “%name%”",
+      "text": "Move the folder “%name%”",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %name% is a file or folder name."
+    },
+    {
+      "key": "Move to the trash",
+      "text": "Move to the trash",
+      "files": [
+        "files/FileItemActions.tsx",
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager, the icon buttons of one file (download, move, links, delete; restore in the trash)."
     },
     {
       "key": "Move to trash",
@@ -4176,12 +5402,81 @@
       "hint": "Drive screen (cloud drive of the admin): button (and icon label) that moves a file or folder to the trash, from where it can be restored."
     },
     {
+      "key": "Move “%name%”",
+      "text": "Move “%name%”",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %name% is a file or folder name."
+    },
+    {
+      "key": "Move “%name%” to the trash?",
+      "text": "Move “%name%” to the trash?",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Title of a confirmation dialog. %name% is a file or folder name."
+    },
+    {
+      "key": "Move__action",
+      "text": "Move",
+      "context": "action",
+      "files": [
+        "files/FileItemActions.tsx"
+      ],
+      "hint": "File manager, the icon buttons of one file (download, move, links, delete; restore in the trash). Context: action."
+    },
+    {
+      "key": "Move__confirm-move-button",
+      "text": "Move",
+      "context": "confirm-move-button",
+      "files": [
+        "files/MoveAcrossAreasDialog.tsx"
+      ],
+      "hint": "File manager, confirmation dialog of a move into another file area. Context: confirm move button."
+    },
+    {
+      "key": "Move__folder-action",
+      "text": "Move",
+      "context": "folder-action",
+      "files": [
+        "files/FolderTree.tsx"
+      ],
+      "hint": "File manager, folder tree in the side panel. Context: folder action."
+    },
+    {
+      "key": "Moved to the trash",
+      "text": "Moved to the trash",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
       "key": "Moved to the trash.",
       "text": "Moved to the trash.",
       "files": [
         "clouddrive/CloudDriveScreen.tsx"
       ],
       "hint": "Drive screen (cloud drive of the admin): success toast after a file or folder went to the trash; an Undo button follows."
+    },
+    {
+      "key": "Moved__file-event",
+      "text": "Moved",
+      "context": "file-event",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file event."
+    },
+    {
+      "key": "Moving…",
+      "text": "Moving…",
+      "files": [
+        "files/MoveAcrossAreasDialog.tsx",
+        "files/MoveDialog.tsx"
+      ],
+      "hint": "File manager, confirmation dialog of a move into another file area. Label of a button while the action runs."
     },
     {
       "key": "Name",
@@ -4194,6 +5489,34 @@
         "translations/LocalesScreen.tsx"
       ],
       "hint": "Languages and locales admin: column header, the name of the language or locale."
+    },
+    {
+      "key": "Name__file-name",
+      "text": "Name",
+      "context": "file-name",
+      "files": [
+        "files/FileDrawer.tsx",
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file name."
+    },
+    {
+      "key": "Name__file-order",
+      "text": "Name",
+      "context": "file-order",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: file order."
+    },
+    {
+      "key": "Name__folder-name",
+      "text": "Name",
+      "context": "folder-name",
+      "files": [
+        "files/FolderNameDialog.tsx"
+      ],
+      "hint": "File manager, dialog to create or rename a folder. Context: folder name."
     },
     {
       "key": "Native name",
@@ -4233,9 +5556,20 @@
       "key": "New folder",
       "text": "New folder",
       "files": [
-        "clouddrive/CloudDriveScreen.tsx"
+        "clouddrive/CloudDriveScreen.tsx",
+        "files/FileManager.tsx",
+        "files/FolderNameDialog.tsx",
+        "files/FolderTree.tsx"
       ],
       "hint": "Drive screen (cloud drive of the admin): button and dialog title: create a folder in the current folder."
+    },
+    {
+      "key": "New subfolder",
+      "text": "New subfolder",
+      "files": [
+        "files/FolderTree.tsx"
+      ],
+      "hint": "File manager, folder tree in the side panel."
     },
     {
       "key": "New table",
@@ -4252,6 +5586,39 @@
         "translations/AppTranslationKeyDrawer.tsx"
       ],
       "hint": "App translations admin, drawer of one translation key: accessible name of the text field for the new translation."
+    },
+    {
+      "key": "New version",
+      "text": "New version",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "New version being checked",
+      "text": "New version being checked",
+      "files": [
+        "files/FileCard.tsx",
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file card in the grid."
+    },
+    {
+      "key": "New version uploaded",
+      "text": "New version uploaded",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "New version uploaded — it becomes current once the malware check is done",
+      "text": "New version uploaded — it becomes current once the malware check is done",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
     {
       "key": "New__issue-flag",
@@ -4277,6 +5644,15 @@
         "translations/AppTranslationKeyDrawer.tsx"
       ],
       "hint": "App translations admin, drawer of one translation key: order option of the values: the newest first."
+    },
+    {
+      "key": "Newest first__file-order",
+      "text": "Newest first",
+      "context": "file-order",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: file order."
     },
     {
       "key": "Next run",
@@ -4335,6 +5711,14 @@
         "crons/parts.tsx"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): empty list; 'Add Cron' is the button above it."
+    },
+    {
+      "key": "No area found",
+      "text": "No area found",
+      "files": [
+        "files/MoveDialog.tsx"
+      ],
+      "hint": "File manager, move dialog (pick the target folder, optionally another file area)."
     },
     {
       "key": "No change",
@@ -4426,6 +5810,46 @@
       "hint": "Issues admin screen (errors grouped by root cause): empty list of the tab with every status."
     },
     {
+      "key": "No files linked to %label% yet.",
+      "text": "No files linked to %label% yet.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %label% names a link target (e.g. a project)."
+    },
+    {
+      "key": "No files linked to %label% yet. Drop files here or upload.",
+      "text": "No files linked to %label% yet. Drop files here or upload.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %label% names a link target (e.g. a project)."
+    },
+    {
+      "key": "No files match the search and filters.",
+      "text": "No files match the search and filters.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "No files yet.",
+      "text": "No files yet.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "No files yet. Drop files here or upload.",
+      "text": "No files yet. Drop files here or upload.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
       "key": "No ignored errors.",
       "text": "No ignored errors.",
       "files": [
@@ -4504,6 +5928,23 @@
         "issues/IssuesTrendChart.tsx"
       ],
       "hint": "Issues admin screen (errors grouped by root cause): note under the trend when no log backend is configured."
+    },
+    {
+      "key": "No malware found.",
+      "text": "No malware found.",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip)."
+    },
+    {
+      "key": "No malware found.__file-scan-status",
+      "text": "No malware found.",
+      "context": "file-scan-status",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip). Context: file scan status."
     },
     {
       "key": "No media items found",
@@ -4873,6 +6314,15 @@
       "hint": "Title when the server refuses the generated SQL because this server must not change the database schema."
     },
     {
+      "key": "Not checked__file-scan-status",
+      "text": "Not checked",
+      "context": "file-scan-status",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip). Context: file scan status."
+    },
+    {
       "key": "Not consumed__worker-transport-state",
       "text": "Not consumed",
       "context": "worker-transport-state",
@@ -4890,6 +6340,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): the queue was not counted (shown instead of a number)."
     },
     {
+      "key": "Not enough storage left (%free% free).",
+      "text": "Not enough storage left (%free% free).",
+      "files": [
+        "files/uploadPrecheck.ts"
+      ],
+      "hint": "File manager, check before an upload starts (shown in the upload tray as the reason a file was refused). %free% is the free storage."
+    },
+    {
       "key": "Not fixed yet: every new event counts here__issue-status",
       "text": "Not fixed yet: every new event counts here",
       "context": "issue-status",
@@ -4897,6 +6355,15 @@
         "issues/status.ts"
       ],
       "hint": "Issues admin screen (errors grouped by root cause): tooltip of the status 'Open' of an error group."
+    },
+    {
+      "key": "Not linked__file-link-filter",
+      "text": "Not linked",
+      "context": "file-link-filter",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: file link filter."
     },
     {
       "key": "Not stopped",
@@ -4929,6 +6396,14 @@
         "workers/charts.tsx"
       ],
       "hint": "Workers admin chart: placeholder when the chart has nothing to show in the chosen time window."
+    },
+    {
+      "key": "Nothing matches this search.",
+      "text": "Nothing matches this search.",
+      "files": [
+        "files/LinkTargetsDialog.tsx"
+      ],
+      "hint": "File manager, dialog to edit the links of files (checkbox list of link targets of the application)."
     },
     {
       "key": "Nothing matches your search",
@@ -4979,6 +6454,30 @@
         "crons/runs.tsx"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): pager button of the runs list: the older page."
+    },
+    {
+      "key": "Older version restored",
+      "text": "Older version restored",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "Older versions could not be deleted",
+      "text": "Older versions could not be deleted",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "Older versions deleted",
+      "text": "Older versions deleted",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
     {
       "key": "Oldest first",
@@ -5062,6 +6561,14 @@
       "hint": "Slider label in a colour picker: how opaque the colour is (0 to 100 %)."
     },
     {
+      "key": "Open PDF",
+      "text": "Open PDF",
+      "files": [
+        "files/FilePreview.tsx"
+      ],
+      "hint": "File manager, file preview in the details drawer."
+    },
+    {
       "key": "Open in log backend",
       "text": "Open in log backend",
       "files": [
@@ -5129,6 +6636,14 @@
       "hint": "Workers admin chart: legend entry that groups the remaining transports; %count% is how many."
     },
     {
+      "key": "Other file",
+      "text": "Other file",
+      "files": [
+        "files/fileView.ts"
+      ],
+      "hint": "File manager, kind of file (type column, filter, details)."
+    },
+    {
       "key": "Other__stop-reason",
       "text": "Other",
       "context": "stop-reason",
@@ -5178,6 +6693,30 @@
         "workers/WorkerTransportScreen.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): tab with facts, charts and live processes."
+    },
+    {
+      "key": "PDF",
+      "text": "PDF",
+      "files": [
+        "files/fileView.ts"
+      ],
+      "hint": "File manager, kind of file (type column, filter, details)."
+    },
+    {
+      "key": "Page %number%",
+      "text": "Page %number%",
+      "files": [
+        "files/PdfPreview.tsx"
+      ],
+      "hint": "File manager, PDF preview (pages drawn as images). %number% is a version or page number."
+    },
+    {
+      "key": "Page %number% could not be shown.",
+      "text": "Page %number% could not be shown.",
+      "files": [
+        "files/PdfPreview.tsx"
+      ],
+      "hint": "File manager, PDF preview (pages drawn as images). %number% is a version or page number."
     },
     {
       "key": "Page %page%",
@@ -5269,6 +6808,22 @@
       "hint": "Button in the scheduled task form, next to a stored console command that cannot be chosen from the list: unlocks the field to choose another command."
     },
     {
+      "key": "Pick the area and the folder to move to. A move into another area is confirmed separately.",
+      "text": "Pick the area and the folder to move to. A move into another area is confirmed separately.",
+      "files": [
+        "files/MoveDialog.tsx"
+      ],
+      "hint": "File manager, move dialog (pick the target folder, optionally another file area)."
+    },
+    {
+      "key": "Pick the folder to move to.",
+      "text": "Pick the folder to move to.",
+      "files": [
+        "files/MoveDialog.tsx"
+      ],
+      "hint": "File manager, move dialog (pick the target folder, optionally another file area)."
+    },
+    {
       "key": "Plural",
       "text": "Plural",
       "files": [
@@ -5277,12 +6832,30 @@
       "hint": "App translations admin, drawer of one translation key: context option of a value: the plural form."
     },
     {
+      "key": "Presentation",
+      "text": "Presentation",
+      "files": [
+        "files/fileView.ts"
+      ],
+      "hint": "File manager, kind of file (type column, filter, details)."
+    },
+    {
       "key": "Presets",
       "text": "Presets",
       "files": [
         "form/ColorValueField.tsx"
       ],
       "hint": "Accessible name of a row of preset colours in a colour picker."
+    },
+    {
+      "key": "Preview of %name%",
+      "text": "Preview of %name%",
+      "files": [
+        "files/FilePreview.tsx",
+        "files/PdfPreview.tsx",
+        "files/TextPreview.tsx"
+      ],
+      "hint": "File manager, file preview in the details drawer. %name% is a file or folder name."
     },
     {
       "key": "Previous__page",
@@ -5499,6 +7072,14 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): why 'Run now' is unavailable right after the server refused it."
     },
     {
+      "key": "Refused: malware detected",
+      "text": "Refused: malware detected",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
       "key": "Regression__issue-flag",
       "text": "Regression",
       "context": "issue-flag",
@@ -5541,6 +7122,14 @@
       "hint": "Accessible label of the small X button on a chip in a multi-select, removing that choice. %label% is the chosen value, for example German."
     },
     {
+      "key": "Remove %name% from the list",
+      "text": "Remove %name% from the list",
+      "files": [
+        "files/UploadTray.tsx"
+      ],
+      "hint": "File manager, upload tray (floating panel listing the running uploads). %name% is a file or folder name."
+    },
+    {
       "key": "Remove__media-field-action",
       "text": "Remove",
       "context": "media-field-action",
@@ -5548,6 +7137,40 @@
         "media/MediaItemField.tsx"
       ],
       "hint": "Button label next to a media field; click to clear the chosen image reference from the form. Takes effect only after the form is saved."
+    },
+    {
+      "key": "Removed for good",
+      "text": "Removed for good",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Rename folder",
+      "text": "Rename folder",
+      "files": [
+        "files/FolderNameDialog.tsx"
+      ],
+      "hint": "File manager, dialog to create or rename a folder."
+    },
+    {
+      "key": "Rename__folder-action",
+      "text": "Rename",
+      "context": "folder-action",
+      "files": [
+        "files/FolderTree.tsx"
+      ],
+      "hint": "File manager, folder tree in the side panel. Context: folder action."
+    },
+    {
+      "key": "Renamed__file-event",
+      "text": "Renamed",
+      "context": "file-event",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file event."
     },
     {
       "key": "Reopen__issue-action",
@@ -5573,6 +7196,14 @@
         "issues/IssueGroupDrawer.tsx"
       ],
       "hint": "Issues admin screen, details drawer of one error group: note under the Reopen button."
+    },
+    {
+      "key": "Replace file",
+      "text": "Replace file",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
     {
       "key": "Report problem",
@@ -5743,9 +7374,69 @@
       "key": "Restore",
       "text": "Restore",
       "files": [
-        "clouddrive/CloudDriveScreen.tsx"
+        "clouddrive/CloudDriveScreen.tsx",
+        "files/FileManager.tsx"
       ],
       "hint": "Drive screen (cloud drive of the admin): icon label: bring a trashed file or folder back."
+    },
+    {
+      "key": "Restore %name%",
+      "text": "Restore %name%",
+      "files": [
+        "files/FileItemActions.tsx"
+      ],
+      "hint": "File manager, the icon buttons of one file (download, move, links, delete; restore in the trash). %name% is a file or folder name."
+    },
+    {
+      "key": "Restore failed",
+      "text": "Restore failed",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Restore this version",
+      "text": "Restore this version",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "Restore version %number%",
+      "text": "Restore version %number%",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %number% is a version or page number."
+    },
+    {
+      "key": "Restore version %number%?",
+      "text": "Restore version %number%?",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Title of a confirmation dialog. %number% is a version or page number."
+    },
+    {
+      "key": "Restore__action",
+      "text": "Restore",
+      "context": "action",
+      "files": [
+        "files/FileDrawer.tsx",
+        "files/FileItemActions.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: action."
+    },
+    {
+      "key": "Restored__file-event",
+      "text": "Restored",
+      "context": "file-event",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file event."
     },
     {
       "key": "Result",
@@ -5783,6 +7474,14 @@
         "workers/WorkersOverviewScreen.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): button that loads the overview again after an error."
+    },
+    {
+      "key": "Retry %name%",
+      "text": "Retry %name%",
+      "files": [
+        "files/UploadTray.tsx"
+      ],
+      "hint": "File manager, upload tray (floating panel listing the running uploads). %name% is a file or folder name."
     },
     {
       "key": "Right now, per transport",
@@ -5995,6 +7694,23 @@
       "hint": "Heading of the panel that shows the SQL creating every database table (developer tool)."
     },
     {
+      "key": "SVG graphic",
+      "text": "SVG graphic",
+      "files": [
+        "files/fileView.ts"
+      ],
+      "hint": "File manager, kind of file (type column, filter, details)."
+    },
+    {
+      "key": "Save",
+      "text": "Save",
+      "files": [
+        "files/FileDrawer.tsx",
+        "files/FolderNameDialog.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
       "key": "Save and translate",
       "text": "Save and translate",
       "files": [
@@ -6010,6 +7726,14 @@
         "i18n/Translate.tsx"
       ],
       "hint": "Sample text of the primary button specimen in the UI showcase; imperative, a typical save action. Maintenance UI showcase screen, Buttons section."
+    },
+    {
+      "key": "Save links",
+      "text": "Save links",
+      "files": [
+        "files/LinkTargetsDialog.tsx"
+      ],
+      "hint": "File manager, dialog to edit the links of files (checkbox list of link targets of the application)."
     },
     {
       "key": "Save__action",
@@ -6034,6 +7758,9 @@
       "text": "Saving…",
       "files": [
         "crons/CronFormDrawer.tsx",
+        "files/FileDrawer.tsx",
+        "files/FolderNameDialog.tsx",
+        "files/LinkTargetsDialog.tsx",
         "translations/AppTranslationKeyDrawer.tsx"
       ],
       "hint": "App translations admin, drawer of one translation key: submit button while the key is being saved."
@@ -6114,6 +7841,14 @@
       "hint": "Placeholder of the search field in the \"Cron\" filter of the runs list (scheduled tasks are called Crons)."
     },
     {
+      "key": "Search areas…",
+      "text": "Search areas…",
+      "files": [
+        "files/MoveDialog.tsx"
+      ],
+      "hint": "File manager, move dialog (pick the target folder, optionally another file area). Placeholder of a search field."
+    },
+    {
       "key": "Search by name",
       "text": "Search by name",
       "files": [
@@ -6136,6 +7871,22 @@
         "issues/IssuesScreen.tsx"
       ],
       "hint": "Issues admin screen (errors grouped by root cause): accessible name of the search field."
+    },
+    {
+      "key": "Search file names",
+      "text": "Search file names",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Search file names…",
+      "text": "Search file names…",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Placeholder of a search field."
     },
     {
       "key": "Search for a command to run…",
@@ -6170,6 +7921,22 @@
       "hint": "App translations admin, drawer of one translation key: search placeholder inside the language picker."
     },
     {
+      "key": "Search link targets",
+      "text": "Search link targets",
+      "files": [
+        "files/LinkTargetsDialog.tsx"
+      ],
+      "hint": "File manager, dialog to edit the links of files (checkbox list of link targets of the application)."
+    },
+    {
+      "key": "Search link targets…",
+      "text": "Search link targets…",
+      "files": [
+        "files/LinkTargetsDialog.tsx"
+      ],
+      "hint": "File manager, dialog to edit the links of files (checkbox list of link targets of the application). Placeholder of a search field."
+    },
+    {
       "key": "Search locales by name…",
       "text": "Search locales by name…",
       "files": [
@@ -6192,6 +7959,14 @@
         "crons/CronsScreen.tsx"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): placeholder of the search field."
+    },
+    {
+      "key": "Search results in all folders",
+      "text": "Search results in all folders",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
     },
     {
       "key": "Search the values of this key",
@@ -6268,6 +8043,15 @@
         "page/EntityDetailShell.tsx"
       ],
       "hint": "Default accessible name (screen reader label, not visible) of the tab bar under the header of a detail screen, whose tabs switch between sections of the record such as General, Teams or Rides. Plural noun."
+    },
+    {
+      "key": "Select %name%",
+      "text": "Select %name%",
+      "files": [
+        "files/FileCard.tsx",
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager, file card in the grid. %name% is a file or folder name."
     },
     {
       "key": "Select %table%",
@@ -6408,6 +8192,14 @@
       "hint": "Small floating pill button at the bottom edge of an expanded group panel; clicking it shows only the first few rows again."
     },
     {
+      "key": "Show uploads",
+      "text": "Show uploads",
+      "files": [
+        "files/UploadTray.tsx"
+      ],
+      "hint": "File manager, upload tray (floating panel listing the running uploads)."
+    },
+    {
       "key": "Show__generated-code",
       "text": "Show",
       "context": "generated-code",
@@ -6423,6 +8215,22 @@
         "workers/WorkersOverviewScreen.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): warning shown when a reload failed: the numbers on screen are from %time% (a clock time)."
+    },
+    {
+      "key": "Showing the first %count% rows. Download the file to see all of it.",
+      "text": "Showing the first %count% rows. Download the file to see all of it.",
+      "files": [
+        "files/TextPreview.tsx"
+      ],
+      "hint": "File manager, text / CSV preview. %count% is a number."
+    },
+    {
+      "key": "Showing the first 100 KB. Download the file to see all of it.",
+      "text": "Showing the first 100 KB. Download the file to see all of it.",
+      "files": [
+        "files/TextPreview.tsx"
+      ],
+      "hint": "File manager, text / CSV preview."
     },
     {
       "key": "Showing the last data that loaded.",
@@ -6475,6 +8283,16 @@
       "hint": "App translations admin, drawer of one translation key: filter option: singular and plural values."
     },
     {
+      "key": "Size__file-size",
+      "text": "Size",
+      "context": "file-size",
+      "files": [
+        "files/FileDrawer.tsx",
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file size."
+    },
+    {
       "key": "Skip to content",
       "text": "Skip to content",
       "files": [
@@ -6505,6 +8323,15 @@
         "translations/AppTranslationsScreen.tsx"
       ],
       "hint": "Accessible name of the sort dropdown in the toolbar of the translation keys list, shown while the keys are displayed as cards; it picks the order of the keys."
+    },
+    {
+      "key": "Sort by__file-order",
+      "text": "Sort by",
+      "context": "file-order",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: file order."
     },
     {
       "key": "Sort by__media-picker",
@@ -6540,6 +8367,14 @@
         "clouddrive/CloudDriveScreen.tsx"
       ],
       "hint": "Drive screen (cloud drive of the admin): picker of the storage space (one drive per customer, agent workspace or library)."
+    },
+    {
+      "key": "Spreadsheet",
+      "text": "Spreadsheet",
+      "files": [
+        "files/fileView.ts"
+      ],
+      "hint": "File manager, kind of file (type column, filter, details)."
     },
     {
       "key": "Stack",
@@ -6605,6 +8440,15 @@
       "hint": "Column header and label of a status: the status tabs of the issues screen (Open, Resolved, Ignored, All) and the status column of the crons table."
     },
     {
+      "key": "Status__file-status",
+      "text": "Status",
+      "context": "file-status",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: file status."
+    },
+    {
       "key": "Stopped",
       "text": "Stopped",
       "files": [
@@ -6647,6 +8491,14 @@
         "workers/status.ts"
       ],
       "hint": "Status badge of a worker process: description of Stopping."
+    },
+    {
+      "key": "Storage in %area% after the move",
+      "text": "Storage in %area% after the move",
+      "files": [
+        "files/MoveAcrossAreasDialog.tsx"
+      ],
+      "hint": "File manager, confirmation dialog of a move into another file area. %area% is the name of a file area."
     },
     {
       "key": "Stored rows are matched and updated with the configured values, new ones are added. Rows that are not configured stay.",
@@ -6784,6 +8636,15 @@
       "hint": "Drive screen (cloud drive of the admin): badge of a system folder (scratch files of the assistant, deleted after a few days)."
     },
     {
+      "key": "System__file-event-actor",
+      "text": "System",
+      "context": "file-event-actor",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file event actor."
+    },
+    {
       "key": "Table dropped",
       "text": "Table dropped",
       "files": [
@@ -6800,12 +8661,36 @@
       "hint": "Tooltip and accessible label of the icon button in a list toolbar that switches the list to a table with rows and columns."
     },
     {
+      "key": "Target area",
+      "text": "Target area",
+      "files": [
+        "files/MoveDialog.tsx"
+      ],
+      "hint": "File manager, move dialog (pick the target folder, optionally another file area)."
+    },
+    {
+      "key": "Target folder",
+      "text": "Target folder",
+      "files": [
+        "files/MoveDialog.tsx"
+      ],
+      "hint": "File manager, move dialog (pick the target folder, optionally another file area)."
+    },
+    {
       "key": "Template text for the translation (optional)",
       "text": "Template text for the translation (optional)",
       "files": [
         "translations/AppTranslationKeyDrawer.tsx"
       ],
       "hint": "App translations admin, drawer of one translation key: placeholder of the template field: a text the translation is built from."
+    },
+    {
+      "key": "Text",
+      "text": "Text",
+      "files": [
+        "files/fileView.ts"
+      ],
+      "hint": "File manager, kind of file (type column, filter, details)."
     },
     {
       "key": "Text direction",
@@ -6930,6 +8815,14 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): tooltip of the status badge 'Command missing'."
     },
     {
+      "key": "The current version stays available until the new one has passed the malware check.",
+      "text": "The current version stays available until the new one has passed the malware check.",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
       "key": "The diff could not be applied.",
       "text": "The diff could not be applied.",
       "files": [
@@ -6946,12 +8839,28 @@
       "hint": "Schema diff admin screen (database changes between the code's entities and the live database): fallback error when several table changes failed without a message."
     },
     {
+      "key": "The download unlocks after the malware check",
+      "text": "The download unlocks after the malware check",
+      "files": [
+        "files/FileItemActions.tsx"
+      ],
+      "hint": "File manager, the icon buttons of one file (download, move, links, delete; restore in the trash)."
+    },
+    {
       "key": "The editor could not be loaded; edit the Markdown text directly.",
       "text": "The editor could not be loaded; edit the Markdown text directly.",
       "files": [
         "markdown/MarkdownEditor.tsx"
       ],
       "hint": "Small note under a plain text box that replaces the Markdown editor when the editor could not be loaded. The user can still type Markdown (formatting syntax) directly."
+    },
+    {
+      "key": "The empty folder is removed.",
+      "text": "The empty folder is removed.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
     },
     {
       "key": "The error group could not be loaded.",
@@ -6978,6 +8887,14 @@
       "hint": "Error shown inside the confirmation before an AI translation generation when the cost estimate (number of keys, requests) could not be loaded; the generation can still be confirmed."
     },
     {
+      "key": "The extension cannot be changed. Upload the file again to change its type.",
+      "text": "The extension cannot be changed. Upload the file again to change its type.",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
       "key": "The file cannot be downloaded.",
       "text": "The file cannot be downloaded.",
       "files": [
@@ -6994,6 +8911,22 @@
       "hint": "Drive screen (cloud drive of the admin): error toast after a failed move to the trash."
     },
     {
+      "key": "The file could not be updated",
+      "text": "The file could not be updated",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "The file is empty.",
+      "text": "The file is empty.",
+      "files": [
+        "files/uploadPrecheck.ts"
+      ],
+      "hint": "File manager, check before an upload starts (shown in the upload tray as the reason a file was refused)."
+    },
+    {
       "key": "The file is not an image this browser can read",
       "text": "The file is not an image this browser can read",
       "files": [
@@ -7004,6 +8937,46 @@
       "hint": "Error message shown when a picked file cannot be decoded as an image by the browser while preparing an upload in the media picker."
     },
     {
+      "key": "The files are removed right away and cannot be restored.",
+      "text": "The files are removed right away and cannot be restored.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "The files could not be loaded.",
+      "text": "The files could not be loaded.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "The files could not be moved",
+      "text": "The files could not be moved",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "The files leave this area; whoever can only see this area loses access. Folders move with everything in them.",
+      "text": "The files leave this area; whoever can only see this area loses access. Folders move with everything in them.",
+      "files": [
+        "files/MoveAcrossAreasDialog.tsx"
+      ],
+      "hint": "File manager, confirmation dialog of a move into another file area."
+    },
+    {
+      "key": "The folder and everything in it are deleted. This cannot be undone.",
+      "text": "The folder and everything in it are deleted. This cannot be undone.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
       "key": "The folder could not be created.",
       "text": "The folder could not be created.",
       "files": [
@@ -7012,12 +8985,36 @@
       "hint": "Drive screen (cloud drive of the admin): error toast after a failed folder creation."
     },
     {
+      "key": "The folder could not be deleted",
+      "text": "The folder could not be deleted",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
       "key": "The folder could not be loaded.",
       "text": "The folder could not be loaded.",
       "files": [
         "clouddrive/CloudDriveScreen.tsx"
       ],
       "hint": "Drive screen (cloud drive of the admin): error text in the list when the folder contents could not be read."
+    },
+    {
+      "key": "The folder could not be moved",
+      "text": "The folder could not be moved",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "The folder is created %location%.",
+      "text": "The folder is created %location%.",
+      "files": [
+        "files/FolderNameDialog.tsx"
+      ],
+      "hint": "File manager, dialog to create or rename a folder. %location% is a phrase like \"in Reports\"."
     },
     {
       "key": "The generation runs in the background.",
@@ -7112,6 +9109,14 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): tooltip of the status badge 'Failing'."
     },
     {
+      "key": "The link targets could not be loaded.",
+      "text": "The link targets could not be loaded.",
+      "files": [
+        "files/LinkTargetsDialog.tsx"
+      ],
+      "hint": "File manager, dialog to edit the links of files (checkbox list of link targets of the application)."
+    },
+    {
       "key": "The live database matches the entities: nothing to apply.",
       "text": "The live database matches the entities: nothing to apply.",
       "files": [
@@ -7144,6 +9149,49 @@
       "hint": "Issues admin screen (errors grouped by root cause): note under the trend when the log backend failed."
     },
     {
+      "key": "The malware check could not finish. The file stays locked until it is checked again.",
+      "text": "The malware check could not finish. The file stays locked until it is checked again.",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip)."
+    },
+    {
+      "key": "The malware check could not finish. The file stays locked until it is checked again.__file-scan-status",
+      "text": "The malware check could not finish. The file stays locked until it is checked again.",
+      "context": "file-scan-status",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip). Context: file scan status."
+    },
+    {
+      "key": "The malware check found malware in this upload. It was refused; nobody can download it.",
+      "text": "The malware check found malware in this upload. It was refused; nobody can download it.",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip)."
+    },
+    {
+      "key": "The malware check is running. The file can be downloaded once it is done.__file-scan-status",
+      "text": "The malware check is running. The file can be downloaded once it is done.",
+      "context": "file-scan-status",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip). Context: file scan status."
+    },
+    {
+      "key": "The malware check refused this upload; nobody can download it.__file-scan-status",
+      "text": "The malware check refused this upload; nobody can download it.",
+      "context": "file-scan-status",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip). Context: file scan status."
+    },
+    {
       "key": "The message carried no dispatch time",
       "text": "The message carried no dispatch time",
       "files": [
@@ -7158,6 +9206,30 @@
         "workers/transport.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): error when the runs could not be loaded."
+    },
+    {
+      "key": "The move could not be checked",
+      "text": "The move could not be checked",
+      "files": [
+        "files/MoveAcrossAreasDialog.tsx"
+      ],
+      "hint": "File manager, confirmation dialog of a move into another file area."
+    },
+    {
+      "key": "The move failed",
+      "text": "The move failed",
+      "files": [
+        "files/MoveAcrossAreasDialog.tsx"
+      ],
+      "hint": "File manager, confirmation dialog of a move into another file area."
+    },
+    {
+      "key": "The new file must be a .%extension% file. Upload other types as a new file.",
+      "text": "The new file must be a .%extension% file. Upload other types as a new file.",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %extension% is a file extension like \"pdf\"."
     },
     {
       "key": "The number of missing keys is not known.",
@@ -7473,6 +9545,22 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): description of the charts section."
     },
     {
+      "key": "The trash could not be emptied",
+      "text": "The trash could not be emptied",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "The trash is empty.",
+      "text": "The trash is empty.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
       "key": "The trend could not be loaded.",
       "text": "The trend could not be loaded.",
       "files": [
@@ -7490,12 +9578,45 @@
       "hint": "Issues admin screen (errors grouped by root cause): note under the trend for an unknown reason code %code%."
     },
     {
+      "key": "The upload did not reach the server. Check the connection and try again.",
+      "text": "The upload did not reach the server. Check the connection and try again.",
+      "files": [
+        "files/uploadWithProgress.ts"
+      ],
+      "hint": "File manager, upload error message."
+    },
+    {
+      "key": "The upload has not finished yet.",
+      "text": "The upload has not finished yet.",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip)."
+    },
+    {
+      "key": "The upload has not finished yet.__file-scan-status",
+      "text": "The upload has not finished yet.",
+      "context": "file-scan-status",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip). Context: file scan status."
+    },
+    {
       "key": "The value you selected is not a valid choice.",
       "text": "The value you selected is not a valid choice.",
       "files": [
         "i18n/serverMessages.ts"
       ],
       "hint": "Validation message from the server shown next to a form field (or in the error list above a form) after a failed save. A dropdown field contains a value that is not one of the allowed options."
+    },
+    {
+      "key": "The version could not be restored",
+      "text": "The version could not be restored",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
     {
       "key": "The worker history could not be loaded.",
@@ -7555,12 +9676,61 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): error for an unknown transport; %transport% is the queue name."
     },
     {
+      "key": "There is nothing to link yet.",
+      "text": "There is nothing to link yet.",
+      "files": [
+        "files/LinkTargetsDialog.tsx"
+      ],
+      "hint": "File manager, dialog to edit the links of files (checkbox list of link targets of the application)."
+    },
+    {
+      "key": "These links point to targets outside %area%:",
+      "text": "These links point to targets outside %area%:",
+      "files": [
+        "files/MoveAcrossAreasDialog.tsx"
+      ],
+      "hint": "File manager, confirmation dialog of a move into another file area. %area% is the name of a file area."
+    },
+    {
+      "key": "This PDF could not be shown. Download it to open it.",
+      "text": "This PDF could not be shown. Download it to open it.",
+      "files": [
+        "files/PdfPreview.tsx"
+      ],
+      "hint": "File manager, PDF preview (pages drawn as images)."
+    },
+    {
       "key": "This apply is not allowed",
       "text": "This apply is not allowed",
       "files": [
         "database/SchemaDiffScreen.tsx"
       ],
       "hint": "Title of an error notice on the database schema comparison: the server refused to apply a change for this user or request (a permission refusal); the server's reason follows."
+    },
+    {
+      "key": "This area",
+      "text": "This area",
+      "files": [
+        "files/MoveAcrossAreasDialog.tsx"
+      ],
+      "hint": "File manager, confirmation dialog of a move into another file area."
+    },
+    {
+      "key": "This area runs without a malware check; the file is released unchecked.",
+      "text": "This area runs without a malware check; the file is released unchecked.",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip)."
+    },
+    {
+      "key": "This area runs without a malware check; the file is released unchecked.__file-scan-status",
+      "text": "This area runs without a malware check; the file is released unchecked.",
+      "context": "file-scan-status",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip). Context: file scan status."
     },
     {
       "key": "This browser cannot process images",
@@ -7593,6 +9763,14 @@
         "crons/format.ts"
       ],
       "hint": "Note next to a scheduled task's console command in its edit form: the installed application no longer has this command, so it is shown read-only and saved unchanged."
+    },
+    {
+      "key": "This cannot be undone.",
+      "text": "This cannot be undone.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
     },
     {
       "key": "This command cannot be scheduled here; it is kept as stored.",
@@ -7635,12 +9813,61 @@
       "hint": "Schema diff admin screen (database changes between the code's entities and the live database): notice when a table's change was applied meanwhile."
     },
     {
+      "key": "This file could not be shown. Download it to open it.",
+      "text": "This file could not be shown. Download it to open it.",
+      "files": [
+        "files/TextPreview.tsx"
+      ],
+      "hint": "File manager, text / CSV preview."
+    },
+    {
+      "key": "This file is being checked for malware. It can be previewed and downloaded once the check is done.",
+      "text": "This file is being checked for malware. It can be previewed and downloaded once the check is done.",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip)."
+    },
+    {
+      "key": "This file was not found or is no longer available.",
+      "text": "This file was not found or is no longer available.",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
       "key": "This folder is empty.",
       "text": "This folder is empty.",
       "files": [
-        "clouddrive/CloudDriveScreen.tsx"
+        "clouddrive/CloudDriveScreen.tsx",
+        "files/FileManager.tsx"
       ],
       "hint": "Drive screen (cloud drive of the admin): empty state of a folder without files."
+    },
+    {
+      "key": "This folder is empty. Drop files here or upload.",
+      "text": "This folder is empty. Drop files here or upload.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "This image could not be shown.",
+      "text": "This image could not be shown.",
+      "files": [
+        "files/FilePreview.tsx"
+      ],
+      "hint": "File manager, file preview in the details drawer."
+    },
+    {
+      "key": "This image type has no preview here. Download it to open it.",
+      "text": "This image type has no preview here. Download it to open it.",
+      "files": [
+        "files/FilePreview.tsx"
+      ],
+      "hint": "File manager, file preview in the details drawer."
     },
     {
       "key": "This is not a valid cron expression.",
@@ -7649,6 +9876,14 @@
         "crons/CronFormDrawer.tsx"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): error under the schedule field when the server gives no message."
+    },
+    {
+      "key": "This move is not possible",
+      "text": "This move is not possible",
+      "files": [
+        "files/MoveAcrossAreasDialog.tsx"
+      ],
+      "hint": "File manager, confirmation dialog of a move into another file area."
     },
     {
       "key": "This page could not be shown. Try again, or reload the page.",
@@ -8055,6 +10290,25 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): section title and table name: the queues of background jobs."
     },
     {
+      "key": "Trash emptied",
+      "text": "Trash emptied",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Trash__files-label",
+      "text": "Trash",
+      "context": "files-label",
+      "files": [
+        "files/FileBreadcrumbs.tsx",
+        "files/FileManager.tsx",
+        "files/FolderTree.tsx"
+      ],
+      "hint": "File manager, breadcrumb path of the open folder. Context: files label."
+    },
+    {
       "key": "Trend",
       "text": "Trend",
       "files": [
@@ -8087,12 +10341,30 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): appended to the server's message of a refused action."
     },
     {
+      "key": "Type icon",
+      "text": "Type icon",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
       "key": "Type “%phrase%” to confirm",
       "text": "Type “%phrase%” to confirm",
       "files": [
         "primitives/confirmDialogView.tsx"
       ],
       "hint": "Label above the text field of a confirmation dialog for an irreversible step; the confirm button stays off until the user types the phrase exactly. %phrase% is the phrase to type (for example the name of the item to delete). Keep the quotation marks around it."
+    },
+    {
+      "key": "Type__file-type",
+      "text": "Type",
+      "context": "file-type",
+      "files": [
+        "files/FileDrawer.tsx",
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file type."
     },
     {
       "key": "URL",
@@ -8155,6 +10427,15 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): the queue length is unknown (it could not be counted)."
     },
     {
+      "key": "Unlinked__file-event",
+      "text": "Unlinked",
+      "context": "file-event",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file event."
+    },
+    {
       "key": "Unreadable file",
       "text": "Unreadable file",
       "files": [
@@ -8166,9 +10447,18 @@
       "key": "Unsaved changes",
       "text": "Unsaved changes",
       "files": [
+        "files/FileManager.tsx",
         "form/FormActions.tsx"
       ],
       "hint": "Status text next to the Save and Cancel buttons of an edit form, shown while the user has changed fields that are not saved yet."
+    },
+    {
+      "key": "Up to %size% per file",
+      "text": "Up to %size% per file",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %size% is a file size like \"1.5 MB\"."
     },
     {
       "key": "Updated %time%",
@@ -8188,12 +10478,47 @@
       "hint": "Label in the metadata block of a detail screen, placed before the date and time the record was last modified, for example 'Updated 12 Nov 2026, 10:15'. Keep it short."
     },
     {
+      "key": "Updated__file-date",
+      "text": "Updated",
+      "context": "file-date",
+      "files": [
+        "files/FileDrawer.tsx",
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file date."
+    },
+    {
       "key": "Upload",
       "text": "Upload",
       "files": [
         "clouddrive/CloudDriveScreen.tsx"
       ],
       "hint": "Drive screen (cloud drive of the admin): button: pick files from the computer and upload them into the current folder."
+    },
+    {
+      "key": "Upload cancelled",
+      "text": "Upload cancelled",
+      "files": [
+        "files/uploadWithProgress.ts"
+      ],
+      "hint": "File manager, upload error message."
+    },
+    {
+      "key": "Upload failed",
+      "text": "Upload failed",
+      "files": [
+        "files/UploadTray.tsx",
+        "files/uploadWithProgress.ts"
+      ],
+      "hint": "File manager, upload tray (floating panel listing the running uploads)."
+    },
+    {
+      "key": "Upload files",
+      "text": "Upload files",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
     },
     {
       "key": "Upload__media-picker",
@@ -8203,6 +10528,57 @@
         "media/MediaItemPickerDialog.tsx"
       ],
       "hint": "Button in the media picker dialog header; click to choose image files from the computer and upload them as new media items."
+    },
+    {
+      "key": "Uploaded by",
+      "text": "Uploaded by",
+      "files": [
+        "files/FileDrawer.tsx",
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "Uploaded to %target%",
+      "text": "Uploaded to %target%",
+      "files": [
+        "files/UploadTray.tsx"
+      ],
+      "hint": "File manager, upload tray (floating panel listing the running uploads). %target% is a folder or area name."
+    },
+    {
+      "key": "Uploaded to %target% ·",
+      "text": "Uploaded to %target% ·",
+      "files": [
+        "files/UploadTray.tsx"
+      ],
+      "hint": "File manager, upload tray (floating panel listing the running uploads). %target% is a folder or area name."
+    },
+    {
+      "key": "Uploaded__file-event",
+      "text": "Uploaded",
+      "context": "file-event",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file event."
+    },
+    {
+      "key": "Uploading %name%",
+      "text": "Uploading %name%",
+      "files": [
+        "files/FileDrawer.tsx",
+        "files/UploadTray.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %name% is a file or folder name."
+    },
+    {
+      "key": "Uploading %name% · %percent% %",
+      "text": "Uploading %name% · %percent% %",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %name% is a file or folder name; %percent% is a percentage number."
     },
     {
       "key": "Uploading %name%: %percent%",
@@ -8221,6 +10597,23 @@
       "hint": "Drive screen (cloud drive of the admin): progress text when an upload starts; %name% is the file name."
     },
     {
+      "key": "Uploading · %finished% of %started% done",
+      "text": "Uploading · %finished% of %started% done",
+      "files": [
+        "files/UploadTray.tsx"
+      ],
+      "hint": "File manager, upload tray (floating panel listing the running uploads). %finished% is a number; %started% is a number."
+    },
+    {
+      "key": "Uploading__file-scan-status",
+      "text": "Uploading",
+      "context": "file-scan-status",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager, malware check status of a file (badge and its tooltip). Context: file scan status."
+    },
+    {
       "key": "Uploading…__media-picker",
       "text": "Uploading…",
       "context": "media-picker",
@@ -8228,6 +10621,38 @@
         "media/MediaItemPickerDialog.tsx"
       ],
       "hint": "Button label in the media picker dialog while selected image files are being uploaded; the button is disabled meanwhile."
+    },
+    {
+      "key": "Uploads",
+      "text": "Uploads",
+      "files": [
+        "files/UploadTray.tsx"
+      ],
+      "hint": "File manager, upload tray (floating panel listing the running uploads)."
+    },
+    {
+      "key": "Uploads and changes are switched off for this area",
+      "text": "Uploads and changes are switched off for this area",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Uploads and changes are switched off for this area.",
+      "text": "Uploads and changes are switched off for this area.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Uploads are switched off for this area.",
+      "text": "Uploads are switched off for this area.",
+      "files": [
+        "files/uploadPrecheck.ts"
+      ],
+      "hint": "File manager, check before an upload starts (shown in the upload tray as the reason a file was refused)."
     },
     {
       "key": "Use original",
@@ -8268,6 +10693,30 @@
         "clouddrive/CloudDriveScreen.tsx"
       ],
       "hint": "Drive screen (cloud drive of the admin): column header: the file's version number (v1, v2, …)."
+    },
+    {
+      "key": "Version %number% restored",
+      "text": "Version %number% restored",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %number% is a version or page number."
+    },
+    {
+      "key": "Versions",
+      "text": "Versions",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "Video",
+      "text": "Video",
+      "files": [
+        "files/fileView.ts"
+      ],
+      "hint": "File manager, kind of file (type column, filter, details)."
     },
     {
       "key": "View",
@@ -8334,6 +10783,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile label and column header: jobs waiting in the queues right now."
     },
     {
+      "key": "Waiting · %size%",
+      "text": "Waiting · %size%",
+      "files": [
+        "files/UploadTray.tsx"
+      ],
+      "hint": "File manager, upload tray (floating panel listing the running uploads). %size% is a file size like \"1.5 MB\"."
+    },
+    {
       "key": "Waiting__chart-series",
       "text": "Waiting",
       "context": "chart-series",
@@ -8370,6 +10827,14 @@
         "crons/format.ts"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): schedule in words: every week on %weekday% at %time%."
+    },
+    {
+      "key": "What is this file about?",
+      "text": "What is this file about?",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Title of a confirmation dialog."
     },
     {
       "key": "What it is for, %min% to %max% characters · %count%",
@@ -8515,6 +10980,15 @@
       "hint": "Tooltip of a disabled write button when writes are switched off for this screen."
     },
     {
+      "key": "Writes are switched off on this server.",
+      "text": "Writes are switched off on this server.",
+      "files": [
+        "files/FileManager.tsx",
+        "files/uploadWithProgress.ts"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
       "key": "Writing style",
       "text": "Writing style",
       "files": [
@@ -8581,6 +11055,14 @@
       "hint": "Body text of the discard confirmation dialog, warning that closing the form drawer throws away the user's unsaved edits."
     },
     {
+      "key": "Your session has ended. Log in again to upload.",
+      "text": "Your session has ended. Log in again to upload.",
+      "files": [
+        "files/uploadWithProgress.ts"
+      ],
+      "hint": "File manager, upload error message."
+    },
+    {
       "key": "a lower bound",
       "text": "a lower bound",
       "files": [
@@ -8629,6 +11111,15 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile hint: the kinds of problems counted (transport states)."
     },
     {
+      "key": "being checked__upload-status",
+      "text": "being checked",
+      "context": "upload-status",
+      "files": [
+        "files/UploadTray.tsx"
+      ],
+      "hint": "File manager, upload tray (floating panel listing the running uploads). Context: upload status."
+    },
+    {
       "key": "being handled",
       "text": "being handled",
       "files": [
@@ -8644,6 +11135,14 @@
         "primitives/breadcrumb.tsx"
       ],
       "hint": "Accessible name (screen reader label) of the breadcrumb navigation trail at the top of admin pages; use a short lowercase noun like the English."
+    },
+    {
+      "key": "by %user%",
+      "text": "by %user%",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %user% is a person's name."
     },
     {
       "key": "changes %attributes%",
@@ -8694,6 +11193,15 @@
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): badge on a key that needs singular and plural translations."
     },
     {
+      "key": "current__move-target-folder",
+      "text": "current",
+      "context": "move-target-folder",
+      "files": [
+        "files/MoveDialog.tsx"
+      ],
+      "hint": "File manager, move dialog (pick the target folder, optionally another file area). Context: move target folder."
+    },
+    {
       "key": "dispatch origin unknown",
       "text": "dispatch origin unknown",
       "files": [
@@ -8724,6 +11232,14 @@
         "translations/LocalesScreen.tsx"
       ],
       "hint": "Locales admin screen (language + country combinations): placeholder: an example country code."
+    },
+    {
+      "key": "e.g. Reports 2026",
+      "text": "e.g. Reports 2026",
+      "files": [
+        "files/FolderNameDialog.tsx"
+      ],
+      "hint": "File manager, dialog to create or rename a folder."
     },
     {
       "key": "e.g. Save changes",
@@ -8865,6 +11381,14 @@
         "workers/transport.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): a process without a current job."
+    },
+    {
+      "key": "in %name%",
+      "text": "in %name%",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %name% is a file or folder name."
     },
     {
       "key": "in every queue",
@@ -9224,12 +11748,36 @@
       "hint": "Issues admin screen (errors grouped by root cause): part of the trend caption: the trend is the sum of the trends of %summed% of the %matching% groups that match the filters."
     },
     {
+      "key": "the folder “%name%”",
+      "text": "the folder “%name%”",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %name% is a file or folder name."
+    },
+    {
       "key": "the new value",
       "text": "the new value",
       "files": [
         "translations/AppTranslationKeyDrawer.tsx"
       ],
       "hint": "App translations admin, drawer of one translation key: inserted into 'Context of %label%' / 'Writing style of %label%' for the value being added."
+    },
+    {
+      "key": "the other area",
+      "text": "the other area",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "the target area",
+      "text": "the target area",
+      "files": [
+        "files/MoveAcrossAreasDialog.tsx"
+      ],
+      "hint": "File manager, confirmation dialog of a move into another file area."
     },
     {
       "key": "translate again",
@@ -9387,6 +11935,80 @@
       "hint": "Issues admin screen, details drawer of one error group: number of error events of one entry point."
     },
     {
+      "key": "{count, plural, one {# file deleted permanently} other {# files deleted permanently}}",
+      "text": "{count, plural, one {# file deleted permanently} other {# files deleted permanently}}",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). ICU plural; # is the number."
+    },
+    {
+      "key": "{count, plural, one {# file deleted} other {# files deleted}}",
+      "text": "{count, plural, one {# file deleted} other {# files deleted}}",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). ICU plural; # is the number."
+    },
+    {
+      "key": "{count, plural, one {# file moved to %target%} other {# files moved to %target%}}",
+      "text": "{count, plural, one {# file moved to %target%} other {# files moved to %target%}}",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). ICU plural; # is the number. %target% is a folder or area name."
+    },
+    {
+      "key": "{count, plural, one {# file moved to the trash} other {# files moved to the trash}}",
+      "text": "{count, plural, one {# file moved to the trash} other {# files moved to the trash}}",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). ICU plural; # is the number."
+    },
+    {
+      "key": "{count, plural, one {# file moved} other {# files moved}}",
+      "text": "{count, plural, one {# file moved} other {# files moved}}",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). ICU plural; # is the number."
+    },
+    {
+      "key": "{count, plural, one {# file restored} other {# files restored}}",
+      "text": "{count, plural, one {# file restored} other {# files restored}}",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). ICU plural; # is the number."
+    },
+    {
+      "key": "{count, plural, one {# file uploaded} other {# files uploaded}}",
+      "text": "{count, plural, one {# file uploaded} other {# files uploaded}}",
+      "files": [
+        "files/UploadTray.tsx"
+      ],
+      "hint": "File manager, upload tray (floating panel listing the running uploads). ICU plural; # is the number."
+    },
+    {
+      "key": "{count, plural, one {# file} other {# files}}",
+      "text": "{count, plural, one {# file} other {# files}}",
+      "files": [
+        "files/FileManager.tsx",
+        "files/FolderCard.tsx",
+        "files/MoveAcrossAreasDialog.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). ICU plural; # is the number."
+    },
+    {
+      "key": "{count, plural, one {# folder} other {# folders}}",
+      "text": "{count, plural, one {# folder} other {# folders}}",
+      "files": [
+        "files/MoveAcrossAreasDialog.tsx"
+      ],
+      "hint": "File manager, confirmation dialog of a move into another file area. ICU plural; # is the number."
+    },
+    {
       "key": "{count, plural, one {# hour} other {# hours}}",
       "text": "{count, plural, one {# hour} other {# hours}}",
       "files": [
@@ -9403,6 +12025,22 @@
         "translations/TranslationCompleteness.tsx"
       ],
       "hint": "App translations admin, completeness per locale: sentence in the confirmation before an AI generation: keys without a value in this locale and style."
+    },
+    {
+      "key": "{count, plural, one {# link selected} other {# links selected}}",
+      "text": "{count, plural, one {# link selected} other {# links selected}}",
+      "files": [
+        "files/LinkTargetsDialog.tsx"
+      ],
+      "hint": "File manager, dialog to edit the links of files (checkbox list of link targets of the application). ICU plural; # is the number."
+    },
+    {
+      "key": "{count, plural, one {# link will be removed} other {# links will be removed}}",
+      "text": "{count, plural, one {# link will be removed} other {# links will be removed}}",
+      "files": [
+        "files/MoveAcrossAreasDialog.tsx"
+      ],
+      "hint": "File manager, confirmation dialog of a move into another file area. ICU plural; # is the number."
     },
     {
       "key": "{count, plural, one {# message finished in this window.} other {# messages finished in this window.}}",
@@ -9549,12 +12187,36 @@
       "hint": "Schema diff admin screen (database changes between the code's entities and the live database): title of the confirmation before applying several table changes."
     },
     {
+      "key": "{count, plural, one {Delete # file permanently?} other {Delete # files permanently?}}",
+      "text": "{count, plural, one {Delete # file permanently?} other {Delete # files permanently?}}",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). ICU plural; # is the number."
+    },
+    {
+      "key": "{count, plural, one {Delete # file?} other {Delete # files?}}",
+      "text": "{count, plural, one {Delete # file?} other {Delete # files?}}",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). ICU plural; # is the number."
+    },
+    {
       "key": "{count, plural, one {Delete # key?} other {Delete # keys?}}",
       "text": "{count, plural, one {Delete # key?} other {Delete # keys?}}",
       "files": [
         "translations/AppTranslationsScreen.tsx"
       ],
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): title of the bulk delete confirmation; # is the number of selected keys."
+    },
+    {
+      "key": "{count, plural, one {Delete # older version?} other {Delete # older versions?}}",
+      "text": "{count, plural, one {Delete # older version?} other {Delete # older versions?}}",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). ICU plural; # is the number."
     },
     {
       "key": "{count, plural, one {Every # hour} other {Every # hours}}",
@@ -9571,6 +12233,14 @@
         "crons/format.ts"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): schedule in words: every N minutes."
+    },
+    {
+      "key": "{count, plural, one {Folder deleted — # file moved to the trash} other {Folder deleted — # files moved to the trash}}",
+      "text": "{count, plural, one {Folder deleted — # file moved to the trash} other {Folder deleted — # files moved to the trash}}",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). ICU plural; # is the number."
     },
     {
       "key": "{count, plural, one {Generation started for %locale% (%style%): # key} other {Generation started for %locale% (%style%): # keys}}",
@@ -9605,12 +12275,36 @@
       "hint": "Import of configured rows (maintenance action) of a kind the host names, e.g. countries: default result after the import: how many rows were created or updated."
     },
     {
+      "key": "{count, plural, one {Links saved} other {Links saved for # files}}",
+      "text": "{count, plural, one {Links saved} other {Links saved for # files}}",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). ICU plural; # is the number."
+    },
+    {
       "key": "{count, plural, one {Live processes and # process start in this window; dashed: the configured range.} other {Live processes and # process starts in this window; dashed: the configured range.}}",
       "text": "{count, plural, one {Live processes and # process start in this window; dashed: the configured range.} other {Live processes and # process starts in this window; dashed: the configured range.}}",
       "files": [
         "workers/transport.tsx"
       ],
       "hint": "Workers admin chart: description of the workers chart; # is the number of process starts."
+    },
+    {
+      "key": "{count, plural, one {Move # file to the trash?} other {Move # files to the trash?}}",
+      "text": "{count, plural, one {Move # file to the trash?} other {Move # files to the trash?}}",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). ICU plural; # is the number."
+    },
+    {
+      "key": "{count, plural, one {Move # file} other {Move # files}}",
+      "text": "{count, plural, one {Move # file} other {Move # files}}",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). ICU plural; # is the number."
     },
     {
       "key": "{count, plural, one {The # process listed below, from its start to its stop (or now).} other {The # processes listed below, from their start to their stop (or now).}}",
@@ -9715,6 +12409,22 @@
         "list/EntityListBulkBar.tsx"
       ],
       "hint": "Label in the bulk-action bar of a list showing how many rows the user has ticked, e.g. '3 selected'. # is the number of selected rows."
+    },
+    {
+      "key": "“%name%”",
+      "text": "“%name%”",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %name% is a file or folder name."
+    },
+    {
+      "key": "“%name%” moved to %target%",
+      "text": "“%name%” moved to %target%",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %name% is a file or folder name; %target% is a folder or area name."
     },
     {
       "key": "≈ %duration% at this rate",

@@ -1,6 +1,6 @@
 ---
 name: ddd-admin-ui-specialist
-description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries, import matrix, host setup (AdminUiProvider, theme.css, components.css, tokens.json, check-tokens, -radix, -contrast), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route states, form drawers and dialogs, useConfirm, write access, agent hooks (data-row-key, navigation guard), locale::style translations (delta saves, background progress), image crop, colour fields, key figures, markdown, the admin screens ./workers, ./translations, ./issues, ./database, ./crons, status text roles, ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form or admin screen, a save deletes a background translation, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast or status text fails, or URL filters get lost."
+description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries, import matrix, host setup (AdminUiProvider, theme.css, components.css, tokens.json, check scripts), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route states, form drawers and dialogs, useConfirm, write access, agent hooks (data-row-key, navigation guard), locale::style translations (delta saves), image crop, colour fields, key figures, markdown, the admin screens ./workers, ./translations, ./issues, ./database, ./crons, the ./files file manager, status text roles, ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form, file manager or admin screen, a save deletes a background translation, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast or status text fails, or URL filters get lost."
 metadata:
   author: mgamadeus
   version: 0.3.12
@@ -89,6 +89,8 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | a text-only host confirm service plus typed-phrase confirmations | `AdminUiProvider confirmWithPhrase="package"` (or a function); `ConfirmDialogView` | provider, form |
 | status text legible on a host whose status colours are fills | set `--success-text`, `--warning-text`, `--destructive-text`, `--info-text` (light and dark); badges keep `StatusBadge` | theme.css, tokens.json |
 | a maintenance action (run, pending, last outcome) | `MaintenanceActionCard` | page |
+| a file area: folder tree, grid / table, upload tray, drawer with preview, versions, activity, trash, links, moves between areas | `FileManager` + a `FileManagerAdapter` (`capabilities`: `trash`, `versions`, `activity`, `links`, `moveAcrossAreas`, `filters`, `workingCopy`); slots `renderAreaSettings`, `renderAreaMaintenance`, `renderAreaPicker`, `formatEventType` | files |
+| an upload with progress through the host's session | `uploadWithProgress(transport, request, callbacks)`, `useFileUploadQueue` + `UploadTray` | files |
 | an agent or test reading the screen: row keys, list state, unsaved forms, may it navigate | `data-row-key` on rows and cards, `onListStateChange` + `activeFilters`; `useUnsavedChangesGuard(…, { form, label })` + `getDirtyForms()`; `useNavigationGuard().canNavigate()` | list, logic |
 | mark regions for an agent: anchor, secret value, chrome | `data-agent-anchor` (host), `data-agent-secret` (`Input type="password"` sets it), `data-agent-skip` (package chrome sets it) | README › Screen state for agents |
 
@@ -189,6 +191,10 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 - **Agent attributes.** `data-agent-skip` marks chrome, not disabled controls; `data-agent-secret` is on password
   inputs only: a host field holding a key or token sets it itself. `data-row-key` is set on the element a card
   renderer returns; a card component that drops `data-*` props sets `data-row-key={rowKey}` itself.
+- **File manager adapter identity.** `FileManager` calls the adapter's read hooks (and the capabilities' `useTrash`,
+  `useLinkTargets`, `useMoveTargetAreas`) once per render: the adapter and its `capabilities` keep their identity (module
+  scope or `useMemo`). A control appears only when its capability and the actions it needs are both there
+  (`resolveFileManagerFeatures`). Previews never render SVG or HTML; a PDF needs `loadPdfJs`.
 - **Server vs client.** Hooks and context live in files with `'use client'`; pure helpers (`m`, `formatDateTime`,
   `defineStatusMap`, schemas, conditions) may be called in server code and `metadata`.
 

@@ -10,4 +10,5 @@ export { SHOWCASE_NOW_MS, showcaseTranslationsData, showcaseWorkersData } from '
 export { showcaseIssuesData } from './issuesFixtures.ts';
 export { showcaseDatabaseData } from './databaseFixtures.ts';
 export { showcaseCloudDriveData } from './cloudDriveFixtures.ts';
+export { showcaseFilesData } from './filesFixtures.ts';
 export { showcaseCronsData } from './cronsFixtures.ts';

@@ -34,7 +34,8 @@ Text, markdown, file names, URLs and files that users, mail, third parties or a 
 shown, never run. Render user markdown only through `MarkdownPreview` (sanitised), never with
 `dangerouslySetInnerHTML`; show a foreign file as a download link (the backend serves it with
 `UntrustedContentResponseDto`: attachment, `nosniff`, `CSP: sandbox`), never in an `iframe` with `allow-same-origin`;
-load images only from the application's own origin or its configured media hosts. The backend rule, its helpers and the
+load images only from the application's own origin or its configured media hosts. A file area uses `./files`, whose
+previews keep to that rule (raster images, PDF on canvases, text as text nodes; SVG and HTML never rendered). The backend rule, its helpers and the
 sink scan: skill `ddd-untrusted-input-specialist` of `mgamadeus/ddd`.
 
 ## 1. List state — `useUrlListState`

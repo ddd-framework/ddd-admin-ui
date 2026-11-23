@@ -3,6 +3,18 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## Unreleased
+
+- New entry `./files`: a generic file manager on the host's API. `FileManager` with a `FileManagerAdapter` (opaque area
+  keys and ids) and optional capabilities — `trash`, `versions` (replace, restore an older version, delete older),
+  `activity`, `links` (host-defined target kinds, link dialog, linked / not linked filters, link tabs),
+  `moveAcrossAreas` (area picker, drops on other areas, confirmation from the move preview), `filters`, `workingCopy`,
+  `malwareScan`; slots `headerActions`, `renderAreaSettings`, `renderAreaMaintenance`, `renderAreaPicker`,
+  `formatEventType`. Folder tree, grid and table, search and filters in the URL state, upload tray with progress
+  (`useFileUploadQueue`, `uploadWithProgress`, `precheckUpload`), drag and drop on the browser's own events, details
+  drawer with preview (raster images, PDF through the host's pdf.js, text; SVG and HTML never rendered), facts, links,
+  versions and activity, the trash. `createStaticFileManagerAdapter` and `showcaseFilesData` for reviews and tests.
+
 ## 0.3.16
 
 The content of 0.3.15 again: the registry accepted the 0.3.15 publish but never listed it.

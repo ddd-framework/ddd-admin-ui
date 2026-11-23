@@ -33,6 +33,7 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./issues` | the screen of the issues registry on the host's api (`createIssuesApi`): `IssuesScreen` and its parts (the trend as SVG bars, the window switch, the group drawer with occurrences, frames, causes, job and client blocks, the status actions), `ISSUE_GROUP_STATUS`, the payload types | logic, i18n, primitives, list, page; from form only `FormDrawer` |
 | `./database` | the schema diff screen on the host's api (`createDatabaseApi`): `SchemaDiffScreen`, `SchemaDiffCard`, the generated-code previews (`GeneratedCodePanel`, `CodeBlock`), the status maps `DB_TABLE_CHANGE_TYPE` / `DB_DIFF_SEVERITY`, the diff helpers, the payload types | logic, i18n, primitives, list, page |
 | `./clouddrive` | the drive screen on the host's api (`createCloudDriveApi`, `mgamadeus/ddd-clouddrive`'s `CloudDriveControllerTrait`): `CloudDriveScreen` (space picker, folders, direct upload to the store with multipart, download, new folder, trash with undo, name search), `sendDriveUpload`, the payload types | logic, i18n, primitives, page, form |
+| `./files` | the generic file manager on the host's adapter (`FileManagerAdapter` with optional capabilities): `FileManager` (folder tree, grid / table, search and filters, upload tray with progress, drag and drop moves, details drawer with preview, versions and activity, trash, links, moves into other areas), its parts (`FolderTree`, `FileCard`, `FileDrawer`, `FilePreview`, `MoveDialog`, `LinkTargetsDialog`, `UploadTray`, `QuotaPill`, …), `useFileUploadQueue`, `uploadWithProgress`, `createStaticFileManagerAdapter`, the view models | logic, i18n, primitives, list, page, form |
 | `./crons` | the Crons screen on the host's api (`createCronsApi`): `CronsScreen` and its parts (summary tiles, runner banner, Crons table with countdown and run strip, row actions, details drawer with the duration chart, runs with their output, timeline, create / edit form with the schedule preview), `useCronActions`, the status maps `CRON_STATUS`, `CRON_EXECUTION_RESULT`, the payload types | logic, i18n, primitives, list, page, form, data |
 | `./media` | `MediaItemField`, `FormMediaItemField`, `MediaItemPickerDialog`, `MediaPreview`, `ImageCropDialog` (crop surface: file and aspect options in; cropped blob, skip or cancel out) | logic, i18n, primitives, list, form |
 | `./glass` | `GlassPill`, `QuickFilterPills`, `CollapsibleCard`, `GlassGroup`, `ActionRow` | logic, i18n, primitives |
@@ -41,7 +42,7 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./provider` | `AdminUiProvider` (also the dialog behind `useConfirm`), `useAdminUi`, `defaultStorageKey` | logic, i18n, primitives; types only from media and translations |
 | `./next` | Next.js adapters: `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useNextPathname`, `useListViewParam`, the one URL writer (`queueSearchParamsWrite`) | logic, provider; the only entry importing `next/*` |
 | `./notify-sonner` | `sonnerNotifications` (the notification adapter on `sonner`) and its `Toaster` | logic; the only entry importing `sonner` |
-| `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE`; the sample payloads of the screens (`showcaseWorkersData`, `showcaseTranslationsData`, `showcaseIssuesData`, `showcaseDatabaseData`, `showcaseCloudDriveData`, `showcaseCronsData`) | logic, i18n, primitives, list, page, form, translations, media, glass, data, workers, issues, database, clouddrive, crons, shell, shell-background; never `./next`, `./notify-sonner` or `./markdown` (its section loads through `loadMarkdown`) |
+| `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE`; the sample payloads of the screens (`showcaseWorkersData`, `showcaseTranslationsData`, `showcaseIssuesData`, `showcaseDatabaseData`, `showcaseCloudDriveData`, `showcaseFilesData`, `showcaseCronsData`) | logic, i18n, primitives, list, page, form, translations, media, glass, data, workers, issues, database, clouddrive, files, crons, shell, shell-background; never `./next`, `./notify-sonner` or `./markdown` (its section loads through `loadMarkdown`) |
 | `./data` | key figures: `MetricTile` (label, value, delta, hint, sparkline slot, skeleton), `MetricTileSkeleton`, `MetricGrid`, `DeltaText`, `NoteList`, the delta helpers `resolveDelta`, `relativeChange`, `deltaDirectionOf`, `deltaToneOf` | logic, i18n, primitives |
 | `./markdown` | `MarkdownEditor`, `MarkdownPreview` (sanitised), `renderMarkdownEditor` (the `renderEditor` slot of `./translations` and `AdminUiProvider.renderMarkdownEditor`); loads `@uiw/react-md-editor` and `rehype-sanitize` after hydration | logic, i18n, primitives; translations type-only; the only entry reaching its optional peers |
 | `./design-studio` | `designStudioComponents`: the `components` of `@mgamadeus/ddd-design-studio`'s provider, every slot mapped to the block of the same name; the slot types (`DesignStudioComponentsContract`, structural copy) | primitives, list, page, glass; never imports the studio |
@@ -881,6 +882,65 @@ refreshes); `severityTieBreak="recent"` restores the order of 0.3.7 / 0.3.8 (mos
 first). `severityStatusOrder` (default `CRON_STATUS_SEVERITY`: missing command, failing, overdue, running, ok, paused)
 ranks the statuses, e.g. failing before a missing command. `compareCronsBySeverity(left, right, options)` and
 `sortCrons(crons, sort, severityCompare, options)` take the same `CronSeverityOptions`.
+
+### `./files`
+
+A file manager for any file area of the host: the blocks know only the view models (`FileView`, `FolderView`,
+`FileAreaView`, …) and one adapter. Ids and the area key are opaque (`string | number`).
+
+```tsx
+'use client';
+import { FileManager, type FileManagerAdapter } from '@mgamadeus/ddd-admin-ui/files';
+import { useNextDrawerUrlAdapter, useNextUrlStateAdapter } from '@mgamadeus/ddd-admin-ui/next';
+
+// module scope (or useMemo with stable dependencies): the manager calls each read hook once per render
+const adapter: FileManagerAdapter = {
+  useArea: areaKey => …,          // FileQueryState<FileAreaView>: quota, usage, per-file limit, allow-list, retention
+  useFolders: areaKey => …,       // every folder of the area, flat
+  useFiles: query => …,           // FileListState for a FileListQuery (null = skip)
+  useFile: fileId => …,           // FileDetailView for the drawer (null = skip)
+  useActions: () => actions,      // upload, getDownload, patchFile, moveFiles, trashFiles, createFolder, patchFolder, deleteFolder, …
+  capabilities: { trash: { useTrash }, versions: {}, activity: {}, filters: { family: true, created: true, orders: ['name', 'created', 'size'] } },
+};
+
+export const FilesPage = ({ areas }) => (
+  <FileManager
+    adapter={adapter}
+    areas={areas}
+    urlStateAdapter={useNextUrlStateAdapter({ listId: 'files' })}
+    drawerUrlAdapter={useNextDrawerUrlAdapter()}
+    loadPdfJs={() => import('pdfjs-dist').then(pdfjs => ((pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl), pdfjs))}
+  />
+);
+```
+
+| Capability | Needs the actions | The manager offers |
+|---|---|---|
+| (always) | `upload`, `getDownload`, `patchFile`, `moveFiles`, `trashFiles`, `createFolder`, `patchFolder`, `deleteFolder` | browse, search, upload tray, rename and description, moves inside the area, folders, delete |
+| `trash` (`useTrash`) | `restoreFiles`; optional `purgeFiles`, `emptyTrash` | the Trash node, restore, final delete, empty (typed confirmation) |
+| `versions` | optional `uploadVersion`, `restoreVersion`, `deleteOlderVersions` | the versions in the drawer, Replace, Restore an older version, Delete older |
+| `activity` | — | the file's events in the drawer (`formatEventType` names the host's types) |
+| `links` (`kinds`, `useLinkTargets`) | `setLinks`; optional `bulkLinks` | link chips, the link dialog (tri-state for several files), linked / not linked and "linked to" filters, link tabs (`context`) |
+| `moveAcrossAreas` (`useMoveTargetAreas`) | `moveItems`, `previewMove` | an area picker in the move dialog, drops on other areas' roots, the confirmation from the preview |
+| `filters` | — | type, created from / to, uploaded by me, the sort orders |
+| `workingCopy` | — | a badge on files with `hasWorkingCopyChanges` |
+| `malwareScan: { enabled: false }` | — | no scan badges (an area without a malware check) |
+
+- **Slots:** `headerActions`, `renderAreaSettings` (the manager adds an "Area settings" button that opens it),
+  `renderAreaMaintenance` (a purge, a usage link), `renderAreaPicker` (a grouped, searchable picker above the list; the
+  tree then shows the open area only), `formatEventType`.
+- **Area:** `areas` lists the areas; the open one lives in the URL state (`area`) or is controlled (`areaKey` +
+  `onAreaKeyChange`). The URL state also holds `folder` (`trash` for the trash), `view`, the filters and `order`; the
+  drawer is `?file=<id>`.
+- **Untrusted content:** previews draw only JPEG, PNG, GIF and WebP (or a rendition the server made) as `<img>`, PDF on
+  canvases through the host's pdf.js (`loadPdfJs`; without it "Open PDF" in a new tab), TXT / CSV / Markdown / JSON as
+  text nodes (first 100 KB). SVG, HTML and every other type are never rendered: icon, facts, download. Nothing is fetched
+  before the file is released (`CLEAN` / `SKIPPED`).
+- **Uploads:** `uploadWithProgress(transport, request, callbacks)` sends one multipart request with progress, renews a
+  session once after a 401 and refuses while writes are off; an adapter that uploads straight to a store implements
+  `upload` itself. The tray runs three at a time and checks type, size and quota before (`precheckUpload`).
+- **Drag and drop** is the browser's own (no library); keyboard and touch use the Move dialog.
+- `createStaticFileManagerAdapter(showcaseFilesData)` answers fixed payloads (writes refused) for reviews and tests.
 
 ## Design studio
 

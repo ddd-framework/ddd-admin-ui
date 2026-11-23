@@ -19,6 +19,7 @@ import { WorkersShowcase } from './sections/WorkersShowcase.tsx';
 import { IssuesShowcase } from './sections/IssuesShowcase.tsx';
 import { DatabaseShowcase } from './sections/DatabaseShowcase.tsx';
 import { CloudDriveShowcase } from './sections/CloudDriveShowcase.tsx';
+import { FilesShowcase } from './sections/FilesShowcase.tsx';
 import { CronsShowcase } from './sections/CronsShowcase.tsx';
 
 /** One section of the showcase: a heading and what it draws. Hosts append their own (`Showcase.sections`). */
@@ -51,7 +52,7 @@ export interface ShowcaseProps {
   loadMarkdown?: MarkdownLoader;
   /**
    * Leave out package sections by id (`primitives`, `list`, `page`, `form`, `translations`, `markdown`, `media`,
-   * `workers`, `issues`, `database`, `clouddrive`, `crons`, `glass`, `data`, `shell`, `notify-sonner`, `next`).
+   * `workers`, `issues`, `database`, `clouddrive`, `files`, `crons`, `glass`, `data`, `shell`, `notify-sonner`, `next`).
    */
   omit?: readonly string[];
   className?: string;
@@ -88,6 +89,12 @@ const packageSections = (
   { id: 'issues', title: './issues', description: 'The issues screen: error groups, trend, details drawer, resolve / ignore / reopen.', content: <IssuesShowcase /> },
   { id: 'database', title: './database', description: 'The schema diff screen: per-table and bulk apply, generated SQL and model code.', content: <DatabaseShowcase /> },
   { id: 'clouddrive', title: './clouddrive', description: 'The drive screen: spaces, folders, upload, download, trash, search.', content: <CloudDriveShowcase /> },
+  {
+    id: 'files',
+    title: './files',
+    description: 'The file manager: folder tree, grid and table, filters, drawer with versions and activity, trash, links.',
+    content: <FilesShowcase />,
+  },
   { id: 'crons', title: './crons', description: 'The crons screen: list, runs, timeline, create and edit, run now.', content: <CronsShowcase /> },
   { id: 'glass', title: './glass', description: 'Glass pills, quick filters, collapsible cards, groups and rows.', content: <GlassShowcase /> },
   { id: 'data', title: './data', description: 'Key figures: metric tiles with a change and a sparkline slot, their grid, notes.', content: <DataShowcase /> },

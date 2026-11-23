@@ -1,0 +1,90 @@
+import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
+
+import { parseCsv } from './csvPreview.ts';
+import {
+  extensionOf,
+  fileFamilyOfContentType,
+  fileNameStem,
+  filePreviewKind,
+  folderDepth,
+  folderPath,
+  folderSubtreeHeight,
+  folderSubtreeIds,
+  type FolderView,
+  formatBytes,
+  sameFileId,
+} from './fileView.ts';
+import { bulkLinkChanges, initialLinkStates, linkSetOf } from './linkSelection.ts';
+
+const folders: FolderView[] = [
+  { id: 1, areaKey: 'a', parentId: null, name: 'Reports' },
+  { id: 2, areaKey: 'a', parentId: 1, name: '2026' },
+  { id: 3, areaKey: 'a', parentId: 2, name: 'Q1' },
+  { id: 'x', areaKey: 'a', parentId: null, name: 'Other' },
+];
+
+describe('file view helpers', () => {
+  it('compares ids as text', () => {
+    assert.equal(sameFileId(2, '2'), true);
+    assert.equal(sameFileId(null, null), true);
+    assert.equal(sameFileId(null, 0), false);
+  });
+
+  it('walks the folder tree with number and string ids', () => {
+    assert.deepEqual(
+      folderPath(folders, '3').map(folder => folder.name),
+      ['Reports', '2026', 'Q1']
+    );
+    assert.equal(folderDepth(folders, 3), 3);
+    assert.equal(folderDepth(folders, null), 0);
+    assert.deepEqual([...folderSubtreeIds(folders, 1)].sort(), ['1', '2', '3']);
+    assert.equal(folderSubtreeHeight(folders, 1), 3);
+  });
+
+  it('previews only safe types', () => {
+    assert.equal(filePreviewKind({ family: 'IMAGE', extension: 'png' }), 'image');
+    assert.equal(filePreviewKind({ family: 'IMAGE', extension: 'heic' }), 'none');
+    assert.equal(filePreviewKind({ family: 'IMAGE', extension: 'heic', thumbnailUrl: 'https://cdn/x.webp' }), 'image');
+    assert.equal(filePreviewKind({ family: 'VECTOR', extension: 'svg' }), 'none', 'SVG never renders in the browser');
+    assert.equal(filePreviewKind({ family: 'PDF', extension: 'pdf' }), 'pdf');
+    assert.equal(filePreviewKind({ family: 'SPREADSHEET', extension: 'csv' }), 'csv');
+    assert.equal(filePreviewKind({ family: 'TEXT', extension: 'html' }), 'none', 'HTML is never shown as text or markup');
+    assert.equal(filePreviewKind({ family: 'TEXT', extension: 'md' }), 'text');
+  });
+
+  it('splits names and formats sizes', () => {
+    assert.equal(extensionOf('Budget 2026.XLSX'), 'xlsx');
+    assert.equal(extensionOf('.env'), '');
+    assert.equal(fileNameStem('Budget 2026.xlsx', 'xlsx'), 'Budget 2026');
+    assert.equal(formatBytes(1536), '1.5 KB');
+    assert.equal(formatBytes(undefined), '—');
+    assert.equal(fileFamilyOfContentType('image/svg+xml'), 'VECTOR');
+    assert.equal(fileFamilyOfContentType('application/pdf; charset=binary'), 'PDF');
+    assert.equal(fileFamilyOfContentType(null), null);
+  });
+
+  it('reads CSV without evaluating anything', () => {
+    assert.deepEqual(parseCsv('a;b\n"=1+1";"x""y"\n'), [
+      ['a', 'b'],
+      ['=1+1', 'x"y'],
+    ]);
+  });
+
+  it('computes link sets and bulk changes', () => {
+    const files = [
+      { links: [{ kind: 'project', id: 1, name: 'A' }] },
+      { links: [{ kind: 'project', id: 1, name: 'A' }, { kind: 'customer', id: 'c7', name: 'B' }] },
+    ];
+    const initial = initialLinkStates(files);
+    assert.equal(initial.get('project:1'), true);
+    assert.equal(initial.get('customer:c7'), 'indeterminate');
+    const next = new Map(initial);
+    next.set('customer:c7', true);
+    next.set('project:1', false);
+    const change = bulkLinkChanges([10, 11], initial, next);
+    assert.deepEqual(change.add, [{ kind: 'customer', id: 'c7' }]);
+    assert.deepEqual(change.remove, [{ kind: 'project', id: '1' }]);
+    assert.deepEqual(linkSetOf(new Map([['project:1', true]]), new Map([['project:1', { kind: 'project', id: 1 }]])).links, [{ kind: 'project', id: 1 }]);
+  });
+});
