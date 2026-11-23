@@ -3,7 +3,6 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { FileManager, type FileAreaMaintenanceSlotProps, type FileAreaSettingsSlotProps } from '../files/FileManager.tsx';
-import type { FileAreaKey } from '../files/fileView.ts';
 import type { PdfJsLoader } from '../files/PdfPreview.tsx';
 import { useTranslate } from '../i18n/useTranslate.ts';
 import type { EntityDrawerUrlAdapter } from '../logic/pure/entityDrawer.ts';
@@ -16,6 +15,15 @@ import type { CloudDriveApi } from './api.ts';
 import { CloudDriveSpacePicker } from './CloudDriveSpacePicker.tsx';
 import { DRIVE_EVENT_LABELS, driveAreaRefOf, driveFolderIdOf } from './driveFileMapping.ts';
 import { useCloudDriveFileAdapter } from './useCloudDriveFileAdapter.ts';
+
+/**
+ * The URL parameters of the drive screen: `space`, `path` (`/a/b`; a folder node id still works), `file` (the details),
+ * `fileTab` (`accesses`), `tab` (`trash`), `view`, `q`, the filters and `sort`.
+ */
+export const CLOUD_DRIVE_URL_KEYS = { area: 'space', folder: 'path', order: 'sort', file: 'file', fileTab: 'fileTab', tab: 'tab' } as const;
+
+/** A deep link by node id (`?node=<id>`): replaced by `space` + `path` + `file` once the node is known. */
+export const CLOUD_DRIVE_NODE_KEY = 'node';
 
 /** One folder of a path (`null` id: the root). Kept for hosts that typed deep links with it. */
 export interface CloudDriveFolderStep {
@@ -84,35 +92,50 @@ export const CloudDriveScreen = ({
   const listUrl = urlStateAdapter ?? memory.urlStateAdapter;
   const drawerUrl = drawerUrlAdapter ?? memory.drawerUrlAdapter;
 
-  const [chosenSpaceId, setChosenSpaceId] = useState<number | null>(initialSpaceId ?? null);
-  const spaceId = chosenSpaceId ?? (areas[0] ? Number(areas[0].key) : null);
+  // The open space lives in the URL (`space`; the first space when absent), like the folder (`path`) and the file.
+  const urlSpace = Number(listUrl.get(CLOUD_DRIVE_URL_KEYS.area));
+  const urlSpaceId = Number.isInteger(urlSpace) && urlSpace > 0 && spaceItems?.some(item => item.id === urlSpace) ? urlSpace : null;
+  const initialSpace = initialSpaceId !== undefined && spaceItems?.some(item => item.id === initialSpaceId) ? initialSpaceId : null;
+  const spaceId = urlSpaceId ?? initialSpace ?? (areas[0] ? Number(areas[0].key) : null);
   const spaceItem = spaceItems?.find(item => item.id === spaceId);
   const adapter = useCloudDriveFileAdapter({ api, spaceId: spaceId ?? 0 });
+  const isPartner = api.audience === 'shared';
 
-  // A deep link: its space, folder and (for a file) the details drawer, once the node is known.
-  const deepLinkNodeId = initialNodeId ?? initialFolderNodeId;
-  const [deepLinkApplied, setDeepLinkApplied] = useState(deepLinkNodeId === undefined);
-  const deepLinkQuery = api.useDriveNodeQuery({ driveNodeId: deepLinkNodeId ?? 0 }, { skip: deepLinkApplied || deepLinkNodeId === undefined });
+  // A deep link by node (`?node=<id>`, `initialNodeId` / `initialFolderNodeId`): its space, folder and (for a file)
+  // the details drawer, once the node is known; the `node` parameter is then replaced by `space` + `path` + `file`.
+  const urlNode = Number(listUrl.get(CLOUD_DRIVE_NODE_KEY));
+  const deepLinkNodeId = Number.isInteger(urlNode) && urlNode > 0 ? urlNode : (initialNodeId ?? initialFolderNodeId);
+  const [appliedNodeId, setAppliedNodeId] = useState<number | null>(null);
+  const deepLinkPending = deepLinkNodeId !== undefined && appliedNodeId !== deepLinkNodeId;
+  const deepLinkQuery = api.useDriveNodeQuery({ driveNodeId: deepLinkNodeId ?? 0 }, { skip: !deepLinkPending });
   const deepLinkSpace = spaceItems?.find(item => item.id === deepLinkQuery.data?.driveNode.driveSpaceId);
   useEffect(() => {
-    if (deepLinkApplied || !deepLinkQuery.data || !deepLinkSpace) return;
+    if (!deepLinkPending || deepLinkNodeId === undefined) return;
+    if (deepLinkQuery.isError) {
+      setAppliedNodeId(deepLinkNodeId);
+      listUrl.replace({ [CLOUD_DRIVE_NODE_KEY]: null });
+      return;
+    }
+    if (!deepLinkQuery.data || !deepLinkSpace) return;
     const { driveNode } = deepLinkQuery.data;
     const isFolder = driveNode.nodeType === 'FOLDER';
     const folderId = isFolder ? driveFolderIdOf(driveNode.id, deepLinkSpace.rootNodeId) : driveFolderIdOf(driveNode.parentNodeId, deepLinkSpace.rootNodeId);
-    setChosenSpaceId(driveNode.driveSpaceId);
-    listUrl.replace({ folder: folderId === null ? null : String(folderId) });
-    if (!isFolder) drawerUrl.replace({ file: String(driveNode.id) });
-    setDeepLinkApplied(true);
-  }, [deepLinkApplied, deepLinkQuery.data, deepLinkSpace, listUrl, drawerUrl]);
+    listUrl.replace({
+      [CLOUD_DRIVE_NODE_KEY]: null,
+      [CLOUD_DRIVE_URL_KEYS.area]: String(driveNode.driveSpaceId),
+      [CLOUD_DRIVE_URL_KEYS.folder]: folderId === null ? null : String(folderId),
+    });
+    if (!isFolder) drawerUrl.replace({ [CLOUD_DRIVE_URL_KEYS.file]: String(driveNode.id) });
+    setAppliedNodeId(deepLinkNodeId);
+  }, [deepLinkPending, deepLinkNodeId, deepLinkQuery.data, deepLinkQuery.isError, deepLinkSpace, listUrl, drawerUrl]);
 
-  const selectArea = useCallback((areaKey: FileAreaKey) => setChosenSpaceId(Number(areaKey)), []);
   const eventLabel = useCallback(
     (type: string) => formatEventType?.(type) ?? (DRIVE_EVENT_LABELS[type] ? t(DRIVE_EVENT_LABELS[type]) : null),
     [formatEventType, t]
   );
   const heading = title ?? t('Drive');
 
-  if (spacesQuery.isLoading || (!deepLinkApplied && deepLinkQuery.isLoading)) {
+  if (spacesQuery.isLoading || (deepLinkPending && deepLinkQuery.isLoading)) {
     return (
       <div className="space-y-4">
         <PageHeader title={heading} description={description} actions={headerActions} />
@@ -143,8 +166,7 @@ export const CloudDriveScreen = ({
       adapter={adapter}
       variant={variant}
       areas={areas}
-      areaKey={spaceId}
-      onAreaKeyChange={selectArea}
+      urlKeys={CLOUD_DRIVE_URL_KEYS}
       title={heading}
       description={description}
       headerActions={headerActions}
@@ -154,9 +176,10 @@ export const CloudDriveScreen = ({
       loadPdfJs={loadPdfJs}
       defaultView={defaultView}
       renderAreaPicker={props => <CloudDriveSpacePicker {...props} spaces={spaceItems} />}
-      renderAreaMaintenance={renderAreaMaintenance}
-      renderAreaSettings={renderAreaSettings}
+      renderAreaMaintenance={isPartner ? undefined : renderAreaMaintenance}
+      renderAreaSettings={isPartner ? undefined : renderAreaSettings}
       formatEventType={eventLabel}
+      readOnlyNotice={t('You may read this space, but not change it.')}
     />
   );
 };

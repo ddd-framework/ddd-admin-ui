@@ -1,7 +1,7 @@
 // The drive's list payloads (mgamadeus/ddd-clouddrive ≥ 0.1.0-rc.10) as the view models of `./files`. Pure: no React,
 // no request; the adapter hook (`useCloudDriveFileAdapter`) and the tests use them.
 import { m, translateText } from '../i18n/store.ts';
-import type { FileListOrder, FileListQuery } from '../files/fileManagerAdapter.ts';
+import type { FileListOrder, FileListQuery, FileLocationMiss, FileLocationResolution } from '../files/fileManagerAdapter.ts';
 import {
   type FileAreaRefView,
   type FileAreaUsagePart,
@@ -20,6 +20,8 @@ import type {
   DriveChildrenArg,
   DriveFileFamily,
   DriveFileVersionListItem,
+  DriveLocationNotFoundBody,
+  DriveLocationResolveResponse,
   DriveNodeBulkResult,
   DriveNodeListItem,
   DriveScanStatus,
@@ -132,12 +134,48 @@ export const driveVersionViewOf = (item: DriveFileVersionListItem): FileVersionV
 
 /** A change of a node as the drawer's activity lists it; a move or rename shows `old path → new path`. */
 export const driveEventViewOf = (item: DriveChangeEventListItem): FileEventView => ({
-  id: item.id,
+  id: item.eventSource ? `${item.eventSource}-${item.id}` : item.id,
   type: item.eventType,
   occurredAt: item.occurredAt ?? null,
   actor: item.actorName ?? null,
-  detail: item.previousPath && item.path && item.previousPath !== item.path ? `${item.previousPath} → ${item.path}` : null,
+  impersonatedBy: item.onBehalfOfName ?? null,
+  detail: item.previousPath && item.path && item.previousPath !== item.path ? `${item.previousPath} → ${item.path}` : (item.detail ?? null),
+  audience: item.audience ?? null,
+  variant: item.contentVariant ?? null,
+  clientIp: item.clientIp ?? null,
 });
+
+/**
+ * Where a resolve answer leads, for the file manager: the space, the folder to open (a file's folder; `null` = the
+ * root), the file whose details open, and the path with a leading slash.
+ */
+export const driveLocationResolutionOf = (response: DriveLocationResolveResponse): FileLocationResolution => {
+  const item = response.item ?? null;
+  const rootNodeId = response.ancestors?.elements?.[0]?.id ?? (item && (item.parentNodeId === null || item.parentNodeId === undefined) ? item.id : null);
+  const isFile = item !== null && item.nodeType === 'FILE';
+  const folderId = item === null ? null : isFile ? driveFolderIdOf(item.parentNodeId, rootNodeId) : item.id === rootNodeId ? null : item.id;
+  return {
+    found: true,
+    areaKey: response.driveSpaceId,
+    folderId,
+    fileId: isFile && item ? item.id : null,
+    path: `/${response.path.replace(/^\/+/, '')}`,
+  };
+};
+
+/** The miss of a resolve request (its 404 body), for the path bar's message. */
+export const driveLocationMissOf = (error: unknown): FileLocationMiss | null => {
+  const failure = error as { status?: unknown; data?: DriveLocationNotFoundBody } | null;
+  if (!failure || failure.status !== 404) return null;
+  const body = failure.data ?? {};
+  const deepest = body.deepestFolder ?? null;
+  return {
+    found: false,
+    deepestFolderPath: deepest ? (deepest.parentNodeId === null || deepest.parentNodeId === undefined ? '/' : deepest.name) : null,
+    missingSegment: body.missingSegment ?? null,
+    message: body.error ?? null,
+  };
+};
 
 /** The labels of the usage split of a space (the quota pill's tooltip). */
 export const DRIVE_USAGE_PART_LABELS = {
@@ -180,7 +218,8 @@ export const driveAreaViewOf = (item: DriveSpaceListItem): FileAreaView => ({
 export const driveAreaRefOf = (item: DriveSpaceListItem): FileAreaRefView => ({
   key: item.id,
   name: item.displayName || item.title || `#${item.id}`,
-  groupLabel: item.displayGroup ?? item.groupLabel ?? null,
+  // `groupLabel` is the translated heading; `displayGroup` is an ordering code (`LIBRARY`), shown only without a label.
+  groupLabel: item.groupLabel ?? item.displayGroup ?? null,
 });
 
 const DRIVE_ORDERS: readonly FileListOrder[] = ['name', 'created', 'size'];

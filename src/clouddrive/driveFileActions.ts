@@ -1,12 +1,12 @@
 // The writes of the drive's file manager adapter, built from the mutation triggers of `createCloudDriveApi`. Pure: no
 // React; `useCloudDriveFileAdapter` binds the triggers, the tests pass fakes.
 import { translateText } from '../i18n/store.ts';
-import type { FileManagerActions } from '../files/fileManagerAdapter.ts';
+import type { FileDownloadOptions, FileManagerActions } from '../files/fileManagerAdapter.ts';
 import type { FileAreaKey, FileItemId, FileView } from '../files/fileView.ts';
 import type { UploadProgressCallbacks } from '../files/uploadWithProgress.ts';
 import type { CloudDriveApi } from './api.ts';
 import { driveFileViewOf, driveFolderIdOf, emptyDriveTrashFully } from './driveFileMapping.ts';
-import type { DriveNodeListItem, DriveNodeResponse } from './types.ts';
+import type { DriveContentPurpose, DriveNodeListItem, DriveNodeResponse } from './types.ts';
 import { sendDriveUpload } from './upload.ts';
 
 type TriggerOf<THook> = THook extends () => readonly [infer TTrigger, unknown] ? TTrigger : never;
@@ -60,6 +60,18 @@ export const rememberDriveNodes = (nodeFacts: Map<number, DriveNodeFact>, items:
  * The writes of the drive's file manager. Purge and empty trash exist only with `canManage` (so the manager offers
  * them only to managers); every other write is offered and the server checks the space's write right.
  */
+/**
+ * The content purpose of a download request: a list picture is a `THUMBNAIL` (never recorded), a preview `INLINE`
+ * (recorded as viewed; the server serves non-raster types as attachment anyway), an original `DOWNLOAD` (recorded as
+ * downloaded).
+ */
+export const drivePurposeOf = (options: FileDownloadOptions): DriveContentPurpose =>
+  options.variant === 'THUMBNAIL'
+    ? 'THUMBNAIL'
+    : options.variant === 'PREVIEW' || (options.variant === undefined && options.disposition === 'inline')
+      ? 'INLINE'
+      : 'DOWNLOAD';
+
 export const buildCloudDriveFileActions = (triggers: CloudDriveFileActionTriggers, context: CloudDriveFileActionContext): FileManagerActions => {
   const { reserveUpload, completeUpload, requestContent, moveNode, updateMetadata, createFolder, moveNodes, trashNodes, restoreNodes, purgeNodes, emptyTrash, restoreVersion } = triggers;
   const { spaceId, rootNodeId, canManage, nodeFacts } = context;
@@ -104,7 +116,7 @@ export const buildCloudDriveFileActions = (triggers: CloudDriveFileActionTrigger
     getDownload: async (fileId, options) => {
       const { grant } = await requestContent({
         driveNodeId: Number(fileId),
-        purpose: options.disposition === 'inline' ? 'INLINE' : 'DOWNLOAD',
+        purpose: drivePurposeOf(options),
         versionId: options.versionId === undefined ? null : Number(options.versionId),
       }).unwrap();
       return { url: grant.url, fileName: grant.fileName, expiresAt: grant.expiresAt ?? null };

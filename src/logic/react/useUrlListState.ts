@@ -15,6 +15,12 @@ export interface UseUrlListStateOptions {
   debounceMs?: number;
   /** Keys that do not count as "filters" in `activeFilterCount` (the toolbar search: its own clear button). */
   uncounted?: readonly string[];
+  /**
+   * Keys that are a place, not a filter (a folder, an open area): a change of one is written at once with a history
+   * entry (`adapter.push`, falling back to `replace`), together with every other key that changed in the same render;
+   * Back and Forward then step through the places. Other keys keep the debounced `replace`. Default none.
+   */
+  pushKeys?: readonly string[];
 }
 
 export interface UrlListState<K extends string> {
@@ -94,7 +100,7 @@ export const externalListChange = <K extends string>(
  */
 export const useUrlListState = <K extends string>(
   keys: readonly K[],
-  { adapter, debounceMs = LIST_STATE_DEBOUNCE_MS, uncounted = NO_KEYS }: UseUrlListStateOptions
+  { adapter, debounceMs = LIST_STATE_DEBOUNCE_MS, uncounted = NO_KEYS, pushKeys = NO_KEYS }: UseUrlListStateOptions
 ): UrlListState<K> => {
   // A client-only mount restores in the first render (as before); a server render and its hydration render do not
   // touch storage, and the saved state is applied right after hydration instead.
@@ -141,6 +147,27 @@ export const useUrlListState = <K extends string>(
     }
     if (Object.keys(fromUrl).length > 0) adapterRef.current.replace(fromUrl);
   }, [keys]);
+
+  // A place key changed: write it now with a history entry (and whatever else changed with it, e.g. cleared filters).
+  useEffect(() => {
+    if (pushKeys.length === 0) return;
+    const written = lastWrittenRef.current;
+    const placeChanged = keys.some(
+      key => pushKeys.includes(key) && values[key].trim() !== (written ? written[key] : (adapterRef.current.get(key) ?? '').trim())
+    );
+    if (!placeChanged) return;
+    const updates: Record<string, string | null> = {};
+    const nextWritten = emptyRecord(keys);
+    for (const key of keys) {
+      const next = values[key].trim();
+      nextWritten[key] = next;
+      if ((adapterRef.current.get(key) ?? '') !== next) updates[key] = next === '' ? null : next;
+    }
+    lastWrittenRef.current = nextWritten;
+    if (Object.keys(updates).length === 0) return;
+    const write = adapterRef.current.push ?? adapterRef.current.replace;
+    write(updates);
+  }, [values, keys, pushKeys]);
 
   useEffect(() => {
     const updates: Record<string, string | null> = {};

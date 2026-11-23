@@ -14,7 +14,7 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
-import { type DragEvent, type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
+import { type DragEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { m } from '../i18n/store.ts';
 import { type TranslateFn, useTranslate } from '../i18n/useTranslate.ts';
@@ -30,8 +30,9 @@ import { FilterDateRange, type FilterOption, FilterPanel, FilterSelect } from '.
 import { StatusBadge } from '../list/StatusBadge.tsx';
 import type { EntityDrawerUrlAdapter } from '../logic/pure/entityDrawer.ts';
 import { notify } from '../logic/pure/notify.ts';
-import type { UrlStateAdapter } from '../logic/pure/urlListState.ts';
+import { renameUrlStateKeys, type UrlStateAdapter } from '../logic/pure/urlListState.ts';
 import { useConfirm } from '../logic/react/useConfirm.ts';
+import { useCopyToClipboard } from '../logic/react/useCopyToClipboard.ts';
 import { useEntityDrawer } from '../logic/react/useEntityDrawer.ts';
 import { useMemoryUrlState } from '../logic/react/useMemoryUrlState.ts';
 import { useRowSelection } from '../logic/react/useRowSelection.ts';
@@ -57,6 +58,8 @@ import {
 import { FileDrawer } from './FileDrawer.tsx';
 import { FileFamilyIcon } from './FileFamilyIcon.tsx';
 import { FileItemActions, type FileItemHandlers } from './FileItemActions.tsx';
+import { FilePathBar } from './FilePathBar.tsx';
+import { filePathText, findFolderByPath, folderIdOfParam, folderParamOf, folderPathText, parseLocationInput, pathSegments, siblingFolders } from './filePaths.ts';
 import { FileLinkChips } from './FileLinkChips.tsx';
 import type {
   FileListOrder,
@@ -105,9 +108,14 @@ import { UploadTray } from './UploadTray.tsx';
 import { useFileUploadQueue } from './useFileUploadQueue.ts';
 
 /** The URL keys of the manager: where it stands, the view and the filters. */
-const LIST_KEYS = ['area', 'folder', 'view', 'q', 'family', 'link', 'target', 'mine', 'from', 'to', 'order'] as const;
+const LIST_KEYS = ['area', 'folder', 'tab', 'view', 'q', 'family', 'link', 'target', 'mine', 'from', 'to', 'order'] as const;
 const FILTER_KEYS = ['q', 'family', 'link', 'target', 'mine', 'from', 'to'] as const;
-const UNCOUNTED = ['area', 'folder', 'view', 'q', 'order'] as const;
+const UNCOUNTED = ['area', 'folder', 'tab', 'view', 'q', 'order'] as const;
+/** Keys that are a place: a change is a history entry (Back returns), filters are replaced. */
+const PLACE_KEYS = ['area', 'folder', 'tab'] as const;
+
+/** A URL key of the manager (`FileManagerProps.urlKeys` renames them for the host's URL). */
+export type FileManagerUrlKey = (typeof LIST_KEYS)[number] | 'file' | 'fileTab';
 const CLEARED_FILTERS = { q: '', family: '', link: '', target: '', mine: '', from: '', to: '' } as const;
 const TRASH = 'trash';
 
@@ -263,7 +271,35 @@ export interface FileManagerProps {
   renderAreaPicker?: (props: FileAreaPickerSlotProps) => ReactNode;
   /** The label of an event type in the drawer's activity (`null` = the built-in label or the type). */
   formatEventType?: (type: string) => string | null | undefined;
+  /**
+   * The URL parameter names of the manager's state, when the host's differ (`{ area: 'space', folder: 'path', order:
+   * 'sort' }`). Keys: `area`, `folder` (a path `/a/b`; a folder id still works), `tab` (`trash`), `view`, `q`, the
+   * filters, `order`, `file` (the details drawer) and `fileTab` (the drawer's `accesses` tab).
+   */
+  urlKeys?: Partial<Record<FileManagerUrlKey, string>>;
+  /** A notice above the list when the reader may not write here (a read-only space). */
+  readOnlyNotice?: ReactNode;
+  /**
+   * The link "Copy link" writes (default: this page with the area, the path and the file in the URL keys). `fileId` is
+   * set for a file.
+   */
+  buildLink?: (target: { areaKey: FileAreaKey; path: string; fileId: FileItemId | null }) => string;
 }
+
+/** `https://host/page?area=…&folder=/a/b&file=12` — this page at one location, every other parameter dropped. */
+const defaultLocationLink = (
+  keys: Readonly<Record<'area' | 'folder' | 'file', string>>,
+  target: { areaKey: FileAreaKey | null; path: string; fileId: FileItemId | null }
+): string => {
+  if (typeof window === 'undefined') return '';
+  const url = new URL(window.location.href);
+  url.search = '';
+  url.hash = '';
+  if (target.areaKey !== null && target.areaKey !== '') url.searchParams.set(keys.area, String(target.areaKey));
+  if (target.path !== '' && target.path !== '/') url.searchParams.set(keys.folder, target.path);
+  if (target.fileId !== null) url.searchParams.set(keys.file, String(target.fileId));
+  return url.toString();
+};
 
 /**
  * The file manager: folder tree + breadcrumbs + quota, grid / table of folders and files, search and filters in the URL
@@ -293,12 +329,27 @@ export const FileManager = ({
   renderAreaMaintenance,
   renderAreaPicker,
   formatEventType,
+  urlKeys,
+  readOnlyNotice,
+  buildLink,
 }: FileManagerProps) => {
   const { t } = useTranslate();
   const memory = useMemoryUrlState();
-  const listState = useUrlListState(LIST_KEYS, { adapter: urlStateAdapter ?? memory.urlStateAdapter, uncounted: UNCOUNTED });
+  const urlKeysText = JSON.stringify(urlKeys ?? {});
+  const renamedKeys = useMemo<Record<string, string>>(() => JSON.parse(urlKeysText) as Record<string, string>, [urlKeysText]);
+  const baseUrlAdapter = urlStateAdapter ?? memory.urlStateAdapter;
+  const listUrlAdapter = useMemo(() => renameUrlStateKeys(baseUrlAdapter, renamedKeys), [baseUrlAdapter, renamedKeys]);
+  const listState = useUrlListState(LIST_KEYS, { adapter: listUrlAdapter, uncounted: UNCOUNTED, pushKeys: PLACE_KEYS });
   const { values, debounced, setValue, setValues } = listState;
-  const drawer = useEntityDrawer({ adapter: drawerUrlAdapter ?? memory.drawerUrlAdapter, editKey: 'file', createKey: 'newFile' });
+  const drawerAdapter = drawerUrlAdapter ?? memory.drawerUrlAdapter;
+  const fileKey = renamedKeys.file ?? 'file';
+  const fileTabKey = renamedKeys.fileTab ?? 'fileTab';
+  const drawer = useEntityDrawer({ adapter: drawerAdapter, editKey: fileKey, createKey: 'newFile' });
+  const drawerTab = drawerAdapter.get(fileTabKey) === 'accesses' ? 'accesses' : 'changes';
+  const setDrawerTab = useCallback((tab: 'changes' | 'accesses') => drawerAdapter.replace({ [fileTabKey]: tab === 'accesses' ? tab : null }), [drawerAdapter, fileTabKey]);
+  const clipboard = useCopyToClipboard();
+  const [editingPath, setEditingPath] = useState(false);
+  const [locationMiss, setLocationMiss] = useState<string | null>(null);
   const actions = adapter.useActions();
   const capabilities = adapter.capabilities;
   const features = useMemo(() => resolveFileManagerFeatures(capabilities, actions), [capabilities, actions]);
@@ -324,12 +375,21 @@ export const FileManager = ({
   const areaData = areaQuery.data;
   const foldersQuery = adapter.useFolders(areaKey);
   const folders = foldersQuery.data ?? [];
-  const inTrash = features.trash && !context && values.folder === TRASH;
+  // `tab=trash`; an older `folder=trash` still opens it.
+  const inTrash = features.trash && !context && (values.tab === TRASH || values.folder === TRASH);
   const requestedFolder = context || inTrash || values.folder === '' || values.folder === TRASH ? null : values.folder;
-  const knownFolder = requestedFolder === null ? undefined : folders.find(folder => String(folder.id) === requestedFolder);
-  // A folder that is not (or no longer) in the tree falls back to the root once the tree is in.
+  const knownFolderId = requestedFolder === null ? null : folderIdOfParam(folders, requestedFolder);
+  // A path or id that is not (or no longer) in the tree falls back to the root once the tree is in (the miss is shown).
   const currentFolderId: FileItemId | null =
-    requestedFolder === null ? null : knownFolder ? knownFolder.id : foldersQuery.data ? null : /^\d+$/.test(requestedFolder) ? Number(requestedFolder) : requestedFolder;
+    requestedFolder === null
+      ? null
+      : knownFolderId !== undefined
+        ? knownFolderId
+        : foldersQuery.data
+          ? null
+          : /^\d+$/.test(requestedFolder)
+            ? Number(requestedFolder)
+            : null;
   const location: FileLocation = inTrash ? { kind: 'trash' } : { kind: 'folder', folderId: currentFolderId };
   const path = useMemo(() => folderPath(folders, currentFolderId), [folders, currentFolderId]);
   const currentFolderName = path.at(-1)?.name ?? rootLabel;
@@ -376,24 +436,135 @@ export const FileManager = ({
 
   const navigate = useCallback(
     (next: FileLocation) => {
-      setValue('folder', next.kind === 'trash' ? TRASH : next.folderId === null ? '' : String(next.folderId));
+      setValues(
+        next.kind === 'trash'
+          ? { tab: TRASH, folder: '' }
+          : { tab: '', folder: folderParamOf(folders, next.folderId) || (next.folderId === null ? '' : String(next.folderId)) }
+      );
+      setLocationMiss(null);
+      setEditingPath(false);
       setTreeSheetOpen(false);
     },
-    [setValue]
+    [setValues, folders]
   );
   const selectArea = useCallback(
     (key: FileAreaKey) => {
       if (onAreaKeyChange) {
         onAreaKeyChange(key);
-        setValue('folder', '');
+        setValues({ folder: '', tab: '' });
       } else {
-        setValues({ area: String(key) === String(areas[0]?.key) ? '' : String(key), folder: '' });
+        setValues({ area: String(key) === String(areas[0]?.key) ? '' : String(key), folder: '', tab: '' });
       }
+      setLocationMiss(null);
       setTreeSheetOpen(false);
     },
-    [onAreaKeyChange, setValue, setValues, areas]
+    [onAreaKeyChange, setValues, areas]
   );
   const clearFilters = useCallback(() => setValues(CLEARED_FILTERS), [setValues]);
+
+  // ─── Locations: the path bar, pasted paths, a URL path that is no folder ─────────────────────────────────────────
+  const locationCapability = capabilities?.location;
+  const missText = useCallback(
+    (deepestFolderPath: string | null | undefined, missingSegment: string | null | undefined, message?: string | null) =>
+      missingSegment
+        ? t('“%name%” does not exist in %folder%.', { replacements: { name: missingSegment, folder: deepestFolderPath || '/' } })
+        : (message ?? t('This location does not exist or you may not open it.')),
+    [t]
+  );
+  /** Opens a resolved location: its area, its folder and (for a file) its details. */
+  const openResolvedLocation = useCallback(
+    (areaKeyOfLocation: FileAreaKey, folderPathOfLocation: string, fileId: FileItemId | null) => {
+      if (String(areaKeyOfLocation) !== String(areaKey)) selectArea(areaKeyOfLocation);
+      clearFilters();
+      setValues({ folder: folderPathOfLocation === '/' ? '' : folderPathOfLocation, tab: '' });
+      setLocationMiss(null);
+      setEditingPath(false);
+      if (fileId !== null) drawer.openEdit(fileId);
+    },
+    [areaKey, selectArea, clearFilters, setValues, drawer]
+  );
+  const goToLocation = useCallback(
+    async (input: string): Promise<string | null> => {
+      const parsed = parseLocationInput(input);
+      if (parsed.kind === 'invalid') return parsed.reason === 'empty' ? t('Type a path.') : t('A path may not contain “..”.');
+      // A folder of the open area: straight from the tree (a mount-prefixed path also without its first name).
+      if (parsed.kind === 'path' && !(parsed.mount && locationCapability)) {
+        for (const segments of parsed.mount ? [parsed.segments, parsed.segments.slice(1)] : [parsed.segments]) {
+          const match = findFolderByPath(folders, segments);
+          if (match.folderId !== undefined) {
+            openResolvedLocation(areaKey, folderPathText(folders, match.folderId), null);
+            return null;
+          }
+        }
+      }
+      if (locationCapability) {
+        try {
+          const result = await locationCapability.resolveLocation(areaKey, input);
+          if (!result.found) return missText(result.deepestFolderPath, result.missingSegment, result.message);
+          const folderOfLocation = result.fileId === null ? result.path : `/${pathSegments(result.path).slice(0, -1).join('/')}`;
+          openResolvedLocation(result.areaKey, folderOfLocation, result.fileId);
+          return null;
+        } catch (error) {
+          return normalizeDddError(error, t('The location could not be opened.')).message;
+        }
+      }
+      if (parsed.kind === 'reference') return t('Links of the form drive/<id> are not supported here.');
+      const match = findFolderByPath(folders, parsed.segments);
+      return missText(folderPathText(folders, match.deepestFolderId), match.missingSegment);
+    },
+    [t, locationCapability, folders, areaKey, openResolvedLocation, missText]
+  );
+
+  // A URL path (`?folder=/a/b/report.pdf`) that is no folder: a file's path opens its folder and details, else the miss.
+  const checkedLocationRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (requestedFolder === null || knownFolderId !== undefined || !foldersQuery.data) return;
+    const checkKey = `${String(areaKey)}|${requestedFolder}`;
+    if (checkedLocationRef.current === checkKey) return;
+    checkedLocationRef.current = checkKey;
+    void goToLocation(requestedFolder).then(failure => {
+      if (failure !== null) setLocationMiss(failure);
+    });
+  }, [requestedFolder, knownFolderId, foldersQuery.data, areaKey, goToLocation]);
+
+  // Ctrl/Cmd+L edits the path (not inside a dialog, not in the trash or a link tab).
+  useEffect(() => {
+    if (context) return undefined;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey || event.key.toLowerCase() !== 'l') return;
+      const active = document.activeElement;
+      if (active instanceof Element && active.closest('[role="dialog"], [role="alertdialog"]')) return;
+      event.preventDefault();
+      setEditingPath(true);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [context]);
+
+  // ─── Copy path / link ──────────────────────────────────────────────────────────────────────────────────────────
+  const linkKeys = useMemo(
+    () => ({ area: renamedKeys.area ?? 'area', folder: renamedKeys.folder ?? 'folder', file: fileKey }),
+    [renamedKeys, fileKey]
+  );
+  const linkTo = useCallback(
+    (path: string, fileId: FileItemId | null) => (buildLink ? buildLink({ areaKey, path, fileId }) : defaultLocationLink(linkKeys, { areaKey, path, fileId })),
+    [buildLink, areaKey, linkKeys]
+  );
+  const copyText = useCallback(
+    async (text: string, success: string) => {
+      if (text !== '' && (await clipboard.copy(text))) notify.success(success);
+      else notify.error(t('The clipboard is not available here.'));
+    },
+    [clipboard, t]
+  );
+  const copyFolderPath = useCallback(
+    (folder: FolderView) => void copyText(folderPathText(folders, folder.id), t('Path copied')),
+    [copyText, folders, t]
+  );
+  const copyFolderLink = useCallback(
+    (folder: FolderView) => void copyText(linkTo(folderPathText(folders, folder.id), null), t('Link copied')),
+    [copyText, linkTo, folders, t]
+  );
 
   // ─── Entries ───────────────────────────────────────────────────────────────────────────────────────────────────
   const childFolders = useMemo(
@@ -580,8 +751,10 @@ export const FileManager = ({
       onLink: features.editLinks ? file => setLinkRequest([file]) : undefined,
       onRestore: features.restore ? file => void restoreFiles([file]) : undefined,
       onPurge: features.purge ? file => void purgeFiles([file]) : undefined,
+      onCopyPath: file => void copyText(filePathText(folders, file), t('Path copied')),
+      onCopyLink: file => void copyText(linkTo(folderPathText(folders, file.folderId), file.id), t('Link copied')),
     }),
-    [download, trashFiles, restoreFiles, purgeFiles, features]
+    [download, trashFiles, restoreFiles, purgeFiles, features, copyText, linkTo, folders, t]
   );
 
   // ─── Folders ───────────────────────────────────────────────────────────────────────────────────────────────────
@@ -637,9 +810,11 @@ export const FileManager = ({
             onRename: folder => setFolderDialog({ mode: 'rename', folder }),
             onMove: folder => setMoveRequest({ folder }),
             onDelete: folder => void deleteFolder(folder),
+            onCopyPath: copyFolderPath,
+            onCopyLink: copyFolderLink,
           }
-        : undefined,
-    [canWriteHere, deleteFolder]
+        : { onCopyPath: copyFolderPath, onCopyLink: copyFolderLink },
+    [canWriteHere, deleteFolder, copyFolderPath, copyFolderLink]
   );
 
   // ─── Moves by drag and drop ────────────────────────────────────────────────────────────────────────────────────
@@ -1219,18 +1394,43 @@ export const FileManager = ({
           <AlertDescription>{t('Existing files can still be downloaded.')}</AlertDescription>
         </Alert>
       )}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <FileBreadcrumbs
-          rootLabel={rootLabel}
-          path={path}
-          inTrash={inTrash}
-          trailLabel={context ? context.label : filterActive ? t('Search results in all folders') : undefined}
-          onNavigate={folderId => {
-            clearFilters();
-            navigate({ kind: 'folder', folderId });
-          }}
-          dropAreaKey={dragEnabled ? areaKey : undefined}
-        />
+      {readOnlyNotice && !canWriteHere && (
+        <Alert>
+          <AlertDescription>{readOnlyNotice}</AlertDescription>
+        </Alert>
+      )}
+      {locationMiss && (
+        <Alert variant="destructive">
+          <AlertTitle>{t('This location was not found')}</AlertTitle>
+          <AlertDescription>
+            {locationMiss}
+            <span className="mt-1 block text-muted-foreground">{t('The nearest folder that exists is shown.')}</span>
+          </AlertDescription>
+        </Alert>
+      )}
+      <div className="sticky top-0 z-(--layer-sticky) -mx-1 flex flex-wrap items-center justify-between gap-3 bg-background/95 px-1 py-1 backdrop-blur-sm">
+        {editingPath && !context && !inTrash ? (
+          <FilePathBar
+            initialPath={folderPathText(folders, currentFolderId)}
+            folders={folders}
+            onSubmit={goToLocation}
+            onCancel={() => setEditingPath(false)}
+          />
+        ) : (
+          <FileBreadcrumbs
+            rootLabel={rootLabel}
+            path={path}
+            inTrash={inTrash}
+            trailLabel={context ? context.label : filterActive ? t('Search results in all folders') : undefined}
+            onNavigate={folderId => {
+              clearFilters();
+              navigate({ kind: 'folder', folderId });
+            }}
+            dropAreaKey={dragEnabled ? areaKey : undefined}
+            siblingsOf={context ? undefined : parentId => siblingFolders(folders, parentId)}
+            onEditPath={context || inTrash ? undefined : () => setEditingPath(true)}
+          />
+        )}
         <QuotaPill usedBytes={areaData?.usedBytes} quotaBytes={areaData?.quotaBytes} isLoading={areaQuery.isLoading} note={areaData?.quotaNote} parts={areaData?.usageParts} />
       </div>
     </div>
@@ -1239,8 +1439,8 @@ export const FileManager = ({
   const pageActions = (
     <div className="flex flex-wrap items-center gap-2">
       {headerActions}
-      {renderAreaMaintenance?.({ areaKey, area: areaData, inTrash })}
-      {renderAreaSettings && (
+      {!features.partner && renderAreaMaintenance?.({ areaKey, area: areaData, inTrash })}
+      {renderAreaSettings && !features.partner && (
         <Button type="button" variant="outline" onClick={() => setSettingsOpen(true)}>
           <Settings2 />
           {t('Area settings')}
@@ -1262,11 +1462,11 @@ export const FileManager = ({
       ) : (
         canWrite && (
           <>
-            {folderActions && !context && !filterActive && (
+            {folderActions?.onCreate && !context && !filterActive && (
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => folderActions.onCreate(currentFolderId)}
+                onClick={() => folderActions.onCreate?.(currentFolderId)}
                 disabled={!writesAllowed || folderDepth(folders, currentFolderId) >= maxFolderDepth}
               >
                 <FolderPlus />
@@ -1330,6 +1530,8 @@ export const FileManager = ({
         loadPdfJs={loadPdfJs}
         workingCopyLabel={workingCopyLabel}
         workingCopyDescription={capabilities?.workingCopy?.description}
+        activityTab={drawerTab}
+        onActivityTabChange={setDrawerTab}
       />
       <MoveDialog
         open={moveRequest !== null}
@@ -1470,7 +1672,7 @@ export const FileManager = ({
         </SheetContent>
       </Sheet>
       <UploadTray queue={uploads} scansUploads={features.malwareScan} />
-      {renderAreaSettings && area && renderAreaSettings({ open: settingsOpen, onClose: () => setSettingsOpen(false), areaKey, area: areaData })}
+      {renderAreaSettings && !features.partner && area && renderAreaSettings({ open: settingsOpen, onClose: () => setSettingsOpen(false), areaKey, area: areaData })}
     </>
   );
 

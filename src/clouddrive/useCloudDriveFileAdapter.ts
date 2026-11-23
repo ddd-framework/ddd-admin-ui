@@ -3,8 +3,12 @@
 // The file manager of `./files` on the drive's endpoints (`createCloudDriveApi`, mgamadeus/ddd-clouddrive ≥ 0.1.0-rc.10).
 import { useMemo, useState } from 'react';
 
+import { translateText } from '../i18n/store.ts';
+
 import type {
   FileListQuery,
+  FileLocationMiss,
+  FileLocationResolution,
   FileListState,
   FileManagerActions,
   FileManagerAdapter,
@@ -12,7 +16,7 @@ import type {
   FileQueryState,
   FileTrashQuery,
 } from '../files/fileManagerAdapter.ts';
-import type { FileAreaKey, FileAreaView, FileDetailView, FileItemId, FolderView } from '../files/fileView.ts';
+import type { FileAreaKey, FileAreaView, FileDetailView, FileEventView, FileItemId, FolderView } from '../files/fileView.ts';
 import type { CloudDriveApi } from './api.ts';
 import { buildCloudDriveFileActions, type CloudDriveFileActionTriggers, type DriveNodeFact, rememberDriveNodes } from './driveFileActions.ts';
 import {
@@ -23,6 +27,8 @@ import {
   driveFileItemsOf,
   driveFileViewOf,
   driveFolderViewsOf,
+  driveLocationMissOf,
+  driveLocationResolutionOf,
   driveVersionViewOf,
   nextDriveListLimit,
 } from './driveFileMapping.ts';
@@ -72,6 +78,9 @@ const useGrowingLimit = (key: string): readonly [number, (next: number) => void]
  */
 export const createCloudDriveFileAdapter = (api: CloudDriveApi, spaceId: number): FileManagerAdapter => {
   const nodeFacts = new Map<number, DriveNodeFact>();
+  // The resolve trigger of the last render (`useActions` runs on every render of the manager): the location capability
+  // is a plain function, the request a mutation hook.
+  let resolveTrigger: ReturnType<CloudDriveApi['useResolveDriveLocationMutation']>[0] | null = null;
   const rememberNodes = (items: readonly DriveNodeListItem[]) => rememberDriveNodes(nodeFacts, items);
 
   const useSpaceItem = (areaKey: FileAreaKey | null | undefined): { item: DriveSpaceListItem | undefined; isLoading: boolean; isError: boolean } => {
@@ -157,7 +166,7 @@ export const createCloudDriveFileAdapter = (api: CloudDriveApi, spaceId: number)
     const skip = !Number.isInteger(driveNodeId) || driveNodeId <= 0;
     const nodeQuery = api.useDriveNodeQuery({ driveNodeId }, { skip });
     const versionsQuery = api.useDriveVersionsQuery({ driveNodeId }, { skip });
-    const eventsQuery = api.useDriveEventsQuery({ driveNodeId, limit: DRIVE_ACTIVITY_LIMIT }, { skip });
+    const eventsQuery = api.useDriveEventsQuery({ driveNodeId, limit: DRIVE_ACTIVITY_LIMIT, eventGroup: 'changes' }, { skip });
     const item = nodeQuery.data?.item ?? undefined;
     const space = useSpaceItem(item?.driveSpaceId);
     const data = useMemo((): FileDetailView | undefined => {
@@ -173,8 +182,29 @@ export const createCloudDriveFileAdapter = (api: CloudDriveApi, spaceId: number)
     return { data, isLoading: nodeQuery.isLoading, isFetching: nodeQuery.isFetching || versionsQuery.isFetching, isError: nodeQuery.isError };
   };
 
+  const useAccessEvents = (fileId: FileItemId | null): FileQueryState<readonly FileEventView[]> => {
+    const driveNodeId = fileId === null ? 0 : Number(fileId);
+    const skip = !Number.isInteger(driveNodeId) || driveNodeId <= 0;
+    const accessesQuery = api.useDriveEventsQuery({ driveNodeId, limit: DRIVE_ACTIVITY_LIMIT, eventGroup: 'accesses' }, { skip });
+    const data = useMemo(() => accessesQuery.data?.items?.elements?.map(driveEventViewOf), [accessesQuery.data]);
+    return { data, isLoading: accessesQuery.isLoading, isFetching: accessesQuery.isFetching, isError: accessesQuery.isError };
+  };
+
+  const resolveLocation = async (areaKey: FileAreaKey, input: string): Promise<FileLocationResolution | FileLocationMiss> => {
+    if (!resolveTrigger) throw new Error(translateText('The location could not be opened.'));
+    try {
+      return driveLocationResolutionOf(await resolveTrigger({ driveSpaceId: toSpaceId(areaKey) || spaceId, path: input.trim() }).unwrap());
+    } catch (error) {
+      const miss = driveLocationMissOf(error);
+      if (miss) return miss;
+      throw error;
+    }
+  };
+
   const useActions = (): FileManagerActions => {
     const space = useSpaceItem(spaceId);
+    const [resolve] = api.useResolveDriveLocationMutation();
+    resolveTrigger = resolve;
     const [reserveUpload] = api.useReserveDriveUploadMutation();
     const [completeUpload] = api.useCompleteDriveUploadMutation();
     const [requestContent] = api.useDriveContentMutation();
@@ -206,7 +236,13 @@ export const createCloudDriveFileAdapter = (api: CloudDriveApi, spaceId: number)
     useFiles,
     useFile,
     useActions,
-    capabilities: { ...CLOUD_DRIVE_FILE_CAPABILITIES, trash: { useTrash } },
+    capabilities: {
+      ...CLOUD_DRIVE_FILE_CAPABILITIES,
+      trash: { useTrash },
+      activity: { limit: DRIVE_ACTIVITY_LIMIT, useAccessEvents },
+      location: { resolveLocation },
+      ...(api.audience === 'shared' ? { audience: 'partner' as const } : {}),
+    },
   };
 };
 

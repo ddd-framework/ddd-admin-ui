@@ -215,6 +215,12 @@ export interface FileEventView {
   impersonatedBy?: string | null;
   /** A short human detail (`"Report.pdf" → "Report 2026.pdf"`, `v3`). */
   detail?: string | null;
+  /** Who acted: `staff` or `partner` (an access event), when the backend says. */
+  audience?: string | null;
+  /** What was opened: a preview or the original (an access event). */
+  variant?: string | null;
+  /** The reader's public address (an access event; only staff readers get it). */
+  clientIp?: string | null;
 }
 
 /** The drawer's file: the list facts plus content hash, versions and activity. */

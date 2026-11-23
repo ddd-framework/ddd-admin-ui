@@ -27,12 +27,13 @@ import { Alert, AlertDescription, AlertTitle } from '../primitives/alert.tsx';
 import { Button } from '../primitives/button.tsx';
 import { Card, CardContent, CardHeader, CardTitle } from '../primitives/card.tsx';
 import { Input } from '../primitives/input.tsx';
+import { SegmentedControl } from '../primitives/segmented-control.tsx';
 import { Skeleton } from '../primitives/skeleton.tsx';
 import { Textarea } from '../primitives/textarea.tsx';
 import { FileFamilyIcon } from './FileFamilyIcon.tsx';
-import type { FileItemHandlers } from './FileItemActions.tsx';
+import { FileCopyMenu, type FileItemHandlers } from './FileItemActions.tsx';
 import { FileLinkChips } from './FileLinkChips.tsx';
-import type { FileLinkKind, FileManagerActions, FileManagerAdapter } from './fileManagerAdapter.ts';
+import type { FileLinkKind, FileManagerActions, FileManagerAdapter, FileQueryState } from './fileManagerAdapter.ts';
 import type { FileManagerFeatures } from './fileManagerFeatures.ts';
 import type { PdfJsLoader } from './PdfPreview.tsx';
 import { FilePreview } from './FilePreview.tsx';
@@ -81,6 +82,29 @@ export const FILE_EVENT_LABELS: Readonly<Record<string, string>> = {
   RESTORED: m('Restored', { context: 'file-event' }),
   PURGED: m('Deleted permanently'),
   COPIED_IN: m('Copied in'),
+  VIEWED: m('Viewed', { context: 'file-event' }),
+  DOWNLOADED: m('Downloaded', { context: 'file-event' }),
+  READ_BY_AGENT: m('Read by the assistant'),
+};
+
+/** The activity card's tabs: the file's changes and who opened it. */
+const ACTIVITY_TAB_OPTIONS = [
+  { value: 'changes' as const, label: m('Changes', { context: 'file-history-tab' }), context: 'file-history-tab' },
+  { value: 'accesses' as const, label: m('Accesses', { context: 'file-history-tab' }), context: 'file-history-tab' },
+];
+
+/** The audiences of an access, as the drawer names them. */
+const ACCESS_AUDIENCE_LABELS: Readonly<Record<string, string>> = {
+  INTERNAL: m('Staff', { context: 'file-access-audience' }),
+  SHARED: m('Partner', { context: 'file-access-audience' }),
+};
+
+/** What an access opened. */
+const ACCESS_VARIANT_LABELS: Readonly<Record<string, string>> = {
+  INLINE: m('Preview', { context: 'file-access-variant' }),
+  PREVIEW: m('Preview', { context: 'file-access-variant' }),
+  DOWNLOAD: m('Original', { context: 'file-access-variant' }),
+  ORIGINAL: m('Original', { context: 'file-access-variant' }),
 };
 
 const defaultEventLabel = (type: string, t: TranslateFn): string => (FILE_EVENT_LABELS[type] ? t(FILE_EVENT_LABELS[type]) : type);
@@ -391,7 +415,7 @@ const VersionsCard = ({ file, actions, features, editable, replacementExtension,
   );
 };
 
-const ActivityCard = ({
+const EventList = ({
   events,
   limit,
   formatEventType,
@@ -401,32 +425,85 @@ const ActivityCard = ({
   formatEventType?: (type: string) => string | null | undefined;
 }) => {
   const { t } = useTranslate();
+  if (events.length === 0) return <EmptyValue />;
+  return (
+    <ol className="space-y-3">
+      {events.slice(0, limit).map(event => {
+        const facts = [
+          event.audience ? (ACCESS_AUDIENCE_LABELS[event.audience] ? t(ACCESS_AUDIENCE_LABELS[event.audience]) : event.audience) : null,
+          event.variant ? (ACCESS_VARIANT_LABELS[event.variant] ? t(ACCESS_VARIANT_LABELS[event.variant]) : event.variant) : null,
+          event.clientIp ? t('from %address%', { replacements: { address: event.clientIp } }) : null,
+        ].filter((fact): fact is string => fact !== null);
+        return (
+          <li key={String(event.id)} className="flex gap-3 text-[13px]">
+            <span aria-hidden className="mt-1.5 size-2 shrink-0 rounded-full bg-brand" />
+            <div className="min-w-0">
+              <p>
+                <span className="font-semibold">{formatEventType?.(event.type) ?? defaultEventLabel(event.type, t)}</span>
+                {event.detail && <span className="text-muted-foreground"> · {event.detail}</span>}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                <DateCell value={event.occurredAt} /> · {event.actor ?? t('System', { context: 'file-event-actor' })}
+                {event.impersonatedBy && ` ${t('(on behalf: %name%)', { replacements: { name: event.impersonatedBy } })}`}
+                {facts.length > 0 && ` · ${facts.join(' · ')}`}
+              </p>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+};
+
+const NO_ACCESS_EVENTS = (): FileQueryState<readonly FileEventView[]> => ({ data: undefined, isLoading: false, isError: false });
+
+const ActivityCard = ({
+  fileId,
+  events,
+  limit,
+  formatEventType,
+  useAccessEvents,
+  tab,
+  onTabChange,
+}: {
+  fileId: FileItemId;
+  events: readonly FileEventView[];
+  limit: number;
+  formatEventType?: (type: string) => string | null | undefined;
+  /** The accesses tab's data hook; absent = changes only. */
+  useAccessEvents?: (fileId: FileItemId | null) => FileQueryState<readonly FileEventView[]>;
+  tab: 'changes' | 'accesses';
+  onTabChange?: (tab: 'changes' | 'accesses') => void;
+}) => {
+  const { t } = useTranslate();
+  const withAccesses = useAccessEvents !== undefined;
+  const showAccesses = withAccesses && tab === 'accesses';
+  const accessesQuery = (useAccessEvents ?? NO_ACCESS_EVENTS)(showAccesses ? fileId : null);
   return (
     <Card className="gap-4">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between gap-3">
         <CardTitle className="text-title-card leading-snug font-semibold">{t('Activity', { context: 'file-history' })}</CardTitle>
+        {withAccesses && (
+          <SegmentedControl
+            aria-label={t('Activity', { context: 'file-history' })}
+            value={tab}
+            onValueChange={value => onTabChange?.(value)}
+            height={32}
+            options={ACTIVITY_TAB_OPTIONS}
+          />
+        )}
       </CardHeader>
       <CardContent>
-        {events.length === 0 ? (
-          <EmptyValue />
+        {showAccesses ? (
+          accessesQuery.isLoading ? (
+            <Skeleton className="h-24 w-full rounded-xl" />
+          ) : accessesQuery.isError ? (
+            <p className="text-[13px] text-muted-foreground">{t('The accesses could not be loaded.')}</p>
+          ) : (
+            <EventList events={accessesQuery.data ?? []} limit={limit} formatEventType={formatEventType} />
+          )
         ) : (
-          <ol className="space-y-3">
-            {events.slice(0, limit).map(event => (
-              <li key={String(event.id)} className="flex gap-3 text-[13px]">
-                <span aria-hidden className="mt-1.5 size-2 shrink-0 rounded-full bg-brand" />
-                <div className="min-w-0">
-                  <p>
-                    <span className="font-semibold">{formatEventType?.(event.type) ?? defaultEventLabel(event.type, t)}</span>
-                    {event.detail && <span className="text-muted-foreground"> · {event.detail}</span>}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    <DateCell value={event.occurredAt} /> · {event.actor ?? t('System', { context: 'file-event-actor' })}
-                    {event.impersonatedBy && ` ${t('(on behalf: %name%)', { replacements: { name: event.impersonatedBy } })}`}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ol>
+          <EventList events={events} limit={limit} formatEventType={formatEventType} />
         )}
       </CardContent>
     </Card>
@@ -453,6 +530,9 @@ export interface FileDrawerProps {
   loadPdfJs?: PdfJsLoader;
   workingCopyLabel?: string;
   workingCopyDescription?: string;
+  /** The activity card's tab (`fileTab` in the URL); default `changes`. */
+  activityTab?: 'changes' | 'accesses';
+  onActivityTabChange?: (tab: 'changes' | 'accesses') => void;
 }
 
 /** The drawer id → a file id (numbers stay numbers when the list's ids are numbers). */
@@ -483,6 +563,8 @@ export const FileDrawer = ({
   loadPdfJs,
   workingCopyLabel,
   workingCopyDescription,
+  activityTab = 'changes',
+  onActivityTabChange,
 }: FileDrawerProps) => {
   const { t } = useTranslate();
   const shownId = drawer.shown?.mode === 'edit' ? String(drawer.shown.id) : undefined;
@@ -503,6 +585,13 @@ export const FileDrawer = ({
 
   const headerActions = file && (
     <>
+      {!inTrash && (
+        <FileCopyMenu
+          name={file.name}
+          onCopyPath={handlers.onCopyPath ? () => handlers.onCopyPath?.(file) : undefined}
+          onCopyLink={handlers.onCopyLink ? () => handlers.onCopyLink?.(file) : undefined}
+        />
+      )}
       {!inTrash && (
         <Button type="button" variant="outline" size="sm" disabled={!isFileReleased(file.scanStatus)} onClick={() => handlers.onDownload(file)}>
           <Download />
@@ -691,7 +780,17 @@ export const FileDrawer = ({
                     scansUploads={features.malwareScan}
                   />
                 )}
-                {features.activity && <ActivityCard events={detail.events ?? []} limit={activityLimit} formatEventType={formatEventType} />}
+                {features.activity && (
+                  <ActivityCard
+                    fileId={detail.id}
+                    events={detail.events ?? []}
+                    limit={activityLimit}
+                    formatEventType={formatEventType}
+                    useAccessEvents={adapter.capabilities?.activity?.useAccessEvents}
+                    tab={activityTab}
+                    onTabChange={onActivityTabChange}
+                  />
+                )}
               </>
             ) : (
               <Skeleton className="h-40 w-full rounded-xl" />

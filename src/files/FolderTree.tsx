@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronRight, Folder, FolderInput, FolderOpen, FolderPen, FolderPlus, HardDrive, MoreHorizontal, Trash2 } from 'lucide-react';
+import { ChevronRight, Copy, Folder, FolderInput, FolderOpen, FolderPen, FolderPlus, HardDrive, Link, MoreHorizontal, Trash2 } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 
 import { useTranslate } from '../i18n/useTranslate.ts';
@@ -16,10 +16,15 @@ export type FileLocation = { kind: 'folder'; folderId: FileItemId | null } | { k
 
 /** The folder writes the tree offers (absent = read-only tree). */
 export interface FolderTreeActions {
-  onCreate: (parentId: FileItemId | null) => void;
-  onRename: (folder: FolderView) => void;
-  onMove: (folder: FolderView) => void;
-  onDelete: (folder: FolderView) => void;
+  /** The writes; absent = not offered (a reader still gets the copy entries). */
+  onCreate?: (parentId: FileItemId | null) => void;
+  onRename?: (folder: FolderView) => void;
+  onMove?: (folder: FolderView) => void;
+  onDelete?: (folder: FolderView) => void;
+  /** Copies the folder's path (`/a/b`). */
+  onCopyPath?: (folder: FolderView) => void;
+  /** Copies a link that opens the folder. */
+  onCopyLink?: (folder: FolderView) => void;
 }
 
 export interface FolderTreeProps {
@@ -76,24 +81,47 @@ export const FolderActionsMenu = ({ folder, depth, actions, writesAllowed, maxFo
           <MoreHorizontal />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem disabled={!writesAllowed || depth >= maxFolderDepth} onSelect={() => actions.onCreate(folder.id)}>
-          <FolderPlus />
-          {t('New subfolder')}
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled={!writesAllowed} onSelect={() => actions.onRename(folder)}>
-          <FolderPen />
-          {t('Rename', { context: 'folder-action' })}
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled={!writesAllowed} onSelect={() => actions.onMove(folder)}>
-          <FolderInput />
-          {t('Move', { context: 'folder-action' })}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" disabled={!writesAllowed} onSelect={() => actions.onDelete(folder)}>
-          <Trash2 />
-          {t('Delete folder')}
-        </DropdownMenuItem>
+      <DropdownMenuContent align="end" className="w-52">
+        {actions.onCreate && (
+          <DropdownMenuItem disabled={!writesAllowed || depth >= maxFolderDepth} onSelect={() => actions.onCreate?.(folder.id)}>
+            <FolderPlus />
+            {t('New subfolder')}
+          </DropdownMenuItem>
+        )}
+        {actions.onRename && (
+          <DropdownMenuItem disabled={!writesAllowed} onSelect={() => actions.onRename?.(folder)}>
+            <FolderPen />
+            {t('Rename', { context: 'folder-action' })}
+          </DropdownMenuItem>
+        )}
+        {actions.onMove && (
+          <DropdownMenuItem disabled={!writesAllowed} onSelect={() => actions.onMove?.(folder)}>
+            <FolderInput />
+            {t('Move', { context: 'folder-action' })}
+          </DropdownMenuItem>
+        )}
+        {(actions.onCopyPath || actions.onCopyLink) && (actions.onCreate || actions.onRename || actions.onMove) && <DropdownMenuSeparator />}
+        {actions.onCopyPath && (
+          <DropdownMenuItem onSelect={() => actions.onCopyPath?.(folder)}>
+            <Copy />
+            {t('Copy path')}
+          </DropdownMenuItem>
+        )}
+        {actions.onCopyLink && (
+          <DropdownMenuItem onSelect={() => actions.onCopyLink?.(folder)}>
+            <Link />
+            {t('Copy link')}
+          </DropdownMenuItem>
+        )}
+        {actions.onDelete && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" disabled={!writesAllowed} onSelect={() => actions.onDelete?.(folder)}>
+              <Trash2 />
+              {t('Delete folder')}
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -327,7 +355,7 @@ export const FolderTree = ({
     </ul>
   ) : null;
 
-  const rootTrailing = actions ? (
+  const rootTrailing = actions?.onCreate ? (
     <Button
       type="button"
       variant="ghost"
@@ -335,7 +363,7 @@ export const FolderTree = ({
       aria-label={t('New folder')}
       title={t('New folder')}
       disabled={!writesAllowed}
-      onClick={() => actions.onCreate(null)}
+      onClick={() => actions.onCreate?.(null)}
       className="size-6 shrink-0 opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 max-md:opacity-100"
     >
       <FolderPlus />

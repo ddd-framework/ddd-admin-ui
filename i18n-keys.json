@@ -582,6 +582,14 @@
       "hint": "File manager, check before an upload starts (shown in the upload tray as the reason a file was refused). %extension% is a file extension like \"pdf\"."
     },
     {
+      "key": "/folder/subfolder or drive/123",
+      "text": "/folder/subfolder or drive/123",
+      "files": [
+        "files/FilePathBar.tsx"
+      ],
+      "hint": "Placeholder of the editable path bar of the file manager: the user types a folder path from the area's root, or pastes a reference like drive/123. Keep the slashes and 'drive/123' literally."
+    },
+    {
       "key": "24 h",
       "text": "24 h",
       "files": [
@@ -670,6 +678,14 @@
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
     {
+      "key": "A path may not contain “..”.",
+      "text": "A path may not contain “..”.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "Error under the file manager's path bar: the typed path tries to step up a folder with '..', which is not allowed."
+    },
+    {
       "key": "A restart was requested; a live process has not stopped for it yet",
       "text": "A restart was requested; a live process has not stopped for it yet",
       "files": [
@@ -717,6 +733,15 @@
         "files/FileDrawer.tsx"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "Accesses__file-history-tab",
+      "text": "Accesses",
+      "context": "file-history-tab",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "Tab of the activity card in a file's details: who viewed or downloaded the file and when."
     },
     {
       "key": "Account",
@@ -1459,6 +1484,7 @@
       "key": "Cancel",
       "text": "Cancel",
       "files": [
+        "files/FilePathBar.tsx",
         "files/FolderNameDialog.tsx",
         "files/LinkTargetsDialog.tsx",
         "files/MoveAcrossAreasDialog.tsx",
@@ -1582,6 +1608,15 @@
         "database/SchemaDiffCard.tsx"
       ],
       "hint": "Small badge on a database table in the schema comparison: this table's pending change differs from what was shown before the last reload."
+    },
+    {
+      "key": "Changes__file-history-tab",
+      "text": "Changes",
+      "context": "file-history-tab",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "Tab of the activity card in a file's details: the history of changes (uploaded, renamed, moved …)."
     },
     {
       "key": "Check failed__file-scan-status",
@@ -2026,6 +2061,32 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): button that copies the id of the error group to the clipboard."
     },
     {
+      "key": "Copy link",
+      "text": "Copy link",
+      "files": [
+        "files/FileItemActions.tsx",
+        "files/FolderTree.tsx"
+      ],
+      "hint": "Menu entry on a file or folder of the file manager: copies a web link that opens this file or folder in the admin."
+    },
+    {
+      "key": "Copy path",
+      "text": "Copy path",
+      "files": [
+        "files/FileItemActions.tsx",
+        "files/FolderTree.tsx"
+      ],
+      "hint": "Menu entry on a file or folder of the file manager: copies its path inside the area, like /Templates/letter.pdf."
+    },
+    {
+      "key": "Copy path or link",
+      "text": "Copy path or link",
+      "files": [
+        "files/FileItemActions.tsx"
+      ],
+      "hint": "Tooltip of the copy button on a file row of the file manager: opens a small menu to copy the file's path or a link to it."
+    },
+    {
       "key": "Copy stack",
       "text": "Copy stack",
       "files": [
@@ -2040,6 +2101,14 @@
         "crons/runs.tsx"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): button that copies the full output of a run."
+    },
+    {
+      "key": "Copy the path or a link of %name%",
+      "text": "Copy the path or a link of %name%",
+      "files": [
+        "files/FileItemActions.tsx"
+      ],
+      "hint": "Screen reader label of the copy button on a file row; %name% is the file name."
     },
     {
       "key": "Could not copy",
@@ -2807,7 +2876,8 @@
       "text": "Downloaded",
       "context": "file-event",
       "files": [
-        "clouddrive/driveFileMapping.ts"
+        "clouddrive/driveFileMapping.ts",
+        "files/FileDrawer.tsx"
       ],
       "hint": "File manager details drawer, history: event type: someone downloaded the file."
     },
@@ -2954,6 +3024,22 @@
         "files/LinkTargetsDialog.tsx"
       ],
       "hint": "File manager, dialog to edit the links of files (checkbox list of link targets of the application). %name% is a file or folder name."
+    },
+    {
+      "key": "Edit the path",
+      "text": "Edit the path",
+      "files": [
+        "files/FileBreadcrumbs.tsx"
+      ],
+      "hint": "Screen reader label of the small button next to the file manager's breadcrumbs that turns them into an editable path field."
+    },
+    {
+      "key": "Edit the path (Ctrl/Cmd+L)",
+      "text": "Edit the path (Ctrl/Cmd+L)",
+      "files": [
+        "files/FileBreadcrumbs.tsx"
+      ],
+      "hint": "Tooltip of the button and the last breadcrumb that make the file manager's path editable; Ctrl/Cmd+L is the keyboard shortcut, keep it literally."
     },
     {
       "key": "Edit__action",
@@ -3707,9 +3793,26 @@
       "text": "Folders",
       "files": [
         "files/FileManager.tsx",
+        "files/FilePathBar.tsx",
         "files/FolderTree.tsx"
       ],
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Folders beside %name%",
+      "text": "Folders beside %name%",
+      "files": [
+        "files/FileBreadcrumbs.tsx"
+      ],
+      "hint": "Screen reader label of the small arrow next to a breadcrumb folder: opens the list of folders in the same parent folder; %name% is the folder."
+    },
+    {
+      "key": "Folders beside it",
+      "text": "Folders beside it",
+      "files": [
+        "files/FileBreadcrumbs.tsx"
+      ],
+      "hint": "Heading of the menu that lists the folders in the same parent folder as the breadcrumb's folder."
     },
     {
       "key": "Folders nest at most %max% levels deep.",
@@ -3883,6 +3986,14 @@
         "translations/TranslationCompleteness.tsx"
       ],
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): success toast; %locale% is a locale code like de-DE, %style% INFORMAL or FORMAL."
+    },
+    {
+      "key": "Go to the path",
+      "text": "Go to the path",
+      "files": [
+        "files/FilePathBar.tsx"
+      ],
+      "hint": "Screen reader label of the button next to the path field: opens the typed folder or file."
     },
     {
       "key": "Grid view",
@@ -4637,6 +4748,14 @@
       "hint": "Issues admin screen, one occurrence of an error in the details drawer: label of the log level of the event (ERROR, CRITICAL, …)."
     },
     {
+      "key": "Link copied",
+      "text": "Link copied",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "Short toast after a link to a file or folder was copied to the clipboard."
+    },
+    {
       "key": "Linked to",
       "text": "Linked to",
       "files": [
@@ -4661,6 +4780,14 @@
         "files/FileManager.tsx"
       ],
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: file link filter."
+    },
+    {
+      "key": "Links of the form drive/<id> are not supported here.",
+      "text": "Links of the form drive/<id> are not supported here.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "Error under the path field when the user pasted a reference like drive/123 but this file area cannot look such references up. Keep 'drive/<id>' literally."
     },
     {
       "key": "Links__file-links",
@@ -6586,6 +6713,15 @@
       "hint": "App translations admin, drawer of one translation key: accessible name of the select ordering the values."
     },
     {
+      "key": "Original__file-access-variant",
+      "text": "Original",
+      "context": "file-access-variant",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "In a file's access history: the person downloaded the original file (as opposed to only viewing a preview)."
+    },
+    {
       "key": "Other (%count%)",
       "text": "Other (%count%)",
       "files": [
@@ -6683,6 +6819,31 @@
         "issues/IssuesScreen.tsx"
       ],
       "hint": "Issues admin screen (errors grouped by root cause): current page number of the list; %page% is a number."
+    },
+    {
+      "key": "Partner__file-access-audience",
+      "text": "Partner",
+      "context": "file-access-audience",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "In a file's access history: the access was made through the partner area (an external partner user, not staff)."
+    },
+    {
+      "key": "Path",
+      "text": "Path",
+      "files": [
+        "files/FilePathBar.tsx"
+      ],
+      "hint": "Accessible label of the editable path field of the file manager (a folder path like /Templates/Typst)."
+    },
+    {
+      "key": "Path copied",
+      "text": "Path copied",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "Short toast after the path of a file or folder (like /Templates/letter.pdf) was copied to the clipboard."
     },
     {
       "key": "Paused %name%",
@@ -6806,6 +6967,15 @@
         "files/TextPreview.tsx"
       ],
       "hint": "File manager, file preview in the details drawer. %name% is a file or folder name."
+    },
+    {
+      "key": "Preview__file-access-variant",
+      "text": "Preview",
+      "context": "file-access-variant",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "In a file's access history: the person viewed a preview of the file (in the details panel), not the download."
     },
     {
       "key": "Previous__page",
@@ -6963,6 +7133,14 @@
         "clouddrive/driveFileMapping.ts"
       ],
       "hint": "File manager details drawer, history: event type: the AI agent read the file."
+    },
+    {
+      "key": "Read by the assistant",
+      "text": "Read by the assistant",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "Event in a file's history: the AI assistant read the file's content."
     },
     {
       "key": "Received a signal",
@@ -8318,6 +8496,15 @@
       "hint": "Issues admin screen, one occurrence of an error in the details drawer: heading of the stack frames of the error."
     },
     {
+      "key": "Staff__file-access-audience",
+      "text": "Staff",
+      "context": "file-access-audience",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "In a file's access history: the access was made by internal staff (the admin), not by a partner."
+    },
+    {
       "key": "Started",
       "text": "Started",
       "files": [
@@ -8715,12 +8902,28 @@
       "hint": "Description of the panel with the generated model code; Doctrine is a product name, keep it."
     },
     {
+      "key": "The accesses could not be loaded.",
+      "text": "The accesses could not be loaded.",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "Error in the file details' activity card when the list of who viewed or downloaded the file failed to load."
+    },
+    {
       "key": "The apply was refused",
       "text": "The apply was refused",
       "files": [
         "database/SchemaDiffScreen.tsx"
       ],
       "hint": "Schema diff admin screen (database changes between the code's entities and the live database): notice title when the server refused to apply a change (its message follows)."
+    },
+    {
+      "key": "The clipboard is not available here.",
+      "text": "The clipboard is not available here.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "Error toast when copying a path or link failed because the browser refused clipboard access (for example on an insecure page)."
     },
     {
       "key": "The code could not be generated.",
@@ -9059,6 +9262,15 @@
       "hint": "Locales admin screen (language + country combinations): page description."
     },
     {
+      "key": "The location could not be opened.",
+      "text": "The location could not be opened.",
+      "files": [
+        "clouddrive/useCloudDriveFileAdapter.ts",
+        "files/FileManager.tsx"
+      ],
+      "hint": "Error under the path field when looking up the typed path failed for another reason than 'not found' (for example a network error)."
+    },
+    {
       "key": "The log backend could not be read: every bucket shows 0, which does not mean there were no errors.",
       "text": "The log backend could not be read: every bucket shows 0, which does not mean there were no errors.",
       "files": [
@@ -9156,6 +9368,14 @@
         "files/MoveAcrossAreasDialog.tsx"
       ],
       "hint": "File manager, confirmation dialog of a move into another file area."
+    },
+    {
+      "key": "The nearest folder that exists is shown.",
+      "text": "The nearest folder that exists is shown.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "Second line of the alert shown when a link or URL pointed to a folder that does not exist: the list now shows the closest existing folder."
     },
     {
       "key": "The new file must be a .%extension% file. Upload other types as a new file.",
@@ -9843,6 +10063,22 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): error under the schedule field when the server gives no message."
     },
     {
+      "key": "This location does not exist or you may not open it.",
+      "text": "This location does not exist or you may not open it.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "Error when a typed or linked path leads nowhere, and the server gave no details (it may not exist or the user lacks the right to open it)."
+    },
+    {
+      "key": "This location was not found",
+      "text": "This location was not found",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "Title of the alert shown when a link or the URL pointed to a folder or file that does not exist (anymore)."
+    },
+    {
       "key": "This move is not possible",
       "text": "This move is not possible",
       "files": [
@@ -10315,6 +10551,14 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): appended to the server's message of a refused action."
     },
     {
+      "key": "Type a path.",
+      "text": "Type a path.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "Error under the empty path field when the user pressed Enter without typing a path."
+    },
+    {
       "key": "Type icon",
       "text": "Type icon",
       "files": [
@@ -10690,7 +10934,8 @@
       "text": "Viewed",
       "context": "file-event",
       "files": [
-        "clouddrive/driveFileMapping.ts"
+        "clouddrive/driveFileMapping.ts",
+        "files/FileDrawer.tsx"
       ],
       "hint": "File manager details drawer, history: event type: someone opened the file's preview."
     },
@@ -11022,6 +11267,14 @@
       "hint": "Body text of the discard confirmation dialog, warning that closing the form drawer throws away the user's unsaved edits."
     },
     {
+      "key": "You may read this space, but not change it.",
+      "text": "You may read this space, but not change it.",
+      "files": [
+        "clouddrive/CloudDriveScreen.tsx"
+      ],
+      "hint": "Notice above the drive's file list when the user may open and download files of this space but not upload, rename, move or delete."
+    },
+    {
       "key": "Your session has ended. Log in again to upload.",
       "text": "Your session has ended. Log in again to upload.",
       "files": [
@@ -11306,6 +11559,14 @@
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): a fixed number of worker processes (no autoscaling); %max% is a number."
+    },
+    {
+      "key": "from %address%",
+      "text": "from %address%",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "Fragment in a file's access history after the date and the person: the public internet address the access came from; %address% is an IP address, keep it as is."
     },
     {
       "key": "from %origin%",
@@ -12393,6 +12654,14 @@
         "files/FileManager.tsx"
       ],
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %name% is a file or folder name."
+    },
+    {
+      "key": "“%name%” does not exist in %folder%.",
+      "text": "“%name%” does not exist in %folder%.",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "Error under the path field or in an alert: the folder or file name %name% was not found inside %folder% (a folder name or path like /Templates)."
     },
     {
       "key": "“%name%” moved to %target%",

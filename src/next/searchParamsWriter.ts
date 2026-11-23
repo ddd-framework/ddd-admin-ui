@@ -18,6 +18,8 @@ export interface SearchParamsWriteOptions {
   saveKeys?: readonly string[];
   /** Parameters a write never removes (a host's sticky parameters, e.g. `debug`); setting a value still works. */
   preserve?: readonly string[];
+  /** A router write with a history entry (`router.push`): the batch it lands in is pushed as a whole. */
+  push?: boolean;
 }
 
 interface PendingWrite {
@@ -71,7 +73,9 @@ export const flushSearchParamsWrites = (): void => {
     else window.history.replaceState(null, '', url);
     return;
   }
-  write.router.replace(query ? `${write.pathname}?${query}` : write.pathname, { scroll: false });
+  const target = query ? `${write.pathname}?${query}` : write.pathname;
+  if (write.push) write.router.push(target, { scroll: false });
+  else write.router.replace(target, { scroll: false });
 };
 
 const enqueue = (updates: SearchParamUpdates, options: SearchParamsWriteOptions | undefined): PendingWrite => {
@@ -94,6 +98,7 @@ const enqueue = (updates: SearchParamUpdates, options: SearchParamsWriteOptions 
     else pending.saveAs.set(options.saveAs, new Set([...(known ?? []), ...options.saveKeys]));
   }
   for (const key of options?.preserve ?? []) pending.preserve.add(key);
+  if (options?.push) pending.push = true;
   return pending;
 };
 

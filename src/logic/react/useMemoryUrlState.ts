@@ -28,15 +28,16 @@ export const useMemoryUrlState = (
   return useMemo(() => {
     const get = (key: string) => parameters[key] ?? null;
     const replace = (updates: Readonly<Record<string, string | null>>) => setParameters(current => applyUpdates(current, updates));
+    const push = (updates: Readonly<Record<string, string | null>>) => {
+      historyRef.current.push(parameters);
+      setParameters(applyUpdates(parameters, updates));
+    };
     return {
-      urlStateAdapter: { get, replace },
+      urlStateAdapter: { get, replace, push },
       drawerUrlAdapter: {
         get,
         replace,
-        push: updates => {
-          historyRef.current.push(parameters);
-          setParameters(applyUpdates(parameters, updates));
-        },
+        push,
         back: () => {
           const previous = historyRef.current.pop();
           if (previous) setParameters(previous);

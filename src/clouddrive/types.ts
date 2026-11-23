@@ -2,7 +2,14 @@
 
 export type DriveNodeType = 'FOLDER' | 'FILE' | 'LINK';
 export type DriveSpaceAudience = 'INTERNAL' | 'SHARED';
-export type DriveContentPurpose = 'DOWNLOAD' | 'INLINE';
+/**
+ * What a content URL is for (ddd-clouddrive ≥ rc.11 records `INLINE` as "viewed" and `DOWNLOAD` as "downloaded";
+ * `THUMBNAIL` is never recorded).
+ */
+export type DriveContentPurpose = 'DOWNLOAD' | 'INLINE' | 'THUMBNAIL';
+
+/** Who the drive answers as: staff (`internal`, default) or a partner audience (`shared`, ddd-clouddrive ≥ rc.11). */
+export type CloudDriveAudience = 'internal' | 'shared';
 
 export interface DriveSpace {
   id: number;
@@ -305,6 +312,42 @@ export interface DriveChangeEventListItem {
   previousPath?: string | null;
   driveFileVersionId?: number | null;
   isFromWorkingCopy?: boolean;
+  /** `CHANGE` (a change of the node) or `ACTIVITY` (an access or a host event; ddd-clouddrive ≥ rc.11). */
+  eventSource?: string | null;
+  onBehalfOfAccountId?: number | null;
+  onBehalfOfName?: string | null;
+  /** `INTERNAL` or `SHARED` (who acted). */
+  audience?: string | null;
+  /** What an access opened (`INLINE`, `DOWNLOAD`). */
+  contentVariant?: string | null;
+  detail?: string | null;
+  /** The reader's public address (an access; sent to staff readers only, ddd-clouddrive ≥ rc.13). */
+  clientIp?: string | null;
+}
+
+/** `GET /spaces/{id}/resolve?path=` (ddd-clouddrive ≥ rc.14): where a path or `drive/<id>` leads. */
+export interface DriveLocationResolveResponse {
+  /** The space of the location (another one than asked for a mount path or a reference). */
+  driveSpaceId: number;
+  item?: DriveNodeListItem | null;
+  ancestors?: { elements?: DriveNodeListItem[] } | null;
+  /** The location inside its space, without a leading slash (`""` = the root). */
+  path: string;
+  adminLink?: string | null;
+}
+
+/** The 404 body of the resolve route. */
+export interface DriveLocationNotFoundBody {
+  error?: string;
+  driveSpaceId?: number | null;
+  path?: string | null;
+  deepestFolder?: DriveNodeListItem | null;
+  missingSegment?: string | null;
+}
+
+export interface DriveLocationResolveArg {
+  driveSpaceId: number;
+  path: string;
 }
 
 /** What a bulk action did (`DriveNodeBulkResult`); counts include subtrees. */
@@ -372,6 +415,10 @@ export interface DriveSpaceIdArg {
 export interface DriveEventsArg {
   driveNodeId: number;
   limit?: number;
+  /** `changes` or `accesses` (ddd-clouddrive ≥ rc.11). */
+  eventGroup?: 'changes' | 'accesses';
+  /** Comma-separated event types. */
+  eventTypes?: string;
 }
 
 export interface DriveVersionRestoreArg {

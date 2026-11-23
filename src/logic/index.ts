@@ -195,7 +195,7 @@ export type {
   InjectedTag,
   StaticQueryFailure,
 } from './pure/injectedApi.ts';
-export { LIST_STATE_DEBOUNCE_MS } from './pure/urlListState.ts';
+export { LIST_STATE_DEBOUNCE_MS, renameUrlStateKeys } from './pure/urlListState.ts';
 export type { UrlStateAdapter } from './pure/urlListState.ts';
 
 // React

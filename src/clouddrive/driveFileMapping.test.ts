@@ -101,7 +101,8 @@ describe('drive payloads as file manager views', () => {
     assert.equal(area.trashRetentionDays, 30);
     assert.equal(driveAreaViewOf({ ...space, quota: { ...space.quota, quotaBytes: 0 } }).quotaBytes, null);
     assert.deepEqual(driveAreaRefOf(space), { key: 3, name: 'Team A', groupLabel: 'Teams' });
-    assert.equal(driveAreaRefOf({ ...space, displayGroup: 'Team spaces' }).groupLabel, 'Team spaces');
+    assert.equal(driveAreaRefOf({ ...space, displayGroup: 'TEAM' }).groupLabel, 'Teams', 'the translated label wins over the code');
+    assert.equal(driveAreaRefOf({ ...space, groupLabel: null, displayGroup: 'TEAM' }).groupLabel, 'TEAM');
     assert.equal(driveAreaViewOf({ ...space, quota: { ...space.quota, quotaBytes: 0, effectiveQuotaBytes: 4096 } }).quotaBytes, 4096);
   });
 

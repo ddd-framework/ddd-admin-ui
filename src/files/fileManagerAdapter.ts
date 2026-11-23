@@ -4,6 +4,7 @@ import type {
   FileAreaView,
   FileDetailView,
   FileDownloadView,
+  FileEventView,
   FileFamily,
   FileItemId,
   FileLinkRef,
@@ -59,6 +60,45 @@ export interface FileManagerCapabilities {
   workingCopy?: FileWorkingCopyCapability;
   /** The malware check: scan states and their badges (absent: the states are shown only when not released). */
   malwareScan?: { enabled: boolean };
+  /**
+   * Locations the folder tree cannot resolve alone: a pasted `drive/<id>`, a path into another area, a file's path
+   * (the path bar and a URL `path` that names a file). Without it the path bar resolves folder paths of the open area.
+   */
+  location?: FileLocationCapability;
+  /**
+   * Who reads here: `staff` (default) or `partner`. A partner sees no staff-only control (purge, empty trash, area
+   * settings and maintenance, the client address of an access).
+   */
+  audience?: 'staff' | 'partner';
+}
+
+/** Where a location leads (`FileLocationCapability.resolveLocation`). */
+export interface FileLocationResolution {
+  found: true;
+  /** The area of the location; another area than the open one switches to it. */
+  areaKey: FileAreaKey;
+  /** The folder to open (`null` = the area's root): the item itself, or a file's folder. */
+  folderId: FileItemId | null;
+  /** The file the location names (its details open), else `null`. */
+  fileId: FileItemId | null;
+  /** The location as a path inside its area (`/a/b/file.pdf`). */
+  path: string;
+}
+
+/** A location that leads nowhere: what was found on the way, for the error. */
+export interface FileLocationMiss {
+  found: false;
+  /** The deepest folder that exists on the way, as a path (`/a`), when known. */
+  deepestFolderPath?: string | null;
+  /** The first name that does not exist there. */
+  missingSegment?: string | null;
+  /** The server's message, when it gave one. */
+  message?: string | null;
+}
+
+export interface FileLocationCapability {
+  /** Resolves a typed or pasted location (`/a/b`, `drive/123`, `/workspace/drive/…`) against `areaKey`. */
+  resolveLocation: (areaKey: FileAreaKey, input: string) => Promise<FileLocationResolution | FileLocationMiss>;
 }
 
 export interface FileTrashCapability {
@@ -74,6 +114,11 @@ export interface FileVersionsCapability {
 export interface FileActivityCapability {
   /** How many events the drawer lists (default 20). */
   limit?: number;
+  /**
+   * The file's accesses (viewed, downloaded) for the drawer's "Accesses" tab; `null` = skip. Without it the drawer
+   * shows the changes only.
+   */
+  useAccessEvents?: (fileId: FileItemId | null) => FileQueryState<readonly FileEventView[]>;
 }
 
 /** One kind of link target the host offers (`project`, `customer`, …). */
@@ -241,8 +286,11 @@ export interface FileDownloadOptions {
   versionId?: FileItemId;
   /** `inline` only for JPEG / PNG / GIF / WebP and PDF (the server refuses it otherwise). */
   disposition: 'inline' | 'attachment';
-  /** `PREVIEW` = what the drawer shows (a rendition when the server made one); default `ORIGINAL`. */
-  variant?: 'ORIGINAL' | 'PREVIEW';
+  /**
+   * `PREVIEW` = what the drawer shows (an access the server may record as "viewed"); `THUMBNAIL` = a small picture in
+   * a list (never recorded); default `ORIGINAL` = a download (recorded as "downloaded").
+   */
+  variant?: 'ORIGINAL' | 'PREVIEW' | 'THUMBNAIL';
 }
 
 /** The writes of the manager; the optional ones belong to a capability. */

@@ -41,6 +41,9 @@ import type {
   DriveUploadCompleteArg,
   DriveUploadReservationResponse,
   DriveUploadReserveArg,
+  CloudDriveAudience,
+  DriveLocationResolveArg,
+  DriveLocationResolveResponse,
 } from './types.ts';
 
 /** The cache tag type of the cloud drive operations (ids `SPACES`, `NODES`). */
@@ -96,6 +99,10 @@ export interface CloudDriveApi {
   usePurgeDriveNodesMutation: ApiMutationHook<DriveNodesBulkArg, DriveNodeBulkResponse>;
   /** `POST /spaces/{id}/trash/empty` (manage right): one batch; `hasMore` asks for another call. */
   useEmptyDriveTrashMutation: ApiMutationHook<DriveSpaceIdArg, DriveNodeBulkResponse>;
+  /** `GET /spaces/{id}/resolve?path=`: where a path, `drive/<id>` or a workspace path leads (not cached; 404 = a miss). */
+  useResolveDriveLocationMutation: ApiMutationHook<DriveLocationResolveArg, DriveLocationResolveResponse>;
+  /** Who the drive answers as (`createCloudDriveApi({ audience })`); absent = staff. */
+  audience?: CloudDriveAudience;
 }
 
 export interface CreateCloudDriveApiOptions {
@@ -103,6 +110,11 @@ export interface CreateCloudDriveApiOptions {
   baseApi: InjectableBaseApi;
   /** Where the host mounts `CloudDriveControllerTrait`, without a trailing slash (`/api/admin/common/cloudDrive`). */
   apiPrefix: string;
+  /**
+   * `shared`: the prefix is a partner mount (`getDriveAudience()` SHARED): the screen shows no staff-only control
+   * (purge, empty trash, space settings and maintenance). Default `internal`.
+   */
+  audience?: CloudDriveAudience;
 }
 
 const idOf = (id: number): string => encodeURIComponent(String(id));
@@ -128,7 +140,12 @@ export const buildCloudDriveRequests = (apiPrefix: string) => {
       url: `${prefix}/spaces/${idOf(driveSpaceId)}/folders${toQueryString({ includeSystem })}`,
     }),
     versions: ({ driveNodeId }: DriveNodeIdArg): InjectedRequest => ({ url: `${prefix}/nodes/${idOf(driveNodeId)}/versions` }),
-    events: ({ driveNodeId, limit }: DriveEventsArg): InjectedRequest => ({ url: `${prefix}/nodes/${idOf(driveNodeId)}/events${toQueryString({ limit })}` }),
+    events: ({ driveNodeId, limit, eventGroup, eventTypes }: DriveEventsArg): InjectedRequest => ({
+      url: `${prefix}/nodes/${idOf(driveNodeId)}/events${toQueryString({ limit, eventGroup, eventTypes })}`,
+    }),
+    resolve: ({ driveSpaceId, path }: DriveLocationResolveArg): InjectedRequest => ({
+      url: `${prefix}/spaces/${idOf(driveSpaceId)}/resolve${toQueryString({ path })}`,
+    }),
     restoreVersion: ({ driveNodeId, driveFileVersionId }: DriveVersionRestoreArg): InjectedRequest => ({
       url: `${prefix}/nodes/${idOf(driveNodeId)}/versions/${idOf(driveFileVersionId)}/restore`, method: 'POST',
     }),
@@ -189,6 +206,7 @@ export const cloudDriveEndpointDefinitions = (apiPrefix: string) => {
     adminUiDriveNodesRestore: { kind: 'mutation', request: requests.bulkRestore, invalidatesTags: [NODES, SPACES] },
     adminUiDriveNodesPurge: { kind: 'mutation', request: requests.bulkPurge, invalidatesTags: [NODES, SPACES] },
     adminUiDriveTrashEmpty: { kind: 'mutation', request: requests.emptyTrash, invalidatesTags: [NODES, SPACES] },
+    adminUiDriveResolve: { kind: 'mutation', request: requests.resolve },
   } as const satisfies Record<string, InjectedEndpointDefinition<never>>;
 };
 
@@ -196,7 +214,12 @@ export const cloudDriveEndpointDefinitions = (apiPrefix: string) => {
  * Injects the cloud drive operations into the host's RTK Query api and returns their hooks. Call it once at module
  * scope: `export const cloudDriveApi = createCloudDriveApi({ baseApi: adminApi, apiPrefix: '/api/admin/common/cloudDrive' });`
  */
-export const createCloudDriveApi = ({ baseApi, apiPrefix }: CreateCloudDriveApiOptions): CloudDriveApi =>
+export const createCloudDriveApi = ({ baseApi, apiPrefix, audience }: CreateCloudDriveApiOptions): CloudDriveApi => {
+  const hooks = injectCloudDriveEndpoints(baseApi, apiPrefix);
+  return audience ? { ...hooks, audience } : hooks;
+};
+
+const injectCloudDriveEndpoints = (baseApi: InjectableBaseApi, apiPrefix: string): CloudDriveApi =>
   injectEndpointsOnce(baseApi, `clouddrive:${trimApiPrefix(apiPrefix)}`, [CLOUD_DRIVE_TAG], cloudDriveEndpointDefinitions(apiPrefix), hookOf => ({
     useDriveSpacesQuery: hookOf('adminUiDriveSpaces') as CloudDriveApi['useDriveSpacesQuery'],
     useDriveChildrenQuery: hookOf('adminUiDriveChildren') as CloudDriveApi['useDriveChildrenQuery'],
@@ -222,6 +245,7 @@ export const createCloudDriveApi = ({ baseApi, apiPrefix }: CreateCloudDriveApiO
     useRestoreDriveNodesMutation: hookOf('adminUiDriveNodesRestore') as CloudDriveApi['useRestoreDriveNodesMutation'],
     usePurgeDriveNodesMutation: hookOf('adminUiDriveNodesPurge') as CloudDriveApi['usePurgeDriveNodesMutation'],
     useEmptyDriveTrashMutation: hookOf('adminUiDriveTrashEmpty') as CloudDriveApi['useEmptyDriveTrashMutation'],
+    useResolveDriveLocationMutation: hookOf('adminUiDriveResolve') as CloudDriveApi['useResolveDriveLocationMutation'],
   }));
 
 /** Fixed answers of a `createStaticCloudDriveApi`; a query without one stays loading. */
@@ -236,6 +260,10 @@ export interface StaticCloudDriveData {
   folders?: (arg: DriveFoldersArg) => DriveFoldersResponse | StaticQueryFailure | undefined;
   versions?: (arg: DriveNodeIdArg) => DriveListItemsResponse<DriveFileVersionListItem> | StaticQueryFailure | undefined;
   events?: (arg: DriveEventsArg) => DriveListItemsResponse<DriveChangeEventListItem> | StaticQueryFailure | undefined;
+  /** The answer of a path lookup; `undefined` = not found. */
+  resolve?: (arg: DriveLocationResolveArg) => DriveLocationResolveResponse | undefined;
+  /** The audience the static api answers as. */
+  audience?: CloudDriveAudience;
 }
 
 const NOT_AVAILABLE = (): never => {
@@ -268,4 +296,10 @@ export const createStaticCloudDriveApi = (data: StaticCloudDriveData): CloudDriv
   useRestoreDriveNodesMutation: staticMutationHook(NOT_AVAILABLE),
   usePurgeDriveNodesMutation: staticMutationHook(NOT_AVAILABLE),
   useEmptyDriveTrashMutation: staticMutationHook(NOT_AVAILABLE),
+  useResolveDriveLocationMutation: staticMutationHook((arg: DriveLocationResolveArg) => {
+    const answer = data.resolve?.(arg);
+    if (!answer) throw { status: 404, data: { error: 'Not found', missingSegment: arg.path } };
+    return answer;
+  }),
+  ...(data.audience ? { audience: data.audience } : {}),
 });

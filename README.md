@@ -919,7 +919,9 @@ export const FilesPage = ({ areas }) => (
 | (always) | `upload`, `getDownload`, `patchFile`, `moveFiles`, `trashFiles`, `createFolder`, `patchFolder`, `deleteFolder` | browse, search, upload tray, rename and description, moves inside the area, folders, delete |
 | `trash` (`useTrash`) | `restoreFiles`; optional `purgeFiles`, `emptyTrash` | the Trash node, restore, final delete, empty (typed confirmation) |
 | `versions` | optional `uploadVersion`, `restoreVersion`, `deleteOlderVersions` | the versions in the drawer, Replace, Restore an older version, Delete older |
-| `activity` | — | the file's events in the drawer (`formatEventType` names the host's types) |
+| `activity` (optional `useAccessEvents`) | — | the file's events in the drawer (`formatEventType` names the host's types); with `useAccessEvents` a Changes / Accesses switch (viewed, downloaded, by whom, staff or partner, the address when given) |
+| `location` (`resolveLocation`) | — | the path bar resolves what the tree cannot: `drive/<id>`, a path into another area, a file's path (opens its folder and details) |
+| `audience: 'partner'` | — | no staff-only control: no purge, no empty trash, no area settings or maintenance slots |
 | `links` (`kinds`, `useLinkTargets`) | `setLinks`; optional `bulkLinks` | link chips, the link dialog (tri-state for several files), linked / not linked and "linked to" filters, link tabs (`context`) |
 | `moveAcrossAreas` (`useMoveTargetAreas`) | `moveItems`, `previewMove` | an area picker in the move dialog, drops on other areas' roots, the confirmation from the preview |
 | `filters` | — | type, created from / to, uploaded by me, the sort orders |
@@ -929,9 +931,21 @@ export const FilesPage = ({ areas }) => (
 - **Slots:** `headerActions`, `renderAreaSettings` (the manager adds an "Area settings" button that opens it),
   `renderAreaMaintenance` (a purge, a usage link), `renderAreaPicker` (a grouped, searchable picker above the list; the
   tree then shows the open area only), `formatEventType`.
-- **Area:** `areas` lists the areas; the open one lives in the URL state (`area`) or is controlled (`areaKey` +
-  `onAreaKeyChange`). The URL state also holds `folder` (`trash` for the trash), `view`, the filters and `order`; the
-  drawer is `?file=<id>`.
+- **URL state:** `areas` lists the areas; the open one lives in the URL state (`area`) or is controlled (`areaKey` +
+  `onAreaKeyChange`). The URL also holds `folder` as a path (`/Templates/Typst`; a folder id still works), `tab`
+  (`trash`), `view`, the filters and `order`; the drawer is `file=<id>` and its activity tab `fileTab=accesses`.
+  `urlKeys` renames them for the host (`{ area: 'space', folder: 'path', order: 'sort' }`). A change of area, folder or
+  tab is a history entry (the adapter's `push`; Back and Forward step through the folders), search, filters, sort and
+  view replace. A path that names no folder opens the nearest existing one with a notice; a file's path opens its
+  folder and details (capability `location`).
+- **Breadcrumbs and paths:** the crumbs stick to the top while the list scrolls; each folder crumb opens the folders
+  beside it. A click on the last crumb, its pencil or Ctrl/Cmd+L turns them into the path bar: type or paste `/a/b`,
+  `drive/<id>`, `/workspace/drive/…` or `drivespaces/<mount>/…`, complete folder names with the arrows and Tab, Enter
+  goes there, a miss names the missing name. Every file and folder has "Copy path" and "Copy link" (`buildLink`
+  overrides the link; default: this page with the area, path and file). `readOnlyNotice` explains a read-only area.
+- **Recorded accesses:** downloads ask `getDownload` with `variant: 'ORIGINAL'`, the drawer's preview with `PREVIEW`
+  and list pictures come from `thumbnailUrl` (or `THUMBNAIL`), so a server that records views and downloads never
+  records a scrolled list.
 - **Untrusted content:** previews draw only JPEG, PNG, GIF and WebP (or a rendition the server made) as `<img>`, PDF on
   canvases through the host's pdf.js (`loadPdfJs`; without it "Open PDF" in a new tab), TXT / CSV / Markdown / JSON as
   text nodes (first 100 KB). SVG, HTML and every other type are never rendered: icon, facts, download. Nothing is fetched
@@ -968,7 +982,17 @@ export const cloudDriveApi = createCloudDriveApi({ baseApi: adminApi, apiPrefix:
   `driveFolderViewsOf`, `driveChildrenArgOf`, …) and `buildCloudDriveFileActions` are exported for own adapters.
 - **Lists** grow by 100 per "more" up to 1000 rows (one request each, so a write's refetch keeps every row current).
   A search or a filter lists the whole space (`recursive`).
-- **Deep links:** `initialSpaceId`, `initialFolderNodeId`, `initialNodeId` (the file's drawer opens).
+- **URL and deep links:** the screen keeps `space`, `path` (`/a/b`), `file`, `fileTab`, `tab`, `view`, `q`, the filters
+  and `sort` in the URL (`CLOUD_DRIVE_URL_KEYS`); Back, Forward, reload and a shared link restore the view. `?node=<id>`
+  (`CLOUD_DRIVE_NODE_KEY`), `initialNodeId` and `initialFolderNodeId` open a node by id (its space, folder and details)
+  and turn into `space` + `path` + `file`. The path bar resolves `drive/<id>` and workspace paths through
+  `GET /spaces/{id}/resolve` (ddd-clouddrive ≥ rc.14) and switches space when the answer names another one.
+- **Partners:** `createCloudDriveApi({ baseApi, apiPrefix: '/api/partner/cloudDrive', audience: 'shared' })` on a
+  partner mount (`getDriveAudience()` SHARED): no purge, no empty trash, no space settings or maintenance; a write-locked
+  space reads only, with a notice. Accesses show the client address only when the server sends it (staff readers).
+- **Accesses:** the drawer's Changes / Accesses switch reads `GET /nodes/{id}/events?eventGroup=changes|accesses`
+  (ddd-clouddrive ≥ rc.11; viewed = a preview, downloaded = an original). Previews ask `purpose=INLINE`, downloads
+  `DOWNLOAD`; list pictures are the server's thumbnail URLs and never recorded.
 - **Previews and the bucket's CORS:** the drive never sends bytes through PHP. Raster images show from the short-lived
   `INLINE` URL as `<img>`; text and PDF previews fetch the `DOWNLOAD` URL from the browser (`fetch`, pdf.js), so the
   store's CORS must allow `GET` from the admin's origin (without it the preview fails and the download still works).

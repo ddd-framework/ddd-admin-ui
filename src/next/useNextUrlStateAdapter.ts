@@ -53,6 +53,13 @@ export const useNextUrlStateAdapter = ({ listId, restore = true, savedKeys }: Ne
           preserve: preserveSearchParams,
           ...(savedKeysText === null ? {} : { saveKeys: savedKeysText.split('\n') }),
         }),
+      push: updates =>
+        queueSearchParamsWrite(pathname, router, updates, {
+          saveAs: storageKey,
+          preserve: preserveSearchParams,
+          push: true,
+          ...(savedKeysText === null ? {} : { saveKeys: savedKeysText.split('\n') }),
+        }),
       ...(restore ? { restore: () => readSavedListQuery(storageKey) } : {}),
     }),
     [pathname, router, storageKey, searchParams, preserveSearchParams, restore, savedKeysText]

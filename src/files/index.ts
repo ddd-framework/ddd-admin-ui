@@ -9,6 +9,7 @@ export type {
   FileAreaSettingsSlotProps,
   FileManagerContext,
   FileManagerProps,
+  FileManagerUrlKey,
 } from './FileManager.tsx';
 export type {
   FileActivityCapability,
@@ -21,6 +22,9 @@ export type {
   FileListOrder,
   FileListQuery,
   FileListState,
+  FileLocationCapability,
+  FileLocationMiss,
+  FileLocationResolution,
   FileManagerActions,
   FileManagerAdapter,
   FileManagerCapabilities,
@@ -49,7 +53,22 @@ export { FileDrawer, FILE_EVENT_LABELS } from './FileDrawer.tsx';
 export type { FileDrawerProps } from './FileDrawer.tsx';
 export { FileFamilyIcon } from './FileFamilyIcon.tsx';
 export type { FileFamilyIconProps } from './FileFamilyIcon.tsx';
-export { FileItemActions } from './FileItemActions.tsx';
+export { FileCopyMenu, FileItemActions } from './FileItemActions.tsx';
+export { FilePathBar } from './FilePathBar.tsx';
+export type { FilePathBarProps } from './FilePathBar.tsx';
+export {
+  filePathText,
+  findFolderByPath,
+  folderIdOfParam,
+  folderParamOf,
+  folderPathSuggestions,
+  folderPathText,
+  parseLocationInput,
+  PATH_SEPARATOR,
+  pathSegments,
+  siblingFolders,
+} from './filePaths.ts';
+export type { FileLocationInput, FolderPathMatch, FolderPathSuggestion } from './filePaths.ts';
 export type { FileItemActionsProps, FileItemHandlers } from './FileItemActions.tsx';
 export { FileLinkChips } from './FileLinkChips.tsx';
 export type { FileLinkChipsProps } from './FileLinkChips.tsx';

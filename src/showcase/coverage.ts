@@ -130,6 +130,8 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
       FileDndProvider: 'a context provider (mounted by FileManager)',
       FileDrawer: DRAWN_BY('FileManager when a file opens'),
       FileItemActions: DRAWN_BY('FileCard and the table rows of FileManager'),
+      FileCopyMenu: DRAWN_BY('FileItemActions and the details drawer of FileManager'),
+      FilePathBar: DRAWN_BY('FileManager (a click on the last breadcrumb or Ctrl/Cmd+L)'),
       FileLinkChips: DRAWN_BY('FileManager with the links capability'),
       FilePreview: DRAWN_BY('FileDrawer'),
       FolderActionsMenu: DRAWN_BY('FolderTree, FolderCard and the folder rows'),

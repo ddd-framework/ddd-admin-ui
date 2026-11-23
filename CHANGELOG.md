@@ -3,6 +3,36 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.4.3
+
+For mgamadeus/ddd-clouddrive 0.1.0-rc.14 (rc.10 – rc.13 keep working; the path bar's `drive/<id>` and the accesses need
+rc.14 / rc.11).
+
+- `./files`: the location lives in the URL. `folder` holds a path (`/Templates/Typst`; a folder id still works), the
+  trash is `tab=trash` (an old `folder=trash` still opens it), the drawer's activity tab `fileTab=accesses`;
+  `urlKeys` renames every key for the host. Area, folder and tab changes are history entries (Back / Forward step
+  through folders); search, filters, sort and view replace. A path that names no folder shows the nearest one with a
+  notice; a file's path opens its folder and details.
+- `./files`: sticky breadcrumbs with a menu of the folders beside each crumb; the path bar (last crumb, its pencil or
+  Ctrl/Cmd+L): `/a/b`, `drive/<id>`, `/workspace/drive/…`, `drivespaces/<mount>/…`, folder-name completion, a clear miss
+  (`FilePathBar`, pure helpers in `filePaths.ts`). "Copy path" and "Copy link" on every file and folder, in the drawer
+  too (`FileCopyMenu`, `buildLink`). `FolderTreeActions` writes are optional (readers get the copy entries).
+- `./files`: capabilities `location.resolveLocation` (paths the tree cannot resolve), `activity.useAccessEvents` (a
+  Changes / Accesses switch in the drawer: viewed, downloaded, staff or partner, preview or original, the address when
+  given) and `audience: 'partner'` (no purge, empty trash, area settings or maintenance). `readOnlyNotice`.
+  `FileDownloadOptions.variant` adds `THUMBNAIL`.
+- `./clouddrive`: `space`, `path`, `file`, `fileTab`, `tab`, `view`, `q`, filters and `sort` in the URL
+  (`CLOUD_DRIVE_URL_KEYS`; the screen no longer keeps the space in component state); `?node=<id>` opens a node by id
+  (`CLOUD_DRIVE_NODE_KEY`). The path bar resolves through `GET /spaces/{id}/resolve` (`useResolveDriveLocationMutation`,
+  `driveLocationResolutionOf`, `driveLocationMissOf`) and switches space. `createCloudDriveApi({ audience: 'shared' })`
+  for a partner mount. Events ask `eventGroup=changes`, the accesses `eventGroup=accesses`; a preview asks
+  `purpose=INLINE`, a download `DOWNLOAD` (`drivePurposeOf`), list pictures stay the server's thumbnail URLs (never
+  recorded).
+- `./clouddrive`: the picker's heading is `groupLabel` (translated); `displayGroup` (an ordering code) is shown only
+  without a label.
+- `./logic`: `UrlStateAdapter.push` (optional), `useUrlListState({ pushKeys })`, `renameUrlStateKeys`;
+  `useNextUrlStateAdapter` and `useMemoryUrlState` implement `push`.
+
 ## 0.4.2
 
 For mgamadeus/ddd-clouddrive 0.1.0-rc.12 (older servers keep working).
