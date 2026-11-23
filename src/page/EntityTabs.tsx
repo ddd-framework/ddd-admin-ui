@@ -9,6 +9,8 @@ import { type PageLinkComponent, useLinkComponent } from '../primitives/link.tsx
 export interface EntityTab {
   id: string;
   label: string;
+  /** Translation context of `label` (key `<label>__<context>`); mark the label with the same context. */
+  context?: string;
   /** Route of the tab (route tabs); without it the tab is a button (`onSelect`). */
   href?: string;
   /** A small count after the label (`Teams 12`). */
@@ -95,7 +97,7 @@ export const EntityTabs = ({
         const content = (
           <>
             {tab.icon}
-            {t(tab.label)}
+            {t(tab.label, tab.context ? { context: tab.context } : undefined)}
             {tab.count !== undefined && tab.count !== null && (
               <span className="rounded-full bg-tint px-1.5 text-[11px] font-bold text-muted-foreground tabular-nums">
                 {tab.count}

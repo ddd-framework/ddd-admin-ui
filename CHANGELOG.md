@@ -3,6 +3,22 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.5.1
+
+Fixes of `./sandbox` from the first host integration; additive elsewhere.
+
+- Status badges translate: `SANDBOX_STATE` and `SANDBOX_ACTION_OUTCOME` carry their translation context on the map
+  (`Offloaded`, `Idle` … were shown in English although the host had translated them).
+- Tab and section names translate: `EntityTab.context` (new, optional) and `EntityListCard.labelContext` (new, optional)
+  pass the context of a marked label; the sandbox tabs and list cards use them.
+- Commands show their state: `AgentSandboxCommand.status` (`RUNNING` / `EXITED` / `KILLED` / `TIMED_OUT`, ddd-agents
+  ≥ 0.1.34) as a badge (`SANDBOX_COMMAND_STATE`, `sandboxCommandStateOf`); the exit code next to EXITED. Without a
+  status: an exit code is EXITED, none is "state unknown" — a killed or timed-out command is never shown as running.
+- The audit names a killed job as one text, `Kill job %id%` (context `sandbox-action`).
+- File content resolves to the shared download shape `{ blob, filename, contentType, isTruncated }`
+  (`readSandboxFileContent`, `fileNameOfContentDisposition`), so a store that ignores `payload.blob` needs no other
+  rule. **Breaking for direct callers** of `useSandboxFileContentMutation`: read `.blob` instead of the bare `Blob`.
+
 ## 0.5.0
 
 New entry `./sandbox` for mgamadeus/ddd-agents 0.1.32 (`AgentSandboxesControllerTrait`). Additive for every other

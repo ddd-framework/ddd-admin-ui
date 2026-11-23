@@ -1,6 +1,6 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
@@ -3608,6 +3608,15 @@
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
     },
     {
+      "key": "Exited__sandbox-command-state",
+      "text": "Exited",
+      "context": "sandbox-command-state",
+      "files": [
+        "sandbox/format.ts"
+      ],
+      "hint": "Sandbox admin screen (maintenance view of the AI agents' workspaces, where an agent runs commands and keeps files): badge: the command ended by itself (its exit code is shown next to it)."
+    },
+    {
       "key": "Expand %label%",
       "text": "Expand %label%",
       "files": [
@@ -4820,6 +4829,15 @@
       "hint": "App translations admin, drawer of one translation key: success toast after the key was saved."
     },
     {
+      "key": "Kill job %id%__sandbox-action",
+      "text": "Kill job %id%",
+      "context": "sandbox-action",
+      "files": [
+        "sandbox/SandboxDetailScreen.tsx"
+      ],
+      "hint": "Sandbox admin screen (maintenance view of the AI agents' workspaces, where an agent runs commands and keeps files): audit row: an admin killed the background job named %id% (a technical id, keep it as is)."
+    },
+    {
       "key": "Kill job__sandbox-action",
       "text": "Kill job",
       "context": "sandbox-action",
@@ -4837,6 +4855,15 @@
         "sandbox/useSandboxActions.tsx"
       ],
       "hint": "Sandbox admin screen (maintenance view of the AI agents' workspaces, where an agent runs commands and keeps files): title of the confirmation before stopping a background job; %job% is the job's id."
+    },
+    {
+      "key": "Killed__sandbox-command-state",
+      "text": "Killed",
+      "context": "sandbox-command-state",
+      "files": [
+        "sandbox/format.ts"
+      ],
+      "hint": "Sandbox admin screen (maintenance view of the AI agents' workspaces, where an agent runs commands and keeps files): badge: the command was stopped (its job was killed, the session ended or a limit was hit)."
     },
     {
       "key": "Language",
@@ -8475,6 +8502,15 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): status badge: a run of the job is in progress."
     },
     {
+      "key": "Running__sandbox-command-state",
+      "text": "Running",
+      "context": "sandbox-command-state",
+      "files": [
+        "sandbox/format.ts"
+      ],
+      "hint": "Sandbox admin screen (maintenance view of the AI agents' workspaces, where an agent runs commands and keeps files): badge: the command is still running."
+    },
+    {
       "key": "Running__sandbox-state",
       "text": "Running",
       "context": "sandbox-state",
@@ -9368,6 +9404,15 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): column header and label: the state of a transport or a worker process."
     },
     {
+      "key": "State unknown__sandbox-command-state",
+      "text": "State unknown",
+      "context": "sandbox-command-state",
+      "files": [
+        "sandbox/format.ts"
+      ],
+      "hint": "Sandbox admin screen (maintenance view of the AI agents' workspaces, where an agent runs commands and keeps files): badge: the server reports neither a state nor an exit code for the command."
+    },
+    {
       "key": "State__sandbox",
       "text": "State",
       "context": "sandbox",
@@ -9785,6 +9830,15 @@
         "database/GeneratedCode.tsx"
       ],
       "hint": "Error when the generated code could not be loaded."
+    },
+    {
+      "key": "The command was stopped: its job was killed, the session ended or a limit was hit__sandbox-command-state",
+      "text": "The command was stopped: its job was killed, the session ended or a limit was hit",
+      "context": "sandbox-command-state",
+      "files": [
+        "sandbox/format.ts"
+      ],
+      "hint": "Sandbox admin screen (maintenance view of the AI agents' workspaces, where an agent runs commands and keeps files): hover text of the 'Killed' badge of a command."
     },
     {
       "key": "The commands could not be loaded.",
@@ -10393,6 +10447,15 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): title of the banner shown when every active job is overdue."
     },
     {
+      "key": "The runner stopped the command at its time limit__sandbox-command-state",
+      "text": "The runner stopped the command at its time limit",
+      "context": "sandbox-command-state",
+      "files": [
+        "sandbox/format.ts"
+      ],
+      "hint": "Sandbox admin screen (maintenance view of the AI agents' workspaces, where an agent runs commands and keeps files): hover text of the 'Timed out' badge of a command."
+    },
+    {
       "key": "The runs could not be loaded.",
       "text": "The runs could not be loaded.",
       "files": [
@@ -10439,6 +10502,15 @@
         "translations/AppTranslationsScreen.tsx"
       ],
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): description of the bulk delete confirmation."
+    },
+    {
+      "key": "The server reports no state and no exit code for this command__sandbox-command-state",
+      "text": "The server reports no state and no exit code for this command",
+      "context": "sandbox-command-state",
+      "files": [
+        "sandbox/format.ts"
+      ],
+      "hint": "Sandbox admin screen (maintenance view of the AI agents' workspaces, where an agent runs commands and keeps files): hover text of the 'State unknown' badge of a command."
     },
     {
       "key": "The session is open but nothing ran for a while__sandbox-state",
@@ -11201,6 +11273,15 @@
         "workers/history.tsx"
       ],
       "hint": "Workers admin chart: accessible name of the 1 hour … 14 days switch."
+    },
+    {
+      "key": "Timed out__sandbox-command-state",
+      "text": "Timed out",
+      "context": "sandbox-command-state",
+      "files": [
+        "sandbox/format.ts"
+      ],
+      "hint": "Sandbox admin screen (maintenance view of the AI agents' workspaces, where an agent runs commands and keeps files): badge: the runner stopped the command at its time limit."
     },
     {
       "key": "Timeline",
@@ -12533,6 +12614,15 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): tile hint: no transport needs attention."
     },
     {
+      "key": "exit %code%__sandbox-command",
+      "text": "exit %code%",
+      "context": "sandbox-command",
+      "files": [
+        "sandbox/SandboxDetailScreen.tsx"
+      ],
+      "hint": "Sandbox admin screen (maintenance view of the AI agents' workspaces, where an agent runs commands and keeps files): badge: the exit code of a finished command (%code% is a number, e.g. 'exit 1'); keep it short."
+    },
+    {
       "key": "failed__cron-run",
       "text": "failed",
       "context": "cron-run",
@@ -12963,15 +13053,6 @@
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): unit after the number of worker processes ('2 running')."
-    },
-    {
-      "key": "running__sandbox-command",
-      "text": "running",
-      "context": "sandbox-command",
-      "files": [
-        "sandbox/SandboxDetailScreen.tsx"
-      ],
-      "hint": "Sandbox admin screen (maintenance view of the AI agents' workspaces, where an agent runs commands and keeps files): badge of a command that has not finished yet (no exit code)."
     },
     {
       "key": "scales down after %seconds% s idle",

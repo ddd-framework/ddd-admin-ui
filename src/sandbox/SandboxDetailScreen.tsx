@@ -30,7 +30,9 @@ import {
   SANDBOX_ACTION_LABELS,
   SANDBOX_ACTION_OUTCOME,
   SANDBOX_CHANGE_LABELS,
+  SANDBOX_COMMAND_STATE,
   SANDBOX_STATE,
+  sandboxCommandStateOf,
   sandboxNameOf,
   sandboxParentPathOf,
   sandboxPathCrumbs,
@@ -53,13 +55,13 @@ import { useSandboxActions } from './useSandboxActions.tsx';
 
 /** The tabs of a workspace. */
 export const SANDBOX_DETAIL_TABS = [
-  { id: 'files', label: m('Files', { context: 'sandbox-tab' }) },
-  { id: 'changes', label: m('Unsaved changes', { context: 'sandbox-tab' }) },
-  { id: 'processes', label: m('Processes & jobs', { context: 'sandbox-tab' }) },
-  { id: 'commands', label: m('Commands', { context: 'sandbox-tab' }) },
-  { id: 'conversations', label: m('Conversations', { context: 'sandbox-tab' }) },
-  { id: 'events', label: m('Session log', { context: 'sandbox-tab' }) },
-  { id: 'audit', label: m('Audit', { context: 'sandbox-tab' }) },
+  { id: 'files', label: m('Files', { context: 'sandbox-tab' }), context: 'sandbox-tab' },
+  { id: 'changes', label: m('Unsaved changes', { context: 'sandbox-tab' }), context: 'sandbox-tab' },
+  { id: 'processes', label: m('Processes & jobs', { context: 'sandbox-tab' }), context: 'sandbox-tab' },
+  { id: 'commands', label: m('Commands', { context: 'sandbox-tab' }), context: 'sandbox-tab' },
+  { id: 'conversations', label: m('Conversations', { context: 'sandbox-tab' }), context: 'sandbox-tab' },
+  { id: 'events', label: m('Session log', { context: 'sandbox-tab' }), context: 'sandbox-tab' },
+  { id: 'audit', label: m('Audit', { context: 'sandbox-tab' }), context: 'sandbox-tab' },
 ] as const;
 
 export type SandboxDetailTab = (typeof SANDBOX_DETAIL_TABS)[number]['id'];
@@ -101,6 +103,7 @@ const FilesTab = ({ api, workspaceKey, loadPdfJs }: { api: SandboxesApi; workspa
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <EntityListCard
         label={m('Files', { context: 'sandbox-tab' })}
+        labelContext="sandbox-tab"
         toolbar={
           <nav aria-label={t('Folder path')} className="flex min-w-0 flex-wrap items-center gap-1 px-1 text-[13px]">
             <button type="button" className="rounded px-1 font-semibold hover:bg-muted" onClick={() => setDirectory('')}>
@@ -158,7 +161,7 @@ const ChangesTab = ({ api, workspaceKey }: { api: SandboxesApi; workspaceKey: st
       id: 'type',
       header: t('Change', { context: 'sandbox-change' }),
       width: 'content',
-      cell: change => <Badge variant="outline">{SANDBOX_CHANGE_LABELS[change.changeType] ? t(SANDBOX_CHANGE_LABELS[change.changeType] ?? '') : change.changeType}</Badge>,
+      cell: change => <Badge variant="outline">{SANDBOX_CHANGE_LABELS[change.changeType] ? t(SANDBOX_CHANGE_LABELS[change.changeType] ?? '', { context: 'sandbox-change' }) : change.changeType}</Badge>,
     },
     {
       id: 'path',
@@ -179,6 +182,7 @@ const ChangesTab = ({ api, workspaceKey }: { api: SandboxesApi; workspaceKey: st
   return (
     <EntityListCard
       label={m('Unsaved changes', { context: 'sandbox-tab' })}
+      labelContext="sandbox-tab"
       toolbar={
         status ? (
           <p className="px-1 text-[12.5px] text-muted-foreground">
@@ -249,7 +253,7 @@ const ProcessesTab = ({
     },
   ];
   return (
-    <EntityListCard label={m('Processes & jobs', { context: 'sandbox-tab' })}>
+    <EntityListCard label={m('Processes & jobs', { context: 'sandbox-tab' })} labelContext="sandbox-tab">
       <EntityListBody
         displayMode="table"
         columns={columns}
@@ -276,9 +280,12 @@ const CommandsTab = ({ api, workspaceKey }: { api: SandboxesApi; workspaceKey: s
       {commands.map((command: AgentSandboxCommand) => (
         <li key={command.seq} className="surface space-y-2 rounded-2xl p-4">
           <div className="flex flex-wrap items-center gap-2 text-[12.5px]">
-            <Badge variant={command.exitCode === 0 ? 'outline' : 'destructive'} className="font-mono">
-              {command.exitCode === null || command.exitCode === undefined ? t('running', { context: 'sandbox-command' }) : `exit ${command.exitCode}`}
-            </Badge>
+            <StatusBadge value={sandboxCommandStateOf(command)} map={SANDBOX_COMMAND_STATE} />
+            {sandboxCommandStateOf(command) === 'EXITED' && command.exitCode !== null && command.exitCode !== undefined && (
+              <Badge variant={command.exitCode === 0 ? 'outline' : 'destructive'} className="font-mono">
+                {t('exit %code%', { context: 'sandbox-command', replacements: { code: String(command.exitCode) } })}
+              </Badge>
+            )}
             <span className="text-muted-foreground">#{command.seq}</span>
             <DateCell value={command.startedAt} />
             <span className="text-muted-foreground">{formatSandboxDuration(command.durationMs)}</span>
@@ -293,7 +300,7 @@ const CommandsTab = ({ api, workspaceKey }: { api: SandboxesApi; workspaceKey: s
             </details>
           )}
           {command.stderrTail && (
-            <details open={command.exitCode !== 0}>
+            <details open={command.exitCode !== null && command.exitCode !== undefined && command.exitCode !== 0}>
               <summary className="cursor-pointer text-xs font-semibold text-destructive">{t('Errors', { context: 'sandbox-command' })}</summary>
               <UntrustedText text={command.stderrTail} className="mt-1" />
             </details>
@@ -337,7 +344,7 @@ const ConversationsTab = ({
     { id: 'updated', header: t('Last change'), width: 'content', cell: conversation => <DateCell value={conversation.updatedAt} /> },
   ];
   return (
-    <EntityListCard label={m('Conversations', { context: 'sandbox-tab' })}>
+    <EntityListCard label={m('Conversations', { context: 'sandbox-tab' })} labelContext="sandbox-tab">
       <EntityListBody
         displayMode="table"
         columns={columns}
@@ -390,8 +397,11 @@ const AuditTab = ({ api, workspaceKey }: { api: SandboxesApi; workspaceKey: stri
       width: 'content',
       cell: entry => (
         <span>
-          {entry.action && SANDBOX_ACTION_LABELS[entry.action] ? t(SANDBOX_ACTION_LABELS[entry.action] ?? '') : (entry.action ?? '—')}
-          {entry.jobId && <span className="ml-1 font-mono text-xs text-muted-foreground">{entry.jobId}</span>}
+          {entry.action === 'KILL_JOB' && entry.jobId
+            ? t('Kill job %id%', { context: 'sandbox-action', replacements: { id: entry.jobId } })
+            : entry.action && SANDBOX_ACTION_LABELS[entry.action]
+              ? t(SANDBOX_ACTION_LABELS[entry.action] ?? '', { context: 'sandbox-action' })
+              : (entry.action ?? '—')}
         </span>
       ),
     },
@@ -411,7 +421,7 @@ const AuditTab = ({ api, workspaceKey }: { api: SandboxesApi; workspaceKey: stri
     },
   ];
   return (
-    <EntityListCard label={m('Audit', { context: 'sandbox-tab' })}>
+    <EntityListCard label={m('Audit', { context: 'sandbox-tab' })} labelContext="sandbox-tab">
       <EntityListBody
         displayMode="table"
         columns={columns}

@@ -101,7 +101,15 @@ export interface AgentSandboxCommand {
   stderrTail?: string | null;
   isTruncated: boolean;
   jobId?: string | null;
+  /**
+   * `RUNNING` | `EXITED` | `KILLED` | `TIMED_OUT` (ddd-agents ≥ 0.1.34); null or absent = unknown — never read as
+   * running.
+   */
+  status?: AgentSandboxCommandStatus | null;
 }
+
+/** `AgentSandboxCommand.status`. */
+export type AgentSandboxCommandStatus = 'RUNNING' | 'EXITED' | 'KILLED' | 'TIMED_OUT';
 
 export interface AgentSandboxCommandsResponse {
   commands: AgentSandboxElements<AgentSandboxCommand>;
@@ -190,6 +198,20 @@ export interface AgentSandboxFilesArg extends AgentSandboxKeyArg {
 export interface AgentSandboxFileContentArg extends AgentSandboxKeyArg {
   path: string;
   disposition: 'inline' | 'attachment';
+}
+
+/**
+ * One file's bytes, in the shape of every file download (`{ blob, filename, contentType }`, as ddd-web's
+ * `blobResponseHandler`): a host whose store ignores `payload.blob` needs no other rule. The bytes never enter the
+ * cache (a mutation, not a query).
+ */
+export interface AgentSandboxFileContent {
+  blob: Blob;
+  /** From `Content-Disposition`; null without one. */
+  filename: string | null;
+  contentType: string;
+  /** The server cut an inline text preview (`X-Content-Truncated: true`). */
+  isTruncated: boolean;
 }
 
 /** The body of every action: `force` with a `reason` while a turn runs; `confirmation` (the name) for a reset. */

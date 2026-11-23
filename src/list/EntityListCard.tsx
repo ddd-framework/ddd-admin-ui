@@ -8,6 +8,8 @@ import { cn } from '../primitives/cn.ts';
 export interface EntityListCardProps {
   /** Accessible name of the list (`World teams`). */
   label?: string;
+  /** Translation context of `label`; mark the label with the same context. */
+  labelContext?: string;
   /** The card's fixed chrome, usually an `EntityListToolbar`. */
   toolbar?: ReactNode;
   /** A background refetch is in flight: a thin sweeping bar over the toolbar's bottom rule; rows stay mounted. */
@@ -25,11 +27,11 @@ export interface EntityListCardProps {
  * toolbar never touches the card edge and the grid view turns frameless the same way everywhere (host CSS: in grid
  * view the card drops its surface and the toolbar becomes a frosted bar of its own, flush with the cards below).
  */
-export const EntityListCard = ({ label, toolbar, isRefetching = false, fill = false, children, className }: EntityListCardProps) => {
+export const EntityListCard = ({ label, labelContext, toolbar, isRefetching = false, fill = false, children, className }: EntityListCardProps) => {
   const { t } = useTranslate();
   return (
   <section
-    aria-label={label ? t(label) : undefined}
+    aria-label={label ? t(label, labelContext ? { context: labelContext } : undefined) : undefined}
     aria-busy={isRefetching}
     className={cn('surface flex flex-col overflow-hidden rounded-3xl', fill && 'md:min-h-0 md:flex-1', className)}
   >

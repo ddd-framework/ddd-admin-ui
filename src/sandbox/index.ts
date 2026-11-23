@@ -2,18 +2,30 @@
 // host's RTK Query api (`createSandboxesApi`): the list, one workspace with its files (read only, the safe preview),
 // unsaved changes, processes and jobs, commands, conversations, session log and audit, and the audited actions.
 
-export { buildSandboxesRequests, createSandboxesApi, createStaticSandboxesApi, SANDBOXES_TAG, sandboxesEndpointDefinitions } from './api.ts';
+export {
+  buildSandboxesRequests,
+  createSandboxesApi,
+  createStaticSandboxesApi,
+  fileNameOfContentDisposition,
+  readSandboxFileContent,
+  SANDBOXES_TAG,
+  sandboxesEndpointDefinitions,
+} from './api.ts';
 export type { CreateSandboxesApiOptions, SandboxesApi, StaticSandboxesData } from './api.ts';
 export type * from './types.ts';
 export {
   formatSandboxBytes,
   formatSandboxDuration,
   isSandboxTurnRunningRefusal,
+  SANDBOX_ACTION_LABEL_CONTEXT,
   SANDBOX_ACTION_LABELS,
   SANDBOX_ACTION_OUTCOME,
+  SANDBOX_CHANGE_LABEL_CONTEXT,
   SANDBOX_CHANGE_LABELS,
+  SANDBOX_COMMAND_STATE,
   SANDBOX_STATE,
   SANDBOX_TEXT_PREVIEW_BYTES,
+  sandboxCommandStateOf,
   sandboxNameOf,
   sandboxParentPathOf,
   sandboxPathCrumbs,
@@ -21,7 +33,7 @@ export {
   sandboxResetPhraseOf,
   usagePercentOf,
 } from './format.ts';
-export type { SandboxPreviewKind } from './format.ts';
+export type { SandboxCommandState, SandboxPreviewKind } from './format.ts';
 export { SandboxActionsMenu, SandboxesScreen, SandboxMountMode, SandboxUsageBar } from './SandboxesScreen.tsx';
 export type { SandboxesScreenProps } from './SandboxesScreen.tsx';
 export { SANDBOX_DETAIL_TABS, SandboxDetailScreen } from './SandboxDetailScreen.tsx';

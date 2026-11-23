@@ -54,10 +54,10 @@ export const SandboxFilePreview = ({ api, workspaceKey, file, loadPdfJs }: Sandb
     setFailed(null);
     void requestContent({ workspaceKey, path: file.path, disposition: 'inline' })
       .unwrap()
-      .then(blob => {
+      .then(content => {
         if (cancelled) return;
-        objectUrl = URL.createObjectURL(blob);
-        setPreview({ url: objectUrl, kind: sandboxPreviewKindOf(blob.type), size: blob.size });
+        objectUrl = URL.createObjectURL(content.blob);
+        setPreview({ url: objectUrl, kind: sandboxPreviewKindOf(content.contentType || content.blob.type), size: content.blob.size });
       })
       .catch(error => {
         if (!cancelled) setFailed(normalizeDddError(error, t('The file could not be loaded.')).message);
@@ -71,8 +71,8 @@ export const SandboxFilePreview = ({ api, workspaceKey, file, loadPdfJs }: Sandb
   const download = async () => {
     setDownloading(true);
     try {
-      const blob = await requestContent({ workspaceKey, path: file.path, disposition: 'attachment' }).unwrap();
-      saveBlob(blob, file.name);
+      const content = await requestContent({ workspaceKey, path: file.path, disposition: 'attachment' }).unwrap();
+      saveBlob(content.blob, content.filename ?? file.name);
     } catch (error) {
       notify.error(normalizeDddError(error, t('%name% could not be downloaded', { replacements: { name: file.name } })).message);
     } finally {

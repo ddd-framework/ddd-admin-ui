@@ -18,6 +18,7 @@ import type {
   AgentSandboxCommandsResponse,
   AgentSandboxConversationsResponse,
   AgentSandboxDriveStatusResponse,
+  AgentSandboxFileContent,
   AgentSandboxFileContentArg,
   AgentSandboxFilesArg,
   AgentSandboxFilesResponse,
@@ -29,6 +30,32 @@ import type {
   AgentSandboxWorkspaceResponse,
   AgentSandboxWorkspacesResponse,
 } from './types.ts';
+
+/** The file name of a `Content-Disposition` header (`filename*=UTF-8''…` before `filename="…"`); null without one. */
+export const fileNameOfContentDisposition = (header: string | null): string | null => {
+  if (!header) return null;
+  const encoded = /filename\*\s*=\s*(?:UTF-8|utf-8)''([^;]+)/.exec(header);
+  if (encoded?.[1]) {
+    try {
+      return decodeURIComponent(encoded[1].trim().replace(/^"|"$/g, ''));
+    } catch {
+      // fall through to the plain name
+    }
+  }
+  const plain = /filename\s*=\s*"?([^";]+)"?/i.exec(header);
+  return plain?.[1]?.trim() || null;
+};
+
+/** The response handler of the file content: the shared download shape. */
+export const readSandboxFileContent = async (response: Response): Promise<AgentSandboxFileContent> => {
+  const blob = await response.blob();
+  return {
+    blob,
+    filename: fileNameOfContentDisposition(response.headers.get('Content-Disposition')),
+    contentType: response.headers.get('Content-Type') ?? blob.type,
+    isTruncated: response.headers.get('X-Content-Truncated') === 'true',
+  };
+};
 
 /** The cache tag type of the sandbox operations (ids `LIST`, `DETAIL`). */
 export const SANDBOXES_TAG = 'AdminUiSandboxes';
@@ -53,8 +80,8 @@ export interface SandboxesApi {
   useSandboxConversationsQuery: ApiQueryHook<AgentSandboxLimitArg, AgentSandboxConversationsResponse>;
   /** `GET /{workspaceKey}/actions?limit=`: the audit of the actions on this workspace. */
   useSandboxActionLogQuery: ApiQueryHook<AgentSandboxLimitArg, AgentSandboxActionLogEntriesResponse>;
-  /** `GET /{workspaceKey}/files/content?path&disposition`: one file's bytes as a `Blob` (not cached). */
-  useSandboxFileContentMutation: ApiMutationHook<AgentSandboxFileContentArg, Blob>;
+  /** `GET /{workspaceKey}/files/content?path&disposition`: one file's bytes as `{ blob, filename, contentType, isTruncated }` (not cached). */
+  useSandboxFileContentMutation: ApiMutationHook<AgentSandboxFileContentArg, AgentSandboxFileContent>;
   /** `POST /{workspaceKey}/start|offload|end|reset` (409 while a turn runs, unless `force` + `reason`). */
   useSandboxActionMutation: ApiMutationHook<AgentSandboxActionArg, AgentSandboxActionResponse>;
   /** `POST /{workspaceKey}/jobs/{jobId}/kill`. */
@@ -100,7 +127,7 @@ export const buildSandboxesRequests = (apiPrefix: string) => {
     }),
     content: ({ workspaceKey, path, disposition }: AgentSandboxFileContentArg): InjectedRequest => ({
       url: `${prefix}${keyPath(workspaceKey)}/files/content${toQueryString({ path, disposition })}`,
-      responseHandler: response => response.blob(),
+      responseHandler: readSandboxFileContent,
     }),
     action: ({ workspaceKey, action, ...body }: AgentSandboxActionArg): InjectedRequest => ({
       url: `${prefix}${keyPath(workspaceKey)}/${action}`,
@@ -190,7 +217,7 @@ export const createStaticSandboxesApi = (data: StaticSandboxesData): SandboxesAp
   useSandboxFileContentMutation: staticMutationHook((arg: AgentSandboxFileContentArg) => {
     const text = data.fileText?.(arg);
     if (text === undefined) throw { status: 404, data: { error: 'Not found' } };
-    return new Blob([text], { type: 'text/plain' });
+    return { blob: new Blob([text], { type: 'text/plain' }), filename: null, contentType: 'text/plain', isTruncated: false };
   }),
   useSandboxActionMutation: staticMutationHook(NOT_AVAILABLE),
   useKillSandboxJobMutation: staticMutationHook(NOT_AVAILABLE),

@@ -1,10 +1,10 @@
 // Labels, states and numbers of the sandbox screens. Pure: no React.
-import { Archive, CircleCheck, CircleDot, CircleX, Moon, Play, ShieldAlert } from 'lucide-react';
+import { Archive, CircleCheck, CircleDot, CircleX, Clock, Moon, Play, ShieldAlert } from 'lucide-react';
 
 import { formatUiNumber } from '../i18n/format.ts';
 import { m } from '../i18n/store.ts';
 import { defineStatusMap } from '../logic/pure/status.ts';
-import type { AgentSandboxActionOutcome, AgentSandboxState, AgentSandboxWorkspace } from './types.ts';
+import type { AgentSandboxActionOutcome, AgentSandboxCommand, AgentSandboxCommandStatus, AgentSandboxState, AgentSandboxWorkspace } from './types.ts';
 
 /** `AgentSandboxWorkspace.state`. */
 export const SANDBOX_STATE = defineStatusMap<AgentSandboxState>({
@@ -26,7 +26,7 @@ export const SANDBOX_STATE = defineStatusMap<AgentSandboxState>({
     icon: Archive,
     description: m('No session: the workspace is saved and starts again on the next command', { context: 'sandbox-state' }),
   },
-});
+}, { context: 'sandbox-state' });
 
 /** `AgentSandboxActionLogEntry.outcome`. */
 export const SANDBOX_ACTION_OUTCOME = defineStatusMap<AgentSandboxActionOutcome>({
@@ -38,7 +38,48 @@ export const SANDBOX_ACTION_OUTCOME = defineStatusMap<AgentSandboxActionOutcome>
     description: m('Not run: a turn was running, a confirmation or a reason was missing', { context: 'sandbox-action-outcome' }),
   },
   FAILED: { label: m('Failed', { context: 'sandbox-action-outcome' }), tone: 'danger', icon: CircleX },
-});
+}, { context: 'sandbox-action-outcome' });
+
+/**
+ * The state of a command: the server's `status` (ddd-agents ≥ 0.1.34), else derived from the exit code — an exit code
+ * is EXITED, none is UNKNOWN (a killed or timed-out command has none either, so it is never shown as running).
+ */
+export type SandboxCommandState = AgentSandboxCommandStatus | 'UNKNOWN';
+
+export const sandboxCommandStateOf = (command: Pick<AgentSandboxCommand, 'status' | 'exitCode'>): SandboxCommandState => {
+  if (command.status) return command.status;
+  return command.exitCode === null || command.exitCode === undefined ? 'UNKNOWN' : 'EXITED';
+};
+
+/** `AgentSandboxCommand.status` as a badge (EXITED carries the exit code next to it). */
+export const SANDBOX_COMMAND_STATE = defineStatusMap<SandboxCommandState>({
+  RUNNING: { label: m('Running', { context: 'sandbox-command-state' }), tone: 'info', icon: Play },
+  EXITED: { label: m('Exited', { context: 'sandbox-command-state' }), tone: 'neutral', icon: CircleCheck },
+  KILLED: {
+    label: m('Killed', { context: 'sandbox-command-state' }),
+    tone: 'warning',
+    icon: CircleX,
+    description: m('The command was stopped: its job was killed, the session ended or a limit was hit', { context: 'sandbox-command-state' }),
+  },
+  TIMED_OUT: {
+    label: m('Timed out', { context: 'sandbox-command-state' }),
+    tone: 'danger',
+    icon: Clock,
+    description: m('The runner stopped the command at its time limit', { context: 'sandbox-command-state' }),
+  },
+  UNKNOWN: {
+    label: m('State unknown', { context: 'sandbox-command-state' }),
+    tone: 'neutral',
+    icon: CircleDot,
+    description: m('The server reports no state and no exit code for this command', { context: 'sandbox-command-state' }),
+  },
+}, { context: 'sandbox-command-state' });
+
+/** The translation context of `SANDBOX_ACTION_LABELS`. */
+export const SANDBOX_ACTION_LABEL_CONTEXT = 'sandbox-action';
+
+/** The translation context of `SANDBOX_CHANGE_LABELS`. */
+export const SANDBOX_CHANGE_LABEL_CONTEXT = 'sandbox-change';
 
 /** The actions of the audit, as the screen names them. */
 export const SANDBOX_ACTION_LABELS: Readonly<Record<string, string>> = {
