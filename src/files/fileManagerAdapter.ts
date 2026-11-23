@@ -34,8 +34,11 @@ export interface FileManagerAdapter {
   useFolders: (areaKey: FileAreaKey) => FileQueryState<readonly FolderView[]>;
   /** The list with the manager's query; `null` = skip (the trash is shown). */
   useFiles: (query: FileListQuery | null) => FileListState;
-  /** One file for the drawer (versions, activity, hash); `null` = skip. */
-  useFile: (fileId: FileItemId | null) => FileQueryState<FileDetailView>;
+  /**
+   * One file for the drawer (versions, activity, hash); `null` = skip. `options.pollingIntervalMs` > 0: fetch the file
+   * and its versions again every n ms (the drawer asks for it while a version is still being checked); 0 / absent: off.
+   */
+  useFile: (fileId: FileItemId | null, options?: FileQueryOptions) => FileQueryState<FileDetailView>;
   /** Every write of the manager, bound to the API's mutations. */
   useActions: () => FileManagerActions;
   /** The optional features this API offers. */
@@ -168,6 +171,14 @@ export interface FileQueryState<TData> {
   /** Any request in flight (also a background refetch). */
   isFetching?: boolean;
   isError: boolean;
+  /** Fetches the current data again (optional: without it the manager waits for the next poll or write). */
+  refetch?: () => void;
+}
+
+/** Options of a read hook of the adapter. */
+export interface FileQueryOptions {
+  /** Fetch again every n ms; 0 / absent: no polling. */
+  pollingIntervalMs?: number;
 }
 
 /** A growing list window. */
@@ -180,6 +191,8 @@ export interface FileListState {
   hasMore: boolean;
   loadMore: () => void;
   isError: boolean;
+  /** Fetches the rows again (optional; the manager calls it when an open file's check has finished). */
+  refetch?: () => void;
 }
 
 export type FileListOrder = 'name' | 'created' | 'size';

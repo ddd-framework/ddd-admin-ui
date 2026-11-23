@@ -3,6 +3,20 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.5.3
+
+Two fixes of `./files` from a host's second browser check; additive.
+
+- The folder bar (crumbs, path bar, quota) really sticks below the host's top bar: it moved out of the header block (a
+  parent only as tall as the bar, so it had nothing to stick against) into the wrapper of the list. Checked in a
+  headless browser at 1280×520, embedded and in the page frame (`test/consumer/fixtures/next-app/browser-files.mjs`).
+- The open drawer follows a version that is still being uploaded or checked: it fetches the file and its versions again
+  every 4 s (`FILE_CHECK_POLL_INTERVAL_MS`), and on window focus, until the check ends; a hidden tab does not poll. When
+  the check ends, the list fetches its rows again. New: `FileManagerAdapter.useFile(fileId, options?)` with
+  `FileQueryOptions.pollingIntervalMs`, optional `refetch` on `FileQueryState` and `FileListState`,
+  `isFileBeingChecked()`. The drive adapter maps the interval to RTK Query's `pollingInterval`. An adapter that ignores
+  the option keeps working (no polling).
+
 ## 0.5.2
 
 Fixes of `./files` and `./clouddrive` from a full browser check of a host; additive.

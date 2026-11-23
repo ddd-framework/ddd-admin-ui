@@ -13,6 +13,7 @@ import type {
   FileManagerActions,
   FileManagerAdapter,
   FileManagerCapabilities,
+  FileQueryOptions,
   FileQueryState,
   FileTrashQuery,
 } from '../files/fileManagerAdapter.ts';
@@ -138,6 +139,7 @@ export const createCloudDriveFileAdapter = (api: CloudDriveApi, spaceId: number)
         if (nextLimit !== null) setLimit(nextLimit);
       },
       isError: childrenQuery.isError,
+      refetch: () => void childrenQuery.refetch(),
     };
   };
 
@@ -167,11 +169,12 @@ export const createCloudDriveFileAdapter = (api: CloudDriveApi, spaceId: number)
     };
   };
 
-  const useFile = (fileId: FileItemId | null): FileQueryState<FileDetailView> => {
+  const useFile = (fileId: FileItemId | null, options?: FileQueryOptions): FileQueryState<FileDetailView> => {
     const driveNodeId = fileId === null ? 0 : Number(fileId);
     const skip = !Number.isInteger(driveNodeId) || driveNodeId <= 0;
-    const nodeQuery = api.useDriveNodeQuery({ driveNodeId }, { skip });
-    const versionsQuery = api.useDriveVersionsQuery({ driveNodeId }, { skip });
+    const pollingInterval = skip ? 0 : Math.max(0, options?.pollingIntervalMs ?? 0);
+    const nodeQuery = api.useDriveNodeQuery({ driveNodeId }, { skip, pollingInterval });
+    const versionsQuery = api.useDriveVersionsQuery({ driveNodeId }, { skip, pollingInterval });
     const eventsQuery = api.useDriveEventsQuery({ driveNodeId, limit: DRIVE_ACTIVITY_LIMIT, eventGroup: 'changes' }, { skip });
     const item = nodeQuery.data?.item ?? undefined;
     const space = useSpaceItem(item?.driveSpaceId);
@@ -185,7 +188,17 @@ export const createCloudDriveFileAdapter = (api: CloudDriveApi, spaceId: number)
         events: eventsQuery.data?.items?.elements?.map(driveEventViewOf),
       };
     }, [item, nodeQuery.data, versionsQuery.data, eventsQuery.data, space.item]);
-    return { data, isLoading: nodeQuery.isLoading, isFetching: nodeQuery.isFetching || versionsQuery.isFetching, isError: nodeQuery.isError };
+    return {
+      data,
+      isLoading: nodeQuery.isLoading,
+      isFetching: nodeQuery.isFetching || versionsQuery.isFetching,
+      isError: nodeQuery.isError,
+      refetch: () => {
+        if (skip) return;
+        void nodeQuery.refetch();
+        void versionsQuery.refetch();
+      },
+    };
   };
 
   const useAccessEvents = (fileId: FileItemId | null): FileQueryState<readonly FileEventView[]> => {

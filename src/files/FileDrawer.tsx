@@ -49,10 +49,12 @@ import {
   type FolderView,
   fileNameStem,
   formatBytes,
+  isFileBeingChecked,
   isFileReleased,
   newestVersionStateOf,
   sameFileId,
 } from './fileView.ts';
+import { useFileCheckPolling } from './useFileCheckPolling.ts';
 import { isUploadAborted, uploadErrorMessage } from './uploadWithProgress.ts';
 
 /** File names: at most 255 characters including the extension. */
@@ -537,6 +539,8 @@ export interface FileDrawerProps {
   /** The activity card's tab (`fileTab` in the URL); default `changes`. */
   activityTab?: 'changes' | 'accesses';
   onActivityTabChange?: (tab: 'changes' | 'accesses') => void;
+  /** A version check the open drawer watched has finished: the manager refreshes the list row. */
+  onFileCheckFinished?: () => void;
 }
 
 /** A version's note in the reader's language: the system's note when known, else the stored free text. */
@@ -590,6 +594,7 @@ export const FileDrawer = ({
   workingCopyDescription,
   activityTab = 'changes',
   onActivityTabChange,
+  onFileCheckFinished,
 }: FileDrawerProps) => {
   const { t } = useTranslate();
   const shownId = drawer.shown?.mode === 'edit' ? String(drawer.shown.id) : undefined;
@@ -597,12 +602,27 @@ export const FileDrawer = ({
   // the file's queries run only while the drawer is open: a closed drawer (still drawn while it slides out) holds no
   // subscription, so a file trashed or purged afterwards is never fetched again
   const fileId = drawer.isOpen ? shownFileId : null;
-  const detailQuery = adapter.useFile(fileId);
+  // while a version of the open file is uploaded or checked, the drawer fetches it again (every few seconds, on focus;
+  // not while the tab is hidden) until the check ends — the state is read from the last render's file
+  const [isShownFileChecking, setIsShownFileChecking] = useState(false);
+  const detailRefetchRef = useRef<(() => void) | undefined>(undefined);
+  const pollingIntervalMs = useFileCheckPolling({
+    isOpen: fileId !== null,
+    isChecking: isShownFileChecking,
+    refetch: () => detailRefetchRef.current?.(),
+    onCheckFinished: onFileCheckFinished,
+  });
+  const detailQuery = adapter.useFile(fileId, { pollingIntervalMs });
+  detailRefetchRef.current = detailQuery.refetch;
   const detail = detailQuery.data && sameFileId(detailQuery.data.id, fileId) ? detailQuery.data : null;
   const openFile: FileView | null = detail ?? (listedFile && sameFileId(listedFile.id, shownFileId) ? listedFile : null);
   const lastFileRef = useRef<FileView | null>(null);
   if (drawer.isOpen && openFile !== null) lastFileRef.current = openFile;
   const file: FileView | null = drawer.isOpen ? openFile : lastFileRef.current;
+  const isOpenFileChecking = drawer.isOpen && openFile !== null && isFileBeingChecked(openFile);
+  useEffect(() => {
+    setIsShownFileChecking(isOpenFileChecking);
+  }, [isOpenFileChecking]);
   // the file's own state decides (a live file opened with the trash tab in the URL is live); an adapter that does not
   // report `deletedAt` keeps the tab's view
   const inTrash = file !== null && file.deletedAt !== undefined ? file.deletedAt !== null : inTrashTab;

@@ -239,6 +239,8 @@ else
   node browser-overlay-guard.mjs "http://127.0.0.1:$PORT"
   echo "── delta saves of translatable texts: a background write survives the save, rebase (headless browser)"
   node browser-translation-delta.mjs "http://127.0.0.1:$PORT"
+  echo "── ./files: the folder bar sticks below the host top bar (headless browser, measured)"
+  node browser-files.mjs "http://127.0.0.1:$PORT"
   kill $SERVER_PID 2>/dev/null || true
 fi
 

@@ -32,6 +32,7 @@ export type {
   FileMoveInput,
   FileMoveResult,
   FilePatch,
+  FileQueryOptions,
   FileQueryState,
   FileTrashCapability,
   FileTrashQuery,
@@ -82,6 +83,7 @@ export { detectCsvDelimiter, parseCsv } from './csvPreview.ts';
 export { FILE_NEWEST_VERSION_STATE, FILE_SCAN_STATUS, SCAN_STATUS_EXPLANATION } from './fileStatus.ts';
 export {
   extensionOf,
+  FILE_CHECK_POLL_INTERVAL_MS,
   FILE_FAMILIES,
   FILE_FAMILY_LABELS,
   FILE_SCAN_STATUSES,
@@ -95,6 +97,7 @@ export {
   folderSubtreeHeight,
   folderSubtreeIds,
   formatBytes,
+  isFileBeingChecked,
   isFileReleased,
   isPageThumbnail,
   MAX_FOLDER_DEPTH,

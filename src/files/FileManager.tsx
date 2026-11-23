@@ -1408,31 +1408,36 @@ export const FileManager = ({
           </AlertDescription>
         </Alert>
       )}
-      <div className="sticky top-[var(--nav-h)] z-(--layer-sticky) -mx-1 flex flex-wrap items-center justify-between gap-3 bg-background/95 px-1 py-1 backdrop-blur-sm">
-        {editingPath && !context && !inTrash ? (
-          <FilePathBar
-            initialPath={folderPathText(folders, currentFolderId)}
-            folders={folders}
-            onSubmit={goToLocation}
-            onCancel={() => setEditingPath(false)}
-          />
-        ) : (
-          <FileBreadcrumbs
-            rootLabel={rootLabel}
-            path={path}
-            inTrash={inTrash}
-            trailLabel={context ? context.label : filterActive ? t('Search results in all folders') : undefined}
-            onNavigate={folderId => {
-              clearFilters();
-              navigate({ kind: 'folder', folderId });
-            }}
-            dropAreaKey={dragEnabled ? areaKey : undefined}
-            siblingsOf={context ? undefined : parentId => siblingFolders(folders, parentId)}
-            onEditPath={context || inTrash ? undefined : () => setEditingPath(true)}
-          />
-        )}
-        <QuotaPill usedBytes={areaData?.usedBytes} quotaBytes={areaData?.quotaBytes} isLoading={areaQuery.isLoading} note={areaData?.quotaNote} parts={areaData?.usageParts} />
-      </div>
+    </div>
+  );
+
+  // The folder bar sits in the SAME wrapper as the list: a sticky element sticks only while its parent scrolls past,
+  // so a parent as tall as the bar itself (the header block) never lets it stick.
+  const folderBar = (
+    <div data-file-folder-bar="" className="sticky top-[var(--nav-h)] z-(--layer-sticky) -mx-1 flex shrink-0 flex-wrap items-center justify-between gap-3 bg-background/95 px-1 py-1 backdrop-blur-sm">
+      {editingPath && !context && !inTrash ? (
+        <FilePathBar
+          initialPath={folderPathText(folders, currentFolderId)}
+          folders={folders}
+          onSubmit={goToLocation}
+          onCancel={() => setEditingPath(false)}
+        />
+      ) : (
+        <FileBreadcrumbs
+          rootLabel={rootLabel}
+          path={path}
+          inTrash={inTrash}
+          trailLabel={context ? context.label : filterActive ? t('Search results in all folders') : undefined}
+          onNavigate={folderId => {
+            clearFilters();
+            navigate({ kind: 'folder', folderId });
+          }}
+          dropAreaKey={dragEnabled ? areaKey : undefined}
+          siblingsOf={context ? undefined : parentId => siblingFolders(folders, parentId)}
+          onEditPath={context || inTrash ? undefined : () => setEditingPath(true)}
+        />
+      )}
+      <QuotaPill usedBytes={areaData?.usedBytes} quotaBytes={areaData?.quotaBytes} isLoading={areaQuery.isLoading} note={areaData?.quotaNote} parts={areaData?.usageParts} />
     </div>
   );
 
@@ -1532,6 +1537,7 @@ export const FileManager = ({
         workingCopyDescription={capabilities?.workingCopy?.description}
         activityTab={drawerTab}
         onActivityTabChange={setDrawerTab}
+        onFileCheckFinished={() => list.refetch?.()}
       />
       <MoveDialog
         open={moveRequest !== null}
@@ -1684,7 +1690,10 @@ export const FileManager = ({
             <div className="min-w-0 flex-1">{belowHeader}</div>
             {pageActions}
           </div>
-          {body}
+          <div className="flex flex-col gap-3">
+            {folderBar}
+            {body}
+          </div>
           {overlays}
         </div>
       </FileDndProvider>
@@ -1694,7 +1703,10 @@ export const FileManager = ({
   return (
     <FileDndProvider enabled={dragEnabled} canDrop={canDrop} onDrop={onDrop}>
       <PageFrame title={title ?? t('Files', { context: 'files-label' })} description={description} actions={pageActions} belowHeader={belowHeader}>
-        {body}
+        <div className="flex flex-col gap-3 md:min-h-0 md:flex-1">
+          {folderBar}
+          {body}
+        </div>
       </PageFrame>
       {overlays}
     </FileDndProvider>

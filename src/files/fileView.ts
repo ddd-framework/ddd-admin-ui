@@ -346,6 +346,16 @@ export const newestVersionStateOf = (file: Pick<FileView, 'hasPendingVersion' | 
   }
 };
 
+/** How often the drawer fetches a file again while one of its versions is being checked. */
+export const FILE_CHECK_POLL_INTERVAL_MS = 4000;
+
+/**
+ * Whether a file has a version that is still being uploaded or checked: its shown version (`scanStatus`) or a newer one
+ * (`newestVersionStateOf()` = `checking`). The drawer polls while this is true.
+ */
+export const isFileBeingChecked = (file: Pick<FileView, 'scanStatus' | 'hasPendingVersion' | 'newestVersionStatus'>): boolean =>
+  file.scanStatus === 'UPLOADING' || file.scanStatus === 'PENDING' || newestVersionStateOf(file) === 'checking';
+
 /** A download (or preview) link of the release gate. */
 export interface FileDownloadView {
   url: string;
