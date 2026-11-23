@@ -589,7 +589,16 @@ export const FileDrawer = ({
             <Alert variant={newestVersionStateOf(file) === 'checking' ? 'default' : 'destructive'}>
               <ShieldEllipsis />
               <AlertTitle>{t(FILE_NEWEST_VERSION_STATE[newestVersionStateOf(file) ?? 'checking'].label)}</AlertTitle>
-              <AlertDescription>{t(FILE_NEWEST_VERSION_STATE[newestVersionStateOf(file) ?? 'checking'].description ?? '')}</AlertDescription>
+              <AlertDescription>
+                {t(FILE_NEWEST_VERSION_STATE[newestVersionStateOf(file) ?? 'checking'].description ?? '')}
+                {(file.newestVersionNumber || file.newestVersionReason) && (
+                  <span className="mt-1 block text-muted-foreground">
+                    {[file.newestVersionNumber ? t('Version %number%', { replacements: { number: file.newestVersionNumber } }) : null, file.newestVersionReason]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </span>
+                )}
+              </AlertDescription>
             </Alert>
           )}
           {workingCopyLabel && file.hasWorkingCopyChanges && (

@@ -31,6 +31,12 @@ export const FILE_SCAN_STATUS = defineStatusMap<FileScanStatus>(
       icon: ShieldX,
       description: m('The malware check refused this upload; nobody can download it.', { context: 'file-scan-status' }),
     },
+    BLOCKED: {
+      label: m('Type not allowed', { context: 'file-scan-status' }),
+      tone: 'danger',
+      icon: ShieldOff,
+      description: m('The content does not match a file type this area allows; it was refused and nobody can download it.', { context: 'file-scan-status' }),
+    },
     FAILED: {
       label: m('Check failed', { context: 'file-scan-status' }),
       tone: 'danger',
@@ -53,6 +59,7 @@ export const SCAN_STATUS_EXPLANATION: Readonly<Record<FileScanStatus, string>> =
   PENDING: m('This file is being checked for malware. It can be previewed and downloaded once the check is done.'),
   CLEAN: m('No malware found.'),
   INFECTED: m('The malware check found malware in this upload. It was refused; nobody can download it.'),
+  BLOCKED: m('The content of this upload does not match a file type this area allows. It was refused; nobody can download it.'),
   FAILED: m('The malware check could not finish. The file stays locked until it is checked again.'),
   SKIPPED: m('This area runs without a malware check; the file is released unchecked.'),
 };
@@ -73,7 +80,13 @@ export const FILE_NEWEST_VERSION_STATE = defineStatusMap<FileNewestVersionState>
       description: m('The malware check of the new version could not finish; the current version stays available.'),
     },
     blocked: {
-      label: m('New version blocked'),
+      label: m('New version refused: type not allowed'),
+      tone: 'danger',
+      icon: ShieldOff,
+      description: m('The new version does not match a file type this area allows; it was refused and the current version stays.'),
+    },
+    infected: {
+      label: m('New version: malware found'),
       tone: 'danger',
       icon: ShieldX,
       description: m('The malware check found malware in the new version; it was refused and the current version stays.'),

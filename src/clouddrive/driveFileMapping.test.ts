@@ -101,6 +101,8 @@ describe('drive payloads as file manager views', () => {
     assert.equal(area.trashRetentionDays, 30);
     assert.equal(driveAreaViewOf({ ...space, quota: { ...space.quota, quotaBytes: 0 } }).quotaBytes, null);
     assert.deepEqual(driveAreaRefOf(space), { key: 3, name: 'Team A', groupLabel: 'Teams' });
+    assert.equal(driveAreaRefOf({ ...space, displayGroup: 'Team spaces' }).groupLabel, 'Team spaces');
+    assert.equal(driveAreaViewOf({ ...space, quota: { ...space.quota, quotaBytes: 0, effectiveQuotaBytes: 4096 } }).quotaBytes, 4096);
   });
 
   it('asks for a folder, or for the whole space on a search or without a folder', () => {
@@ -120,7 +122,12 @@ describe('drive payloads as file manager views', () => {
 
   it('names the state of a newest version that is not current', () => {
     assert.equal(newestVersionStateOf(driveFileViewOf(file({ hasPendingVersion: true }), ROOT)), 'checking');
-    assert.equal(newestVersionStateOf(driveFileViewOf(file({ hasPendingVersion: true, latestVersionScanStatus: 'INFECTED' }), ROOT)), 'blocked');
+    assert.equal(newestVersionStateOf(driveFileViewOf(file({ hasPendingVersion: true, latestVersionScanStatus: 'INFECTED' }), ROOT)), 'infected');
+    const refused = driveFileViewOf(file({ latestVersionNumber: 3, latestVersionScanStatus: 'BLOCKED', latestVersionStateReason: 'text/html is not allowed' }), ROOT);
+    assert.equal(newestVersionStateOf(refused), 'blocked');
+    assert.equal(refused.newestVersionNumber, 3);
+    assert.equal(refused.newestVersionReason, 'text/html is not allowed');
+    assert.equal(driveScanStatusOf('BLOCKED'), 'BLOCKED');
     assert.equal(newestVersionStateOf(driveFileViewOf(file({ hasPendingVersion: true, latestVersionScanStatus: 'FAILED' }), ROOT)), 'failed');
     assert.equal(newestVersionStateOf(driveFileViewOf(file(), ROOT)), null);
   });

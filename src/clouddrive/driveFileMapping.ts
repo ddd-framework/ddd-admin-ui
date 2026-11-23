@@ -51,6 +51,7 @@ export const driveScanStatusOf = (scanStatus: DriveScanStatus | null | undefined
     case 'PENDING':
     case 'UPLOADING':
     case 'INFECTED':
+    case 'BLOCKED':
     case 'FAILED':
       return scanStatus;
     case 'PURGING':
@@ -91,7 +92,9 @@ export const driveFileViewOf = (item: DriveNodeListItem, rootNodeId: number | nu
   description: item.description ?? null,
   scanStatus: item.scanStatus ? driveScanStatusOf(item.scanStatus) : 'UPLOADING',
   hasPendingVersion: item.hasPendingVersion === true,
-  newestVersionStatus: item.hasPendingVersion && item.latestVersionScanStatus ? driveScanStatusOf(item.latestVersionScanStatus) : null,
+  newestVersionStatus: item.latestVersionScanStatus ? driveScanStatusOf(item.latestVersionScanStatus) : null,
+  newestVersionNumber: item.latestVersionNumber ?? null,
+  newestVersionReason: item.latestVersionStateReason ?? null,
   hasWorkingCopyChanges: item.hasWorkingCopyChanges === true,
   thumbnailUrl: item.thumbnailUrl ?? null,
   uploadedBy: item.createdByName ?? null,
@@ -154,11 +157,17 @@ export const driveUsagePartsOf = (quota: DriveSpaceListItem['quota']): FileAreaU
   return parts.length > 0 ? parts : null;
 };
 
+/** The quota that applies (`effectiveQuotaBytes`, else `quotaBytes`); `null` = no limit. */
+export const effectiveQuotaOf = (quota: DriveSpaceListItem['quota']): number | null => {
+  const quotaBytes = quota.effectiveQuotaBytes ?? quota.quotaBytes;
+  return typeof quotaBytes === 'number' && quotaBytes > 0 ? quotaBytes : null;
+};
+
 /** A space as the file manager's area facts. */
 export const driveAreaViewOf = (item: DriveSpaceListItem): FileAreaView => ({
   areaKey: item.id,
   isEnabled: true,
-  quotaBytes: item.quota.quotaBytes > 0 ? item.quota.quotaBytes : null,
+  quotaBytes: effectiveQuotaOf(item.quota),
   usedBytes: item.quota.usedBytes,
   maxFileSizeBytes: item.quota.maxFileSizeBytes > 0 ? item.quota.maxFileSizeBytes : null,
   trashRetentionDays: item.quota.trashRetentionDays > 0 ? item.quota.trashRetentionDays : null,
@@ -171,7 +180,7 @@ export const driveAreaViewOf = (item: DriveSpaceListItem): FileAreaView => ({
 export const driveAreaRefOf = (item: DriveSpaceListItem): FileAreaRefView => ({
   key: item.id,
   name: item.displayName || item.title || `#${item.id}`,
-  groupLabel: item.groupLabel ?? null,
+  groupLabel: item.displayGroup ?? item.groupLabel ?? null,
 });
 
 const DRIVE_ORDERS: readonly FileListOrder[] = ['name', 'created', 'size'];

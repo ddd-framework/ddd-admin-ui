@@ -1485,9 +1485,15 @@
   "Older versions": "Drive screen, tooltip of the storage pill: part of the used storage taken by older, kept versions of files.",
   "Trash__drive-usage": "Drive screen, tooltip of the storage pill: part of the used storage taken by files in the trash.",
   "Uploads being checked": "Drive screen, tooltip of the storage pill: part of the used storage taken by uploads still in the malware check.",
-  "New version blocked": "File manager (the admin's file area): badge on a file: its newest version was refused by the malware check; the previous version stays current.",
   "New version: check failed": "File manager (the admin's file area): badge on a file: the malware check of its newest version could not run; the previous version stays current.",
   "The malware check found malware in the new version; it was refused and the current version stays.": "File manager (the admin's file area): details drawer: explanation under the badge New version blocked.",
   "The malware check of the new version could not finish; the current version stays available.": "File manager (the admin's file area): details drawer: explanation under the badge New version: check failed.",
-  "{count, plural, one {# entry} other {# entries}}": "File manager (the admin's file area): folder card and folder row: how many files and subfolders the folder contains directly (ICU plural)."
+  "{count, plural, one {# entry} other {# entries}}": "File manager (the admin's file area): folder card and folder row: how many files and subfolders the folder contains directly (ICU plural).",
+  "New version refused: type not allowed": "File manager (the admin's file area): badge on a file: its newest version was refused because its content is not a file type the area allows (not malware); the previous version stays current.",
+  "New version: malware found": "File manager (the admin's file area): badge on a file: the malware check found malware in its newest version; the previous version stays current.",
+  "The content does not match a file type this area allows; it was refused and nobody can download it.__file-scan-status": "File manager (the admin's file area): tooltip of the status badge Type not allowed: the upload was refused by the area's file type rules.",
+  "The content of this upload does not match a file type this area allows. It was refused; nobody can download it.": "File manager (the admin's file area): details drawer and preview: explanation for a file refused by the area's file type rules.",
+  "The new version does not match a file type this area allows; it was refused and the current version stays.": "File manager (the admin's file area): details drawer: explanation under the badge New version refused: type not allowed.",
+  "Type not allowed__file-scan-status": "File manager (the admin's file area): status badge of a file refused because its content is not a file type the area allows (not malware).",
+  "Version %number%": "File manager (the admin's file area): details drawer: the number of the newest version under its state; %number% is the version number."
 }

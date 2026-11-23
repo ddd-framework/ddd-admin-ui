@@ -3,6 +3,17 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.4.2
+
+For mgamadeus/ddd-clouddrive 0.1.0-rc.12 (older servers keep working).
+
+- `./files`: scan status `BLOCKED` (refused by the area's type rules, not malware) beside `INFECTED`; the newest version's
+  state adds `infected` (`blocked` now means the type rules) and shows `newestVersionNumber` and `newestVersionReason`
+  in the drawer.
+- `./clouddrive`: the picker groups by `displayGroup` (else `groupLabel`) in the server's order; the quota is
+  `quota.effectiveQuotaBytes` (else `quotaBytes`, `effectiveQuotaOf`); a file's newest version maps
+  `latestVersionNumber`, `latestVersionScanStatus` and `latestVersionStateReason`; `BLOCKED` maps to the file status.
+
 ## 0.4.1
 
 Additive.

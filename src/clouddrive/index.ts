@@ -28,6 +28,7 @@ export {
   driveScanStatusOf,
   driveVersionViewOf,
   DRIVE_USAGE_PART_LABELS,
+  effectiveQuotaOf,
   driveUsagePartsOf,
   emptyDriveTrashFully,
   groupDriveSpaces,

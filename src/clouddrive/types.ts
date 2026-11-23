@@ -198,7 +198,8 @@ export interface DriveFileCardsArg {
 export type DriveFileFamily = 'PDF' | 'SPREADSHEET' | 'DOCUMENT' | 'PRESENTATION' | 'TEXT' | 'IMAGE' | 'VECTOR' | 'VIDEO' | 'ARCHIVE';
 
 /** The scan state a file shows (of its current version, else of its newest one). */
-export type DriveScanStatus = 'UPLOADING' | 'PENDING' | 'CLEAN' | 'INFECTED' | 'FAILED' | 'PURGING';
+/** `BLOCKED` (ddd-clouddrive ≥ rc.12): refused by the space's type policy; `INFECTED`: malware. */
+export type DriveScanStatus = 'UPLOADING' | 'PENDING' | 'CLEAN' | 'INFECTED' | 'BLOCKED' | 'FAILED' | 'PURGING';
 
 /** One file or folder as the lists draw it (`DriveNodeListItem`); null values are left out of the JSON. */
 export interface DriveNodeListItem {
@@ -218,8 +219,10 @@ export interface DriveNodeListItem {
   tags?: string[];
   scanStatus?: DriveScanStatus | null;
   hasPendingVersion?: boolean;
-  /** The check state of the newest version while it is not current (a later rc; read when present). */
+  /** The newest version while it is not the current one (ddd-clouddrive ≥ rc.12): number, check state, reason. */
+  latestVersionNumber?: number | null;
   latestVersionScanStatus?: DriveScanStatus | null;
+  latestVersionStateReason?: string | null;
   hasWorkingCopyChanges?: boolean;
   isContentUntrusted?: boolean;
   isSystem?: boolean;
@@ -245,6 +248,8 @@ export interface DriveSpaceQuota {
   trashRetentionDays: number;
   keptVersionCount: number;
   versionRetentionDays: number;
+  /** The quota that applies (ddd-clouddrive ≥ rc.12; equals `quotaBytes`). */
+  effectiveQuotaBytes?: number | null;
   /** The usage split (ddd-clouddrive ≥ rc.12; absent before): current versions, older versions, trash, uploads being checked. */
   currentVersionBytes?: number | null;
   olderVersionBytes?: number | null;
@@ -260,6 +265,8 @@ export interface DriveSpaceListItem {
   displayName: string;
   /** The group the picker files the space under; `null` = no group. */
   groupLabel?: string | null;
+  /** The group to show (ddd-clouddrive ≥ rc.12; preferred over `groupLabel`). */
+  displayGroup?: string | null;
   spaceKind?: string | null;
   audience?: DriveSpaceAudience | null;
   rootNodeId?: number | null;

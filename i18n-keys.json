@@ -1,6 +1,6 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
@@ -5523,12 +5523,12 @@
       "hint": "File manager, file card in the grid."
     },
     {
-      "key": "New version blocked",
-      "text": "New version blocked",
+      "key": "New version refused: type not allowed",
+      "text": "New version refused: type not allowed",
       "files": [
         "files/fileStatus.ts"
       ],
-      "hint": "File manager (the admin's file area): badge on a file: its newest version was refused by the malware check; the previous version stays current."
+      "hint": "File manager (the admin's file area): badge on a file: its newest version was refused because its content is not a file type the area allows (not malware); the previous version stays current."
     },
     {
       "key": "New version uploaded",
@@ -5553,6 +5553,14 @@
         "files/fileStatus.ts"
       ],
       "hint": "File manager (the admin's file area): badge on a file: the malware check of its newest version could not run; the previous version stays current."
+    },
+    {
+      "key": "New version: malware found",
+      "text": "New version: malware found",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager (the admin's file area): badge on a file: the malware check found malware in its newest version; the previous version stays current."
     },
     {
       "key": "New__issue-flag",
@@ -8732,6 +8740,23 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): tooltip of the status badge 'Command missing'."
     },
     {
+      "key": "The content does not match a file type this area allows; it was refused and nobody can download it.__file-scan-status",
+      "text": "The content does not match a file type this area allows; it was refused and nobody can download it.",
+      "context": "file-scan-status",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager (the admin's file area): tooltip of the status badge Type not allowed: the upload was refused by the area's file type rules."
+    },
+    {
+      "key": "The content of this upload does not match a file type this area allows. It was refused; nobody can download it.",
+      "text": "The content of this upload does not match a file type this area allows. It was refused; nobody can download it.",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager (the admin's file area): details drawer and preview: explanation for a file refused by the area's file type rules."
+    },
+    {
       "key": "The current version stays available until the new one has passed the malware check.",
       "text": "The current version stays available until the new one has passed the malware check.",
       "files": [
@@ -9139,6 +9164,14 @@
         "files/FileDrawer.tsx"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %extension% is a file extension like \"pdf\"."
+    },
+    {
+      "key": "The new version does not match a file type this area allows; it was refused and the current version stays.",
+      "text": "The new version does not match a file type this area allows; it was refused and the current version stays.",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager (the admin's file area): details drawer: explanation under the badge New version refused: type not allowed."
     },
     {
       "key": "The number of missing keys is not known.",
@@ -10290,6 +10323,15 @@
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
     },
     {
+      "key": "Type not allowed__file-scan-status",
+      "text": "Type not allowed",
+      "context": "file-scan-status",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager (the admin's file area): status badge of a file refused because its content is not a file type the area allows (not malware)."
+    },
+    {
       "key": "Type “%phrase%” to confirm",
       "text": "Type “%phrase%” to confirm",
       "files": [
@@ -10602,6 +10644,14 @@
         "translations/AppTranslationKeyDrawer.tsx"
       ],
       "hint": "App translations admin, drawer of one translation key: heading above the translated values, one per locale and writing style (informal/formal)."
+    },
+    {
+      "key": "Version %number%",
+      "text": "Version %number%",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager (the admin's file area): details drawer: the number of the newest version under its state; %number% is the version number."
     },
     {
       "key": "Version %number% restored",

@@ -121,7 +121,8 @@ export const fileFamilyOfContentType = (contentType: string | null | undefined):
 };
 
 /** The state of the malware check of a file (version). */
-export const FILE_SCAN_STATUSES = ['UPLOADING', 'PENDING', 'CLEAN', 'INFECTED', 'FAILED', 'SKIPPED'] as const;
+/** `BLOCKED`: refused by the area's type rules (not malware); `INFECTED`: refused by the malware check. */
+export const FILE_SCAN_STATUSES = ['UPLOADING', 'PENDING', 'CLEAN', 'INFECTED', 'BLOCKED', 'FAILED', 'SKIPPED'] as const;
 
 export type FileScanStatus = (typeof FILE_SCAN_STATUSES)[number];
 
@@ -165,6 +166,10 @@ export interface FileView {
    * check could not run, `INFECTED` when it was blocked); absent = unknown (`hasPendingVersion` alone).
    */
   newestVersionStatus?: FileScanStatus | null;
+  /** The newest version's number while it is not the current one (shown with its state). */
+  newestVersionNumber?: number | null;
+  /** Why the newest version was refused or failed (a short server text), when known. */
+  newestVersionReason?: string | null;
   /** Changes of a working copy are not committed yet (capability `workingCopy`). */
   hasWorkingCopyChanges?: boolean;
   /** Short-lived thumbnail URL of a released image (or a page rendition); absent otherwise. */
@@ -290,13 +295,18 @@ export interface FileAreaUsagePart {
   bytes: number;
 }
 
-/** What the newest, not yet current version of a file is: being checked, check failed, blocked; `null` = nothing to say. */
-export type FileNewestVersionState = 'checking' | 'failed' | 'blocked';
+/**
+ * What the newest, not yet current version of a file is: being checked, check failed, refused by the type rules
+ * (`blocked`), refused by the malware check (`infected`); `null` = nothing to say.
+ */
+export type FileNewestVersionState = 'checking' | 'failed' | 'blocked' | 'infected';
 
 /** The state of a file's newest version that is not current yet (`hasPendingVersion` / `newestVersionStatus`). */
 export const newestVersionStateOf = (file: Pick<FileView, 'hasPendingVersion' | 'newestVersionStatus'>): FileNewestVersionState | null => {
   switch (file.newestVersionStatus) {
     case 'INFECTED':
+      return 'infected';
+    case 'BLOCKED':
       return 'blocked';
     case 'FAILED':
       return 'failed';

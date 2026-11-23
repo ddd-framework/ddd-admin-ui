@@ -44,7 +44,7 @@ const FILES: DriveNodeListItem[] = [
   {
     id: 5, driveSpaceId: 1, parentNodeId: 1, nodeType: 'FILE', name: 'Assignments.xlsx', extension: 'xlsx', family: 'SPREADSHEET',
     contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', sizeBytes: 34816, versionNumber: 2, scanStatus: 'CLEAN',
-    hasPendingVersion: true, latestVersionScanStatus: 'FAILED', createdByName: 'Staff', createdAt: '2026-11-21 10:00:00', updatedAt: '2026-11-23 01:12:00',
+    hasPendingVersion: true, latestVersionNumber: 3, latestVersionScanStatus: 'BLOCKED', latestVersionStateReason: 'The content is HTML; this space allows office files only.', createdByName: 'Staff', createdAt: '2026-11-21 10:00:00', updatedAt: '2026-11-23 01:12:00',
   },
   {
     id: 8, driveSpaceId: 1, parentNodeId: 2, nodeType: 'FILE', name: 'Quarter report.pdf', extension: 'pdf', family: 'PDF', contentType: 'application/pdf',
