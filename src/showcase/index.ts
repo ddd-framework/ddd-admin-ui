@@ -12,3 +12,4 @@ export { showcaseDatabaseData } from './databaseFixtures.ts';
 export { showcaseCloudDriveData } from './cloudDriveFixtures.ts';
 export { showcaseFilesData } from './filesFixtures.ts';
 export { showcaseCronsData } from './cronsFixtures.ts';
+export { showcaseSandboxesData } from './sandboxFixtures.ts';

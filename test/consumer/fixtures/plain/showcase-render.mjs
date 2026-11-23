@@ -29,7 +29,7 @@ const { prelude } = await prerenderToNodeStream(element);
 let html = '';
 for await (const chunk of prelude) html += chunk;
 
-const SECTIONS = ['primitives', 'list', 'page', 'form', 'translations', 'markdown', 'media', 'workers', 'issues', 'database', 'crons', 'glass', 'data', 'shell', 'notify-sonner', 'next', 'host'];
+const SECTIONS = ['primitives', 'list', 'page', 'form', 'translations', 'markdown', 'media', 'workers', 'issues', 'database', 'crons', 'sandbox', 'glass', 'data', 'shell', 'notify-sonner', 'next', 'host'];
 const checks = [
   ['renders a light and a dark pane', html.includes('data-showcase-theme="light"') && html.includes('data-showcase-theme="dark"')],
   ['the dark pane carries the .dark class', /data-showcase-theme="dark" class="[^"]*\bdark\b/.test(html)],

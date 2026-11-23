@@ -24,9 +24,10 @@ export interface InjectedRequest {
   body?: unknown;
   /**
    * How the response body becomes `data` (RTK Query's `fetchBaseQuery` option, passed on by `createDddBaseQuery`):
-   * `'text'` for a `text/plain` answer; absent = the base query's default (JSON).
+   * `'text'` for a `text/plain` answer, a function for raw bytes (`response => response.blob()`, a mutation only: the
+   * result is not serialisable); absent = the base query's default (JSON).
    */
-  responseHandler?: 'json' | 'text' | 'content-type';
+  responseHandler?: 'json' | 'text' | 'content-type' | ((response: Response) => Promise<unknown>);
 }
 
 /** A cache tag: a tag type, or a tag type with an id. */

@@ -35,6 +35,7 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./clouddrive` | the drive on the host's api (`createCloudDriveApi`, `mgamadeus/ddd-clouddrive` ≥ 0.1.0-rc.10, `CloudDriveControllerTrait`): `CloudDriveScreen` (the `./files` file manager on the drive: grouped, searchable space picker, folders, direct upload to the store with multipart, preview, versions with restore, history, malware status, the agents' unsaved changes, filters and orders, trash with purge and empty for managers), `useCloudDriveFileAdapter`, `CloudDriveSpacePicker`, the mappers, `sendDriveUpload`, the payload types | logic, i18n, primitives, page, form, files |
 | `./files` | the generic file manager on the host's adapter (`FileManagerAdapter` with optional capabilities): `FileManager` (folder tree, grid / table, search and filters, upload tray with progress, drag and drop moves, details drawer with preview, versions and activity, trash, links, moves into other areas), its parts (`FolderTree`, `FileCard`, `FileDrawer`, `FilePreview`, `MoveDialog`, `LinkTargetsDialog`, `UploadTray`, `QuotaPill`, …), `useFileUploadQueue`, `uploadWithProgress`, `createStaticFileManagerAdapter`, the view models | logic, i18n, primitives, list, page, form |
 | `./crons` | the Crons screen on the host's api (`createCronsApi`): `CronsScreen` and its parts (summary tiles, runner banner, Crons table with countdown and run strip, row actions, details drawer with the duration chart, runs with their output, timeline, create / edit form with the schedule preview), `useCronActions`, the status maps `CRON_STATUS`, `CRON_EXECUTION_RESULT`, the payload types | logic, i18n, primitives, list, page, form, data |
+| `./sandbox` | the agents' workspaces on the host's api (`createSandboxesApi`, `mgamadeus/ddd-agents` ≥ 0.1.32, `AgentSandboxesControllerTrait`): `SandboxesScreen` (state, last activity, disk and memory against their limits, mount mode, runner, owner, conversations, start / offload / end) and `SandboxDetailScreen` (files read only with the safe preview, unsaved changes, processes and jobs with kill, commands with exit code and output tails, conversations, session log, audit; reset with a typed name; a reason while a turn runs), `useSandboxActions`, `SandboxFilePreview`, the payload types | logic, i18n, primitives, list, page, form, files |
 | `./media` | `MediaItemField`, `FormMediaItemField`, `MediaItemPickerDialog`, `MediaPreview`, `ImageCropDialog` (crop surface: file and aspect options in; cropped blob, skip or cancel out) | logic, i18n, primitives, list, form |
 | `./glass` | `GlassPill`, `QuickFilterPills`, `CollapsibleCard`, `GlassGroup`, `ActionRow` | logic, i18n, primitives |
 | `./shell` | the application frame `AppShell` (top bar with slots, sidebar with groups, badges and locks, the icon rail and its `[` shortcut, the mobile menu, the content frame), `ShellBreadcrumbs`, `ShellDocumentTitle`, `AccountMenu`, `LanguageMenu`, their parts and hooks (`useSidebarCollapsed`, `useShellShortcut`) | logic, i18n, primitives |
@@ -42,7 +43,7 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./provider` | `AdminUiProvider` (also the dialog behind `useConfirm`), `useAdminUi`, `defaultStorageKey` | logic, i18n, primitives; types only from media and translations |
 | `./next` | Next.js adapters: `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useNextPathname`, `useListViewParam`, the one URL writer (`queueSearchParamsWrite`) | logic, provider; the only entry importing `next/*` |
 | `./notify-sonner` | `sonnerNotifications` (the notification adapter on `sonner`) and its `Toaster` | logic; the only entry importing `sonner` |
-| `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE`; the sample payloads of the screens (`showcaseWorkersData`, `showcaseTranslationsData`, `showcaseIssuesData`, `showcaseDatabaseData`, `showcaseCloudDriveData`, `showcaseFilesData`, `showcaseCronsData`) | logic, i18n, primitives, list, page, form, translations, media, glass, data, workers, issues, database, clouddrive, files, crons, shell, shell-background; never `./next`, `./notify-sonner` or `./markdown` (its section loads through `loadMarkdown`) |
+| `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE`; the sample payloads of the screens (`showcaseWorkersData`, `showcaseTranslationsData`, `showcaseIssuesData`, `showcaseDatabaseData`, `showcaseCloudDriveData`, `showcaseFilesData`, `showcaseCronsData`, `showcaseSandboxesData`) | logic, i18n, primitives, list, page, form, translations, media, glass, data, workers, issues, database, clouddrive, files, crons, sandbox, shell, shell-background; never `./next`, `./notify-sonner` or `./markdown` (its section loads through `loadMarkdown`) |
 | `./data` | key figures: `MetricTile` (label, value, delta, hint, sparkline slot, skeleton), `MetricTileSkeleton`, `MetricGrid`, `DeltaText`, `NoteList`, the delta helpers `resolveDelta`, `relativeChange`, `deltaDirectionOf`, `deltaToneOf` | logic, i18n, primitives |
 | `./markdown` | `MarkdownEditor`, `MarkdownPreview` (sanitised), `renderMarkdownEditor` (the `renderEditor` slot of `./translations` and `AdminUiProvider.renderMarkdownEditor`); loads `@uiw/react-md-editor` and `rehype-sanitize` after hydration | logic, i18n, primitives; translations type-only; the only entry reaching its optional peers |
 | `./design-studio` | `designStudioComponents`: the `components` of `@mgamadeus/ddd-design-studio`'s provider, every slot mapped to the block of the same name; the slot types (`DesignStudioComponentsContract`, structural copy) | primitives, list, page, glass; never imports the studio |
@@ -998,6 +999,36 @@ export const cloudDriveApi = createCloudDriveApi({ baseApi: adminApi, apiPrefix:
   store's CORS must allow `GET` from the admin's origin (without it the preview fails and the download still works).
   SVG, HTML and other types are never rendered.
 - **Older servers:** without the rc.10 list items the screen says which version it needs.
+
+### `./sandbox`
+
+The agents' workspaces of `mgamadeus/ddd-agents` (≥ 0.1.32): the host implements `AgentSandboxAdministration` over its
+runner and mounts `AgentSandboxesControllerTrait` for superadmins (the trait's hook
+`throwForbiddenUnlessSandboxesAccessAllowed()` plus the host's `access_control`).
+
+```tsx
+export const sandboxesApi = createSandboxesApi({ baseApi: adminApi, apiPrefix: '/api/admin/maintenance/sandboxes' });
+
+<SandboxesScreen api={sandboxesApi} onOpenWorkspace={key => router.push(`/maintenance/sandboxes/${encodeURIComponent(key)}`)} />
+<SandboxDetailScreen
+  api={sandboxesApi}
+  workspaceKey={workspaceKey}
+  tab={tab}                                   // optional, e.g. from the URL; else kept by the screen
+  onTabChange={setTab}
+  buildConversationHref={conversation => `/agents/conversations/${conversation.conversationId}`}
+  loadPdfJs={loadPdfJs}
+/>
+```
+
+- **Actions** (`useSandboxActions`): start / warm up, offload (unsaved changes to the drive, then the session is
+  released), end, kill a job, reset (typed name = the display name, else the key). Every action is audited by the
+  server. While a conversation of the space has a running turn (`hasLiveTurn`, or the server's 409) the screen asks
+  for a reason and sends the action with `force`.
+- **Untrusted content:** files are read only; JPEG, PNG, GIF and WebP draw as `<img>` from the fetched bytes, PDF through
+  the host's pdf.js, text as text nodes (the first 256 KB), anything else only downloads. Commands, their output and
+  the session log are escaped preformatted text; nothing is rendered as HTML.
+- **Not set up:** without a host administration the list answers `isConfigured: false` and the screen says so.
+- `createStaticSandboxesApi(showcaseSandboxesData)` answers fixed payloads (actions refused) for reviews and tests.
 
 ## Design studio
 

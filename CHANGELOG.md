@@ -3,6 +3,22 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.5.0
+
+New entry `./sandbox` for mgamadeus/ddd-agents 0.1.32 (`AgentSandboxesControllerTrait`). Additive for every other
+entry.
+
+- `./sandbox`: `createSandboxesApi({ baseApi, apiPrefix })` (+ `createStaticSandboxesApi`), `SandboxesScreen` (every
+  workspace: state, last activity, disk and memory against their limits with the peak, mount mode and its reason,
+  runner, owner, conversations, a running-turn marker; start / warm up, offload, end per row; "not set up" without a
+  host administration) and `SandboxDetailScreen` (facts, then the tabs Files — read only, the safe preview —, Unsaved
+  changes, Processes & jobs with kill, Commands with exit code, duration and output tails, Conversations with
+  `buildConversationHref`, Session log, Audit). `useSandboxActions`: confirmations, reset with the typed name, a reason
+  and `force` while a turn runs (also on the server's 409). Everything from the sandbox is escaped text; file previews
+  only for JPEG / PNG / GIF / WebP (`<img>`), PDF (host pdf.js) and plain text.
+- `./logic`: `InjectedRequest.responseHandler` takes a function (raw bytes for a mutation).
+- `./showcase`: the `sandbox` section, `showcaseSandboxesData`.
+
 ## 0.4.4
 
 The release of 0.4.3 (its tag was never published: the text manifest carried the old version). Same content as

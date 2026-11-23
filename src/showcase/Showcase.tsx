@@ -21,6 +21,7 @@ import { DatabaseShowcase } from './sections/DatabaseShowcase.tsx';
 import { CloudDriveShowcase } from './sections/CloudDriveShowcase.tsx';
 import { FilesShowcase } from './sections/FilesShowcase.tsx';
 import { CronsShowcase } from './sections/CronsShowcase.tsx';
+import { SandboxShowcase } from './sections/SandboxShowcase.tsx';
 
 /** One section of the showcase: a heading and what it draws. Hosts append their own (`Showcase.sections`). */
 export interface ShowcaseSection {
@@ -52,7 +53,7 @@ export interface ShowcaseProps {
   loadMarkdown?: MarkdownLoader;
   /**
    * Leave out package sections by id (`primitives`, `list`, `page`, `form`, `translations`, `markdown`, `media`,
-   * `workers`, `issues`, `database`, `clouddrive`, `files`, `crons`, `glass`, `data`, `shell`, `notify-sonner`, `next`).
+   * `workers`, `issues`, `database`, `clouddrive`, `files`, `crons`, `sandbox`, `glass`, `data`, `shell`, `notify-sonner`, `next`).
    */
   omit?: readonly string[];
   className?: string;
@@ -96,6 +97,12 @@ const packageSections = (
     content: <FilesShowcase />,
   },
   { id: 'crons', title: './crons', description: 'The crons screen: list, runs, timeline, create and edit, run now.', content: <CronsShowcase /> },
+  {
+    id: 'sandbox',
+    title: './sandbox',
+    description: 'The agents’ workspaces: list, one workspace with files, changes, processes, commands, log and audit.',
+    content: <SandboxShowcase />,
+  },
   { id: 'glass', title: './glass', description: 'Glass pills, quick filters, collapsible cards, groups and rows.', content: <GlassShowcase /> },
   { id: 'data', title: './data', description: 'Key figures: metric tiles with a change and a sparkline slot, their grid, notes.', content: <DataShowcase /> },
   { id: 'shell', title: './shell', description: 'Application frame, breadcrumbs, account and language menus; the animated background of ./shell-background.', content: <ShellShowcase /> },

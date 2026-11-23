@@ -271,7 +271,7 @@ export function checkPackage(packageDirectory, options = {}) {
       // the development page: every block entry, never an entry with an optional peer (./next, ./notify-sonner)
       showcase: [
         'logic', 'i18n', 'primitives', 'list', 'page', 'form', 'translations', 'media', 'glass', 'data', 'workers', 'issues',
-        'database', 'clouddrive', 'files', 'crons', 'shell', 'shell-background',
+        'database', 'clouddrive', 'files', 'crons', 'sandbox', 'shell', 'shell-background',
       ],
       // the inputs (form only through fieldLabels and useConfirmDialog) and the admin screens (lists, pages, the key drawer)
       translations: ['logic', 'i18n', 'primitives', 'form', 'list', 'page'],
@@ -281,6 +281,8 @@ export function checkPackage(packageDirectory, options = {}) {
       issues: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'data'],
       database: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'data'],
       crons: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'data'],
+      // the agents' workspaces on the agents module's admin trait; previews through the file manager's blocks
+      sandbox: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'files'],
       // the drive screen on the cloud drive module's admin trait
       clouddrive: ['logic', 'i18n', 'primitives', 'page', 'form', 'files'],
       // the generic file manager (tree, list, drawer, dialogs) on the host's adapter
