@@ -28,6 +28,15 @@ Where the names below come from (setup and the entry list: [`README.md`](./READM
 Every screen renders below `AdminUiProvider`. A screen that may not write sets that once with `WriteAccessProvider`
 (§ 15).
 
+## 0. Untrusted content (mandatory)
+
+Text, markdown, file names, URLs and files that users, mail, third parties or a model wrote are foreign: they are
+shown, never run. Render user markdown only through `MarkdownPreview` (sanitised), never with
+`dangerouslySetInnerHTML`; show a foreign file as a download link (the backend serves it with
+`UntrustedContentResponseDto`: attachment, `nosniff`, `CSP: sandbox`), never in an `iframe` with `allow-same-origin`;
+load images only from the application's own origin or its configured media hosts. The backend rule, its helpers and the
+sink scan: skill `ddd-untrusted-input-specialist` of `mgamadeus/ddd`.
+
 ## 1. List state — `useUrlListState`
 
 One hook for search + filters, in the URL, 350 ms debounce. Keys = URL parameter names, a module constant.
