@@ -3,7 +3,7 @@ import { describe, it } from 'node:test';
 
 import { resolveFileManagerFeatures } from '../files/fileManagerFeatures.ts';
 import { buildCloudDriveFileActions, type CloudDriveFileActionTriggers, type DriveNodeFact } from './driveFileActions.ts';
-import { newestVersionStateOf } from '../files/fileView.ts';
+import { newestVersionStateOf, personWithOnBehalfOf } from '../files/fileView.ts';
 import {
   DRIVE_LIST_MAX_LIMIT,
   driveAreaRefOf,
@@ -87,6 +87,32 @@ describe('drive payloads as file manager views', () => {
   it('keeps only files of a list answer', () => {
     const items = driveFileItemsOf([file(), file({ id: 2, nodeType: 'FOLDER' }), file({ id: 3, isSystem: true }), file({ id: 4, nodeType: 'LINK' })]);
     assert.deepEqual(items.map(item => item.id), [41]);
+  });
+
+  it('maps the folder creator and who they acted for', () => {
+    const [folder] = driveFolderViewsOf(
+      [file({ id: 5, nodeType: 'FOLDER', createdByName: 'Staff', createdOnBehalfOfName: 'Partner GmbH', createdAt: '2026-11-23 10:00:00', updatedAt: '2026-11-23 11:00:00' })],
+      ROOT
+    );
+    assert.equal(folder?.createdBy, 'Staff');
+    assert.equal(folder?.createdOnBehalfOf, 'Partner GmbH');
+    assert.equal(folder?.createdAt, '2026-11-23 10:00:00');
+    assert.equal(folder?.updatedAt, '2026-11-23 11:00:00');
+  });
+
+  it('keeps a trashed folder in the trash as a folder row (empty or not)', () => {
+    const view = driveFileViewOf(file({ id: 6, nodeType: 'FOLDER', name: 'ob-ordner', extension: '', trashedAt: '2026-11-23 21:00:00' }), ROOT);
+    assert.equal(view.isFolder, true);
+    assert.equal(view.deletedAt, '2026-11-23 21:00:00');
+    assert.equal(driveFileViewOf(file(), ROOT).isFolder, undefined);
+  });
+
+  it('draws a person with the account they acted for', () => {
+    const t = (text: string, options?: { replacements?: Record<string, string | number> }) =>
+      text.replace('%name%', String(options?.replacements?.name ?? ''));
+    assert.equal(personWithOnBehalfOf('Staff', 'Partner GmbH', t), 'Staff (on behalf: Partner GmbH)');
+    assert.equal(personWithOnBehalfOf('Ann', null, t), 'Ann');
+    assert.equal(personWithOnBehalfOf(null, 'Partner GmbH', t), null);
   });
 
   it('maps who the uploader and the version author acted for (ddd-clouddrive rc.20)', () => {

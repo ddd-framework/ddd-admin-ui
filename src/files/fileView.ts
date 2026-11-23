@@ -7,7 +7,7 @@
  */
 
 import { formatUiNumber } from '../i18n/format.ts';
-import { m } from '../i18n/store.ts';
+import { m, type TranslateFn } from '../i18n/store.ts';
 
 /** An id of a file, folder, version or link target. */
 export type FileItemId = string | number;
@@ -192,6 +192,11 @@ export interface FileView {
   deletedBy?: string | null;
   /** Trash only: when the file is removed for good. */
   purgeAfter?: string | null;
+  /**
+   * Trash only: the row is a trashed folder (with its content), not a file. Restore and final delete take its id like
+   * a file's; it has no details, no download and no versions.
+   */
+  isFolder?: boolean;
 }
 
 /** One stored version of a file (drawer). */
@@ -267,6 +272,12 @@ export interface FolderView {
   fileCount?: number | null;
   /** Files and folders directly inside (a backend that counts entries, not files); used when `fileCount` is absent. */
   entryCount?: number | null;
+  /** Display name of the account that created the folder. */
+  createdBy?: string | null;
+  /** Display name of the account the creator acted for (impersonation), shown as "(on behalf: …)". */
+  createdOnBehalfOf?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 /** An area the manager can show (the tree's roots when there is more than one) or move to. */
@@ -448,6 +459,13 @@ export const extensionOf = (fileName: string): string => {
 const BYTE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB'] as const;
 
 /** `1536` → `1.5 KB`, binary steps (1 KB = 1024 B). */
+/**
+ * A person with the account they acted for, as the drawer, the table and the cards draw it: `Jane (on behalf: Acme)`;
+ * the name alone without an on-behalf account; null without a name.
+ */
+export const personWithOnBehalfOf = (name: string | null | undefined, onBehalfOf: string | null | undefined, t: TranslateFn): string | null =>
+  name ? (onBehalfOf ? `${name} ${t('(on behalf: %name%)', { replacements: { name: onBehalfOf } })}` : name) : null;
+
 export const formatBytes = (bytes: number | null | undefined): string => {
   if (bytes === null || bytes === undefined || !Number.isFinite(bytes) || bytes < 0) return '—';
   let value = bytes;

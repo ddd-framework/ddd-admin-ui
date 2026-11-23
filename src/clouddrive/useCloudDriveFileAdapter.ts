@@ -151,7 +151,7 @@ export const createCloudDriveFileAdapter = (api: CloudDriveApi, spaceId: number)
     const trashQuery = api.useDriveTrashQuery({ driveSpaceId, limit }, { skip });
     const rootNodeId = space.item?.rootNodeId;
     const items = useMemo(
-      () => (trashQuery.data?.items?.elements ?? []).filter(item => item.nodeType === 'FILE').map(item => driveFileViewOf(item, rootNodeId)),
+      () => (trashQuery.data?.items?.elements ?? []).filter(item => item.nodeType === 'FILE' || item.nodeType === 'FOLDER').map(item => driveFileViewOf(item, rootNodeId)),
       [trashQuery.data, rootNodeId]
     );
     const nextLimit = nextDriveListLimit(limit);

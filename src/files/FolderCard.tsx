@@ -6,7 +6,7 @@ import { Card, CardContent } from '../primitives/card.tsx';
 import { cn } from '../primitives/cn.ts';
 import { DROP_ACTIVE_CLASS, DROP_CANDIDATE_CLASS, type FileDropTarget, useFileDraggable, useFileDropTarget } from './fileDragAndDrop.tsx';
 import { FileFamilyIcon } from './FileFamilyIcon.tsx';
-import type { FolderView } from './fileView.ts';
+import { type FolderView, personWithOnBehalfOf } from './fileView.ts';
 import { FolderActionsMenu, type FolderTreeActions } from './FolderTree.tsx';
 
 export interface FolderCardProps {
@@ -71,6 +71,11 @@ export const FolderCard = ({
             {folder.name}
           </h3>
           <p className="text-sm text-muted-foreground">{drop.isOver ? t('Drop to move here') : folderContentLabel(folder, t)}</p>
+          {!drop.isOver && personWithOnBehalfOf(folder.createdBy, folder.createdOnBehalfOf, t) && (
+            <p className="truncate text-xs text-muted-foreground">
+              {t('Created by %user%', { replacements: { user: personWithOnBehalfOf(folder.createdBy, folder.createdOnBehalfOf, t) ?? '' } })}
+            </p>
+          )}
         </div>
         {actions && <FolderActionsMenu folder={folder} depth={depth} actions={actions} writesAllowed={writesAllowed} maxFolderDepth={maxFolderDepth} />}
       </CardContent>

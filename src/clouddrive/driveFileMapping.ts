@@ -82,7 +82,7 @@ const extensionOfName = (name: string): string => {
 export const driveFolderIdOf = (parentNodeId: number | null | undefined, rootNodeId: number | null | undefined): number | null =>
   parentNodeId === null || parentNodeId === undefined || parentNodeId === rootNodeId ? null : parentNodeId;
 
-/** A file of the drive as a `FileView` (trash facts included when present). */
+/** A file of the drive as a `FileView` (trash facts included when present; a trashed folder is marked `isFolder`). */
 export const driveFileViewOf = (item: DriveNodeListItem, rootNodeId: number | null | undefined): FileView => ({
   id: item.id,
   areaKey: item.driveSpaceId,
@@ -108,6 +108,7 @@ export const driveFileViewOf = (item: DriveNodeListItem, rootNodeId: number | nu
   deletedAt: item.trashedAt ?? null,
   deletedBy: item.trashedByName ?? null,
   purgeAfter: item.purgeAfter ?? null,
+  ...(item.nodeType === 'FOLDER' ? { isFolder: true } : {}),
 });
 
 /** The folders of a space as the tree reads them: the root itself is left out, its children hang at `null`. */
@@ -120,6 +121,10 @@ export const driveFolderViewsOf = (items: readonly DriveNodeListItem[], rootNode
       parentId: driveFolderIdOf(item.parentNodeId, rootNodeId),
       name: item.name,
       entryCount: item.childCount ?? null,
+      createdBy: item.createdByName ?? null,
+      createdOnBehalfOf: item.createdOnBehalfOfName ?? null,
+      createdAt: item.createdAt ?? null,
+      updatedAt: item.updatedAt ?? null,
     }));
 
 /** The drive's note codes as the file manager names them (a move between spaces is a move from another area). */

@@ -16,7 +16,7 @@ import { type FileItemHandlers, FileItemActions } from './FileItemActions.tsx';
 import { FileLinkChips } from './FileLinkChips.tsx';
 import type { FileLinkKind } from './fileManagerAdapter.ts';
 import { FILE_NEWEST_VERSION_STATE, FILE_SCAN_STATUS } from './fileStatus.ts';
-import { FILE_FAMILY_LABELS, type FileView, formatBytes, isPageThumbnail, newestVersionStateOf } from './fileView.ts';
+import { FILE_FAMILY_LABELS, type FileView, formatBytes, isPageThumbnail, newestVersionStateOf, personWithOnBehalfOf } from './fileView.ts';
 
 export interface FileCardSelection {
   selected: boolean;
@@ -51,6 +51,7 @@ export interface FileCardProps {
 /** The thumbnail or the family icon; a failed thumbnail falls back to the icon. */
 const FilePreviewTile = ({ file }: { file: FileView }) => {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  if (file.isFolder) return <FileFamilyIcon family="FOLDER" size="lg" />;
   const src = file.thumbnailUrl && failedSrc !== file.thumbnailUrl ? file.thumbnailUrl : null;
   if (src) {
     return (
@@ -88,13 +89,13 @@ export const FileCard = ({
   const { t } = useTranslate();
   const activation = useRowActivation(onActivate);
   const drag = useFileDraggable(dragItem ?? null);
-  const showStatus = file.scanStatus !== 'CLEAN' && file.scanStatus !== 'SKIPPED';
+  const showStatus = !file.isFolder && file.scanStatus !== 'CLEAN' && file.scanStatus !== 'SKIPPED';
   const newestVersionState = showStatus ? null : newestVersionStateOf(file);
   const dateLine = inTrash
     ? file.deletedBy
       ? t('Deleted %date% by %user%', { replacements: { date: formatDate(file.deletedAt), user: file.deletedBy } })
       : t('Deleted %date%', { replacements: { date: formatDate(file.deletedAt) } })
-    : formatDate(file.createdAt);
+    : [formatDate(file.createdAt), personWithOnBehalfOf(file.uploadedBy, file.uploadedOnBehalfOf, t)].filter(Boolean).join(' · ');
 
   return (
     <Card
@@ -136,7 +137,7 @@ export const FileCard = ({
           </div>
         )}
         <span className="absolute bottom-2.5 left-2.5 rounded-md bg-card/90 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-muted-foreground uppercase shadow-sm">
-          {file.extension || t(FILE_FAMILY_LABELS[file.family])}
+          {file.isFolder ? t('Folder', { context: 'file-type' }) : file.extension || t(FILE_FAMILY_LABELS[file.family])}
         </span>
       </div>
       <CardContent className="flex-1 space-y-1.5 p-4">
@@ -144,7 +145,7 @@ export const FileCard = ({
           {file.name}
         </h3>
         <p className="truncate text-sm text-muted-foreground">
-          {formatBytes(file.sizeBytes)} · {dateLine}
+          {file.isFolder ? dateLine : `${formatBytes(file.sizeBytes)} · ${dateLine}`}
         </p>
         {linkKinds && <FileLinkChips links={file.links} kinds={linkKinds} showEmpty={false} />}
       </CardContent>

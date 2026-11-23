@@ -3,6 +3,19 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.5.5
+
+Who created a folder, the on-behalf account in the list, and trashed folders in the trash; additive.
+
+- The table's "Uploaded by" column and the grid card add "(on behalf: …)" like the drawer
+  (`personWithOnBehalfOf(name, onBehalfOf, t)` in `./files`).
+- New optional `FolderView.createdBy`, `createdOnBehalfOf`, `createdAt`, `updatedAt`; the drive adapter fills them
+  from `createdByName` / `createdOnBehalfOfName`. The table shows them in "Uploaded by", "Created", "Updated"; the
+  folder card shows "Created by %user%" (new key).
+- Trash: a trashed folder (empty or not) is a row of its own. New optional `FileView.isFolder` (trash only): folder
+  icon and type, no size, status, details or download; restore and delete permanently take its id. The drive adapter
+  kept only files of `GET …/trash` and dropped trashed folders; it now keeps them.
+
 ## 0.5.4
 
 The uploader's and the version author's on-behalf account (impersonation) next to the name; additive.

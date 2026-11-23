@@ -1163,7 +1163,7 @@
   "%type% files have no preview here. Download it to open it.": "File manager, file preview in the details drawer. %type% is a kind of file like \"Spreadsheet\".",
   "%used% of %quota%": "File manager, storage pill (used storage of the file area). %quota% is the storage limit; %used% is the used storage.",
   "(not visible to you)": "File manager, confirmation dialog of a move into another file area.",
-  "(on behalf: %name%)": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %name% is a file or folder name.",
+  "(on behalf: %name%)": "File manager: after the name of an uploader, a version author or a folder creator who acted for another account (impersonation). %name% is the display name of the account acted for.",
   ".%extension% files are not allowed here.": "File manager, check before an upload starts (shown in the upload tray as the reason a file was refused). %extension% is a file extension like \"pdf\".",
   "A dash means only some of the files have that link; one click links all of them.": "File manager, dialog to edit the links of files (checkbox list of link targets of the application).",
   "A folder cannot move into itself.": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash).",
@@ -1664,5 +1664,6 @@
   "Moved here from another area__file-version-note": "File manager, file details drawer, version history: a note under one version, written by the system. The file was moved here from another file area the reader may not see.",
   "Copied from %path%__file-version-note": "File manager, file details drawer, version history: a note under one version, written by the system. The assistant copied the file here; %path% is the path it was copied from.",
   "Copied from another location__file-version-note": "File manager, file details drawer, version history: a note under one version, written by the system. The file was copied here from a location the reader may not see.",
-  "Files in the trash have no preview. Restore the file to see it.": "File manager, file details drawer: shown instead of the preview while the file is in the trash."
+  "Files in the trash have no preview. Restore the file to see it.": "File manager, file details drawer: shown instead of the preview while the file is in the trash.",
+  "Created by %user%": "File manager, folder card in the grid: who created the folder. %user% is a display name, possibly followed by \"(on behalf: …)\"."
 }

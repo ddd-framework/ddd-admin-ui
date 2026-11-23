@@ -1,6 +1,6 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
@@ -594,9 +594,10 @@
       "key": "(on behalf: %name%)",
       "text": "(on behalf: %name%)",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/FileDrawer.tsx",
+        "files/fileView.ts"
       ],
-      "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %name% is a file or folder name."
+      "hint": "File manager: after the name of an uploader, a version author or a folder creator who acted for another account (impersonation). %name% is the display name of the account acted for."
     },
     {
       "key": "(plural)",
@@ -2419,6 +2420,14 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): toast after creating a job."
     },
     {
+      "key": "Created by %user%",
+      "text": "Created by %user%",
+      "files": [
+        "files/FolderCard.tsx"
+      ],
+      "hint": "File manager, folder card in the grid: who created the folder. %user% is a display name, possibly followed by \"(on behalf: …)\"."
+    },
+    {
       "key": "Created__entity-metadata",
       "text": "Created",
       "context": "entity-metadata",
@@ -4093,6 +4102,7 @@
       "text": "Folder",
       "context": "file-type",
       "files": [
+        "files/FileCard.tsx",
         "files/FileManager.tsx",
         "files/FolderCard.tsx"
       ],

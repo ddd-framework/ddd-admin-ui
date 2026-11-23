@@ -94,6 +94,7 @@ import {
   type LinkTargetsView,
   type LinkTargetView,
   MAX_FOLDER_DEPTH,
+  personWithOnBehalfOf,
   sameFileId,
 } from './fileView.ts';
 import { FolderCard, folderContentLabel } from './FolderCard.tsx';
@@ -957,6 +958,8 @@ export const FileManager = ({
       cell: entry =>
         entry.kind === 'folder' ? (
           <FileFamilyIcon family="FOLDER" size="sm" />
+        ) : entry.file.isFolder ? (
+          <FileFamilyIcon family="FOLDER" size="sm" />
         ) : entry.file.thumbnailUrl ? (
           <span className="flex size-8 overflow-hidden rounded-lg bg-tint">
             <img src={entry.file.thumbnailUrl} alt="" loading="lazy" className={cn('size-full object-cover', isPageThumbnail(entry.file) && 'object-top')} />
@@ -1001,7 +1004,7 @@ export const FileManager = ({
       id: 'type',
       header: t('Type', { context: 'file-type' }),
       cell: entry =>
-        entry.kind === 'folder' ? (
+        entry.kind === 'folder' || entry.file.isFolder ? (
           t('Folder', { context: 'file-type' })
         ) : (
           <span className="whitespace-nowrap">
@@ -1014,7 +1017,7 @@ export const FileManager = ({
       id: 'status',
       header: t('Status', { context: 'file-status' }),
       cell: entry =>
-        entry.kind === 'folder' ? (
+        entry.kind === 'folder' || entry.file.isFolder ? (
           <EmptyValue />
         ) : (
           <span className="flex flex-wrap gap-1">
@@ -1038,13 +1041,18 @@ export const FileManager = ({
       header: t('Size', { context: 'file-size' }),
       className: 'text-right',
       cell: entry => (
-        <span className="whitespace-nowrap tabular-nums">{entry.kind === 'folder' ? folderContentLabel(entry.folder, t) : formatBytes(entry.file.sizeBytes)}</span>
+        <span className="whitespace-nowrap tabular-nums">{entry.kind === 'folder' ? folderContentLabel(entry.folder, t) : entry.file.isFolder ? <EmptyValue /> : formatBytes(entry.file.sizeBytes)}</span>
       ),
     },
     {
       id: 'uploadedBy',
       header: inTrash ? t('Deleted by') : t('Uploaded by'),
-      cell: entry => (entry.kind === 'folder' ? <EmptyValue /> : (inTrash ? entry.file.deletedBy : entry.file.uploadedBy) || <EmptyValue />),
+      cell: entry =>
+        (entry.kind === 'folder'
+          ? personWithOnBehalfOf(entry.folder.createdBy, entry.folder.createdOnBehalfOf, t)
+          : inTrash
+            ? entry.file.deletedBy
+            : personWithOnBehalfOf(entry.file.uploadedBy, entry.file.uploadedOnBehalfOf, t)) || <EmptyValue />,
     },
     ...(inTrash
       ? [
@@ -1063,12 +1071,26 @@ export const FileManager = ({
           {
             id: 'created',
             header: t('Created', { context: 'file-date' }),
-            cell: (entry: FileManagerEntry) => (entry.kind === 'file' ? <DateCell value={entry.file.createdAt} /> : <EmptyValue />),
+            cell: (entry: FileManagerEntry) =>
+              entry.kind === 'file' ? (
+                <DateCell value={entry.file.createdAt} />
+              ) : entry.folder.createdAt ? (
+                <DateCell value={entry.folder.createdAt} />
+              ) : (
+                <EmptyValue />
+              ),
           },
           {
             id: 'updated',
             header: t('Updated', { context: 'file-date' }),
-            cell: (entry: FileManagerEntry) => (entry.kind === 'file' ? <DateCell value={entry.file.updatedAt} /> : <EmptyValue />),
+            cell: (entry: FileManagerEntry) =>
+              entry.kind === 'file' ? (
+                <DateCell value={entry.file.updatedAt} />
+              ) : entry.folder.updatedAt ? (
+                <DateCell value={entry.folder.updatedAt} />
+              ) : (
+                <EmptyValue />
+              ),
           },
         ]),
     {
@@ -1103,7 +1125,11 @@ export const FileManager = ({
 
   const rowAction = useCallback(
     (entry: FileManagerEntry) =>
-      entry.kind === 'folder' ? () => navigate({ kind: 'folder', folderId: entry.folder.id }) : () => drawer.openEdit(entry.file.id),
+      entry.kind === 'folder'
+        ? () => navigate({ kind: 'folder', folderId: entry.folder.id })
+        : entry.file.isFolder
+          ? null
+          : () => drawer.openEdit(entry.file.id),
     [navigate, drawer]
   );
 
