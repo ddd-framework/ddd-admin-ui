@@ -3,6 +3,19 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.3.13
+
+New entry `./clouddrive`: the drive screen on the endpoints of `mgamadeus/ddd-clouddrive` (`CloudDriveControllerTrait`).
+Additive.
+
+- `createCloudDriveApi({ baseApi, apiPrefix })` injects the operations (spaces, folder pages, name search, node with
+  versions, new folder, upload reserve and complete, content URLs, move, trash, restore, file cards for the
+  `DriveFiles` widget); `createStaticCloudDriveApi` answers fixed payloads.
+- `CloudDriveScreen`: space picker with usage, breadcrumbs, folders and files (system folders and files pending their
+  scan marked), direct upload to the object store (single PUT or multipart, every signed header sent unchanged),
+  download through a short-lived URL, new folder, trash with undo, name search.
+- `sendDriveUpload(reservation, file, onProgress)` and `formatDriveSize()` for hosts with their own upload UI.
+
 ## 0.3.12
 
 Delta saves of translatable texts and controls for translations that run on the server. Everything is additive: the

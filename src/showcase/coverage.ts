@@ -116,6 +116,10 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
     shown: ['CodeBlock', 'GeneratedCodePanel', 'SchemaDiffCard', 'SchemaDiffScreen'],
     notShown: {},
   },
+  clouddrive: {
+    shown: ['CloudDriveScreen'],
+    notShown: {},
+  },
   crons: {
     shown: [
       'CronActionErrorCallout', 'CronDetailsDrawer', 'CronDurationChart', 'CronExecutionDialog', 'CronFormDrawer', 'CronLastRun',

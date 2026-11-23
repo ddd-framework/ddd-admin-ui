@@ -1,6 +1,6 @@
 {
   "name": "@mgamadeus/ddd-admin-ui",
-  "version": "0.3.12",
+  "version": "0.3.13",
   "description": "Admin UI building blocks for React 19 / Next 16 / Tailwind 4 apps on @mgamadeus/ddd-web: entity lists (table and card grid, filters, selection, bulk actions), page frames and detail shells, form shells with conditional fields and server validation, translatable inputs, media pickers, Next adapters, a provider, and the shadcn-style primitives they are drawn with, plus two stylesheets and two JSON manifests.",
   "keywords": [
     "ddd",
@@ -117,6 +117,10 @@
     "./database": {
       "types": "./dist/database/index.d.ts",
       "default": "./dist/database/index.js"
+    },
+    "./clouddrive": {
+      "types": "./dist/clouddrive/index.d.ts",
+      "default": "./dist/clouddrive/index.js"
     },
     "./crons": {
       "types": "./dist/crons/index.d.ts",
