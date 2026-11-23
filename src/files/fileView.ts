@@ -153,6 +153,11 @@ export interface FileView {
   mimeType?: string | null;
   /** Size of the current version (or, without one, of the newest). */
   sizeBytes: number;
+  /**
+   * Identifies the content the file shows (the current version's number or id): it changes whenever another version
+   * becomes current (an upload, a restore), so a preview loaded before is fetched again. Absent = unknown.
+   */
+  contentVersion?: number | string | null;
   description?: string | null;
   /**
    * The scan state of the current (released) version, or — while there is none — of the newest version. Areas without a
@@ -199,9 +204,26 @@ export interface FileVersionView {
   isCurrent: boolean;
   uploadedBy?: string | null;
   createdAt?: string | null;
-  /** A note stored with the version (`Restored from v2`). */
+  /** Free text stored with the version (a person's or the agent's note). */
   comment?: string | null;
+  /** A note the system wrote, drawn in the reader's language (wins over `comment`). */
+  systemNote?: FileVersionSystemNote | null;
 }
+
+/** What the system noted on a version; unknown codes fall back to `comment`. */
+export interface FileVersionSystemNote {
+  /** `RESTORED_FROM_VERSION`, `MOVED_FROM_AREA`, `COPIED_FROM_PATH` (others: not drawn). */
+  code: string;
+  /** RESTORED_FROM_VERSION: the restored version's number. */
+  versionNumber?: number | null;
+  /** MOVED_FROM_AREA: the area the file came from (absent when the reader may not see it). */
+  sourceAreaName?: string | null;
+  /** COPIED_FROM_PATH: the path the file was copied from (absent when the reader may not see it). */
+  sourcePath?: string | null;
+}
+
+/** The system note codes the file manager draws. */
+export const FILE_VERSION_NOTE_CODES = ['RESTORED_FROM_VERSION', 'MOVED_FROM_AREA', 'COPIED_FROM_PATH'] as const;
 
 /** One entry of a file's activity (capability `activity`). */
 export interface FileEventView {

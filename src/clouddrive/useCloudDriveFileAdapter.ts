@@ -86,7 +86,10 @@ export const createCloudDriveFileAdapter = (api: CloudDriveApi, spaceId: number)
   const useSpaceItem = (areaKey: FileAreaKey | null | undefined): { item: DriveSpaceListItem | undefined; isLoading: boolean; isError: boolean } => {
     const driveSpaceId = toSpaceId(areaKey);
     const spaceQuery = api.useDriveSpaceQuery({ driveSpaceId }, { skip: driveSpaceId === 0 });
-    return { item: spaceQuery.data?.item ?? undefined, isLoading: spaceQuery.isLoading, isError: spaceQuery.isError };
+    // while another space loads, the hook still holds the previous space: never hand out its root or quota
+    const loadedItem = spaceQuery.data?.item ?? undefined;
+    const item = loadedItem !== undefined && loadedItem.id === driveSpaceId ? loadedItem : undefined;
+    return { item, isLoading: spaceQuery.isLoading || (driveSpaceId !== 0 && item === undefined && !spaceQuery.isError), isError: spaceQuery.isError };
   };
 
   const useArea = (areaKey: FileAreaKey): FileQueryState<FileAreaView> => {
@@ -98,9 +101,12 @@ export const createCloudDriveFileAdapter = (api: CloudDriveApi, spaceId: number)
     const space = useSpaceItem(areaKey);
     const driveSpaceId = toSpaceId(areaKey);
     const foldersQuery = api.useDriveFoldersQuery({ driveSpaceId, includeSystem: false }, { skip: driveSpaceId === 0 });
+    // the previous space's tree while this one loads is no tree of this space (its folder ids would be asked here)
+    const isStale = foldersQuery.isFetching && foldersQuery.currentData === undefined;
+    const foldersData = isStale ? undefined : foldersQuery.data;
     const data = useMemo(
-      () => (foldersQuery.data && space.item ? driveFolderViewsOf(foldersQuery.data.items.elements ?? [], space.item.rootNodeId) : undefined),
-      [foldersQuery.data, space.item]
+      () => (foldersData && space.item ? driveFolderViewsOf(foldersData.items.elements ?? [], space.item.rootNodeId) : undefined),
+      [foldersData, space.item]
     );
     return { data, isLoading: foldersQuery.isLoading || space.isLoading, isFetching: foldersQuery.isFetching, isError: foldersQuery.isError };
   };

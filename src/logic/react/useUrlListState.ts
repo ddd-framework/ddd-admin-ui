@@ -49,7 +49,9 @@ const emptyRecord = <K extends string>(keys: readonly K[]): Record<K, string> =>
 
 /**
  * The first values of a list: the URL's, else (`withRestore`) the adapter's saved state when the URL carries none of
- * the keys. Storage is read only with `withRestore`, i.e. never in a server render or a hydration render.
+ * the keys. A key present but empty (`?tab=&folder=`) is the URL's explicit choice and wins over the saved state: a
+ * link to "the list without filters" opens it so. Storage is read only with `withRestore`, i.e. never in a server render
+ * or a hydration render.
  */
 export const initialListValues = <K extends string>(
   keys: readonly K[],
@@ -57,8 +59,13 @@ export const initialListValues = <K extends string>(
   withRestore: boolean
 ): Record<K, string> => {
   const initial = emptyRecord(keys);
-  for (const key of keys) initial[key] = adapter.get(key) ?? '';
-  if (withRestore && keys.every(key => initial[key] === '')) {
+  let urlCarriesAKey = false;
+  for (const key of keys) {
+    const urlValue = adapter.get(key);
+    if (urlValue !== null && urlValue !== undefined) urlCarriesAKey = true;
+    initial[key] = urlValue ?? '';
+  }
+  if (withRestore && !urlCarriesAKey) {
     const saved = adapter.restore?.();
     if (saved) for (const key of keys) initial[key] = saved[key] ?? '';
   }

@@ -29,6 +29,7 @@ export {
   driveLocationMissOf,
   driveLocationResolutionOf,
   driveScanStatusOf,
+  driveVersionNoteOf,
   driveVersionViewOf,
   DRIVE_USAGE_PART_LABELS,
   effectiveQuotaOf,

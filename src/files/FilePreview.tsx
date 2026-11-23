@@ -40,7 +40,8 @@ const usePreviewUrl = (file: FileView, enabled: boolean, disposition: FileDownlo
   const getDownloadRef = useRef(getDownload);
   getDownloadRef.current = getDownload;
   const [state, setState] = useState<{ key: string; url: string | null; error: string | null }>({ key: '', url: null, error: null });
-  const key = `${String(file.id)}:${file.sizeBytes}:${file.scanStatus}:${disposition}`;
+  // another current version (upload, restore) is another content: fetch the preview again
+  const key = `${String(file.id)}:${String(file.contentVersion ?? '')}:${file.updatedAt ?? ''}:${file.sizeBytes}:${file.scanStatus}:${disposition}`;
 
   useEffect(() => {
     if (!enabled) return;
@@ -80,9 +81,20 @@ const ImagePreview = ({ url, alt }: { url: string; alt: string }) => {
 export const FilePreview = ({ file, getDownload, loadPdfJs, className }: FilePreviewProps) => {
   const { t } = useTranslate();
   const released = isFileReleased(file.scanStatus);
+  // a file in the trash is not previewed (the server releases its content as a download only)
+  const trashed = file.deletedAt !== null && file.deletedAt !== undefined;
   const kind = filePreviewKind(file);
   const disposition: FileDownloadOptions['disposition'] = kind === 'image' || kind === 'pdf' ? 'inline' : 'attachment';
-  const preview = usePreviewUrl(file, released && kind !== 'none', disposition, getDownload);
+  const preview = usePreviewUrl(file, released && !trashed && kind !== 'none', disposition, getDownload);
+
+  if (trashed) {
+    return (
+      <Panel className={className}>
+        <FileFamilyIcon family={file.family} size="lg" />
+        <p className="max-w-sm text-[13px] text-muted-foreground">{t('Files in the trash have no preview. Restore the file to see it.')}</p>
+      </Panel>
+    );
+  }
 
   if (!released) {
     return (

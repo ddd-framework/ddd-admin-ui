@@ -21,6 +21,8 @@ export interface FolderCardProps {
   draggable?: boolean;
   /** Files and folders dropped onto the card move into this folder; absent = no drop target. */
   dropTarget?: FileDropTarget | null;
+  /** The grid's row key (set by `EntityListGrid`): lands on the card's root. */
+  'data-row-key'?: string;
 }
 
 /** `3 files`, or "Folder" when the backend sends no count. */
@@ -34,13 +36,24 @@ export const folderContentLabel = (folder: Pick<FolderView, 'fileCount' | 'entry
     : fileCountLabel(folder.fileCount, t);
 
 /** A folder in the grid (folders come first): a click opens it, its menu holds the folder writes; drag source and drop target. */
-export const FolderCard = ({ folder, depth, onOpen, actions, writesAllowed, maxFolderDepth, draggable = false, dropTarget = null }: FolderCardProps) => {
+export const FolderCard = ({
+  folder,
+  depth,
+  onOpen,
+  actions,
+  writesAllowed,
+  maxFolderDepth,
+  draggable = false,
+  dropTarget = null,
+  'data-row-key': rowKey,
+}: FolderCardProps) => {
   const { t } = useTranslate();
   const activation = useRowActivation(onOpen);
   const drag = useFileDraggable(draggable ? { kind: 'folder', folder } : null);
   const drop = useFileDropTarget(dropTarget);
   return (
     <Card
+      data-row-key={rowKey}
       className={cn(
         'cursor-pointer gap-0 self-start py-0 transition-shadow hover:shadow-md motion-reduce:transition-none',
         drop.isCandidate && DROP_CANDIDATE_CLASS,

@@ -44,6 +44,8 @@ export interface FileCardProps {
   hasTrash?: boolean;
   /** The badge of uncommitted working-copy changes (capability `workingCopy`); absent = no badge. */
   workingCopyLabel?: string;
+  /** The grid's row key (set by `EntityListGrid`): lands on the card's root, so tests and agents find the card. */
+  'data-row-key'?: string;
 }
 
 /** The thumbnail or the family icon; a failed thumbnail falls back to the icon. */
@@ -81,6 +83,7 @@ export const FileCard = ({
   linkKinds,
   hasTrash = true,
   workingCopyLabel,
+  'data-row-key': rowKey,
 }: FileCardProps) => {
   const { t } = useTranslate();
   const activation = useRowActivation(onActivate);
@@ -95,6 +98,7 @@ export const FileCard = ({
 
   return (
     <Card
+      data-row-key={rowKey}
       className={cn(
         'group/card gap-0 overflow-hidden py-0 transition-shadow hover:shadow-md motion-reduce:transition-none',
         onActivate && 'cursor-pointer',

@@ -32,6 +32,8 @@ export const FilePathBar = ({ initialPath, folders, onSubmit, onCancel }: FilePa
   const [value, setValue] = useState(initialPath === '/' ? '/' : `${initialPath}/`);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // a blur while the location resolves is no cancel: the answer (an error to show) is still to come
+  const busyRef = useRef(false);
   const [highlighted, setHighlighted] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const listId = useId();
@@ -45,13 +47,17 @@ export const FilePathBar = ({ initialPath, folders, onSubmit, onCancel }: FilePa
 
   const submit = async (input: string) => {
     setBusy(true);
+    busyRef.current = true;
     setError(null);
+    let failure: string | null = null;
     try {
-      const failure = await onSubmit(input);
+      failure = await onSubmit(input);
       if (failure !== null) setError(failure);
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
+    if (failure !== null) inputRef.current?.focus();
   };
 
   const accept = (index: number) => {
@@ -96,7 +102,9 @@ export const FilePathBar = ({ initialPath, folders, onSubmit, onCancel }: FilePa
           }}
           onKeyDown={onKeyDown}
           onBlur={event => {
-            // A click on a completion or the buttons keeps the bar; leaving it elsewhere returns to the crumbs.
+            // A click on a completion or the buttons keeps the bar; leaving it elsewhere returns to the crumbs. While a
+            // location resolves the bar stays: its answer may be an error to show.
+            if (busyRef.current) return;
             if (!event.currentTarget.parentElement?.parentElement?.contains(event.relatedTarget as Node | null)) onCancel();
           }}
           role="combobox"
@@ -109,7 +117,8 @@ export const FilePathBar = ({ initialPath, folders, onSubmit, onCancel }: FilePa
           aria-describedby={error ? errorId : undefined}
           spellCheck={false}
           autoComplete="off"
-          disabled={busy}
+          readOnly={busy}
+          aria-busy={busy}
           className="h-8 font-mono text-[13px]"
           placeholder={t('/folder/subfolder or drive/123')}
         />

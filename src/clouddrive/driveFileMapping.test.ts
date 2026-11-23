@@ -106,6 +106,22 @@ describe('drive payloads as file manager views', () => {
     assert.equal(driveAreaViewOf({ ...space, quota: { ...space.quota, quotaBytes: 0, effectiveQuotaBytes: 4096 } }).quotaBytes, 4096);
   });
 
+  it('turns the drive notes into system notes without internal ids, keeps free text', () => {
+    const restored = driveVersionViewOf({ id: 8, driveNodeId: 41, versionNumber: 3, isCurrent: true, isLatest: true, isRestorable: false, comment: null, commentCode: 'RESTORED_FROM_VERSION', commentParameters: { versionNumber: 1 } });
+    assert.deepEqual(restored.systemNote, { code: 'RESTORED_FROM_VERSION', versionNumber: 1, sourceAreaName: null, sourcePath: null });
+    const moved = driveVersionViewOf({ id: 9, driveNodeId: 41, versionNumber: 1, isCurrent: true, isLatest: true, isRestorable: false, commentCode: 'TRANSFERRED_FROM_SPACE', commentParameters: { sourceSpaceDisplayName: null } });
+    assert.equal(moved.systemNote?.code, 'MOVED_FROM_AREA');
+    assert.equal(moved.systemNote?.sourceAreaName, null, 'a partner gets no source space');
+    const unknown = driveVersionViewOf({ id: 10, driveNodeId: 41, versionNumber: 1, isCurrent: true, isLatest: true, isRestorable: false, comment: 'checked', commentCode: 'SOMETHING_NEW' });
+    assert.equal(unknown.systemNote, null);
+    assert.equal(unknown.comment, 'checked');
+  });
+
+  it('names the current content, so a preview is fetched again after a restore', () => {
+    assert.equal(driveFileViewOf(file({ versionNumber: 2 }), ROOT).contentVersion, 2);
+    assert.equal(driveFileViewOf(file({ versionNumber: 3 }), ROOT).contentVersion, 3);
+  });
+
   it('asks for a folder, or for the whole space on a search or without a folder', () => {
     const folderArg = driveChildrenArgOf({ areaKey: 3, folderId: 'root' }, ROOT, 100);
     assert.equal(folderArg.folderNodeId, ROOT);

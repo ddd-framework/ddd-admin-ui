@@ -55,4 +55,10 @@ describe('useUrlListState restore', () => {
     const adapter = { ...adapterWithSavedState(), get: (key: string) => (key === 'q' ? 'from-url' : null) };
     assert.deepEqual(initialListValues(KEYS, adapter, true), { q: 'from-url', status: '' });
   });
+
+  it('takes a key present but empty in the URL as the explicit state, not the saved one', () => {
+    const adapter = { ...adapterWithSavedState(), get: (key: string) => (key === 'status' ? '' : null) };
+    assert.deepEqual(initialListValues(KEYS, adapter, true), { q: '', status: '' });
+    assert.equal(adapter.restoreCalls, 0);
+  });
 });

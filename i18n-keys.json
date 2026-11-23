@@ -1,6 +1,6 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
@@ -2178,6 +2178,24 @@
       "hint": "Issues admin screen, details drawer of one error group: toast after the group was copied to the clipboard for an AI coding agent."
     },
     {
+      "key": "Copied from %path%__file-version-note",
+      "text": "Copied from %path%",
+      "context": "file-version-note",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer, version history: a note under one version, written by the system. The assistant copied the file here; %path% is the path it was copied from."
+    },
+    {
+      "key": "Copied from another location__file-version-note",
+      "text": "Copied from another location",
+      "context": "file-version-note",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer, version history: a note under one version, written by the system. The file was copied here from a location the reader may not see."
+    },
+    {
       "key": "Copied in",
       "text": "Copied in",
       "files": [
@@ -3861,6 +3879,14 @@
         "files/FileManager.tsx"
       ],
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Files in the trash have no preview. Restore the file to see it.",
+      "text": "Files in the trash have no preview. Restore the file to see it.",
+      "files": [
+        "files/FilePreview.tsx"
+      ],
+      "hint": "File manager, file details drawer: shown instead of the preview while the file is in the trash."
     },
     {
       "key": "Files without an extension are not allowed here.",
@@ -5967,6 +5993,24 @@
         "files/FolderTree.tsx"
       ],
       "hint": "File manager, folder tree in the side panel. Context: folder action."
+    },
+    {
+      "key": "Moved here from %area%__file-version-note",
+      "text": "Moved here from %area%",
+      "context": "file-version-note",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer, version history: a note under one version, written by the system. The file was moved here from another file area (e.g. another drive space); %area% is that area's name."
+    },
+    {
+      "key": "Moved here from another area__file-version-note",
+      "text": "Moved here from another area",
+      "context": "file-version-note",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer, version history: a note under one version, written by the system. The file was moved here from another file area the reader may not see."
     },
     {
       "key": "Moved to the trash",
@@ -8295,6 +8339,24 @@
         "files/FileItemActions.tsx"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: action."
+    },
+    {
+      "key": "Restored from an older version__file-version-note",
+      "text": "Restored from an older version",
+      "context": "file-version-note",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer, version history: a note under one version, written by the system. The version was made by restoring an older one (its number is unknown)."
+    },
+    {
+      "key": "Restored from version %number%__file-version-note",
+      "text": "Restored from version %number%",
+      "context": "file-version-note",
+      "files": [
+        "files/FileDrawer.tsx"
+      ],
+      "hint": "File manager, file details drawer, version history: a note under one version, written by the system. The version was made by restoring an older one; %number% is that older version's number."
     },
     {
       "key": "Restored__file-event",

@@ -9,6 +9,7 @@ import {
   type FileEventView,
   type FileFamily,
   type FileScanStatus,
+  type FileVersionSystemNote,
   type FileVersionView,
   type FileView,
   type FolderView,
@@ -91,6 +92,7 @@ export const driveFileViewOf = (item: DriveNodeListItem, rootNodeId: number | nu
   family: driveFamilyOf(item),
   mimeType: item.contentType ?? null,
   sizeBytes: item.sizeBytes ?? 0,
+  contentVersion: item.versionNumber ?? null,
   description: item.description ?? null,
   scanStatus: item.scanStatus ? driveScanStatusOf(item.scanStatus) : 'UPLOADING',
   hasPendingVersion: item.hasPendingVersion === true,
@@ -119,6 +121,25 @@ export const driveFolderViewsOf = (items: readonly DriveNodeListItem[], rootNode
       entryCount: item.childCount ?? null,
     }));
 
+/** The drive's note codes as the file manager names them (a move between spaces is a move from another area). */
+const DRIVE_VERSION_NOTE_CODES: Readonly<Record<string, string>> = {
+  RESTORED_FROM_VERSION: 'RESTORED_FROM_VERSION',
+  TRANSFERRED_FROM_SPACE: 'MOVED_FROM_AREA',
+  COPIED_FROM_PATH: 'COPIED_FROM_PATH',
+};
+
+/** A version's system note; null for free text or a code this package does not know (then `comment` is drawn). */
+export const driveVersionNoteOf = (item: DriveFileVersionListItem): FileVersionSystemNote | null => {
+  const code = item.commentCode ? DRIVE_VERSION_NOTE_CODES[item.commentCode] : undefined;
+  if (!code) return null;
+  return {
+    code,
+    versionNumber: item.commentParameters?.versionNumber ?? null,
+    sourceAreaName: item.commentParameters?.sourceSpaceDisplayName ?? null,
+    sourcePath: item.commentParameters?.sourcePath ?? null,
+  };
+};
+
 /** A version of a file as the drawer lists it. */
 export const driveVersionViewOf = (item: DriveFileVersionListItem): FileVersionView => ({
   id: item.id,
@@ -130,6 +151,7 @@ export const driveVersionViewOf = (item: DriveFileVersionListItem): FileVersionV
   uploadedBy: item.authorName ?? null,
   createdAt: item.createdAt ?? null,
   comment: item.comment ?? null,
+  systemNote: driveVersionNoteOf(item),
 });
 
 /** A change of a node as the drawer's activity lists it; a move or rename shows `old path → new path`. */

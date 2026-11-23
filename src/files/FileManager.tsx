@@ -1408,7 +1408,7 @@ export const FileManager = ({
           </AlertDescription>
         </Alert>
       )}
-      <div className="sticky top-0 z-(--layer-sticky) -mx-1 flex flex-wrap items-center justify-between gap-3 bg-background/95 px-1 py-1 backdrop-blur-sm">
+      <div className="sticky top-[var(--nav-h)] z-(--layer-sticky) -mx-1 flex flex-wrap items-center justify-between gap-3 bg-background/95 px-1 py-1 backdrop-blur-sm">
         {editingPath && !context && !inTrash ? (
           <FilePathBar
             initialPath={folderPathText(folders, currentFolderId)}

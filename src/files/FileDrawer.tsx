@@ -349,7 +349,10 @@ const VersionsCard = ({ file, actions, features, editable, replacementExtension,
                     </Button>
                   )}
                 </span>
-                {version.comment && <span className="basis-full text-xs text-muted-foreground">{version.comment}</span>}
+                {(() => {
+                  const noteText = versionNoteText(version, t);
+                  return noteText ? <span className="basis-full text-xs text-muted-foreground">{noteText}</span> : null;
+                })()}
                 {version.scanResultDetail && <span className="basis-full font-mono text-[11px] text-muted-foreground">{version.scanResultDetail}</span>}
               </li>
             ))}
@@ -520,6 +523,7 @@ export interface FileDrawerProps {
   listedFile: FileView | null;
   folders: readonly FolderView[];
   rootLabel: string;
+  /** The trash tab is open; the file's own `deletedAt` wins when the adapter reports it. */
   inTrash: boolean;
   canWrite: boolean;
   writesAllowed: boolean;
@@ -534,6 +538,27 @@ export interface FileDrawerProps {
   activityTab?: 'changes' | 'accesses';
   onActivityTabChange?: (tab: 'changes' | 'accesses') => void;
 }
+
+/** A version's note in the reader's language: the system's note when known, else the stored free text. */
+const versionNoteText = (version: FileVersionView, t: TranslateFn): string | null => {
+  const note = version.systemNote;
+  switch (note?.code) {
+    case 'RESTORED_FROM_VERSION':
+      return note.versionNumber !== null && note.versionNumber !== undefined
+        ? t('Restored from version %number%', { context: 'file-version-note', replacements: { number: note.versionNumber } })
+        : t('Restored from an older version', { context: 'file-version-note' });
+    case 'MOVED_FROM_AREA':
+      return note.sourceAreaName
+        ? t('Moved here from %area%', { context: 'file-version-note', replacements: { area: note.sourceAreaName } })
+        : t('Moved here from another area', { context: 'file-version-note' });
+    case 'COPIED_FROM_PATH':
+      return note.sourcePath
+        ? t('Copied from %path%', { context: 'file-version-note', replacements: { path: note.sourcePath } })
+        : t('Copied from another location', { context: 'file-version-note' });
+    default:
+      return version.comment || null;
+  }
+};
 
 /** The drawer id → a file id (numbers stay numbers when the list's ids are numbers). */
 const fileIdOf = (shownId: string | undefined, listedFile: FileView | null): FileItemId | null => {
@@ -554,7 +579,7 @@ export const FileDrawer = ({
   listedFile,
   folders,
   rootLabel,
-  inTrash,
+  inTrash: inTrashTab,
   canWrite,
   writesAllowed,
   handlers,
@@ -568,10 +593,19 @@ export const FileDrawer = ({
 }: FileDrawerProps) => {
   const { t } = useTranslate();
   const shownId = drawer.shown?.mode === 'edit' ? String(drawer.shown.id) : undefined;
-  const fileId = fileIdOf(shownId, listedFile);
+  const shownFileId = fileIdOf(shownId, listedFile);
+  // the file's queries run only while the drawer is open: a closed drawer (still drawn while it slides out) holds no
+  // subscription, so a file trashed or purged afterwards is never fetched again
+  const fileId = drawer.isOpen ? shownFileId : null;
   const detailQuery = adapter.useFile(fileId);
   const detail = detailQuery.data && sameFileId(detailQuery.data.id, fileId) ? detailQuery.data : null;
-  const file: FileView | null = detail ?? (listedFile && sameFileId(listedFile.id, fileId) ? listedFile : null);
+  const openFile: FileView | null = detail ?? (listedFile && sameFileId(listedFile.id, shownFileId) ? listedFile : null);
+  const lastFileRef = useRef<FileView | null>(null);
+  if (drawer.isOpen && openFile !== null) lastFileRef.current = openFile;
+  const file: FileView | null = drawer.isOpen ? openFile : lastFileRef.current;
+  // the file's own state decides (a live file opened with the trash tab in the URL is live); an adapter that does not
+  // report `deletedAt` keeps the tab's view
+  const inTrash = file !== null && file.deletedAt !== undefined ? file.deletedAt !== null : inTrashTab;
   const editable = canWrite && writesAllowed && !inTrash;
   const folderName =
     file === null

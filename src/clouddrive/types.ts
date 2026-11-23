@@ -289,7 +289,11 @@ export interface DriveFileVersionListItem {
   versionNumber: number;
   sizeBytes?: number | null;
   contentType?: string | null;
+  /** Free text; null when the version carries a system note (ddd-clouddrive ≥ rc.19). */
   comment?: string | null;
+  /** RESTORED_FROM_VERSION, TRANSFERRED_FROM_SPACE, COPIED_FROM_PATH (ddd-clouddrive ≥ rc.19). */
+  commentCode?: string | null;
+  commentParameters?: DriveFileVersionCommentParameters | null;
   origin?: string | null;
   authorAccountId?: number | null;
   authorName?: string | null;
@@ -299,6 +303,13 @@ export interface DriveFileVersionListItem {
   isCurrent: boolean;
   isLatest: boolean;
   isRestorable: boolean;
+}
+
+/** The values of a version's system note (`DriveFileVersionCommentParameters`); staff-only values are null for partners. */
+export interface DriveFileVersionCommentParameters {
+  versionNumber?: number | null;
+  sourceSpaceDisplayName?: string | null;
+  sourcePath?: string | null;
 }
 
 /** One entry of a node's history (`DriveChangeEventListItem`). */

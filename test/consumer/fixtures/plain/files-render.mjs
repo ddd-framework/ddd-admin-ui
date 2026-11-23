@@ -41,6 +41,9 @@ const withWorkingCopy = render(
   })
 );
 checks.push(['files: the working-copy badge with its capability', withWorkingCopy.includes('Unsaved changes')]);
+const grid = render(h(FileManager, { adapter: full, areas, variant: 'embedded', defaultView: 'grid' }));
+checks.push(['files: file and folder cards carry their row key', (grid.match(/data-row-key="/g) ?? []).length >= 2]);
+checks.push(['files: the folder bar sticks below the host top bar', screen.includes('sticky top-[var(--nav-h)]')]);
 
 let failed = false;
 for (const [label, passed] of checks) {

@@ -3,6 +3,32 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.5.2
+
+Fixes of `./files` and `./clouddrive` from a full browser check of a host; additive.
+
+- The path bar shows why a location was not found: the field stays focused (read-only, not disabled) while the
+  location resolves, so the blur no longer closed the bar before the error arrived.
+- The folder bar (crumbs, path bar, quota) sticks below the host's fixed top bar (`top-[var(--nav-h)]`) instead of
+  under it.
+- A restore shows the restored content at once: `FileView.contentVersion` (new, optional; the drive sets the current
+  version's number) is part of the preview's key, so another current version fetches the preview again.
+- A file in the trash shows a note instead of a preview and asks for no preview URL (the drive releases trashed content
+  as a download only).
+- A closed drawer holds no queries of its file (it keeps drawing the last file while it slides out), so a file trashed
+  or purged afterwards is not fetched again.
+- An explicit empty URL parameter wins over the saved list state (`useUrlListState`): `?tab=&folder=` opens the files,
+  not the trash or the last folder. The saved state comes back only when the URL carries none of the list's keys.
+- The drawer takes a file's trash state from the file (`deletedAt`) when the adapter reports it: a live file opened
+  with `tab=trash` is shown live.
+- A jump to another space (`drive/<id>`, a mount path) asks only that space's folders: the drive adapter never uses the
+  previous space's root or folder tree while the new one loads.
+- File and folder cards carry `data-row-key` (no `EntityListGrid` warning).
+- Version notes the system wrote are drawn in the reader's language: `FileVersionView.systemNote` (new:
+  `RESTORED_FROM_VERSION`, `MOVED_FROM_AREA`, `COPIED_FROM_PATH`), mapped from the drive's `commentCode` /
+  `commentParameters` (ddd-clouddrive ≥ 0.1.0-rc.19); no internal ids, the source area and path only when the server
+  sends them. Free text stays `comment`.
+
 ## 0.5.1
 
 Fixes of `./sandbox` from the first host integration; additive elsewhere.
