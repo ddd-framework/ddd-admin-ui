@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import { resolveFileManagerFeatures } from '../files/fileManagerFeatures.ts';
 import { buildCloudDriveFileActions, type CloudDriveFileActionTriggers, type DriveNodeFact } from './driveFileActions.ts';
+import { newestVersionStateOf } from '../files/fileView.ts';
 import {
   DRIVE_LIST_MAX_LIMIT,
   driveAreaRefOf,
@@ -15,6 +16,7 @@ import {
   driveScanStatusOf,
   driveVersionViewOf,
   emptyDriveTrashFully,
+  groupDriveSpaces,
   nextDriveListLimit,
 } from './driveFileMapping.ts';
 import type { DriveNodeBulkResult, DriveNodeListItem, DriveSpaceListItem } from './types.ts';
@@ -79,7 +81,7 @@ describe('drive payloads as file manager views', () => {
       ROOT
     );
     assert.deepEqual(folders.map(folder => [folder.id, folder.parentId]), [[12, null], [13, 12]]);
-    assert.equal(folders[0]?.fileCount, 4);
+    assert.equal(folders[0]?.entryCount, 4, 'the drive counts entries (files and folders), not files');
   });
 
   it('keeps only files of a list answer', () => {
@@ -114,6 +116,29 @@ describe('drive payloads as file manager views', () => {
     assert.equal(searchArg.orderBy, 'size');
     assert.equal(searchArg.limit, 200);
     assert.equal(driveChildrenArgOf({ areaKey: 3, family: 'AUDIO' }, ROOT, 100).family, undefined, 'a family the drive does not know is no filter');
+  });
+
+  it('names the state of a newest version that is not current', () => {
+    assert.equal(newestVersionStateOf(driveFileViewOf(file({ hasPendingVersion: true }), ROOT)), 'checking');
+    assert.equal(newestVersionStateOf(driveFileViewOf(file({ hasPendingVersion: true, latestVersionScanStatus: 'INFECTED' }), ROOT)), 'blocked');
+    assert.equal(newestVersionStateOf(driveFileViewOf(file({ hasPendingVersion: true, latestVersionScanStatus: 'FAILED' }), ROOT)), 'failed');
+    assert.equal(newestVersionStateOf(driveFileViewOf(file(), ROOT)), null);
+  });
+
+  it('splits the usage only when the server sends the parts', () => {
+    assert.equal(driveAreaViewOf(space).usageParts, null);
+    const parts = driveAreaViewOf({ ...space, quota: { ...space.quota, currentVersionBytes: 60, olderVersionBytes: 20, trashedBytes: 15, pendingBytes: 5 } }).usageParts;
+    assert.deepEqual(parts?.map(part => part.bytes), [60, 20, 15, 5]);
+  });
+
+  it('groups the spaces in the server order', () => {
+    const groups = groupDriveSpaces([
+      { key: 1, name: 'B', groupLabel: 'Teams' },
+      { key: 2, name: 'A', groupLabel: 'Teams' },
+      { key: 3, name: 'Z', groupLabel: null },
+      { key: 4, name: 'C', groupLabel: 'Archive' },
+    ]);
+    assert.deepEqual(groups.map(group => [group.label, group.areas.map(area => area.key)]), [['Teams', [1, 2]], ['', [3]], ['Archive', [4]]]);
   });
 
   it('grows a list page by page up to the largest answer', () => {

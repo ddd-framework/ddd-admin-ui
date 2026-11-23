@@ -1169,7 +1169,6 @@
   "A folder cannot move into itself.": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash).",
   "A link labels the file; it does not share it.": "File manager, dialog to edit the links of files (checkbox list of link targets of the application).",
   "A new current version is made from it; the newer versions stay in the history.": "File manager, file details drawer (preview, name and description, facts, links, versions, activity).",
-  "A new version is being checked": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash).",
   "A working copy holds changes that are not saved yet.": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash).",
   "A working copy holds changes to this file that are not saved yet. The file shows the last saved state.": "File manager, file details drawer (preview, name and description, facts, links, versions, activity).",
   "Actions for the folder %name%": "File manager, folder tree in the side panel. %name% is a file or folder name.",
@@ -1305,7 +1304,6 @@
   "Name__file-order": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: file order.",
   "Name__folder-name": "File manager, dialog to create or rename a folder. Context: folder name.",
   "New subfolder": "File manager, folder tree in the side panel.",
-  "New version": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash).",
   "New version being checked": "File manager, file card in the grid.",
   "New version uploaded": "File manager, file details drawer (preview, name and description, facts, links, versions, activity).",
   "New version uploaded — it becomes current once the malware check is done": "File manager, file details drawer (preview, name and description, facts, links, versions, activity).",
@@ -1482,5 +1480,14 @@
   "The spaces could not be loaded.": "Drive screen: error message when the list of storage spaces failed to load.",
   "There is no space you may read.": "Drive screen: empty state: the signed-in user may read no storage space.",
   "This drive needs mgamadeus/ddd-clouddrive 0.1.0-rc.10 or newer on the server.": "Drive screen: shown to developers when the server's drive module is too old for this screen; keep the package name and version as they are.",
-  "Viewed__file-event": "File manager details drawer, history: event type: someone opened the file's preview."
+  "Viewed__file-event": "File manager details drawer, history: event type: someone opened the file's preview.",
+  "Current versions": "Drive screen, tooltip of the storage pill: part of the used storage taken by the current version of each file.",
+  "Older versions": "Drive screen, tooltip of the storage pill: part of the used storage taken by older, kept versions of files.",
+  "Trash__drive-usage": "Drive screen, tooltip of the storage pill: part of the used storage taken by files in the trash.",
+  "Uploads being checked": "Drive screen, tooltip of the storage pill: part of the used storage taken by uploads still in the malware check.",
+  "New version blocked": "File manager (the admin's file area): badge on a file: its newest version was refused by the malware check; the previous version stays current.",
+  "New version: check failed": "File manager (the admin's file area): badge on a file: the malware check of its newest version could not run; the previous version stays current.",
+  "The malware check found malware in the new version; it was refused and the current version stays.": "File manager (the admin's file area): details drawer: explanation under the badge New version blocked.",
+  "The malware check of the new version could not finish; the current version stays available.": "File manager (the admin's file area): details drawer: explanation under the badge New version: check failed.",
+  "{count, plural, one {# entry} other {# entries}}": "File manager (the admin's file area): folder card and folder row: how many files and subfolders the folder contains directly (ICU plural)."
 }

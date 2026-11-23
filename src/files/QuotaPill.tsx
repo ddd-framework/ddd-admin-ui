@@ -5,7 +5,7 @@ import { HardDrive } from 'lucide-react';
 import { useTranslate } from '../i18n/useTranslate.ts';
 import { cn } from '../primitives/cn.ts';
 import { Skeleton } from '../primitives/skeleton.tsx';
-import { formatBytes } from './fileView.ts';
+import { type FileAreaUsagePart, formatBytes } from './fileView.ts';
 
 export interface QuotaPillProps {
   usedBytes: number | null | undefined;
@@ -14,6 +14,8 @@ export interface QuotaPillProps {
   isLoading?: boolean;
   /** What the usage counts (tooltip); default: every kept version, uploads being checked and the trash. */
   note?: string | null;
+  /** What the usage is made of; shown in the tooltip, one line per part, when given. */
+  parts?: readonly FileAreaUsagePart[] | null;
   className?: string;
 }
 
@@ -21,11 +23,12 @@ export interface QuotaPillProps {
 const WARNING_RATIO = 0.9;
 
 /** The area's usage (`1.2 GB of 5 GB`): a pill with a thin meter. */
-export const QuotaPill = ({ usedBytes, quotaBytes, isLoading = false, note, className }: QuotaPillProps) => {
+export const QuotaPill = ({ usedBytes, quotaBytes, isLoading = false, note, parts, className }: QuotaPillProps) => {
   const { t } = useTranslate();
   if (isLoading) return <Skeleton className={cn('h-8 w-44 rounded-full', className)} />;
   if (usedBytes === null || usedBytes === undefined) return null;
-  const title = note ? t(note) : t('Counts every kept version, uploads being checked and the trash.');
+  const noteText = note ? t(note) : t('Counts every kept version, uploads being checked and the trash.');
+  const title = parts && parts.length > 0 ? [noteText, ...parts.map(part => `${part.label}: ${formatBytes(part.bytes)}`)].join('\n') : noteText;
   if (typeof quotaBytes !== 'number') {
     return (
       <div className={cn('surface-glass inline-flex h-8 items-center gap-2 rounded-full px-3.5 text-[13px] whitespace-nowrap', className)} title={title}>

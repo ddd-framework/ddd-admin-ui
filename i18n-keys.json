@@ -1,6 +1,6 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
@@ -668,14 +668,6 @@
         "files/FileDrawer.tsx"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
-    },
-    {
-      "key": "A new version is being checked",
-      "text": "A new version is being checked",
-      "files": [
-        "files/FileManager.tsx"
-      ],
-      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
     },
     {
       "key": "A restart was requested; a live process has not stopped for it yet",
@@ -2274,6 +2266,14 @@
         "workers/transport.tsx"
       ],
       "hint": "Workers admin, page of one transport (one queue of background jobs): column header: the job a process handles now."
+    },
+    {
+      "key": "Current versions",
+      "text": "Current versions",
+      "files": [
+        "clouddrive/driveFileMapping.ts"
+      ],
+      "hint": "Drive screen, tooltip of the storage pill: part of the used storage taken by the current version of each file."
     },
     {
       "key": "Current__file-version",
@@ -5515,21 +5515,20 @@
       "hint": "App translations admin, drawer of one translation key: accessible name of the text field for the new translation."
     },
     {
-      "key": "New version",
-      "text": "New version",
-      "files": [
-        "files/FileManager.tsx"
-      ],
-      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
-    },
-    {
       "key": "New version being checked",
       "text": "New version being checked",
       "files": [
-        "files/FileCard.tsx",
-        "files/FileDrawer.tsx"
+        "files/fileStatus.ts"
       ],
       "hint": "File manager, file card in the grid."
+    },
+    {
+      "key": "New version blocked",
+      "text": "New version blocked",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager (the admin's file area): badge on a file: its newest version was refused by the malware check; the previous version stays current."
     },
     {
       "key": "New version uploaded",
@@ -5546,6 +5545,14 @@
         "files/FileDrawer.tsx"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "New version: check failed",
+      "text": "New version: check failed",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager (the admin's file area): badge on a file: the malware check of its newest version could not run; the previous version stays current."
     },
     {
       "key": "New__issue-flag",
@@ -6389,6 +6396,14 @@
         "files/FileDrawer.tsx"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
+    },
+    {
+      "key": "Older versions",
+      "text": "Older versions",
+      "files": [
+        "clouddrive/driveFileMapping.ts"
+      ],
+      "hint": "Drive screen, tooltip of the storage pill: part of the used storage taken by older, kept versions of files."
     },
     {
       "key": "Older versions could not be deleted",
@@ -8720,7 +8735,7 @@
       "key": "The current version stays available until the new one has passed the malware check.",
       "text": "The current version stays available until the new one has passed the malware check.",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileStatus.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
@@ -9044,6 +9059,14 @@
       "hint": "File manager, malware check status of a file (badge and its tooltip). Context: file scan status."
     },
     {
+      "key": "The malware check found malware in the new version; it was refused and the current version stays.",
+      "text": "The malware check found malware in the new version; it was refused and the current version stays.",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager (the admin's file area): details drawer: explanation under the badge New version blocked."
+    },
+    {
       "key": "The malware check found malware in this upload. It was refused; nobody can download it.",
       "text": "The malware check found malware in this upload. It was refused; nobody can download it.",
       "files": [
@@ -9059,6 +9082,14 @@
         "files/fileStatus.ts"
       ],
       "hint": "File manager, malware check status of a file (badge and its tooltip). Context: file scan status."
+    },
+    {
+      "key": "The malware check of the new version could not finish; the current version stays available.",
+      "text": "The malware check of the new version could not finish; the current version stays available.",
+      "files": [
+        "files/fileStatus.ts"
+      ],
+      "hint": "File manager (the admin's file area): details drawer: explanation under the badge New version: check failed."
     },
     {
       "key": "The malware check refused this upload; nobody can download it.__file-scan-status",
@@ -10199,6 +10230,15 @@
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
     },
     {
+      "key": "Trash__drive-usage",
+      "text": "Trash",
+      "context": "drive-usage",
+      "files": [
+        "clouddrive/driveFileMapping.ts"
+      ],
+      "hint": "Drive screen, tooltip of the storage pill: part of the used storage taken by files in the trash."
+    },
+    {
       "key": "Trash__files-label",
       "text": "Trash",
       "context": "files-label",
@@ -10522,6 +10562,14 @@
         "files/uploadPrecheck.ts"
       ],
       "hint": "File manager, check before an upload starts (shown in the upload tray as the reason a file was refused)."
+    },
+    {
+      "key": "Uploads being checked",
+      "text": "Uploads being checked",
+      "files": [
+        "clouddrive/driveFileMapping.ts"
+      ],
+      "hint": "Drive screen, tooltip of the storage pill: part of the used storage taken by uploads still in the malware check."
     },
     {
       "key": "Use original",
@@ -11796,6 +11844,14 @@
       "hint": "Why the \"Apply all\" button of the database schema comparison is disabled: the large-table safety guard blocks some table changes, so they cannot be applied from this screen; the remaining changes can be applied individually or by selecting them. # is the number of blocked changes."
     },
     {
+      "key": "{count, plural, one {# entry} other {# entries}}",
+      "text": "{count, plural, one {# entry} other {# entries}}",
+      "files": [
+        "files/FolderCard.tsx"
+      ],
+      "hint": "File manager (the admin's file area): folder card and folder row: how many files and subfolders the folder contains directly (ICU plural)."
+    },
+    {
       "key": "{count, plural, one {# event} other {# events}}",
       "text": "{count, plural, one {# event} other {# events}}",
       "files": [
@@ -11863,6 +11919,7 @@
       "key": "{count, plural, one {# file} other {# files}}",
       "text": "{count, plural, one {# file} other {# files}}",
       "files": [
+        "clouddrive/CloudDriveSpacePicker.tsx",
         "files/FileManager.tsx",
         "files/FolderCard.tsx",
         "files/MoveAcrossAreasDialog.tsx"

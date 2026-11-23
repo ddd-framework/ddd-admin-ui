@@ -153,7 +153,7 @@ export const CloudDriveScreen = ({
       drawerUrlAdapter={drawerUrl}
       loadPdfJs={loadPdfJs}
       defaultView={defaultView}
-      renderAreaPicker={props => <CloudDriveSpacePicker {...props} />}
+      renderAreaPicker={props => <CloudDriveSpacePicker {...props} spaces={spaceItems} />}
       renderAreaMaintenance={renderAreaMaintenance}
       renderAreaSettings={renderAreaSettings}
       formatEventType={eventLabel}

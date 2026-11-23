@@ -13,7 +13,11 @@ const QUOTA = {
 const SPACE_ITEMS: DriveSpaceListItem[] = [
   {
     id: 1, title: 'Summer 2026', displayName: 'Summer 2026', groupLabel: 'Projects', spaceKind: 'project', audience: 'INTERNAL', rootNodeId: 1,
-    quota: { ...QUOTA, usedBytes: 4_400_000, quotaBytes: 5_368_709_120, fileCount: 143, folderCount: 12 }, canWrite: true, canManage: true,
+    quota: {
+      ...QUOTA, usedBytes: 4_400_000, quotaBytes: 5_368_709_120, fileCount: 143, folderCount: 12,
+      currentVersionBytes: 3_100_000, olderVersionBytes: 900_000, trashedBytes: 300_000, pendingBytes: 100_000,
+    },
+    canWrite: true, canManage: true,
   },
   {
     id: 7, title: 'Library', displayName: 'Library', groupLabel: null, spaceKind: 'library', audience: 'INTERNAL', rootNodeId: 70,
@@ -40,7 +44,7 @@ const FILES: DriveNodeListItem[] = [
   {
     id: 5, driveSpaceId: 1, parentNodeId: 1, nodeType: 'FILE', name: 'Assignments.xlsx', extension: 'xlsx', family: 'SPREADSHEET',
     contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', sizeBytes: 34816, versionNumber: 2, scanStatus: 'CLEAN',
-    hasPendingVersion: true, createdByName: 'Staff', createdAt: '2026-11-21 10:00:00', updatedAt: '2026-11-23 01:12:00',
+    hasPendingVersion: true, latestVersionScanStatus: 'FAILED', createdByName: 'Staff', createdAt: '2026-11-21 10:00:00', updatedAt: '2026-11-23 01:12:00',
   },
   {
     id: 8, driveSpaceId: 1, parentNodeId: 2, nodeType: 'FILE', name: 'Quarter report.pdf', extension: 'pdf', family: 'PDF', contentType: 'application/pdf',

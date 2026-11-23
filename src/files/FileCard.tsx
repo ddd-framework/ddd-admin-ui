@@ -1,6 +1,6 @@
 'use client';
 
-import { FilePen, ShieldEllipsis } from 'lucide-react';
+import { FilePen } from 'lucide-react';
 import { useState } from 'react';
 
 import { useTranslate } from '../i18n/useTranslate.ts';
@@ -15,8 +15,8 @@ import { FileFamilyIcon } from './FileFamilyIcon.tsx';
 import { type FileItemHandlers, FileItemActions } from './FileItemActions.tsx';
 import { FileLinkChips } from './FileLinkChips.tsx';
 import type { FileLinkKind } from './fileManagerAdapter.ts';
-import { FILE_SCAN_STATUS } from './fileStatus.ts';
-import { FILE_FAMILY_LABELS, type FileView, formatBytes, isPageThumbnail } from './fileView.ts';
+import { FILE_NEWEST_VERSION_STATE, FILE_SCAN_STATUS } from './fileStatus.ts';
+import { FILE_FAMILY_LABELS, type FileView, formatBytes, isPageThumbnail, newestVersionStateOf } from './fileView.ts';
 
 export interface FileCardSelection {
   selected: boolean;
@@ -86,6 +86,7 @@ export const FileCard = ({
   const activation = useRowActivation(onActivate);
   const drag = useFileDraggable(dragItem ?? null);
   const showStatus = file.scanStatus !== 'CLEAN' && file.scanStatus !== 'SKIPPED';
+  const newestVersionState = showStatus ? null : newestVersionStateOf(file);
   const dateLine = inTrash
     ? file.deletedBy
       ? t('Deleted %date% by %user%', { replacements: { date: formatDate(file.deletedAt), user: file.deletedBy } })
@@ -121,11 +122,11 @@ export const FileCard = ({
             />
           </div>
         )}
-        {(showStatus || file.hasPendingVersion || (workingCopyLabel && file.hasWorkingCopyChanges)) && (
+        {(showStatus || newestVersionState !== null || (workingCopyLabel && file.hasWorkingCopyChanges)) && (
           <div className="absolute top-2.5 right-2.5 flex flex-col items-end gap-1">
             {showStatus && <StatusBadge value={file.scanStatus} map={FILE_SCAN_STATUS} className="shadow-sm" />}
-            {!showStatus && file.hasPendingVersion && (
-              <StatusBadge tone="warning" label={t('New version being checked')} icon={ShieldEllipsis} className="shadow-sm" />
+            {!showStatus && newestVersionState !== null && (
+              <StatusBadge value={newestVersionState} map={FILE_NEWEST_VERSION_STATE} className="shadow-sm" />
             )}
             {workingCopyLabel && file.hasWorkingCopyChanges && <StatusBadge tone="info" label={workingCopyLabel} icon={FilePen} className="shadow-sm" />}
           </div>

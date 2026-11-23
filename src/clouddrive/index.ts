@@ -7,7 +7,7 @@ export type { CloudDriveApi, CreateCloudDriveApiOptions, StaticCloudDriveData } 
 export type * from './types.ts';
 export { CloudDriveScreen } from './CloudDriveScreen.tsx';
 export type { CloudDriveFolderStep, CloudDriveScreenProps } from './CloudDriveScreen.tsx';
-export { CloudDriveSpacePicker, groupDriveSpaces } from './CloudDriveSpacePicker.tsx';
+export { CloudDriveSpacePicker } from './CloudDriveSpacePicker.tsx';
 export type { CloudDriveSpacePickerProps } from './CloudDriveSpacePicker.tsx';
 export { CLOUD_DRIVE_FILE_CAPABILITIES, createCloudDriveFileAdapter, DRIVE_ACTIVITY_LIMIT, useCloudDriveFileAdapter } from './useCloudDriveFileAdapter.ts';
 export type { UseCloudDriveFileAdapterOptions } from './useCloudDriveFileAdapter.ts';
@@ -27,9 +27,12 @@ export {
   driveFolderViewsOf,
   driveScanStatusOf,
   driveVersionViewOf,
+  DRIVE_USAGE_PART_LABELS,
+  driveUsagePartsOf,
   emptyDriveTrashFully,
+  groupDriveSpaces,
   nextDriveListLimit,
 } from './driveFileMapping.ts';
-export type { DriveEmptyTrashOutcome } from './driveFileMapping.ts';
+export type { DriveEmptyTrashOutcome, DriveSpaceGroup } from './driveFileMapping.ts';
 export { formatDriveSize, parseDriveTime, sendDriveUpload } from './upload.ts';
 export type { DriveUploadProgress } from './upload.ts';

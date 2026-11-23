@@ -218,6 +218,8 @@ export interface DriveNodeListItem {
   tags?: string[];
   scanStatus?: DriveScanStatus | null;
   hasPendingVersion?: boolean;
+  /** The check state of the newest version while it is not current (a later rc; read when present). */
+  latestVersionScanStatus?: DriveScanStatus | null;
   hasWorkingCopyChanges?: boolean;
   isContentUntrusted?: boolean;
   isSystem?: boolean;
@@ -243,6 +245,11 @@ export interface DriveSpaceQuota {
   trashRetentionDays: number;
   keptVersionCount: number;
   versionRetentionDays: number;
+  /** The usage split (ddd-clouddrive ≥ rc.12; absent before): current versions, older versions, trash, uploads being checked. */
+  currentVersionBytes?: number | null;
+  olderVersionBytes?: number | null;
+  trashedBytes?: number | null;
+  pendingBytes?: number | null;
 }
 
 /** One space as the picker and the file manager read it (`DriveSpaceListItem`). */

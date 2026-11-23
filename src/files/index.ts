@@ -60,7 +60,7 @@ export type { PdfDocumentLike, PdfJsLike, PdfJsLoader, PdfPageLike, PdfPreviewPr
 export { TextPreview, TEXT_PREVIEW_BYTES } from './TextPreview.tsx';
 export type { TextPreviewProps } from './TextPreview.tsx';
 export { detectCsvDelimiter, parseCsv } from './csvPreview.ts';
-export { FILE_SCAN_STATUS, SCAN_STATUS_EXPLANATION } from './fileStatus.ts';
+export { FILE_NEWEST_VERSION_STATE, FILE_SCAN_STATUS, SCAN_STATUS_EXPLANATION } from './fileStatus.ts';
 export {
   extensionOf,
   FILE_FAMILIES,
@@ -78,12 +78,14 @@ export {
   isFileReleased,
   isPageThumbnail,
   MAX_FOLDER_DEPTH,
+  newestVersionStateOf,
   sameFileId,
 } from './fileView.ts';
 export type {
   AllowedFileTypeView,
   FileAreaKey,
   FileAreaRefView,
+  FileAreaUsagePart,
   FileAreaView,
   FileDetailView,
   FileDownloadView,
@@ -94,6 +96,7 @@ export type {
   FileLinkView,
   FileMovePreviewView,
   FileMoveUnlinkView,
+  FileNewestVersionState,
   FilePreviewKind,
   FileScanStatus,
   FileVersionView,
@@ -102,7 +105,7 @@ export type {
   LinkTargetsView,
   LinkTargetView,
 } from './fileView.ts';
-export { FolderCard, fileCountLabel } from './FolderCard.tsx';
+export { FolderCard, fileCountLabel, folderContentLabel } from './FolderCard.tsx';
 export type { FolderCardProps } from './FolderCard.tsx';
 export { FolderNameDialog, MAX_FOLDER_NAME_LENGTH } from './FolderNameDialog.tsx';
 export type { FolderNameDialogProps } from './FolderNameDialog.tsx';

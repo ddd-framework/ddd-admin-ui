@@ -3,6 +3,20 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.4.1
+
+Additive.
+
+- `./clouddrive`: the space picker keeps the server's order (group, then name) and shows a second line per space (file
+  count · used size; `CloudDriveSpacePicker spaces`); `groupDriveSpaces` moved to the pure mappers. The storage pill's
+  tooltip lists the usage split when the server sends it (`quota.currentVersionBytes`, `olderVersionBytes`,
+  `trashedBytes`, `pendingBytes`; `driveUsagePartsOf`). A file whose newest version is not current shows its state
+  from `latestVersionScanStatus` when the item carries it (being checked, check failed, blocked). A folder's count is
+  its entries (`1 entry` / `5 entries`): the drive counts files and folders.
+- `./files`: `FileView.newestVersionStatus` + `newestVersionStateOf` + `FILE_NEWEST_VERSION_STATE` (table, card and
+  drawer name a failed or blocked new version instead of "being checked"); `FolderView.entryCount` +
+  `folderContentLabel`; `FileAreaView.usageParts` and `QuotaPill parts` (tooltip lines).
+
 ## 0.4.0
 
 Breaking for `./clouddrive`: the screen needs mgamadeus/ddd-clouddrive ≥ 0.1.0-rc.10.

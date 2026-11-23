@@ -11,7 +11,6 @@ import {
   FolderTree as FolderTreeIcon,
   Link2,
   Settings2,
-  ShieldEllipsis,
   Trash2,
   Upload,
 } from 'lucide-react';
@@ -69,7 +68,7 @@ import type {
   LinkTargetsQuery,
 } from './fileManagerAdapter.ts';
 import { resolveFileManagerFeatures } from './fileManagerFeatures.ts';
-import { FILE_SCAN_STATUS } from './fileStatus.ts';
+import { FILE_NEWEST_VERSION_STATE, FILE_SCAN_STATUS } from './fileStatus.ts';
 import {
   FILE_FAMILIES,
   FILE_FAMILY_LABELS,
@@ -87,13 +86,14 @@ import {
   folderSubtreeIds,
   formatBytes,
   isFileReleased,
+  newestVersionStateOf,
   isPageThumbnail,
   type LinkTargetsView,
   type LinkTargetView,
   MAX_FOLDER_DEPTH,
   sameFileId,
 } from './fileView.ts';
-import { FolderCard, fileCountLabel } from './FolderCard.tsx';
+import { FolderCard, folderContentLabel } from './FolderCard.tsx';
 import { FolderNameDialog } from './FolderNameDialog.tsx';
 import { type FileLocation, FolderActionsMenu, FolderTree, type FolderTreeActions } from './FolderTree.tsx';
 import { LinkTargetsDialog } from './LinkTargetsDialog.tsx';
@@ -844,8 +844,8 @@ export const FileManager = ({
         ) : (
           <span className="flex flex-wrap gap-1">
             {showStatusOf(entry.file) && <StatusBadge value={entry.file.scanStatus} map={FILE_SCAN_STATUS} />}
-            {entry.file.hasPendingVersion && isFileReleased(entry.file.scanStatus) && (
-              <StatusBadge tone="warning" label={t('New version')} icon={ShieldEllipsis} title={t('A new version is being checked')} />
+            {isFileReleased(entry.file.scanStatus) && newestVersionStateOf(entry.file) !== null && (
+              <StatusBadge value={newestVersionStateOf(entry.file) ?? 'checking'} map={FILE_NEWEST_VERSION_STATE} />
             )}
             {workingCopyLabel && entry.file.hasWorkingCopyChanges && (
               <StatusBadge
@@ -863,7 +863,7 @@ export const FileManager = ({
       header: t('Size', { context: 'file-size' }),
       className: 'text-right',
       cell: entry => (
-        <span className="whitespace-nowrap tabular-nums">{entry.kind === 'folder' ? fileCountLabel(entry.folder.fileCount, t) : formatBytes(entry.file.sizeBytes)}</span>
+        <span className="whitespace-nowrap tabular-nums">{entry.kind === 'folder' ? folderContentLabel(entry.folder, t) : formatBytes(entry.file.sizeBytes)}</span>
       ),
     },
     {
@@ -1231,7 +1231,7 @@ export const FileManager = ({
           }}
           dropAreaKey={dragEnabled ? areaKey : undefined}
         />
-        <QuotaPill usedBytes={areaData?.usedBytes} quotaBytes={areaData?.quotaBytes} isLoading={areaQuery.isLoading} note={areaData?.quotaNote} />
+        <QuotaPill usedBytes={areaData?.usedBytes} quotaBytes={areaData?.quotaBytes} isLoading={areaQuery.isLoading} note={areaData?.quotaNote} parts={areaData?.usageParts} />
       </div>
     </div>
   );

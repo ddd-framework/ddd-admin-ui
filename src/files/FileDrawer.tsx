@@ -36,7 +36,7 @@ import type { FileLinkKind, FileManagerActions, FileManagerAdapter } from './fil
 import type { FileManagerFeatures } from './fileManagerFeatures.ts';
 import type { PdfJsLoader } from './PdfPreview.tsx';
 import { FilePreview } from './FilePreview.tsx';
-import { FILE_SCAN_STATUS } from './fileStatus.ts';
+import { FILE_NEWEST_VERSION_STATE, FILE_SCAN_STATUS } from './fileStatus.ts';
 import {
   extensionOf,
   FILE_FAMILY_LABELS,
@@ -49,6 +49,7 @@ import {
   fileNameStem,
   formatBytes,
   isFileReleased,
+  newestVersionStateOf,
   sameFileId,
 } from './fileView.ts';
 import { isUploadAborted, uploadErrorMessage } from './uploadWithProgress.ts';
@@ -584,11 +585,11 @@ export const FileDrawer = ({
               </AlertDescription>
             </Alert>
           )}
-          {file.hasPendingVersion && isFileReleased(file.scanStatus) && (
-            <Alert>
+          {isFileReleased(file.scanStatus) && newestVersionStateOf(file) !== null && (
+            <Alert variant={newestVersionStateOf(file) === 'checking' ? 'default' : 'destructive'}>
               <ShieldEllipsis />
-              <AlertTitle>{t('New version being checked')}</AlertTitle>
-              <AlertDescription>{t('The current version stays available until the new one has passed the malware check.')}</AlertDescription>
+              <AlertTitle>{t(FILE_NEWEST_VERSION_STATE[newestVersionStateOf(file) ?? 'checking'].label)}</AlertTitle>
+              <AlertDescription>{t(FILE_NEWEST_VERSION_STATE[newestVersionStateOf(file) ?? 'checking'].description ?? '')}</AlertDescription>
             </Alert>
           )}
           {workingCopyLabel && file.hasWorkingCopyChanges && (

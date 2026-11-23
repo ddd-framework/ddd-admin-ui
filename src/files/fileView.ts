@@ -160,6 +160,11 @@ export interface FileView {
   scanStatus: FileScanStatus;
   /** A newer version is being checked while the current one stays available. */
   hasPendingVersion?: boolean;
+  /**
+   * The check state of the newest version while it is not the current one (`PENDING` while checked, `FAILED` when the
+   * check could not run, `INFECTED` when it was blocked); absent = unknown (`hasPendingVersion` alone).
+   */
+  newestVersionStatus?: FileScanStatus | null;
   /** Changes of a working copy are not committed yet (capability `workingCopy`). */
   hasWorkingCopyChanges?: boolean;
   /** Short-lived thumbnail URL of a released image (or a page rendition); absent otherwise. */
@@ -223,6 +228,8 @@ export interface FolderView {
   name: string;
   /** Files directly in this folder (not trashed), when the backend sends it. */
   fileCount?: number | null;
+  /** Files and folders directly inside (a backend that counts entries, not files); used when `fileCount` is absent. */
+  entryCount?: number | null;
 }
 
 /** An area the manager can show (the tree's roots when there is more than one) or move to. */
@@ -272,7 +279,34 @@ export interface FileAreaView {
   quotaNote?: string | null;
   fileCount?: number | null;
   folderCount?: number | null;
+  /** What the usage is made of (the quota pill's tooltip): e.g. current versions, older versions, trash, uploads. */
+  usageParts?: readonly FileAreaUsagePart[] | null;
 }
+
+/** One part of an area's usage. */
+export interface FileAreaUsagePart {
+  /** Shown as given (translate it before). */
+  label: string;
+  bytes: number;
+}
+
+/** What the newest, not yet current version of a file is: being checked, check failed, blocked; `null` = nothing to say. */
+export type FileNewestVersionState = 'checking' | 'failed' | 'blocked';
+
+/** The state of a file's newest version that is not current yet (`hasPendingVersion` / `newestVersionStatus`). */
+export const newestVersionStateOf = (file: Pick<FileView, 'hasPendingVersion' | 'newestVersionStatus'>): FileNewestVersionState | null => {
+  switch (file.newestVersionStatus) {
+    case 'INFECTED':
+      return 'blocked';
+    case 'FAILED':
+      return 'failed';
+    case 'PENDING':
+    case 'UPLOADING':
+      return 'checking';
+    default:
+      return file.hasPendingVersion ? 'checking' : null;
+  }
+};
 
 /** A download (or preview) link of the release gate. */
 export interface FileDownloadView {

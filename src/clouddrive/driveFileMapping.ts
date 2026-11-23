@@ -1,9 +1,10 @@
 // The drive's list payloads (mgamadeus/ddd-clouddrive ≥ 0.1.0-rc.10) as the view models of `./files`. Pure: no React,
 // no request; the adapter hook (`useCloudDriveFileAdapter`) and the tests use them.
-import { m } from '../i18n/store.ts';
+import { m, translateText } from '../i18n/store.ts';
 import type { FileListOrder, FileListQuery } from '../files/fileManagerAdapter.ts';
 import {
   type FileAreaRefView,
+  type FileAreaUsagePart,
   type FileAreaView,
   type FileEventView,
   type FileFamily,
@@ -90,6 +91,7 @@ export const driveFileViewOf = (item: DriveNodeListItem, rootNodeId: number | nu
   description: item.description ?? null,
   scanStatus: item.scanStatus ? driveScanStatusOf(item.scanStatus) : 'UPLOADING',
   hasPendingVersion: item.hasPendingVersion === true,
+  newestVersionStatus: item.hasPendingVersion && item.latestVersionScanStatus ? driveScanStatusOf(item.latestVersionScanStatus) : null,
   hasWorkingCopyChanges: item.hasWorkingCopyChanges === true,
   thumbnailUrl: item.thumbnailUrl ?? null,
   uploadedBy: item.createdByName ?? null,
@@ -109,7 +111,7 @@ export const driveFolderViewsOf = (items: readonly DriveNodeListItem[], rootNode
       areaKey: item.driveSpaceId,
       parentId: driveFolderIdOf(item.parentNodeId, rootNodeId),
       name: item.name,
-      fileCount: item.childCount ?? null,
+      entryCount: item.childCount ?? null,
     }));
 
 /** A version of a file as the drawer lists it. */
@@ -134,6 +136,24 @@ export const driveEventViewOf = (item: DriveChangeEventListItem): FileEventView 
   detail: item.previousPath && item.path && item.previousPath !== item.path ? `${item.previousPath} → ${item.path}` : null,
 });
 
+/** The labels of the usage split of a space (the quota pill's tooltip). */
+export const DRIVE_USAGE_PART_LABELS = {
+  currentVersionBytes: m('Current versions'),
+  olderVersionBytes: m('Older versions'),
+  trashedBytes: m('Trash', { context: 'drive-usage' }),
+  pendingBytes: m('Uploads being checked'),
+} as const;
+
+/** The usage split of a space when the server sends it (ddd-clouddrive ≥ rc.12), translated; `null` otherwise. */
+export const driveUsagePartsOf = (quota: DriveSpaceListItem['quota']): FileAreaUsagePart[] | null => {
+  const parts: FileAreaUsagePart[] = [];
+  for (const key of Object.keys(DRIVE_USAGE_PART_LABELS) as (keyof typeof DRIVE_USAGE_PART_LABELS)[]) {
+    const bytes = quota[key];
+    if (typeof bytes === 'number') parts.push({ label: translateText(DRIVE_USAGE_PART_LABELS[key], key === 'trashedBytes' ? { context: 'drive-usage' } : {}), bytes });
+  }
+  return parts.length > 0 ? parts : null;
+};
+
 /** A space as the file manager's area facts. */
 export const driveAreaViewOf = (item: DriveSpaceListItem): FileAreaView => ({
   areaKey: item.id,
@@ -144,6 +164,7 @@ export const driveAreaViewOf = (item: DriveSpaceListItem): FileAreaView => ({
   trashRetentionDays: item.quota.trashRetentionDays > 0 ? item.quota.trashRetentionDays : null,
   fileCount: item.quota.fileCount,
   folderCount: item.quota.folderCount,
+  usageParts: driveUsagePartsOf(item.quota),
 });
 
 /** A space as an entry of the area picker and the manager's `areas`. */
@@ -211,4 +232,23 @@ export const emptyDriveTrashFully = async (
     outcome.hasMore = result.hasMore;
     if (!result.hasMore || result.processedCount === 0 || outcome.calls >= maxCalls) return outcome;
   }
+};
+
+/** One group of the space picker. */
+export interface DriveSpaceGroup {
+  /** `''` = spaces without a group. */
+  label: string;
+  areas: FileAreaRefView[];
+}
+
+/** Groups the spaces by `groupLabel` in the server's order (it sorts by group, then name): nothing is re-sorted. */
+export const groupDriveSpaces = (areas: readonly FileAreaRefView[]): DriveSpaceGroup[] => {
+  const groups = new Map<string, FileAreaRefView[]>();
+  for (const area of areas) {
+    const label = area.groupLabel ?? '';
+    const group = groups.get(label);
+    if (group) group.push(area);
+    else groups.set(label, [area]);
+  }
+  return [...groups.entries()].map(([label, groupAreas]) => ({ label, areas: groupAreas }));
 };

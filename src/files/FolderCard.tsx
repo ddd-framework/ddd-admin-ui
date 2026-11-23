@@ -27,6 +27,12 @@ export interface FolderCardProps {
 export const fileCountLabel = (count: number | null | undefined, t: TranslateFn): string =>
   typeof count === 'number' ? t('{count, plural, one {# file} other {# files}}', { count }) : t('Folder', { context: 'file-type' });
 
+/** What a folder holds: `3 files`, else `1 entry` / `5 entries` (files and folders), else "Folder". */
+export const folderContentLabel = (folder: Pick<FolderView, 'fileCount' | 'entryCount'>, t: TranslateFn): string =>
+  typeof folder.fileCount !== 'number' && typeof folder.entryCount === 'number'
+    ? t('{count, plural, one {# entry} other {# entries}}', { count: folder.entryCount })
+    : fileCountLabel(folder.fileCount, t);
+
 /** A folder in the grid (folders come first): a click opens it, its menu holds the folder writes; drag source and drop target. */
 export const FolderCard = ({ folder, depth, onOpen, actions, writesAllowed, maxFolderDepth, draggable = false, dropTarget = null }: FolderCardProps) => {
   const { t } = useTranslate();
@@ -51,7 +57,7 @@ export const FolderCard = ({ folder, depth, onOpen, actions, writesAllowed, maxF
           <h3 className="truncate font-semibold" title={folder.name}>
             {folder.name}
           </h3>
-          <p className="text-sm text-muted-foreground">{drop.isOver ? t('Drop to move here') : fileCountLabel(folder.fileCount, t)}</p>
+          <p className="text-sm text-muted-foreground">{drop.isOver ? t('Drop to move here') : folderContentLabel(folder, t)}</p>
         </div>
         {actions && <FolderActionsMenu folder={folder} depth={depth} actions={actions} writesAllowed={writesAllowed} maxFolderDepth={maxFolderDepth} />}
       </CardContent>
