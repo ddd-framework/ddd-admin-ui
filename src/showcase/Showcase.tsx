@@ -88,7 +88,7 @@ const packageSections = (
   { id: 'workers', title: './workers', description: 'The worker monitoring screens: overview, transport, runs, processes (SVG charts).', content: <WorkersShowcase /> },
   { id: 'issues', title: './issues', description: 'The issues screen: error groups, trend, details drawer, resolve / ignore / reopen.', content: <IssuesShowcase /> },
   { id: 'database', title: './database', description: 'The schema diff screen: per-table and bulk apply, generated SQL and model code.', content: <DatabaseShowcase /> },
-  { id: 'clouddrive', title: './clouddrive', description: 'The drive screen: spaces, folders, upload, download, trash, search.', content: <CloudDriveShowcase /> },
+  { id: 'clouddrive', title: './clouddrive', description: 'The drive screen: the file manager on the drive with the grouped space picker, versions, history and the trash.', content: <CloudDriveShowcase /> },
   {
     id: 'files',
     title: './files',

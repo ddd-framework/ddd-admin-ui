@@ -1,32 +1,8 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.3.16",
+  "version": "0.4.0",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
-    {
-      "key": "\"%name%\" could not be uploaded.",
-      "text": "\"%name%\" could not be uploaded.",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): error toast after an upload failed; %name% is the file name."
-    },
-    {
-      "key": "\"%name%\" uploaded.",
-      "text": "\"%name%\" uploaded.",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): success toast after a file was uploaded; %name% is the file name."
-    },
-    {
-      "key": "\"%name%\" was not saved: %reason%",
-      "text": "\"%name%\" was not saved: %reason%",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): error toast: the upload found a newer version of the file and wrote nothing; %reason% is the server's reason."
-    },
     {
       "key": "%add% to add · %remove% to remove on all %count% files",
       "text": "%add% to add · %remove% to remove on all %count% files",
@@ -58,14 +34,6 @@
         "translations/TranslatableField.tsx"
       ],
       "hint": "Character counter under a text field: characters typed / the maximum allowed."
-    },
-    {
-      "key": "%count% entries",
-      "text": "%count% entries",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): size column of a folder row: how many files and folders it contains."
     },
     {
       "key": "%count% failed",
@@ -534,14 +502,6 @@
       "hint": "File manager, storage pill (used storage of the file area). %quota% is the storage limit; %used% is the used storage."
     },
     {
-      "key": "%used% of %quota% used · %files% files",
-      "text": "%used% of %quota% used · %files% files",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): line under the page title: storage used of the space's quota and its number of files."
-    },
-    {
       "key": "%value% /h",
       "text": "%value% /h",
       "files": [
@@ -668,6 +628,14 @@
         "files/LinkTargetsDialog.tsx"
       ],
       "hint": "File manager, dialog to edit the links of files (checkbox list of link targets of the application)."
+    },
+    {
+      "key": "A file with this name exists already in this folder.",
+      "text": "A file with this name exists already in this folder.",
+      "files": [
+        "clouddrive/driveFileActions.ts"
+      ],
+      "hint": "Drive screen (cloud drive of the admin): error after an upload: a file with the same name is already in the target folder."
     },
     {
       "key": "A folder cannot move into itself.",
@@ -1658,6 +1626,14 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): shown under the schedule field while the server checks the expression."
     },
     {
+      "key": "Choose a space",
+      "text": "Choose a space",
+      "files": [
+        "clouddrive/CloudDriveSpacePicker.tsx"
+      ],
+      "hint": "Drive screen: placeholder of the space picker button when no space is chosen (a space = one storage area of the drive)."
+    },
+    {
       "key": "Clear",
       "text": "Clear",
       "files": [
@@ -2131,14 +2107,6 @@
         "files/QuotaPill.tsx"
       ],
       "hint": "File manager, storage pill (used storage of the file area)."
-    },
-    {
-      "key": "Create",
-      "text": "Create",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): submit button of the dialog that creates a new folder."
     },
     {
       "key": "Create Cron",
@@ -2835,6 +2803,15 @@
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: action."
     },
     {
+      "key": "Downloaded__file-event",
+      "text": "Downloaded",
+      "context": "file-event",
+      "files": [
+        "clouddrive/driveFileMapping.ts"
+      ],
+      "hint": "File manager details drawer, history: event type: someone downloaded the file."
+    },
+    {
       "key": "Drag the frame to move it and its handles to resize it; scroll or pinch to zoom.",
       "text": "Drag the frame to move it and its handles to resize it; scroll or pinch to zoom.",
       "files": [
@@ -3501,14 +3478,6 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): column header: failed jobs of a job class."
     },
     {
-      "key": "File size",
-      "text": "File size",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): column header: the size of a file in bytes, KB, MB (not dimensions)."
-    },
-    {
       "key": "File updated",
       "text": "File updated",
       "files": [
@@ -3680,14 +3649,6 @@
         "files/FileManager.tsx"
       ],
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %target% is a folder or area name."
-    },
-    {
-      "key": "Folder name",
-      "text": "Folder name",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): input of the new-folder dialog."
     },
     {
       "key": "Folder path",
@@ -5280,14 +5241,6 @@
       "hint": "Heading of the panel that shows the generated database model code of one entity (developer tool)."
     },
     {
-      "key": "Modified",
-      "text": "Modified",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): column header: when the file or folder was last changed."
-    },
-    {
       "key": "Mondays at 06:00",
       "text": "Mondays at 06:00",
       "files": [
@@ -5337,14 +5290,6 @@
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
     },
     {
-      "key": "Move \"%name%\" to the trash?",
-      "text": "Move \"%name%\" to the trash?",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): title of the confirmation before a file or folder goes to the trash; %name% is its name."
-    },
-    {
       "key": "Move %item% to another area?",
       "text": "Move %item% to another area?",
       "files": [
@@ -5392,14 +5337,6 @@
         "files/FileManager.tsx"
       ],
       "hint": "File manager, the icon buttons of one file (download, move, links, delete; restore in the trash)."
-    },
-    {
-      "key": "Move to trash",
-      "text": "Move to trash",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): button (and icon label) that moves a file or folder to the trash, from where it can be restored."
     },
     {
       "key": "Move “%name%”",
@@ -5453,14 +5390,6 @@
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
     {
-      "key": "Moved to the trash.",
-      "text": "Moved to the trash.",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): success toast after a file or folder went to the trash; an Undo button follows."
-    },
-    {
       "key": "Moved__file-event",
       "text": "Moved",
       "context": "file-event",
@@ -5482,7 +5411,6 @@
       "key": "Name",
       "text": "Name",
       "files": [
-        "clouddrive/CloudDriveScreen.tsx",
         "crons/CronFormDrawer.tsx",
         "crons/parts.tsx",
         "translations/LanguagesScreen.tsx",
@@ -5556,7 +5484,6 @@
       "key": "New folder",
       "text": "New folder",
       "files": [
-        "clouddrive/CloudDriveScreen.tsx",
         "files/FileManager.tsx",
         "files/FolderNameDialog.tsx",
         "files/FolderTree.tsx"
@@ -6134,6 +6061,14 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): empty state of the command picker."
     },
     {
+      "key": "No space matches.",
+      "text": "No space matches.",
+      "files": [
+        "clouddrive/CloudDriveSpacePicker.tsx"
+      ],
+      "hint": "Drive screen, space picker: shown when the search finds no space."
+    },
+    {
       "key": "No stack recorded.",
       "text": "No stack recorded.",
       "files": [
@@ -6374,14 +6309,6 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): filter chip: processes that have not stopped."
     },
     {
-      "key": "Nothing found.",
-      "text": "Nothing found.",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): empty state of a name search without hits."
-    },
-    {
       "key": "Nothing here yet",
       "text": "Nothing here yet",
       "files": [
@@ -6593,6 +6520,14 @@
       "hint": "Screen-reader label of the small link on a media tile that opens the full-size original in a new tab; %title% is the item's title, e.g. 'Logo'."
     },
     {
+      "key": "Open the file again and retry.",
+      "text": "Open the file again and retry.",
+      "files": [
+        "clouddrive/driveFileActions.ts"
+      ],
+      "hint": "Drive screen: error when a new version of a file cannot be uploaded because the file's details are not loaded; the user should reopen the file."
+    },
+    {
       "key": "Open__issue-status",
       "text": "Open",
       "context": "issue-status",
@@ -6750,14 +6685,6 @@
         "crons/status.ts"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): status badge: the job is switched off."
-    },
-    {
-      "key": "Pending scan",
-      "text": "Pending scan",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): badge of a file whose newest version still waits for its malware scan; people cannot open it yet."
     },
     {
       "key": "Per worker",
@@ -7005,6 +6932,14 @@
         "issues/IssueEventDetails.tsx"
       ],
       "hint": "Issues admin screen, one occurrence of an error in the details drawer: folded block with the unparsed stack trace text."
+    },
+    {
+      "key": "Read by the agent",
+      "text": "Read by the agent",
+      "files": [
+        "clouddrive/driveFileMapping.ts"
+      ],
+      "hint": "File manager details drawer, history: event type: the AI agent read the file."
     },
     {
       "key": "Received a signal",
@@ -7374,7 +7309,6 @@
       "key": "Restore",
       "text": "Restore",
       "files": [
-        "clouddrive/CloudDriveScreen.tsx",
         "files/FileManager.tsx"
       ],
       "hint": "Drive screen (cloud drive of the admin): icon label: bring a trashed file or folder back."
@@ -7498,14 +7432,6 @@
         "translations/adminFormat.ts"
       ],
       "hint": "Languages admin screen: text direction option (e.g. Arabic)."
-    },
-    {
-      "key": "Root",
-      "text": "Root",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): first breadcrumb when the space has no title: the top folder of the space."
     },
     {
       "key": "Route",
@@ -7849,14 +7775,6 @@
       "hint": "File manager, move dialog (pick the target folder, optionally another file area). Placeholder of a search field."
     },
     {
-      "key": "Search by name",
-      "text": "Search by name",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): search field and its label: find files and folders whose name contains the text."
-    },
-    {
       "key": "Search commands…",
       "text": "Search commands…",
       "files": [
@@ -7967,6 +7885,14 @@
         "files/FileManager.tsx"
       ],
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
+    },
+    {
+      "key": "Search spaces…",
+      "text": "Search spaces…",
+      "files": [
+        "clouddrive/CloudDriveSpacePicker.tsx"
+      ],
+      "hint": "Drive screen, space picker: placeholder of the search field."
     },
     {
       "key": "Search the values of this key",
@@ -8142,14 +8068,6 @@
         "workers/WorkersOverviewScreen.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): sentence in the “monitoring is off” banner naming the configuration switch; %setting% is a technical setting name, not translated."
-    },
-    {
-      "key": "Shared space",
-      "text": "Shared space",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): badge: people outside the staff (e.g. partners) see this space."
     },
     {
       "key": "Show all (%count%)",
@@ -8359,14 +8277,6 @@
         "translations/TranslationControls.tsx"
       ],
       "hint": "Screen-reader text of a small marker on a language chip in the AI translation panel: texts of this language were translated before their source text was last changed."
-    },
-    {
-      "key": "Space",
-      "text": "Space",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): picker of the storage space (one drive per customer, agent workspace or library)."
     },
     {
       "key": "Spreadsheet",
@@ -8628,14 +8538,6 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): toast after switching a job on."
     },
     {
-      "key": "System",
-      "text": "System",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): badge of a system folder (scratch files of the assistant, deleted after a few days)."
-    },
-    {
       "key": "System__file-event-actor",
       "text": "System",
       "context": "file-event-actor",
@@ -8847,6 +8749,14 @@
       "hint": "File manager, the icon buttons of one file (download, move, links, delete; restore in the trash)."
     },
     {
+      "key": "The drive answered without the file.",
+      "text": "The drive answered without the file.",
+      "files": [
+        "clouddrive/driveFileActions.ts"
+      ],
+      "hint": "Drive screen: error when the server confirmed an upload but returned no file."
+    },
+    {
       "key": "The editor could not be loaded; edit the Markdown text directly.",
       "text": "The editor could not be loaded; edit the Markdown text directly.",
       "files": [
@@ -8893,22 +8803,6 @@
         "files/FileDrawer.tsx"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
-    },
-    {
-      "key": "The file cannot be downloaded.",
-      "text": "The file cannot be downloaded.",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): error toast when the download link could not be issued."
-    },
-    {
-      "key": "The file could not be moved to the trash.",
-      "text": "The file could not be moved to the trash.",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): error toast after a failed move to the trash."
     },
     {
       "key": "The file could not be updated",
@@ -8977,28 +8871,12 @@
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
     },
     {
-      "key": "The folder could not be created.",
-      "text": "The folder could not be created.",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): error toast after a failed folder creation."
-    },
-    {
       "key": "The folder could not be deleted",
       "text": "The folder could not be deleted",
       "files": [
         "files/FileManager.tsx"
       ],
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
-    },
-    {
-      "key": "The folder could not be loaded.",
-      "text": "The folder could not be loaded.",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): error text in the list when the folder contents could not be read."
     },
     {
       "key": "The folder could not be moved",
@@ -9410,6 +9288,14 @@
       "hint": "Reason shown in the AI translation panel why texts of one language were not translated: the text to translate from no longer exists."
     },
     {
+      "key": "The spaces could not be loaded.",
+      "text": "The spaces could not be loaded.",
+      "files": [
+        "clouddrive/CloudDriveScreen.tsx"
+      ],
+      "hint": "Drive screen: error message when the list of storage spaces failed to load."
+    },
+    {
       "key": "The statements that create the whole schema from the entities, without the excluded tables. Shown only, never run.",
       "text": "The statements that create the whole schema from the entities, without the excluded tables. Shown only, never run.",
       "files": [
@@ -9668,6 +9554,14 @@
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): title of the warning shown when a reload failed while older numbers stay on screen."
     },
     {
+      "key": "There is no space you may read.",
+      "text": "There is no space you may read.",
+      "files": [
+        "clouddrive/CloudDriveScreen.tsx"
+      ],
+      "hint": "Drive screen: empty state: the signed-in user may read no storage space."
+    },
+    {
       "key": "There is no transport “%transport%”.",
       "text": "There is no transport “%transport%”.",
       "files": [
@@ -9813,6 +9707,14 @@
       "hint": "Schema diff admin screen (database changes between the code's entities and the live database): notice when a table's change was applied meanwhile."
     },
     {
+      "key": "This drive needs mgamadeus/ddd-clouddrive 0.1.0-rc.10 or newer on the server.",
+      "text": "This drive needs mgamadeus/ddd-clouddrive 0.1.0-rc.10 or newer on the server.",
+      "files": [
+        "clouddrive/CloudDriveScreen.tsx"
+      ],
+      "hint": "Drive screen: shown to developers when the server's drive module is too old for this screen; keep the package name and version as they are."
+    },
+    {
       "key": "This file could not be shown. Download it to open it.",
       "text": "This file could not be shown. Download it to open it.",
       "files": [
@@ -9840,7 +9742,6 @@
       "key": "This folder is empty.",
       "text": "This folder is empty.",
       "files": [
-        "clouddrive/CloudDriveScreen.tsx",
         "files/FileManager.tsx"
       ],
       "hint": "Drive screen (cloud drive of the admin): empty state of a folder without files."
@@ -10392,14 +10293,6 @@
       "hint": "Status badge of a worker transport (queue): consumed, but without an entry in the worker configuration."
     },
     {
-      "key": "Undo",
-      "text": "Undo",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): button in the toast after a move to the trash: brings the item back."
-    },
-    {
       "key": "Unknown error",
       "text": "Unknown error",
       "files": [
@@ -10488,14 +10381,6 @@
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file date."
     },
     {
-      "key": "Upload",
-      "text": "Upload",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): button: pick files from the computer and upload them into the current folder."
-    },
-    {
       "key": "Upload cancelled",
       "text": "Upload cancelled",
       "files": [
@@ -10579,22 +10464,6 @@
         "files/FileDrawer.tsx"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %name% is a file or folder name; %percent% is a percentage number."
-    },
-    {
-      "key": "Uploading %name%: %percent%",
-      "text": "Uploading %name%: %percent%",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): progress text during an upload; %percent% is e.g. \"42 %\"."
-    },
-    {
-      "key": "Uploading %name%…",
-      "text": "Uploading %name%…",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): progress text when an upload starts; %name% is the file name."
     },
     {
       "key": "Uploading · %finished% of %started% done",
@@ -10687,14 +10556,6 @@
       "hint": "App translations admin, drawer of one translation key: heading above the translated values, one per locale and writing style (informal/formal)."
     },
     {
-      "key": "Version",
-      "text": "Version",
-      "files": [
-        "clouddrive/CloudDriveScreen.tsx"
-      ],
-      "hint": "Drive screen (cloud drive of the admin): column header: the file's version number (v1, v2, …)."
-    },
-    {
       "key": "Version %number% restored",
       "text": "Version %number% restored",
       "files": [
@@ -10725,6 +10586,15 @@
         "list/EntityListViewToggle.tsx"
       ],
       "hint": "Label and accessible name of the toggle on the Home screen that switches between the Timeline and Kanban views."
+    },
+    {
+      "key": "Viewed__file-event",
+      "text": "Viewed",
+      "context": "file-event",
+      "files": [
+        "clouddrive/driveFileMapping.ts"
+      ],
+      "hint": "File manager details drawer, history: event type: someone opened the file's preview."
     },
     {
       "key": "Viewport",
@@ -10971,7 +10841,6 @@
       "key": "Writes are switched off",
       "text": "Writes are switched off",
       "files": [
-        "clouddrive/CloudDriveScreen.tsx",
         "crons/parts.tsx",
         "database/SchemaDiffCard.tsx",
         "database/SchemaDiffScreen.tsx",

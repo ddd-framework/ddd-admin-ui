@@ -24,6 +24,7 @@ export interface DriveNode {
   name: string;
   sizeBytes?: number | null;
   contentType?: string | null;
+  sha256?: string | null;
   versionNumber?: number | null;
   currentVersionId?: number | null;
   latestVersionId?: number | null;
@@ -97,10 +98,14 @@ export interface DriveFileCard {
 
 export interface DriveSpacesResponse {
   driveSpaces: { elements?: DriveSpace[] };
+  /** The spaces with display name, group, quota and the viewer's rights (ddd-clouddrive ≥ 0.1.0-rc.10). */
+  items?: { elements?: DriveSpaceListItem[] } | null;
 }
 
 export interface DriveNodesResponse {
   driveNodes: { elements?: DriveNode[] };
+  /** The same nodes as list items (ddd-clouddrive ≥ 0.1.0-rc.10). */
+  items?: { elements?: DriveNodeListItem[] } | null;
   nextCursor?: string | null;
 }
 
@@ -110,6 +115,8 @@ export interface DriveNodeResponse {
   /** The folders above the node, the root first and its own folder last (mgamadeus/ddd-clouddrive ≥ 0.1.0-rc.3). */
   ancestors?: { elements?: DriveNode[] } | null;
   driveFileVersions?: { elements?: DriveFileVersion[] } | null;
+  /** The node as a list item (ddd-clouddrive ≥ 0.1.0-rc.10). */
+  item?: DriveNodeListItem | null;
   isConflict?: boolean | null;
   conflictReason?: string | null;
 }
@@ -126,7 +133,7 @@ export interface DriveFileCardsResponse {
   cards: { elements?: DriveFileCard[] };
 }
 
-export interface DriveChildrenArg {
+export interface DriveChildrenArg extends DriveListFilters {
   driveSpaceId: number;
   folderNodeId?: number | null;
   cursor?: string | null;
@@ -134,9 +141,10 @@ export interface DriveChildrenArg {
   includeSystem?: boolean;
 }
 
-export interface DriveSearchArg {
+export interface DriveSearchArg extends Omit<DriveListFilters, 'query' | 'recursive'> {
   driveSpaceId: number;
   query: string;
+  cursor?: string | null;
   limit?: number;
 }
 
@@ -182,4 +190,193 @@ export interface DriveNodeMoveArg {
 
 export interface DriveFileCardsArg {
   references: string[];
+}
+
+// ─── File manager payloads (mgamadeus/ddd-clouddrive ≥ 0.1.0-rc.10) ────────────────────────────────────────────────
+
+/** The file families of the drive (from the content type and the extension). */
+export type DriveFileFamily = 'PDF' | 'SPREADSHEET' | 'DOCUMENT' | 'PRESENTATION' | 'TEXT' | 'IMAGE' | 'VECTOR' | 'VIDEO' | 'ARCHIVE';
+
+/** The scan state a file shows (of its current version, else of its newest one). */
+export type DriveScanStatus = 'UPLOADING' | 'PENDING' | 'CLEAN' | 'INFECTED' | 'FAILED' | 'PURGING';
+
+/** One file or folder as the lists draw it (`DriveNodeListItem`); null values are left out of the JSON. */
+export interface DriveNodeListItem {
+  id: number;
+  driveSpaceId: number;
+  parentNodeId?: number | null;
+  nodeType: DriveNodeType;
+  name: string;
+  /** Lower case without the dot; `''` for folders. */
+  extension?: string;
+  family?: DriveFileFamily | null;
+  contentType?: string | null;
+  sizeBytes?: number | null;
+  versionNumber?: number | null;
+  childCount?: number | null;
+  description?: string | null;
+  tags?: string[];
+  scanStatus?: DriveScanStatus | null;
+  hasPendingVersion?: boolean;
+  hasWorkingCopyChanges?: boolean;
+  isContentUntrusted?: boolean;
+  isSystem?: boolean;
+  /** Only for released JPEG, PNG, GIF or WebP. */
+  thumbnailUrl?: string | null;
+  createdByAccountId?: number | null;
+  createdByName?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  trashedAt?: string | null;
+  trashedByAccountId?: number | null;
+  trashedByName?: string | null;
+  purgeAfter?: string | null;
+}
+
+/** What a space holds and allows (`DriveSpaceQuota`). */
+export interface DriveSpaceQuota {
+  usedBytes: number;
+  quotaBytes: number;
+  maxFileSizeBytes: number;
+  fileCount: number;
+  folderCount: number;
+  trashRetentionDays: number;
+  keptVersionCount: number;
+  versionRetentionDays: number;
+}
+
+/** One space as the picker and the file manager read it (`DriveSpaceListItem`). */
+export interface DriveSpaceListItem {
+  id: number;
+  title?: string | null;
+  /** The name to show (the host may set it, e.g. the owning record's name). */
+  displayName: string;
+  /** The group the picker files the space under; `null` = no group. */
+  groupLabel?: string | null;
+  spaceKind?: string | null;
+  audience?: DriveSpaceAudience | null;
+  rootNodeId?: number | null;
+  quota: DriveSpaceQuota;
+  canWrite: boolean;
+  canManage: boolean;
+}
+
+/** One stored version of a file (`DriveFileVersionListItem`), newest first. */
+export interface DriveFileVersionListItem {
+  id: number;
+  driveNodeId: number;
+  versionNumber: number;
+  sizeBytes?: number | null;
+  contentType?: string | null;
+  comment?: string | null;
+  origin?: string | null;
+  authorAccountId?: number | null;
+  authorName?: string | null;
+  createdAt?: string | null;
+  scanStatus?: DriveScanStatus | null;
+  scanDetail?: string | null;
+  isCurrent: boolean;
+  isLatest: boolean;
+  isRestorable: boolean;
+}
+
+/** One entry of a node's history (`DriveChangeEventListItem`). */
+export interface DriveChangeEventListItem {
+  id: number;
+  eventType: string;
+  occurredAt?: string | null;
+  actorAccountId?: number | null;
+  actorName?: string | null;
+  path?: string | null;
+  previousPath?: string | null;
+  driveFileVersionId?: number | null;
+  isFromWorkingCopy?: boolean;
+}
+
+/** What a bulk action did (`DriveNodeBulkResult`); counts include subtrees. */
+export interface DriveNodeBulkResult {
+  processedCount: number;
+  fileCount: number;
+  folderCount: number;
+  /** `true`: an empty-trash call stopped at its batch; call again. */
+  hasMore: boolean;
+  skipped?: { elements?: { driveNodeId: number; reason: string }[] } | null;
+}
+
+export interface DriveListItemsResponse<TItem> {
+  items?: { elements?: TItem[] } | null;
+}
+
+export interface DriveSpaceResponse {
+  driveSpace: DriveSpace;
+  item?: DriveSpaceListItem | null;
+}
+
+export interface DriveFoldersResponse {
+  items: { elements?: DriveNodeListItem[] };
+  isTruncated: boolean;
+}
+
+export interface DriveNodeBulkResponse {
+  result: DriveNodeBulkResult;
+}
+
+/** The orders of a list. */
+export type DriveListOrder = 'name' | 'created' | 'size';
+
+/** The filters of `children` (and `search`); without any the folder answers as before. */
+export interface DriveListFilters {
+  /** The whole space instead of one folder (search, filters). */
+  recursive?: boolean;
+  /** A part of the name. */
+  query?: string;
+  family?: DriveFileFamily;
+  /** `Y-m-d`. */
+  createdFrom?: string;
+  /** `Y-m-d`. */
+  createdTo?: string;
+  createdByMe?: boolean;
+  orderBy?: DriveListOrder;
+  orderDirection?: 'asc' | 'desc';
+}
+
+export interface DriveTrashArg {
+  driveSpaceId: number;
+  cursor?: string | null;
+  limit?: number;
+}
+
+export interface DriveFoldersArg {
+  driveSpaceId: number;
+  includeSystem?: boolean;
+}
+
+export interface DriveSpaceIdArg {
+  driveSpaceId: number;
+}
+
+export interface DriveEventsArg {
+  driveNodeId: number;
+  limit?: number;
+}
+
+export interface DriveVersionRestoreArg {
+  driveNodeId: number;
+  driveFileVersionId: number;
+}
+
+export interface DriveNodesBulkArg {
+  driveSpaceId: number;
+  driveNodeIds: number[];
+}
+
+export interface DriveNodesBulkMoveArg extends DriveNodesBulkArg {
+  /** Omitted = the space's root. */
+  targetFolderNodeId?: number | null;
+}
+
+export interface DriveNodeMetadataArg {
+  driveNodeId: number;
+  tags?: string[] | null;
+  description?: string | null;
 }

@@ -12,8 +12,22 @@ import {
   trimApiPrefix,
 } from '../logic/pure/injectedApi.ts';
 import type {
+  DriveChangeEventListItem,
   DriveChildrenArg,
   DriveContentArg,
+  DriveEventsArg,
+  DriveFileVersionListItem,
+  DriveFoldersArg,
+  DriveFoldersResponse,
+  DriveListItemsResponse,
+  DriveNodeBulkResponse,
+  DriveNodeMetadataArg,
+  DriveNodesBulkArg,
+  DriveNodesBulkMoveArg,
+  DriveSpaceIdArg,
+  DriveSpaceResponse,
+  DriveTrashArg,
+  DriveVersionRestoreArg,
   DriveContentGrantResponse,
   DriveFileCardsArg,
   DriveFileCardsResponse,
@@ -58,6 +72,30 @@ export interface CloudDriveApi {
   useRestoreDriveNodeMutation: ApiMutationHook<DriveNodeIdArg, DriveNodeResponse>;
   /** `POST /cards`: file cards with open, download and thumbnail URLs (the `DriveFiles` widget). */
   useDriveFileCardsQuery: ApiQueryHook<DriveFileCardsArg, DriveFileCardsResponse>;
+  /** `GET /spaces/{id}`: one space with display name, quota and the viewer's rights. */
+  useDriveSpaceQuery: ApiQueryHook<DriveSpaceIdArg, DriveSpaceResponse>;
+  /** `GET /spaces/{id}/trash?cursor&limit`: the trashed top-level nodes, newest first. */
+  useDriveTrashQuery: ApiQueryHook<DriveTrashArg, DriveNodesResponse>;
+  /** `GET /spaces/{id}/folders?includeSystem`: every live folder of the space (root included), flat. */
+  useDriveFoldersQuery: ApiQueryHook<DriveFoldersArg, DriveFoldersResponse>;
+  /** `GET /nodes/{id}/versions`: the versions of a file, newest first. */
+  useDriveVersionsQuery: ApiQueryHook<DriveNodeIdArg, DriveListItemsResponse<DriveFileVersionListItem>>;
+  /** `GET /nodes/{id}/events?limit`: the newest changes of a node. */
+  useDriveEventsQuery: ApiQueryHook<DriveEventsArg, DriveListItemsResponse<DriveChangeEventListItem>>;
+  /** `POST /nodes/{id}/versions/{versionId}/restore`: a new current version with an older version's content. */
+  useRestoreDriveVersionMutation: ApiMutationHook<DriveVersionRestoreArg, DriveNodeResponse>;
+  /** `POST /nodes/{id}/metadata`: description and tags. */
+  useUpdateDriveNodeMetadataMutation: ApiMutationHook<DriveNodeMetadataArg, DriveNodeResponse>;
+  /** `POST /spaces/{id}/nodes/move`: up to 200 nodes into one folder (omitted = the root). */
+  useMoveDriveNodesMutation: ApiMutationHook<DriveNodesBulkMoveArg, DriveNodeBulkResponse>;
+  /** `POST /spaces/{id}/nodes/trash`. */
+  useTrashDriveNodesMutation: ApiMutationHook<DriveNodesBulkArg, DriveNodeBulkResponse>;
+  /** `POST /spaces/{id}/nodes/restore`. */
+  useRestoreDriveNodesMutation: ApiMutationHook<DriveNodesBulkArg, DriveNodeBulkResponse>;
+  /** `POST /spaces/{id}/nodes/purge` (manage right): deletes trashed nodes for good. */
+  usePurgeDriveNodesMutation: ApiMutationHook<DriveNodesBulkArg, DriveNodeBulkResponse>;
+  /** `POST /spaces/{id}/trash/empty` (manage right): one batch; `hasMore` asks for another call. */
+  useEmptyDriveTrashMutation: ApiMutationHook<DriveSpaceIdArg, DriveNodeBulkResponse>;
 }
 
 export interface CreateCloudDriveApiOptions {
@@ -74,12 +112,32 @@ export const buildCloudDriveRequests = (apiPrefix: string) => {
   const prefix = trimApiPrefix(apiPrefix);
   return {
     spaces: (): InjectedRequest => ({ url: `${prefix}/spaces/list` }),
-    children: ({ driveSpaceId, folderNodeId, cursor, limit, includeSystem }: DriveChildrenArg): InjectedRequest => ({
-      url: `${prefix}/spaces/${idOf(driveSpaceId)}/children${toQueryString({ folderNodeId, cursor, limit, includeSystem })}`,
+    children: ({ driveSpaceId, folderNodeId, cursor, limit, includeSystem, recursive, query, family, createdFrom, createdTo, createdByMe, orderBy, orderDirection }: DriveChildrenArg): InjectedRequest => ({
+      url: `${prefix}/spaces/${idOf(driveSpaceId)}/children${toQueryString({
+        folderNodeId, cursor, limit, includeSystem, recursive, query, family, createdFrom, createdTo, createdByMe, orderBy, orderDirection,
+      })}`,
     }),
-    search: ({ driveSpaceId, query, limit }: DriveSearchArg): InjectedRequest => ({
-      url: `${prefix}/spaces/${idOf(driveSpaceId)}/search${toQueryString({ query, limit })}`,
+    search: ({ driveSpaceId, query, cursor, limit, family, createdFrom, createdTo, createdByMe, orderBy, orderDirection }: DriveSearchArg): InjectedRequest => ({
+      url: `${prefix}/spaces/${idOf(driveSpaceId)}/search${toQueryString({ query, cursor, limit, family, createdFrom, createdTo, createdByMe, orderBy, orderDirection })}`,
     }),
+    space: ({ driveSpaceId }: DriveSpaceIdArg): InjectedRequest => ({ url: `${prefix}/spaces/${idOf(driveSpaceId)}` }),
+    trashList: ({ driveSpaceId, cursor, limit }: DriveTrashArg): InjectedRequest => ({
+      url: `${prefix}/spaces/${idOf(driveSpaceId)}/trash${toQueryString({ cursor, limit })}`,
+    }),
+    folders: ({ driveSpaceId, includeSystem }: DriveFoldersArg): InjectedRequest => ({
+      url: `${prefix}/spaces/${idOf(driveSpaceId)}/folders${toQueryString({ includeSystem })}`,
+    }),
+    versions: ({ driveNodeId }: DriveNodeIdArg): InjectedRequest => ({ url: `${prefix}/nodes/${idOf(driveNodeId)}/versions` }),
+    events: ({ driveNodeId, limit }: DriveEventsArg): InjectedRequest => ({ url: `${prefix}/nodes/${idOf(driveNodeId)}/events${toQueryString({ limit })}` }),
+    restoreVersion: ({ driveNodeId, driveFileVersionId }: DriveVersionRestoreArg): InjectedRequest => ({
+      url: `${prefix}/nodes/${idOf(driveNodeId)}/versions/${idOf(driveFileVersionId)}/restore`, method: 'POST',
+    }),
+    metadata: ({ driveNodeId, ...body }: DriveNodeMetadataArg): InjectedRequest => ({ url: `${prefix}/nodes/${idOf(driveNodeId)}/metadata`, method: 'POST', body }),
+    bulkMove: ({ driveSpaceId, ...body }: DriveNodesBulkMoveArg): InjectedRequest => ({ url: `${prefix}/spaces/${idOf(driveSpaceId)}/nodes/move`, method: 'POST', body }),
+    bulkTrash: ({ driveSpaceId, ...body }: DriveNodesBulkArg): InjectedRequest => ({ url: `${prefix}/spaces/${idOf(driveSpaceId)}/nodes/trash`, method: 'POST', body }),
+    bulkRestore: ({ driveSpaceId, ...body }: DriveNodesBulkArg): InjectedRequest => ({ url: `${prefix}/spaces/${idOf(driveSpaceId)}/nodes/restore`, method: 'POST', body }),
+    bulkPurge: ({ driveSpaceId, ...body }: DriveNodesBulkArg): InjectedRequest => ({ url: `${prefix}/spaces/${idOf(driveSpaceId)}/nodes/purge`, method: 'POST', body }),
+    emptyTrash: ({ driveSpaceId }: DriveSpaceIdArg): InjectedRequest => ({ url: `${prefix}/spaces/${idOf(driveSpaceId)}/trash/empty`, method: 'POST' }),
     node: ({ driveNodeId }: DriveNodeIdArg): InjectedRequest => ({ url: `${prefix}/nodes/${idOf(driveNodeId)}` }),
     createFolder: ({ driveSpaceId, ...body }: DriveFolderCreateArg): InjectedRequest => ({
       url: `${prefix}/spaces/${idOf(driveSpaceId)}/folders`, method: 'POST', body,
@@ -119,6 +177,18 @@ export const cloudDriveEndpointDefinitions = (apiPrefix: string) => {
     adminUiDriveNodeMove: { kind: 'mutation', request: requests.move, invalidatesTags: [NODES] },
     adminUiDriveNodeTrash: { kind: 'mutation', request: requests.trash, invalidatesTags: [NODES, SPACES] },
     adminUiDriveNodeRestore: { kind: 'mutation', request: requests.restore, invalidatesTags: [NODES, SPACES] },
+    adminUiDriveSpace: { kind: 'query', request: requests.space, providesTags: [SPACES] },
+    adminUiDriveTrash: { kind: 'query', request: requests.trashList, providesTags: [NODES] },
+    adminUiDriveFolders: { kind: 'query', request: requests.folders, providesTags: [NODES] },
+    adminUiDriveVersions: { kind: 'query', request: requests.versions, providesTags: [NODES] },
+    adminUiDriveEvents: { kind: 'query', request: requests.events, providesTags: [NODES] },
+    adminUiDriveVersionRestore: { kind: 'mutation', request: requests.restoreVersion, invalidatesTags: [NODES, SPACES] },
+    adminUiDriveNodeMetadata: { kind: 'mutation', request: requests.metadata, invalidatesTags: [NODES] },
+    adminUiDriveNodesMove: { kind: 'mutation', request: requests.bulkMove, invalidatesTags: [NODES, SPACES] },
+    adminUiDriveNodesTrash: { kind: 'mutation', request: requests.bulkTrash, invalidatesTags: [NODES, SPACES] },
+    adminUiDriveNodesRestore: { kind: 'mutation', request: requests.bulkRestore, invalidatesTags: [NODES, SPACES] },
+    adminUiDriveNodesPurge: { kind: 'mutation', request: requests.bulkPurge, invalidatesTags: [NODES, SPACES] },
+    adminUiDriveTrashEmpty: { kind: 'mutation', request: requests.emptyTrash, invalidatesTags: [NODES, SPACES] },
   } as const satisfies Record<string, InjectedEndpointDefinition<never>>;
 };
 
@@ -140,6 +210,18 @@ export const createCloudDriveApi = ({ baseApi, apiPrefix }: CreateCloudDriveApiO
     useMoveDriveNodeMutation: hookOf('adminUiDriveNodeMove') as CloudDriveApi['useMoveDriveNodeMutation'],
     useTrashDriveNodeMutation: hookOf('adminUiDriveNodeTrash') as CloudDriveApi['useTrashDriveNodeMutation'],
     useRestoreDriveNodeMutation: hookOf('adminUiDriveNodeRestore') as CloudDriveApi['useRestoreDriveNodeMutation'],
+    useDriveSpaceQuery: hookOf('adminUiDriveSpace') as CloudDriveApi['useDriveSpaceQuery'],
+    useDriveTrashQuery: hookOf('adminUiDriveTrash') as CloudDriveApi['useDriveTrashQuery'],
+    useDriveFoldersQuery: hookOf('adminUiDriveFolders') as CloudDriveApi['useDriveFoldersQuery'],
+    useDriveVersionsQuery: hookOf('adminUiDriveVersions') as CloudDriveApi['useDriveVersionsQuery'],
+    useDriveEventsQuery: hookOf('adminUiDriveEvents') as CloudDriveApi['useDriveEventsQuery'],
+    useRestoreDriveVersionMutation: hookOf('adminUiDriveVersionRestore') as CloudDriveApi['useRestoreDriveVersionMutation'],
+    useUpdateDriveNodeMetadataMutation: hookOf('adminUiDriveNodeMetadata') as CloudDriveApi['useUpdateDriveNodeMetadataMutation'],
+    useMoveDriveNodesMutation: hookOf('adminUiDriveNodesMove') as CloudDriveApi['useMoveDriveNodesMutation'],
+    useTrashDriveNodesMutation: hookOf('adminUiDriveNodesTrash') as CloudDriveApi['useTrashDriveNodesMutation'],
+    useRestoreDriveNodesMutation: hookOf('adminUiDriveNodesRestore') as CloudDriveApi['useRestoreDriveNodesMutation'],
+    usePurgeDriveNodesMutation: hookOf('adminUiDriveNodesPurge') as CloudDriveApi['usePurgeDriveNodesMutation'],
+    useEmptyDriveTrashMutation: hookOf('adminUiDriveTrashEmpty') as CloudDriveApi['useEmptyDriveTrashMutation'],
   }));
 
 /** Fixed answers of a `createStaticCloudDriveApi`; a query without one stays loading. */
@@ -149,6 +231,11 @@ export interface StaticCloudDriveData {
   search?: (arg: DriveSearchArg) => DriveNodesResponse | StaticQueryFailure | undefined;
   node?: (arg: DriveNodeIdArg) => DriveNodeResponse | StaticQueryFailure | undefined;
   cards?: (arg: DriveFileCardsArg) => DriveFileCardsResponse | StaticQueryFailure | undefined;
+  space?: (arg: DriveSpaceIdArg) => DriveSpaceResponse | StaticQueryFailure | undefined;
+  trash?: (arg: DriveTrashArg) => DriveNodesResponse | StaticQueryFailure | undefined;
+  folders?: (arg: DriveFoldersArg) => DriveFoldersResponse | StaticQueryFailure | undefined;
+  versions?: (arg: DriveNodeIdArg) => DriveListItemsResponse<DriveFileVersionListItem> | StaticQueryFailure | undefined;
+  events?: (arg: DriveEventsArg) => DriveListItemsResponse<DriveChangeEventListItem> | StaticQueryFailure | undefined;
 }
 
 const NOT_AVAILABLE = (): never => {
@@ -169,4 +256,16 @@ export const createStaticCloudDriveApi = (data: StaticCloudDriveData): CloudDriv
   useMoveDriveNodeMutation: staticMutationHook(NOT_AVAILABLE),
   useTrashDriveNodeMutation: staticMutationHook(NOT_AVAILABLE),
   useRestoreDriveNodeMutation: staticMutationHook(NOT_AVAILABLE),
+  useDriveSpaceQuery: staticQueryHook(arg => data.space?.(arg)),
+  useDriveTrashQuery: staticQueryHook(arg => data.trash?.(arg)),
+  useDriveFoldersQuery: staticQueryHook(arg => data.folders?.(arg)),
+  useDriveVersionsQuery: staticQueryHook(arg => data.versions?.(arg)),
+  useDriveEventsQuery: staticQueryHook(arg => data.events?.(arg)),
+  useRestoreDriveVersionMutation: staticMutationHook(NOT_AVAILABLE),
+  useUpdateDriveNodeMetadataMutation: staticMutationHook(NOT_AVAILABLE),
+  useMoveDriveNodesMutation: staticMutationHook(NOT_AVAILABLE),
+  useTrashDriveNodesMutation: staticMutationHook(NOT_AVAILABLE),
+  useRestoreDriveNodesMutation: staticMutationHook(NOT_AVAILABLE),
+  usePurgeDriveNodesMutation: staticMutationHook(NOT_AVAILABLE),
+  useEmptyDriveTrashMutation: staticMutationHook(NOT_AVAILABLE),
 });

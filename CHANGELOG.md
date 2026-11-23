@@ -3,7 +3,9 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
-## Unreleased
+## 0.4.0
+
+Breaking for `./clouddrive`: the screen needs mgamadeus/ddd-clouddrive ≥ 0.1.0-rc.10.
 
 - New entry `./files`: a generic file manager on the host's API. `FileManager` with a `FileManagerAdapter` (opaque area
   keys and ids) and optional capabilities — `trash`, `versions` (replace, restore an older version, delete older),
@@ -14,6 +16,20 @@ is in 0.x.
   (`useFileUploadQueue`, `uploadWithProgress`, `precheckUpload`), drag and drop on the browser's own events, details
   drawer with preview (raster images, PDF through the host's pdf.js, text; SVG and HTML never rendered), facts, links,
   versions and activity, the trash. `createStaticFileManagerAdapter` and `showcaseFilesData` for reviews and tests.
+- `./clouddrive` rebuilt on `./files`: `CloudDriveScreen` is the file manager on the drive with a grouped, searchable
+  space picker (`CloudDriveSpacePicker`, `displayName` / `groupLabel` of the server), preview, versions with restore,
+  history, malware status, the agents' unsaved changes, filters (type, created, mine) and orders (name, created, size),
+  the trash with restore, and purge / empty trash for viewers with the space's manage right. New:
+  `useCloudDriveFileAdapter` / `createCloudDriveFileAdapter`, `buildCloudDriveFileActions`, the mappers
+  (`driveFileViewOf`, `driveFolderViewsOf`, `driveChildrenArgOf`, `emptyDriveTrashFully`, …), and the operations of
+  rc.10 on `createCloudDriveApi` (`useDriveSpaceQuery`, `useDriveTrashQuery`, `useDriveFoldersQuery`,
+  `useDriveVersionsQuery`, `useDriveEventsQuery`, `useRestoreDriveVersionMutation`, `useUpdateDriveNodeMetadataMutation`,
+  the space-scoped bulk `useMoveDriveNodesMutation`, `useTrashDriveNodesMutation`, `useRestoreDriveNodesMutation`,
+  `usePurgeDriveNodesMutation`, `useEmptyDriveTrashMutation`; children and search take the list filters).
+  `CloudDriveScreen` props: `api`, `title`, `initialSpaceId`, `initialFolderNodeId`, `initialNodeId` and
+  `headerActions` stay; new `description`, `urlStateAdapter`, `drawerUrlAdapter`, `loadPdfJs`, `renderAreaMaintenance`,
+  `renderAreaSettings`, `formatEventType`, `defaultView`, `variant`. `sendDriveUpload` takes an optional `AbortSignal`. Text and
+  PDF previews fetch the store's download URL from the browser: the bucket's CORS must allow it.
 
 ## 0.3.16
 

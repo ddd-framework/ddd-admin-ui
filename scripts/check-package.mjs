@@ -282,7 +282,7 @@ export function checkPackage(packageDirectory, options = {}) {
       database: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'data'],
       crons: ['logic', 'i18n', 'primitives', 'list', 'page', 'form', 'data'],
       // the drive screen on the cloud drive module's admin trait
-      clouddrive: ['logic', 'i18n', 'primitives', 'page', 'form'],
+      clouddrive: ['logic', 'i18n', 'primitives', 'page', 'form', 'files'],
       // the generic file manager (tree, list, drawer, dialogs) on the host's adapter
       files: ['logic', 'i18n', 'primitives', 'list', 'page', 'form'],
       data: ['logic', 'i18n', 'primitives'],

@@ -4,8 +4,8 @@ import type { DrivePresignedRequest, DriveUploadReservation } from './types.ts';
 /** The progress of one upload in bytes. */
 export type DriveUploadProgress = (sentBytes: number, totalBytes: number) => void;
 
-const sendRequest = async (request: DrivePresignedRequest, body: Blob): Promise<void> => {
-  const response = await fetch(request.url, { method: request.method, headers: request.headers ?? {}, body });
+const sendRequest = async (request: DrivePresignedRequest, body: Blob, signal?: AbortSignal): Promise<void> => {
+  const response = await fetch(request.url, { method: request.method, headers: request.headers ?? {}, body, signal });
   if (!response.ok) {
     throw new Error(`Upload refused by the store (${response.status})`);
   }
@@ -13,16 +13,22 @@ const sendRequest = async (request: DrivePresignedRequest, body: Blob): Promise<
 
 /**
  * Sends a file along a reservation: one PUT, or every part of a multipart upload one after the other. Every header of
- * a request goes out unchanged (they are signed into the URL). Content the space knows needs nothing.
+ * a request goes out unchanged (they are signed into the URL). Content the space knows needs nothing. `signal` aborts
+ * the running request (the fetch rejects with an `AbortError`).
  */
-export const sendDriveUpload = async (reservation: DriveUploadReservation, file: Blob, onProgress?: DriveUploadProgress): Promise<void> => {
+export const sendDriveUpload = async (
+  reservation: DriveUploadReservation,
+  file: Blob,
+  onProgress?: DriveUploadProgress,
+  signal?: AbortSignal
+): Promise<void> => {
   if (reservation.isContentKnown) {
     onProgress?.(file.size, file.size);
     return;
   }
   if (!reservation.isMultipart) {
     if (!reservation.uploadRequest) throw new Error('The reservation has no upload request');
-    await sendRequest(reservation.uploadRequest, file);
+    await sendRequest(reservation.uploadRequest, file, signal);
     onProgress?.(file.size, file.size);
     return;
   }
@@ -31,7 +37,7 @@ export const sendDriveUpload = async (reservation: DriveUploadReservation, file:
   for (const part of reservation.partRequests?.elements ?? []) {
     const start = (part.partNumber - 1) * partSize;
     const chunk = file.slice(start, Math.min(file.size, start + partSize));
-    await sendRequest(part.request, chunk);
+    await sendRequest(part.request, chunk, signal);
     sentBytes += chunk.size;
     onProgress?.(sentBytes, file.size);
   }

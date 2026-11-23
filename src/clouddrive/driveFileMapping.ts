@@ -1,0 +1,214 @@
+// The drive's list payloads (mgamadeus/ddd-clouddrive ≥ 0.1.0-rc.10) as the view models of `./files`. Pure: no React,
+// no request; the adapter hook (`useCloudDriveFileAdapter`) and the tests use them.
+import { m } from '../i18n/store.ts';
+import type { FileListOrder, FileListQuery } from '../files/fileManagerAdapter.ts';
+import {
+  type FileAreaRefView,
+  type FileAreaView,
+  type FileEventView,
+  type FileFamily,
+  type FileScanStatus,
+  type FileVersionView,
+  type FileView,
+  type FolderView,
+  fileFamilyOfContentType,
+  fileFamilyOfExtension,
+} from '../files/fileView.ts';
+import type {
+  DriveChangeEventListItem,
+  DriveChildrenArg,
+  DriveFileFamily,
+  DriveFileVersionListItem,
+  DriveNodeBulkResult,
+  DriveNodeListItem,
+  DriveScanStatus,
+  DriveSpaceListItem,
+} from './types.ts';
+
+/** The page size of a growing list; each "more" asks for one page more, up to `DRIVE_LIST_MAX_LIMIT`. */
+export const DRIVE_LIST_PAGE_SIZE = 100;
+
+/** The largest `limit` the drive answers in one call. */
+export const DRIVE_LIST_MAX_LIMIT = 1000;
+
+/** The most calls one "empty trash" makes (each removes one batch of the server). */
+export const DRIVE_EMPTY_TRASH_MAX_CALLS = 200;
+
+const DRIVE_FAMILIES: readonly DriveFileFamily[] = ['PDF', 'SPREADSHEET', 'DOCUMENT', 'PRESENTATION', 'TEXT', 'IMAGE', 'VECTOR', 'VIDEO', 'ARCHIVE'];
+
+/** The labels of the drive's own event types the file manager does not know. */
+export const DRIVE_EVENT_LABELS: Readonly<Record<string, string>> = {
+  READ_BY_AGENT: m('Read by the agent'),
+  VIEWED: m('Viewed', { context: 'file-event' }),
+  DOWNLOADED: m('Downloaded', { context: 'file-event' }),
+};
+
+/** The scan state the file manager shows: `PURGING` (the content is being removed) reads as not available. */
+export const driveScanStatusOf = (scanStatus: DriveScanStatus | null | undefined): FileScanStatus => {
+  switch (scanStatus) {
+    case 'CLEAN':
+    case 'PENDING':
+    case 'UPLOADING':
+    case 'INFECTED':
+    case 'FAILED':
+      return scanStatus;
+    case 'PURGING':
+      return 'FAILED';
+    default:
+      return 'PENDING';
+  }
+};
+
+/** The family of a drive item: the server's family, else from the extension, else from the content type. */
+export const driveFamilyOf = (item: Pick<DriveNodeListItem, 'family' | 'extension' | 'contentType' | 'name'>): FileFamily => {
+  if (item.family && (DRIVE_FAMILIES as readonly string[]).includes(item.family)) return item.family;
+  const extension = (item.extension ?? '') || extensionOfName(item.name);
+  const byExtension = fileFamilyOfExtension(extension);
+  if (byExtension !== 'OTHER') return byExtension;
+  return fileFamilyOfContentType(item.contentType) ?? 'OTHER';
+};
+
+const extensionOfName = (name: string): string => {
+  const dot = name.lastIndexOf('.');
+  return dot > 0 && dot < name.length - 1 ? name.slice(dot + 1).toLowerCase() : '';
+};
+
+/** The folder a node sits in as the file manager names it: the space's root is `null`. */
+export const driveFolderIdOf = (parentNodeId: number | null | undefined, rootNodeId: number | null | undefined): number | null =>
+  parentNodeId === null || parentNodeId === undefined || parentNodeId === rootNodeId ? null : parentNodeId;
+
+/** A file of the drive as a `FileView` (trash facts included when present). */
+export const driveFileViewOf = (item: DriveNodeListItem, rootNodeId: number | null | undefined): FileView => ({
+  id: item.id,
+  areaKey: item.driveSpaceId,
+  folderId: driveFolderIdOf(item.parentNodeId, rootNodeId),
+  name: item.name,
+  extension: (item.extension ?? '') || extensionOfName(item.name),
+  family: driveFamilyOf(item),
+  mimeType: item.contentType ?? null,
+  sizeBytes: item.sizeBytes ?? 0,
+  description: item.description ?? null,
+  scanStatus: item.scanStatus ? driveScanStatusOf(item.scanStatus) : 'UPLOADING',
+  hasPendingVersion: item.hasPendingVersion === true,
+  hasWorkingCopyChanges: item.hasWorkingCopyChanges === true,
+  thumbnailUrl: item.thumbnailUrl ?? null,
+  uploadedBy: item.createdByName ?? null,
+  createdAt: item.createdAt ?? null,
+  updatedAt: item.updatedAt ?? null,
+  deletedAt: item.trashedAt ?? null,
+  deletedBy: item.trashedByName ?? null,
+  purgeAfter: item.purgeAfter ?? null,
+});
+
+/** The folders of a space as the tree reads them: the root itself is left out, its children hang at `null`. */
+export const driveFolderViewsOf = (items: readonly DriveNodeListItem[], rootNodeId: number | null | undefined): FolderView[] =>
+  items
+    .filter(item => item.nodeType === 'FOLDER' && item.parentNodeId !== null && item.parentNodeId !== undefined && item.id !== rootNodeId)
+    .map(item => ({
+      id: item.id,
+      areaKey: item.driveSpaceId,
+      parentId: driveFolderIdOf(item.parentNodeId, rootNodeId),
+      name: item.name,
+      fileCount: item.childCount ?? null,
+    }));
+
+/** A version of a file as the drawer lists it. */
+export const driveVersionViewOf = (item: DriveFileVersionListItem): FileVersionView => ({
+  id: item.id,
+  versionNumber: item.versionNumber,
+  sizeBytes: item.sizeBytes ?? 0,
+  scanStatus: driveScanStatusOf(item.scanStatus),
+  scanResultDetail: item.scanDetail ?? null,
+  isCurrent: item.isCurrent,
+  uploadedBy: item.authorName ?? null,
+  createdAt: item.createdAt ?? null,
+  comment: item.comment ?? null,
+});
+
+/** A change of a node as the drawer's activity lists it; a move or rename shows `old path → new path`. */
+export const driveEventViewOf = (item: DriveChangeEventListItem): FileEventView => ({
+  id: item.id,
+  type: item.eventType,
+  occurredAt: item.occurredAt ?? null,
+  actor: item.actorName ?? null,
+  detail: item.previousPath && item.path && item.previousPath !== item.path ? `${item.previousPath} → ${item.path}` : null,
+});
+
+/** A space as the file manager's area facts. */
+export const driveAreaViewOf = (item: DriveSpaceListItem): FileAreaView => ({
+  areaKey: item.id,
+  isEnabled: true,
+  quotaBytes: item.quota.quotaBytes > 0 ? item.quota.quotaBytes : null,
+  usedBytes: item.quota.usedBytes,
+  maxFileSizeBytes: item.quota.maxFileSizeBytes > 0 ? item.quota.maxFileSizeBytes : null,
+  trashRetentionDays: item.quota.trashRetentionDays > 0 ? item.quota.trashRetentionDays : null,
+  fileCount: item.quota.fileCount,
+  folderCount: item.quota.folderCount,
+});
+
+/** A space as an entry of the area picker and the manager's `areas`. */
+export const driveAreaRefOf = (item: DriveSpaceListItem): FileAreaRefView => ({
+  key: item.id,
+  name: item.displayName || item.title || `#${item.id}`,
+  groupLabel: item.groupLabel ?? null,
+});
+
+const DRIVE_ORDERS: readonly FileListOrder[] = ['name', 'created', 'size'];
+
+/**
+ * The `children` request of a file manager query. A folder (or `'root'`) lists that folder; no folder, a name search
+ * or a filter lists the whole space (`recursive`).
+ */
+export const driveChildrenArgOf = (query: FileListQuery, rootNodeId: number | null | undefined, limit: number): DriveChildrenArg => {
+  const q = query.q?.trim() ?? '';
+  const isFolderView = query.folderId !== undefined && q === '';
+  const folderNodeId = !isFolderView ? null : query.folderId === 'root' ? (rootNodeId ?? null) : Number(query.folderId);
+  return {
+    driveSpaceId: Number(query.areaKey),
+    folderNodeId: folderNodeId ?? undefined,
+    recursive: isFolderView ? undefined : true,
+    query: q === '' ? undefined : q,
+    family: query.family && (DRIVE_FAMILIES as readonly string[]).includes(query.family) ? (query.family as DriveFileFamily) : undefined,
+    createdFrom: query.createdFrom || undefined,
+    createdTo: query.createdTo || undefined,
+    createdByMe: query.uploadedByMe ? true : undefined,
+    orderBy: query.orderBy && DRIVE_ORDERS.includes(query.orderBy) ? query.orderBy : undefined,
+    orderDirection: query.orderDirection,
+    limit,
+    includeSystem: false,
+  };
+};
+
+/** The files of a list answer (folders, links and system nodes are left out). */
+export const driveFileItemsOf = (items: readonly DriveNodeListItem[] | undefined): DriveNodeListItem[] =>
+  (items ?? []).filter(item => item.nodeType === 'FILE' && item.isSystem !== true);
+
+/** The next `limit` of a growing list, or `null` when the drive answers no more in one call. */
+export const nextDriveListLimit = (limit: number): number | null => (limit >= DRIVE_LIST_MAX_LIMIT ? null : Math.min(DRIVE_LIST_MAX_LIMIT, limit + DRIVE_LIST_PAGE_SIZE));
+
+/** What an "empty trash" removed over all its calls. */
+export interface DriveEmptyTrashOutcome {
+  calls: number;
+  processedCount: number;
+  fileCount: number;
+  folderCount: number;
+  /** The call limit was reached with more left (rare; the user empties again). */
+  hasMore: boolean;
+}
+
+/** Empties a trash batch by batch: calls `emptyOnce` while the server answers `hasMore`, at most `maxCalls` times. */
+export const emptyDriveTrashFully = async (
+  emptyOnce: () => Promise<DriveNodeBulkResult>,
+  maxCalls: number = DRIVE_EMPTY_TRASH_MAX_CALLS
+): Promise<DriveEmptyTrashOutcome> => {
+  const outcome: DriveEmptyTrashOutcome = { calls: 0, processedCount: 0, fileCount: 0, folderCount: 0, hasMore: false };
+  for (;;) {
+    const result = await emptyOnce();
+    outcome.calls += 1;
+    outcome.processedCount += result.processedCount;
+    outcome.fileCount += result.fileCount;
+    outcome.folderCount += result.folderCount;
+    outcome.hasMore = result.hasMore;
+    if (!result.hasMore || result.processedCount === 0 || outcome.calls >= maxCalls) return outcome;
+  }
+};

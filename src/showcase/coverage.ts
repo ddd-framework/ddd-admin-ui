@@ -118,7 +118,9 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
   },
   clouddrive: {
     shown: ['CloudDriveScreen'],
-    notShown: {},
+    notShown: {
+      CloudDriveSpacePicker: 'drawn by CloudDriveScreen (renderAreaPicker)',
+    },
   },
   files: {
     shown: ['FileFamilyIcon', 'FileManager', 'QuotaPill'],
