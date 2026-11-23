@@ -3,6 +3,11 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.4.4
+
+The release of 0.4.3 (its tag was never published: the text manifest carried the old version). Same content as
+0.4.3 below.
+
 ## 0.4.3
 
 For mgamadeus/ddd-clouddrive 0.1.0-rc.14 (rc.10 – rc.13 keep working; the path bar's `drive/<id>` and the accesses need
