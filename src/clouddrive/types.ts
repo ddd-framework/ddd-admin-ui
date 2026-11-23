@@ -237,6 +237,9 @@ export interface DriveNodeListItem {
   thumbnailUrl?: string | null;
   createdByAccountId?: number | null;
   createdByName?: string | null;
+  /** ddd-clouddrive ≥ rc.20: the account the creator acted for (impersonation); null otherwise. */
+  createdOnBehalfOfAccountId?: number | null;
+  createdOnBehalfOfName?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
   trashedAt?: string | null;
@@ -297,6 +300,9 @@ export interface DriveFileVersionListItem {
   origin?: string | null;
   authorAccountId?: number | null;
   authorName?: string | null;
+  /** ddd-clouddrive ≥ rc.20: the account the author acted for (impersonation); null otherwise. */
+  onBehalfOfAccountId?: number | null;
+  onBehalfOfName?: string | null;
   createdAt?: string | null;
   scanStatus?: DriveScanStatus | null;
   scanDetail?: string | null;

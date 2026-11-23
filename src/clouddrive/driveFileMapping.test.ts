@@ -89,6 +89,16 @@ describe('drive payloads as file manager views', () => {
     assert.deepEqual(items.map(item => item.id), [41]);
   });
 
+  it('maps who the uploader and the version author acted for (ddd-clouddrive rc.20)', () => {
+    const view = driveFileViewOf(file({ createdByName: 'Staff', createdOnBehalfOfName: 'Partner GmbH' }), ROOT);
+    assert.equal(view.uploadedBy, 'Staff');
+    assert.equal(view.uploadedOnBehalfOf, 'Partner GmbH');
+    assert.equal(driveFileViewOf(file({ createdByName: 'Ann' }), ROOT).uploadedOnBehalfOf, null);
+    const version = driveVersionViewOf({ id: 7, driveNodeId: 41, versionNumber: 2, isCurrent: true, isLatest: true, isRestorable: false, authorName: 'Staff', onBehalfOfName: 'Partner GmbH' });
+    assert.equal(version.uploadedBy, 'Staff');
+    assert.equal(version.uploadedOnBehalfOf, 'Partner GmbH');
+  });
+
   it('maps versions, events and the space', () => {
     const version = driveVersionViewOf({ id: 7, driveNodeId: 41, versionNumber: 2, scanStatus: 'CLEAN', isCurrent: true, isLatest: true, isRestorable: false, comment: 'Restored from v1' });
     assert.equal(version.comment, 'Restored from v1');

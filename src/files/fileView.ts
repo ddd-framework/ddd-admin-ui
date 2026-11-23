@@ -183,6 +183,8 @@ export interface FileView {
   links?: readonly FileLinkView[];
   /** Display name of the uploader. */
   uploadedBy?: string | null;
+  /** Display name of the account the uploader acted for (impersonation), shown as "(on behalf: …)". */
+  uploadedOnBehalfOf?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
   /** Trash only. */
@@ -203,6 +205,8 @@ export interface FileVersionView {
   /** The released version the file downloads by default. */
   isCurrent: boolean;
   uploadedBy?: string | null;
+  /** Display name of the account the uploader acted for (impersonation), shown as "(on behalf: …)". */
+  uploadedOnBehalfOf?: string | null;
   createdAt?: string | null;
   /** Free text stored with the version (a person's or the agent's note). */
   comment?: string | null;

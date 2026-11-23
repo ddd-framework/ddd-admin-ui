@@ -334,7 +334,12 @@ const VersionsCard = ({ file, actions, features, editable, replacementExtension,
                 )}
                 <span className="text-muted-foreground">{formatBytes(version.sizeBytes)}</span>
                 <span className="text-muted-foreground">{formatDateTime(version.createdAt)}</span>
-                {version.uploadedBy && <span className="text-muted-foreground">{t('by %user%', { replacements: { user: version.uploadedBy } })}</span>}
+                {version.uploadedBy && (
+                  <span className="text-muted-foreground">
+                    {t('by %user%', { replacements: { user: version.uploadedBy } })}
+                    {version.uploadedOnBehalfOf && ` ${t('(on behalf: %name%)', { replacements: { name: version.uploadedOnBehalfOf } })}`}
+                  </span>
+                )}
                 <span className="ml-auto flex items-center gap-1">
                   {features.malwareScan && <StatusBadge value={version.scanStatus} map={FILE_SCAN_STATUS} />}
                   {features.restoreVersion && !version.isCurrent && isFileReleased(version.scanStatus) && (
@@ -787,7 +792,15 @@ export const FileDrawer = ({
                   ...(features.malwareScan
                     ? [{ id: 'scan', label: t('Malware check'), value: <StatusBadge value={file.scanStatus} map={FILE_SCAN_STATUS} /> }]
                     : []),
-                  { id: 'uploadedBy', label: t('Uploaded by'), value: file.uploadedBy },
+                  {
+                    id: 'uploadedBy',
+                    label: t('Uploaded by'),
+                    value: file.uploadedBy
+                      ? file.uploadedOnBehalfOf
+                        ? `${file.uploadedBy} ${t('(on behalf: %name%)', { replacements: { name: file.uploadedOnBehalfOf } })}`
+                        : file.uploadedBy
+                      : null,
+                  },
                   { id: 'created', label: t('Created', { context: 'file-date' }), value: <DateCell value={file.createdAt} /> },
                   { id: 'updated', label: t('Updated', { context: 'file-date' }), value: <DateCell value={file.updatedAt} /> },
                   {

@@ -3,6 +3,16 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.5.4
+
+The uploader's and the version author's on-behalf account (impersonation) next to the name; additive.
+
+- New optional `FileView.uploadedOnBehalfOf` and `FileVersionView.uploadedOnBehalfOf`. The drawer shows them next to
+  the name in "Uploaded by" and in each version line, with the activity's own text "(on behalf: %name%)" (no new key:
+  a host's existing translation applies).
+- The drive adapter maps `DriveNodeListItem.createdOnBehalfOfName` and `DriveFileVersionListItem.onBehalfOfName`
+  (ddd-clouddrive ≥ 0.1.0-rc.20); older servers leave them empty.
+
 ## 0.5.3
 
 Two fixes of `./files` from a host's second browser check; additive.
