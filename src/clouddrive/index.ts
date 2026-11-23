@@ -6,5 +6,5 @@ export type { CloudDriveApi, CreateCloudDriveApiOptions, StaticCloudDriveData } 
 export type * from './types.ts';
 export { CloudDriveScreen } from './CloudDriveScreen.tsx';
 export type { CloudDriveFolderStep, CloudDriveScreenProps } from './CloudDriveScreen.tsx';
-export { formatDriveSize, sendDriveUpload } from './upload.ts';
+export { formatDriveSize, parseDriveTime, sendDriveUpload } from './upload.ts';
 export type { DriveUploadProgress } from './upload.ts';

@@ -3,6 +3,18 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.3.14
+
+`./clouddrive` fixes from the first host. Additive.
+
+- Deep links: `CloudDriveScreen` takes `initialFolderNodeId` (opens that folder) and `initialNodeId` (opens the
+  folder of a file or folder and selects its row, scrolled into view). Space and path come from the node's
+  `ancestors` (mgamadeus/ddd-clouddrive ≥ 0.1.0-rc.3).
+- Write access: upload, new folder, trash and restore follow `WriteAccessProvider` (disabled with its reason).
+- Times: offsetless backend times are read as UTC (`parseDriveTime`); before, as local time.
+- The space picker is controlled from the first render (no React warning); the size column reads "File size" (its
+  own text: "Size" was translated as dimensions).
+
 ## 0.3.13
 
 New entry `./clouddrive`: the drive screen on the endpoints of `mgamadeus/ddd-clouddrive` (`CloudDriveControllerTrait`).

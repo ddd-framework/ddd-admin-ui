@@ -1161,7 +1161,6 @@
   "Root": "Drive screen (cloud drive of the admin): first breadcrumb when the space has no title: the top folder of the space.",
   "Search by name": "Drive screen (cloud drive of the admin): search field and its label: find files and folders whose name contains the text.",
   "Shared space": "Drive screen (cloud drive of the admin): badge: people outside the staff (e.g. partners) see this space.",
-  "Size": "Drive screen (cloud drive of the admin): column header: file size.",
   "Space": "Drive screen (cloud drive of the admin): picker of the storage space (one drive per customer, agent workspace or library).",
   "System": "Drive screen (cloud drive of the admin): badge of a system folder (scratch files of the assistant, deleted after a few days).",
   "The file cannot be downloaded.": "Drive screen (cloud drive of the admin): error toast when the download link could not be issued.",
@@ -1173,5 +1172,6 @@
   "Upload": "Drive screen (cloud drive of the admin): button: pick files from the computer and upload them into the current folder.",
   "Uploading %name%: %percent%": "Drive screen (cloud drive of the admin): progress text during an upload; %percent% is e.g. \"42 %\".",
   "Uploading %name%…": "Drive screen (cloud drive of the admin): progress text when an upload starts; %name% is the file name.",
-  "Version": "Drive screen (cloud drive of the admin): column header: the file's version number (v1, v2, …)."
+  "Version": "Drive screen (cloud drive of the admin): column header: the file's version number (v1, v2, …).",
+  "File size": "Drive screen (cloud drive of the admin): column header: the size of a file in bytes, KB, MB (not dimensions)."
 }

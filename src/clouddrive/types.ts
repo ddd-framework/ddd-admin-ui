@@ -107,6 +107,8 @@ export interface DriveNodesResponse {
 export interface DriveNodeResponse {
   driveNode: DriveNode;
   path: string;
+  /** The folders above the node, the root first and its own folder last (mgamadeus/ddd-clouddrive ≥ 0.1.0-rc.3). */
+  ancestors?: { elements?: DriveNode[] } | null;
   driveFileVersions?: { elements?: DriveFileVersion[] } | null;
   isConflict?: boolean | null;
   conflictReason?: string | null;

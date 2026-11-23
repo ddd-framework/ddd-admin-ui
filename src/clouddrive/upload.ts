@@ -45,3 +45,11 @@ export const formatDriveSize = (sizeBytes: number | null | undefined): string =>
   if (sizeBytes < 1024 * 1024 * 1024) return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
   return `${(sizeBytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 };
+
+/** A backend time `Y-m-d H:i:s` without an offset is UTC; one with an offset is read as it is. */
+export const parseDriveTime = (value: string | null | undefined): Date | null => {
+  if (!value) return null;
+  const isoValue = value.includes('T') ? value : value.replace(' ', 'T');
+  const date = new Date(/(Z|[+-]\d{2}:?\d{2})$/.test(isoValue) ? isoValue : `${isoValue}Z`);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
