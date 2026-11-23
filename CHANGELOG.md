@@ -3,6 +3,10 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.3.16
+
+The content of 0.3.15 again: the registry accepted the 0.3.15 publish but never listed it.
+
 ## 0.3.15
 
 - Fixed: `./clouddrive`'s breadcrumbs render each separator as a sibling of its item (before, an `<li>` inside an
