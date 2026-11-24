@@ -1,7 +1,7 @@
 /**
  * `./agent-ui`: the adapters of `Agent.UI` (`@mgamadeus/ddd-agents/ui`) for an admin built from this package — the
  * screen targets from the shell's navigation tree, the navigator with the package's navigation guard, the options of
- * the agents package's DOM reader, and the UI state source (route, tab, view, unsaved and invalid fields, open
+ * the agents package's DOM reader and highlighter (a mark scrolled beside the agent window), and the UI state source (route, tab, view, unsaved and invalid fields, open
  * dialog). Never imports the agents package: `contract.ts` is a structural copy of the contracts the adapters fill.
  */
 export {
@@ -13,9 +13,11 @@ export type {
   AgentUIRouteParameter,
   AgentUIState,
   AgentUIStateSource,
+  ScreenHighlightEvent,
   ScreenLocation,
   ScreenNavigationBlocker,
   ScreenNavigator,
+  ScreenOccludingRect,
   ScreenOpenRequest,
   ScreenTarget,
   ScreenTargetFilter,
@@ -43,4 +45,11 @@ export {
   AGENT_SCREEN_SETTLE_QUIET_MS,
   useAdminUiAgentScreen,
 } from './useAdminUiAgentScreen.ts';
-export type { AdminUiAgentScreen, AdminUiAgentScreenOptions, AdminUiScreenReaderOptions } from './useAdminUiAgentScreen.ts';
+export type {
+  AdminUiAgentScreen,
+  AdminUiAgentScreenOptions,
+  AdminUiScreenHighlighterOptions,
+  AdminUiScreenReaderOptions,
+} from './useAdminUiAgentScreen.ts';
+export { AGENT_PANEL_ATTRIBUTE, findAgentPanelByAttribute, findOccludingRectOfAgentPanel } from './agentPanel.ts';
+export type { ViewportBoxSource } from './agentPanel.ts';

@@ -34,7 +34,7 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./database` | the schema diff screen on the host's api (`createDatabaseApi`): `SchemaDiffScreen`, `SchemaDiffCard`, the generated-code previews (`GeneratedCodePanel`, `CodeBlock`), the status maps `DB_TABLE_CHANGE_TYPE` / `DB_DIFF_SEVERITY`, the diff helpers, the payload types | logic, i18n, primitives, list, page |
 | `./files` | the generic file manager on the host's adapter (`FileManagerAdapter` with optional capabilities): `FileManager` (folder tree, grid / table, search and filters, upload tray with progress, drag and drop moves, details drawer with preview, versions and activity, trash, links, moves into other areas), its parts (`FolderTree`, `FileCard`, `FileDrawer`, `FilePreview`, `MoveDialog`, `LinkTargetsDialog`, `UploadTray`, `QuotaPill`, …), `useFileUploadQueue`, `uploadWithProgress`, `createStaticFileManagerAdapter`, the view models | logic, i18n, primitives, list, page, form |
 | `./crons` | the Crons screen on the host's api (`createCronsApi`): `CronsScreen` and its parts (summary tiles, runner banner, Crons table with countdown and run strip, row actions, details drawer with the duration chart, runs with their output, timeline, create / edit form with the schedule preview), `useCronActions`, the status maps `CRON_STATUS`, `CRON_EXECUTION_RESULT`, the payload types | logic, i18n, primitives, list, page, form, data |
-| `./agent-ui` | the adapters of `Agent.UI` (`@mgamadeus/ddd-agents/ui` 0.3.x) for screens built from the package: `useAdminUiAgentScreen` (screen targets from the shell's navigation tree, the navigator with the navigation guard, the DOM reader's options, the UI state source), the pure `buildScreenTargets`, `matchScreenTarget`, `buildScreenTargetHref`, `buildAgentUIState`, `describeNavigationBlocker`; the contract types (structural copy) | logic, i18n, primitives; never imports the agents package |
+| `./agent-ui` | the adapters of `Agent.UI` (`@mgamadeus/ddd-agents/ui` 0.3.x) for screens built from the package: `useAdminUiAgentScreen` (screen targets from the shell's navigation tree, the navigator with the navigation guard, the DOM reader's and highlighter's options, the UI state source), the pure `buildScreenTargets`, `matchScreenTarget`, `buildScreenTargetHref`, `buildAgentUIState`, `describeNavigationBlocker`; the contract types (structural copy) | logic, i18n, primitives; never imports the agents package |
 | `./media` | `MediaItemField`, `FormMediaItemField`, `MediaItemPickerDialog`, `MediaPreview`, `ImageCropDialog` (crop surface: file and aspect options in; cropped blob, skip or cancel out) | logic, i18n, primitives, list, form |
 | `./glass` | `GlassPill`, `QuickFilterPills`, `CollapsibleCard`, `GlassGroup`, `ActionRow` | logic, i18n, primitives |
 | `./shell` | the application frame `AppShell` (top bar with slots, sidebar with groups, badges and locks, the icon rail and its `[` shortcut, the mobile menu, the content frame), `ShellBreadcrumbs`, `ShellDocumentTitle`, `AccountMenu`, `LanguageMenu`, their parts and hooks (`useSidebarCollapsed`, `useShellShortcut`) | logic, i18n, primitives |
@@ -374,7 +374,11 @@ const adapters = useMemo(() => {
     navigator: screen.navigator,
     isVisible: screen.isVisible,
     reader: new DomScreenReader({ ...screen.readerOptions, registry }),
-    highlighter: new DomScreenHighlighter({ registry, announce: labels => t('Marked: %labels%', { replacements: { labels: labels.join(', ') } }) }),
+    highlighter: new DomScreenHighlighter({
+      ...screen.highlighterOptions,                   // agents ≥ 0.3.2: marks scroll beside the agent window
+      registry,
+      announce: labels => t('Marked: %labels%', { replacements: { labels: labels.join(', ') } }),
+    }),
   };
 }, [screen]);
 const uiClient = useAgentUIClient(adapters, screen.uiStateSource);   // → createAgentsHttpConversationClient({ uiClient })
@@ -394,6 +398,11 @@ const uiClient = useAgentUIClient(adapters, screen.uiStateSource);   // → crea
   field value or label.
 - **Reader options**: the content root is the shell's `<main>` (`findRoot` to change), the location is the pathname
   plus query and the page's `h1`, unsaved changes come from the guard.
+- **Highlighter options** (`@mgamadeus/ddd-agents/ui` ≥ 0.3.2): put `data-agent-panel` on the agent window (or
+  pass `findAgentPanel`). A mark is then scrolled into the band the window leaves free; a window docked beside the
+  page changes nothing. `onHighlight({ references, elements, occludingRect, coveredAfterScroll })` runs after every
+  mark: when `coveredAfterScroll` is true (the element is too tall for the free band, or a side panel lies over it),
+  make the compact window smaller or move it. A mark that stays covered is answered as out of view.
 
 The contract types are a structural copy of `@mgamadeus/ddd-agents/ui` 0.3.x: this package never imports the agents
 package, and the adapters are assignable to its types.

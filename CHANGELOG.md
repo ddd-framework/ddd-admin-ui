@@ -3,6 +3,17 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.7.1
+
+- `./agent-ui`: a mark of the agent no longer lands behind the compact agent window. `useAdminUiAgentScreen` returns
+  `highlighterOptions` for `DomScreenHighlighter` of `@mgamadeus/ddd-agents/ui` ≥ 0.3.2 (`getOccludingRect`,
+  `onHighlight`): the highlighter scrolls the marked element into the band the window leaves free. The window is the
+  first element with `data-agent-panel` (`AGENT_PANEL_ATTRIBUTE`), or what the new option `findAgentPanel` returns;
+  the new option `onHighlight` receives each mark (`coveredAfterScroll` when the element stays covered) so the host
+  can make the window smaller or move it. Pure helper `findOccludingRectOfAgentPanel`; contract types
+  `ScreenOccludingRect`, `ScreenHighlightEvent`. Additive: without `data-agent-panel` and the spread options nothing
+  changes.
+
 ## 0.7.0
 
 - Removed: the entry `./sandbox`. The sandbox administration left `mgamadeus/ddd-agents` (0.3.0) for

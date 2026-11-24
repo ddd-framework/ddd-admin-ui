@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import type { NavigationItem } from '../logic/pure/navigation.ts';
 import { decideNavigation } from '../logic/pure/navigationGuard.ts';
+import { AGENT_PANEL_ATTRIBUTE, findOccludingRectOfAgentPanel } from './agentPanel.ts';
 import {
   buildAgentUIState,
   describeNavigationBlocker,
@@ -178,5 +179,32 @@ describe('buildAgentUIState', () => {
     assert.equal(state.view, null);
     assert.equal(state.openDialogKey, null);
     assert.deepEqual(state.unsavedFieldReferences, []);
+  });
+});
+
+describe('findOccludingRectOfAgentPanel', () => {
+  const viewport = { width: 390, height: 800 };
+  const panelAt = (top: number, left: number, bottom: number, right: number) => ({
+    getBoundingClientRect: () => ({ top, left, bottom, right }),
+  });
+
+  it('reports the box of an open agent window', () => {
+    assert.deepEqual(findOccludingRectOfAgentPanel(panelAt(480, 0, 800, 390), viewport), {
+      top: 480,
+      left: 0,
+      bottom: 800,
+      right: 390,
+    });
+  });
+
+  it('reports nothing without a window, for a closed one, or one outside the viewport', () => {
+    assert.equal(findOccludingRectOfAgentPanel(null, viewport), null);
+    assert.equal(findOccludingRectOfAgentPanel(panelAt(0, 0, 0, 0), viewport), null);
+    assert.equal(findOccludingRectOfAgentPanel(panelAt(900, 0, 1200, 390), viewport), null);
+    assert.equal(findOccludingRectOfAgentPanel(panelAt(0, 400, 800, 700), viewport), null);
+  });
+
+  it('names the attribute the default lookup reads', () => {
+    assert.equal(AGENT_PANEL_ATTRIBUTE, 'data-agent-panel');
   });
 });

@@ -6,10 +6,13 @@ import { useTranslate } from '../i18n/useTranslate.ts';
 import type { NavigationAccess, NavigationItem } from '../logic/pure/navigation.ts';
 import { canNavigate, getDirtyForms, getOpenOverlays, type OverlayKind } from '../logic/pure/navigationGuard.ts';
 import { useCurrentPathname } from '../primitives/pathname.tsx';
+import { findAgentPanelByAttribute, findOccludingRectOfAgentPanel } from './agentPanel.ts';
 import { buildAgentUIState, describeNavigationBlocker, describeUnsavedChanges } from './agentUIState.ts';
 import type {
   AgentUIStateSource,
+  ScreenHighlightEvent,
   ScreenLocation,
+  ScreenOccludingRect,
   ScreenNavigator,
   ScreenTarget,
   ScreenTargetSource,
@@ -45,6 +48,22 @@ export interface AdminUiAgentScreenOptions {
   findRoot?: () => Element | null;
   /** Called after an opened screen settled (e.g. to make room for the page beside the agent window) */
   onOpened?: (target: ScreenTarget, location: ScreenLocation) => void;
+  /**
+   * The agent window, so a mark is scrolled beside it (default: the first element with `data-agent-panel`). A window
+   * docked beside the page never overlaps a mark and changes nothing.
+   */
+  findAgentPanel?: () => Element | null;
+  /**
+   * Called after every mark (agents package 0.3.2 or later), e.g. to make the compact agent window smaller or move it
+   * when `coveredAfterScroll` says the marked element is still under it.
+   */
+  onHighlight?: (event: ScreenHighlightEvent) => void;
+}
+
+/** The options `DomScreenHighlighter` of `@mgamadeus/ddd-agents/ui` (0.3.2 or later) takes besides registry and announce. */
+export interface AdminUiScreenHighlighterOptions {
+  getOccludingRect: () => ScreenOccludingRect | null;
+  onHighlight: (event: ScreenHighlightEvent) => void;
 }
 
 /** The options `DomScreenReader` of `@mgamadeus/ddd-agents/ui` takes besides its registry. */
@@ -64,6 +83,8 @@ export interface AdminUiAgentScreen {
   readerOptions: AdminUiScreenReaderOptions;
   /** Pass to `useAgentUIClient(adapters, uiStateSource)` */
   uiStateSource: AgentUIStateSource;
+  /** Pass to `new DomScreenHighlighter({ ...highlighterOptions, registry, announce })` */
+  highlighterOptions: AdminUiScreenHighlighterOptions;
 }
 
 const wait = (milliseconds: number) => new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -82,7 +103,8 @@ const invalidFieldNamesIn = (root: Element | null): string[] => {
  * The agent's view of an admin built from this package (`Agent.UI` of `@mgamadeus/ddd-agents`): the screen targets
  * from the shell's navigation tree (rights applied), the navigator over the host's router with the package's
  * navigation guard (unsaved changes in a form, an open dialog, drawer or sheet refuse), the options of the DOM reader,
- * and the UI state source (route, tab, view, unsaved and invalid fields, open dialog). Stable for the component's
+ * the UI state source (route, tab, view, unsaved and invalid fields, open dialog), and the highlighter options that
+ * scroll a mark beside the agent window and report each mark to the host. Stable for the component's
  * lifetime; every call reads the newest options and pathname.
  */
 export const useAdminUiAgentScreen = (options: AdminUiAgentScreenOptions): AdminUiAgentScreen => {
@@ -139,8 +161,18 @@ export const useAdminUiAgentScreen = (options: AdminUiAgentScreenOptions): Admin
       },
     };
 
+    const getOccludingRect = (): ScreenOccludingRect | null => {
+      if (typeof window === 'undefined') return null;
+      const agentPanel = (latest.current.options.findAgentPanel ?? findAgentPanelByAttribute)();
+      return findOccludingRectOfAgentPanel(agentPanel, { width: window.innerWidth, height: window.innerHeight });
+    };
+
     return {
       targets: { listTargets },
+      highlighterOptions: {
+        getOccludingRect,
+        onHighlight: event => latest.current.options.onHighlight?.(event),
+      },
       navigator,
       isVisible: () => typeof document !== 'undefined' && document.visibilityState === 'visible',
       readerOptions: {

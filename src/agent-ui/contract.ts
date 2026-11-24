@@ -90,6 +90,26 @@ export interface AgentUIStateSource {
   readUIState(): AgentUIState | null;
 }
 
+/** A region of the viewport in CSS pixels (`ScreenOccludingRect` of the agents package; a `DOMRect` fits). */
+export interface ScreenOccludingRect {
+  top: number;
+  left: number;
+  right: number;
+  bottom: number;
+}
+
+/** What a mark did (`ScreenHighlightEvent` of the agents package, 0.3.2 or later). */
+export interface ScreenHighlightEvent {
+  /** The references that were marked */
+  references: string[];
+  /** The marked elements, the first one scrolled into view */
+  elements: Element[];
+  /** The region reported as covering the page (the agent window), or null */
+  occludingRect: ScreenOccludingRect | null;
+  /** True when the first element stays covered by that region after the scroll */
+  coveredAfterScroll: boolean;
+}
+
 /** The refusal codes of a navigation (`CLIENT_TOOL_OUTCOMES` of the agents package). */
 export const AGENT_UI_NAVIGATION_OUTCOMES = {
   unsavedChanges: 'UNSAVED_CHANGES',
