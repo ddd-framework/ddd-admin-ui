@@ -22,6 +22,7 @@ const expectations = {
   shell: ['AppShell', 'ShellBreadcrumbs', 'ShellDocumentTitle', 'AccountMenu', 'LanguageMenu', 'useSidebarCollapsed', 'useShellShortcut'],
   'shell-background': ['ShaderBackground', 'tintShaderPalette'],
   'design-studio': ['designStudioComponents'],
+  'agent-ui': ['useAdminUiAgentScreen', 'buildScreenTargets', 'matchScreenTarget', 'buildScreenTargetHref', 'buildAgentUIState', 'describeNavigationBlocker', 'describeUnsavedChanges', 'fieldReferenceOf', 'AGENT_UI_NAVIGATION_OUTCOMES'],
 };
 
 let failed = false;

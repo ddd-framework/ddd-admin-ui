@@ -34,7 +34,7 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./database` | the schema diff screen on the host's api (`createDatabaseApi`): `SchemaDiffScreen`, `SchemaDiffCard`, the generated-code previews (`GeneratedCodePanel`, `CodeBlock`), the status maps `DB_TABLE_CHANGE_TYPE` / `DB_DIFF_SEVERITY`, the diff helpers, the payload types | logic, i18n, primitives, list, page |
 | `./files` | the generic file manager on the host's adapter (`FileManagerAdapter` with optional capabilities): `FileManager` (folder tree, grid / table, search and filters, upload tray with progress, drag and drop moves, details drawer with preview, versions and activity, trash, links, moves into other areas), its parts (`FolderTree`, `FileCard`, `FileDrawer`, `FilePreview`, `MoveDialog`, `LinkTargetsDialog`, `UploadTray`, `QuotaPill`, …), `useFileUploadQueue`, `uploadWithProgress`, `createStaticFileManagerAdapter`, the view models | logic, i18n, primitives, list, page, form |
 | `./crons` | the Crons screen on the host's api (`createCronsApi`): `CronsScreen` and its parts (summary tiles, runner banner, Crons table with countdown and run strip, row actions, details drawer with the duration chart, runs with their output, timeline, create / edit form with the schedule preview), `useCronActions`, the status maps `CRON_STATUS`, `CRON_EXECUTION_RESULT`, the payload types | logic, i18n, primitives, list, page, form, data |
-| `./sandbox` | the agents' workspaces on the host's api (`createSandboxesApi`, `mgamadeus/ddd-agents` ≥ 0.1.32, `AgentSandboxesControllerTrait`): `SandboxesScreen` (state, last activity, disk and memory against their limits, mount mode, runner, owner, conversations, start / offload / end) and `SandboxDetailScreen` (files read only with the safe preview, unsaved changes, processes and jobs with kill, commands with exit code and output tails, conversations, session log, audit; reset with a typed name; a reason while a turn runs), `useSandboxActions`, `SandboxFilePreview`, the payload types | logic, i18n, primitives, list, page, form, files |
+| `./agent-ui` | the adapters of `Agent.UI` (`@mgamadeus/ddd-agents/ui` 0.3.x) for screens built from the package: `useAdminUiAgentScreen` (screen targets from the shell's navigation tree, the navigator with the navigation guard, the DOM reader's options, the UI state source), the pure `buildScreenTargets`, `matchScreenTarget`, `buildScreenTargetHref`, `buildAgentUIState`, `describeNavigationBlocker`; the contract types (structural copy) | logic, i18n, primitives; never imports the agents package |
 | `./media` | `MediaItemField`, `FormMediaItemField`, `MediaItemPickerDialog`, `MediaPreview`, `ImageCropDialog` (crop surface: file and aspect options in; cropped blob, skip or cancel out) | logic, i18n, primitives, list, form |
 | `./glass` | `GlassPill`, `QuickFilterPills`, `CollapsibleCard`, `GlassGroup`, `ActionRow` | logic, i18n, primitives |
 | `./shell` | the application frame `AppShell` (top bar with slots, sidebar with groups, badges and locks, the icon rail and its `[` shortcut, the mobile menu, the content frame), `ShellBreadcrumbs`, `ShellDocumentTitle`, `AccountMenu`, `LanguageMenu`, their parts and hooks (`useSidebarCollapsed`, `useShellShortcut`) | logic, i18n, primitives |
@@ -42,7 +42,7 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./provider` | `AdminUiProvider` (also the dialog behind `useConfirm`), `useAdminUi`, `defaultStorageKey` | logic, i18n, primitives; types only from media and translations |
 | `./next` | Next.js adapters: `useNextUrlStateAdapter`, `useNextDrawerUrlAdapter`, `useNextPathname`, `useListViewParam`, the one URL writer (`queueSearchParamsWrite`) | logic, provider; the only entry importing `next/*` |
 | `./notify-sonner` | `sonnerNotifications` (the notification adapter on `sonner`) and its `Toaster` | logic; the only entry importing `sonner` |
-| `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE`; the sample payloads of the screens (`showcaseWorkersData`, `showcaseTranslationsData`, `showcaseIssuesData`, `showcaseDatabaseData`, `showcaseFilesData`, `showcaseCronsData`, `showcaseSandboxesData`) | logic, i18n, primitives, list, page, form, translations, media, glass, data, workers, issues, database, files, crons, sandbox, shell, shell-background; never `./next`, `./notify-sonner` or `./markdown` (its section loads through `loadMarkdown`) |
+| `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE`; the sample payloads of the screens (`showcaseWorkersData`, `showcaseTranslationsData`, `showcaseIssuesData`, `showcaseDatabaseData`, `showcaseFilesData`, `showcaseCronsData`) | logic, i18n, primitives, list, page, form, translations, media, glass, data, workers, issues, database, files, crons, shell, shell-background; never `./next`, `./notify-sonner` or `./markdown` (its section loads through `loadMarkdown`) |
 | `./data` | key figures: `MetricTile` (label, value, delta, hint, sparkline slot, skeleton), `MetricTileSkeleton`, `MetricGrid`, `DeltaText`, `NoteList`, the delta helpers `resolveDelta`, `relativeChange`, `deltaDirectionOf`, `deltaToneOf` | logic, i18n, primitives |
 | `./markdown` | `MarkdownEditor`, `MarkdownPreview` (sanitised), `renderMarkdownEditor` (the `renderEditor` slot of `./translations` and `AdminUiProvider.renderMarkdownEditor`); loads `@uiw/react-md-editor` and `rehype-sanitize` after hydration | logic, i18n, primitives; translations type-only; the only entry reaching its optional peers |
 | `./design-studio` | `designStudioComponents`: the `components` of `@mgamadeus/ddd-design-studio`'s provider, every slot mapped to the block of the same name; the slot types (`DesignStudioComponentsContract`, structural copy) | primitives, list, page, glass; never imports the studio |
@@ -348,6 +348,55 @@ on `DialogContent` / `SheetContent` sets the kind or `null` (not counted); a `fo
 
 The package has no password, key or token field component of its own; a host field for such a value sets
 `data-agent-secret` itself (`<Input data-agent-secret="" … />` on a field that is not `type="password"`).
+
+### `./agent-ui`: the agent's view of the admin
+
+`Agent.UI` of `mgamadeus/ddd-agents` (≥ 0.3.0) lets the admin agent read the screen, list and open screens and mark
+elements; the client runs the requests through four adapters and reports the UI state with every message. The
+agents package (`@mgamadeus/ddd-agents/ui`) ships the runner, the DOM reader and the highlighter; this entry fills the
+rest from the package's own model, so a host writes only its router call and its filter lists:
+
+```tsx
+'use client';
+import { useAdminUiAgentScreen } from '@mgamadeus/ddd-admin-ui/agent-ui';
+import { DomScreenHighlighter, DomScreenReader, ScreenReferenceRegistry, useAgentUIClient } from '@mgamadeus/ddd-agents/ui';
+
+const screen = useAdminUiAgentScreen({
+  navigation: ADMIN_NAVIGATION,                       // the tree of AppShell
+  canAccess,                                          // the shell's rights predicate
+  navigate: href => router.push(href),
+  filtersByTargetKey: { orders: ORDER_LIST_KEYS },    // each list's useUrlListState keys
+});
+const adapters = useMemo(() => {
+  const registry = new ScreenReferenceRegistry();
+  return {
+    targets: screen.targets,
+    navigator: screen.navigator,
+    isVisible: screen.isVisible,
+    reader: new DomScreenReader({ ...screen.readerOptions, registry }),
+    highlighter: new DomScreenHighlighter({ registry, announce: labels => t('Marked: %labels%', { replacements: { labels: labels.join(', ') } }) }),
+  };
+}, [screen]);
+const uiClient = useAgentUIClient(adapters, screen.uiStateSource);   // → createAgentsHttpConversationClient({ uiClient })
+```
+
+- **Targets** come from the navigation tree (`buildScreenTargets`): every in-app entry with an `href` under its key,
+  every `:parameter` crumb a record target (its `entity`, or the parameter without `Id`; below a record
+  `<owner>.<record>`), the literal crumbs right below a target its tabs. `canAccess` applies: the agent offers the
+  viewer's menu. Filters and views are the host's lists per key.
+- **Navigation** is refused by the navigation guard: unsaved changes (`UNSAVED_CHANGES`, naming the forms and fields),
+  then an open package dialog, drawer or sheet (`DIALOG_OPEN`). The agent window must not count itself: give its
+  `DialogContent` / `SheetContent` `overlayKind={null}`, or pass its kind in `ignoreOverlayKinds`. An opened screen
+  waits until the route arrived and no `aria-busy` / skeleton is left (at most 6 s), then `onOpened` runs.
+- **UI state** (`uiStateSource`): the route path and its parameters from the matched target, the tab (route segment,
+  else `?tab=`), the view (`?view=`), the unsaved fields of the guard and the fields marked `aria-invalid` as the
+  reader's references (`f.<field name>`), the kind of the open overlay, visibility. Only tokens the server keeps; no
+  field value or label.
+- **Reader options**: the content root is the shell's `<main>` (`findRoot` to change), the location is the pathname
+  plus query and the page's `h1`, unsaved changes come from the guard.
+
+The contract types are a structural copy of `@mgamadeus/ddd-agents/ui` 0.3.x: this package never imports the agents
+package, and the adapters are assignable to its types.
 
 ## Server and client
 
@@ -961,35 +1010,10 @@ export const FilesPage = ({ areas }) => (
 The drive screen of `mgamadeus/ddd-clouddrive` is the npm package `@mgamadeus/ddd-clouddrive` (`./screen`), built on
 `./files`; it was the entry `./clouddrive` until 0.5.x.
 
-### `./sandbox`
+### The sandbox screen
 
-The agents' workspaces of `mgamadeus/ddd-agents` (≥ 0.1.32): the host implements `AgentSandboxAdministration` over its
-runner and mounts `AgentSandboxesControllerTrait` for superadmins (the trait's hook
-`throwForbiddenUnlessSandboxesAccessAllowed()` plus the host's `access_control`).
-
-```tsx
-export const sandboxesApi = createSandboxesApi({ baseApi: adminApi, apiPrefix: '/api/admin/maintenance/sandboxes' });
-
-<SandboxesScreen api={sandboxesApi} onOpenWorkspace={key => router.push(`/maintenance/sandboxes/${encodeURIComponent(key)}`)} />
-<SandboxDetailScreen
-  api={sandboxesApi}
-  workspaceKey={workspaceKey}
-  tab={tab}                                   // optional, e.g. from the URL; else kept by the screen
-  onTabChange={setTab}
-  buildConversationHref={conversation => `/agents/conversations/${conversation.conversationId}`}
-  loadPdfJs={loadPdfJs}
-/>
-```
-
-- **Actions** (`useSandboxActions`): start / warm up, offload (unsaved changes to the drive, then the session is
-  released), end, kill a job, reset (typed name = the display name, else the key). Every action is audited by the
-  server. While a conversation of the space has a running turn (`hasLiveTurn`, or the server's 409) the screen asks
-  for a reason and sends the action with `force`.
-- **Untrusted content:** files are read only; JPEG, PNG, GIF and WebP draw as `<img>` from the fetched bytes, PDF through
-  the host's pdf.js, text as text nodes (the first 256 KB), anything else only downloads. Commands, their output and
-  the session log are escaped preformatted text; nothing is rendered as HTML.
-- **Not set up:** without a host administration the list answers `isConfigured: false` and the screen says so.
-- `createStaticSandboxesApi(showcaseSandboxesData)` answers fixed payloads (actions refused) for reviews and tests.
+The workspaces of `mgamadeus/ddd-agent-sandbox` are the npm package `@mgamadeus/ddd-agent-sandbox` (`./screen`),
+built on this package's blocks; it was the entry `./sandbox` until 0.6.x.
 
 ## Design studio
 

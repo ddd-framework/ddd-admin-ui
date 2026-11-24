@@ -3,6 +3,24 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.7.0
+
+- Removed: the entry `./sandbox`. The sandbox administration left `mgamadeus/ddd-agents` (0.3.0) for
+  `mgamadeus/ddd-agent-sandbox`; its screens are the npm package `@mgamadeus/ddd-agent-sandbox`: import
+  `createSandboxesApi` and the payload types from `@mgamadeus/ddd-agent-sandbox`, and `SandboxesScreen`,
+  `SandboxDetailScreen`, `useSandboxActions`, `SandboxFilePreview` from `@mgamadeus/ddd-agent-sandbox/screen`. Its texts
+  travel with it (its own `i18n-keys.json`). The showcase drops its sandbox section and `showcaseSandboxesData`.
+- New entry `./agent-ui`: the adapters of `Agent.UI` (`@mgamadeus/ddd-agents/ui` ≥ 0.3.0) for screens built from the
+  package. `useAdminUiAgentScreen({ navigation, canAccess, navigate, filtersByTargetKey, viewsByTargetKey,
+  ignoreOverlayKinds, findRoot, onOpened })` returns `targets` (`ScreenTargetSource` from the shell's navigation tree,
+  rights applied), `navigator` (`ScreenNavigator` over the host's router: refuses with `UNSAVED_CHANGES` or
+  `DIALOG_OPEN` from the navigation guard, waits until the opened screen settled), `isVisible`, `readerOptions` (for
+  `DomScreenReader`) and `uiStateSource` (`AgentUIState`: route path and parameters, tab, view, unsaved and invalid
+  field references `f.<name>`, open overlay kind, visibility). Pure helpers: `buildScreenTargets`,
+  `matchScreenTarget`, `buildScreenTargetHref`, `buildAgentUIState`, `describeNavigationBlocker`,
+  `describeUnsavedChanges`, `fieldReferenceOf`. The entry never imports the agents package (structural copy of its
+  contracts); no new peer.
+
 ## 0.6.0
 
 - Removed: the entry `./clouddrive`. The drive screen of `mgamadeus/ddd-clouddrive` is now the npm package

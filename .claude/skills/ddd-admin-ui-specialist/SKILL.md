@@ -1,9 +1,9 @@
 ---
 name: ddd-admin-ui-specialist
-description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries, import matrix, host setup (AdminUiProvider, theme.css, tokens.json, checks), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route states, form drawers and dialogs, useConfirm, write access, agent hooks, locale::style translations (delta saves), image crop, colour fields, key figures, markdown, the admin screens ./workers, ./translations, ./issues, ./database, ./crons, ./files (file manager, path bar), ./sandbox (agent workspaces), status text roles, ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form, file manager, sandbox or admin screen, a save deletes a background translation, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast fails, or URL filters get lost."
+description: "Build admin screens with @mgamadeus/ddd-admin-ui and extend it: entries, import matrix, host setup (AdminUiProvider, theme.css, tokens.json), the app shell (./shell: sidebar, rail, mobile menu, breadcrumbs, title), list pages with URL filters, date presets, column factories, bulk menus, wide tables, detail shells, route states, form drawers and dialogs, useConfirm, write access, locale::style translations, image crop, colour fields, key figures, markdown, the admin screens ./workers, ./translations, ./issues, ./database, ./crons, ./files (file manager, path bar), ./agent-ui (Agent.UI targets, navigation guard, UI state), status text roles, ./design-studio, i18n-keys.json, new blocks. Use when building a frame, list, detail, form, file manager or admin screen, wiring the agent's screen tools, a save deletes a background translation, Tooltip must be used within TooltipProvider, Cmd+S submits the wrong form, a confirm answers false, breadcrumbs miss a page, contrast fails, or URL filters get lost."
 metadata:
   author: mgamadeus
-  version: 0.3.12
+  version: 0.7.0
 ---
 
 # ddd-admin-ui specialist
@@ -92,7 +92,8 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | a file area: folder tree, grid / table, upload tray, drawer with preview, versions, activity, trash, links, moves between areas | `FileManager` + a `FileManagerAdapter` (`capabilities`: `trash`, `versions`, `activity`, `links`, `moveAcrossAreas`, `filters`, `workingCopy`); slots `renderAreaSettings`, `renderAreaMaintenance`, `renderAreaPicker`, `formatEventType` | files |
 | file manager state in the URL (folder path, file, tab), Back / Forward through folders, sticky breadcrumbs with sibling menus, the path bar (Ctrl/Cmd+L, `drive/<id>`, completion), Copy path / Copy link | `FileManager` `urlKeys` (`renameUrlStateKeys`), `pushKeys` of `useUrlListState` (adapter `push`), capability `location.resolveLocation`, `buildLink`, `readOnlyNotice` | files, logic |
 | accesses of a file (viewed, downloaded) and a partner audience without staff-only controls | capability `activity.useAccessEvents`, `audience: 'partner'` (the drive: `@mgamadeus/ddd-clouddrive`, `audience: 'shared'`) | files |
-| the agents' workspaces (sandboxes): list with state, disk and memory, one workspace with files (safe preview), unsaved changes, processes and jobs, commands, session log, audit; start / offload / end / reset / kill, forced with a reason while a turn runs | `createSandboxesApi({ baseApi, apiPrefix })` + `SandboxesScreen` / `SandboxDetailScreen` (`buildConversationHref`, `loadPdfJs`), `useSandboxActions` | sandbox |
+| the agent's view of the admin (`Agent.UI` of `@mgamadeus/ddd-agents`): screen targets from the shell's navigation, navigation refused by unsaved changes or an open dialog, the DOM reader's options, the UI state (route, tab, view, unsaved / invalid fields, open dialog) | `useAdminUiAgentScreen({ navigation, canAccess, navigate, filtersByTargetKey })` → `targets`, `navigator`, `isVisible`, `readerOptions`, `uiStateSource`; pure `buildScreenTargets`, `buildAgentUIState` | agent-ui |
+| the agents' workspaces (sandboxes) | the npm package `@mgamadeus/ddd-agent-sandbox` (`./screen`); the entry `./sandbox` is gone since 0.7.0 | — |
 | an upload with progress through the host's session | `uploadWithProgress(transport, request, callbacks)`, `useFileUploadQueue` + `UploadTray` | files |
 | the drive of mgamadeus/ddd-clouddrive (spaces by group, versions, history, trash, malware status) | the npm package `@mgamadeus/ddd-clouddrive`: `createCloudDriveApi` (`.`) + `CloudDriveScreen` (`./screen`) on `./files`; the entry `./clouddrive` is gone since 0.6.0 | — |
 | an agent or test reading the screen: row keys, list state, unsaved forms, may it navigate | `data-row-key` on rows and cards, `onListStateChange` + `activeFilters`; `useUnsavedChangesGuard(…, { form, label })` + `getDirtyForms()`; `useNavigationGuard().canNavigate()` | list, logic |
@@ -123,6 +124,12 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
   on `:root`; `PortalContainerProvider` / the provider's `portalContainer` moves every portal.
 - **Import boundary.** Blocks import only the entries the matrix in `README.md` allows, never app code. Only `./next`
   imports `next/*`, only `./notify-sonner` imports `sonner`; `./logic` pure files run without React.
+- **Agent.UI adapters.** `./agent-ui` never imports `@mgamadeus/ddd-agents` (`contract.ts` is a structural copy of
+  its `./ui` 0.3.x contracts). Pass the shell's own `navigation` and `canAccess`, so the agent's targets are the
+  viewer's menu; the agent window itself carries `data-agent-skip`, and when it is a package `Sheet` / `Dialog` it sets
+  `overlayKind={null}` on its content (or its kind goes into `ignoreOverlayKinds`), else every navigation answers
+  `DIALOG_OPEN`. Field references are `f.<field name>`, the
+  reader's; a field the agent should find has a `name`.
 - **Design studio.** Pass `designStudioComponents` from `./design-studio` as the studio provider's `components`; replace
   single slots by spreading it. The entry never imports the studio (`DesignStudioComponentsContract` is a structural
   copy); a new studio slot means updating `contract.ts`, the map and the render test together.

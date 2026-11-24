@@ -11,4 +11,3 @@ export { showcaseIssuesData } from './issuesFixtures.ts';
 export { showcaseDatabaseData } from './databaseFixtures.ts';
 export { showcaseFilesData } from './filesFixtures.ts';
 export { showcaseCronsData } from './cronsFixtures.ts';
-export { showcaseSandboxesData } from './sandboxFixtures.ts';

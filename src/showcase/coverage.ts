@@ -152,10 +152,6 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
       CronTimeDisplayProvider: 'mounted by CronsScreen (timeZone); wraps the parts drawn on their own',
     },
   },
-  sandbox: {
-    shown: ['SandboxActionsMenu', 'SandboxDetailScreen', 'SandboxFilePreview', 'SandboxMountMode', 'SandboxUsageBar', 'SandboxesScreen'],
-    notShown: {},
-  },
   media: {
     shown: ['FormMediaItemField', 'MediaItemField', 'MediaItemPickerDialog', 'MediaPreview', 'ImageCropDialog'],
     notShown: {},
