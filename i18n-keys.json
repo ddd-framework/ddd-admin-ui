@@ -1,6 +1,6 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
@@ -1427,7 +1427,7 @@
       "key": "Blocked by the malware check",
       "text": "Blocked by the malware check",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
@@ -1624,7 +1624,7 @@
       "key": "Checked and released",
       "text": "Checked and released",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
@@ -2002,7 +2002,7 @@
       "key": "Copied in",
       "text": "Copied in",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
@@ -2253,7 +2253,7 @@
       "text": "Created",
       "context": "file-event",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file event."
     },
@@ -2655,7 +2655,7 @@
       "key": "Deleted permanently",
       "text": "Deleted permanently",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
@@ -2698,7 +2698,7 @@
       "key": "Description changed",
       "text": "Description changed",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
@@ -2732,7 +2732,7 @@
       "key": "Details changed",
       "text": "Details changed",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
@@ -2879,7 +2879,7 @@
       "text": "Downloaded",
       "context": "file-event",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager details drawer, history: event type: someone downloaded the file."
     },
@@ -4771,7 +4771,7 @@
       "text": "Linked",
       "context": "file-event",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file event."
     },
@@ -5107,7 +5107,7 @@
       "key": "Malware check failed",
       "text": "Malware check failed",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
@@ -5533,7 +5533,7 @@
       "key": "Moved to the trash",
       "text": "Moved to the trash",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
@@ -5542,7 +5542,7 @@
       "text": "Moved",
       "context": "file-event",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file event."
     },
@@ -5682,7 +5682,8 @@
       "key": "New version uploaded",
       "text": "New version uploaded",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/FileDrawer.tsx",
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
@@ -6541,7 +6542,7 @@
       "key": "Older version restored",
       "text": "Older version restored",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
@@ -6557,7 +6558,8 @@
       "key": "Older versions deleted",
       "text": "Older versions deleted",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/FileDrawer.tsx",
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
@@ -6714,7 +6716,7 @@
       "text": "Original",
       "context": "file-access-variant",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "In a file's access history: the person downloaded the original file (as opposed to only viewing a preview)."
     },
@@ -6822,7 +6824,7 @@
       "text": "Partner",
       "context": "file-access-audience",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "In a file's access history: the access was made through the partner area (an external partner user, not staff)."
     },
@@ -6970,7 +6972,7 @@
       "text": "Preview",
       "context": "file-access-variant",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "In a file's access history: the person viewed a preview of the file (in the details panel), not the download."
     },
@@ -7127,7 +7129,7 @@
       "key": "Read by the assistant",
       "text": "Read by the assistant",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "Event in a file's history: the AI assistant read the file's content."
     },
@@ -7200,7 +7202,7 @@
       "key": "Refused: malware detected",
       "text": "Refused: malware detected",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },
@@ -7293,7 +7295,7 @@
       "text": "Renamed",
       "context": "file-event",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file event."
     },
@@ -7576,7 +7578,7 @@
       "text": "Restored",
       "context": "file-event",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file event."
     },
@@ -8499,7 +8501,7 @@
       "text": "Staff",
       "context": "file-access-audience",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "In a file's access history: the access was made by internal staff (the admin), not by a partner."
     },
@@ -10607,7 +10609,7 @@
       "text": "Unlinked",
       "context": "file-event",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file event."
     },
@@ -10727,7 +10729,7 @@
       "text": "Uploaded",
       "context": "file-event",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file event."
     },
@@ -10883,7 +10885,7 @@
       "text": "Viewed",
       "context": "file-event",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/fileEventLabels.ts"
       ],
       "hint": "File manager details drawer, history: event type: someone opened the file's preview."
     },

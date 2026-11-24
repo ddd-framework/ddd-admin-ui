@@ -3,6 +3,15 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.7.2
+
+- `./files`: the file activity translates the audience of an access ("· Staff", "· Partner"), what it opened
+  ("Preview", "Original") and the event types marked with a context ("Viewed", "Moved", …) in every locale, on the
+  changes and the accesses tab. The drawer looked these texts up without their context, so the key
+  `Staff__file-access-audience` of the manifest never matched. New pure helpers `translateFileEventType`,
+  `translateFileAccessAudience`, `translateFileAccessVariant` (for a host's own `formatEventType`); `FILE_EVENT_LABELS`
+  keeps its shape and export.
+
 ## 0.7.1
 
 - `./agent-ui`: a mark of the agent no longer lands behind the compact agent window. `useAdminUiAgentScreen` returns

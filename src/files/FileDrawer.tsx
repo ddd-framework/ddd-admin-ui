@@ -31,6 +31,7 @@ import { SegmentedControl } from '../primitives/segmented-control.tsx';
 import { Skeleton } from '../primitives/skeleton.tsx';
 import { Textarea } from '../primitives/textarea.tsx';
 import { FileFamilyIcon } from './FileFamilyIcon.tsx';
+import { translateFileAccessAudience, translateFileAccessVariant, translateFileEventType } from './fileEventLabels.ts';
 import { FileCopyMenu, type FileItemHandlers } from './FileItemActions.tsx';
 import { FileLinkChips } from './FileLinkChips.tsx';
 import type { FileLinkKind, FileManagerActions, FileManagerAdapter, FileQueryState } from './fileManagerAdapter.ts';
@@ -61,33 +62,7 @@ import { isUploadAborted, uploadErrorMessage } from './uploadWithProgress.ts';
 const MAX_NAME_LENGTH = 255;
 const MAX_DESCRIPTION_LENGTH = 2000;
 
-/** The labels of the event types the drawer knows; a host adds its own with `formatEventType`. */
-export const FILE_EVENT_LABELS: Readonly<Record<string, string>> = {
-  UPLOADED: m('Uploaded', { context: 'file-event' }),
-  CREATED: m('Created', { context: 'file-event' }),
-  VERSION_ADDED: m('New version uploaded'),
-  VERSIONED: m('New version uploaded'),
-  VERSION_RELEASED: m('Checked and released'),
-  RELEASED: m('Checked and released'),
-  REJECTED_MALWARE: m('Refused: malware detected'),
-  BLOCKED: m('Blocked by the malware check'),
-  SCAN_FAILED: m('Malware check failed'),
-  VERSION_RESTORED: m('Older version restored'),
-  OLD_VERSIONS_DELETED: m('Older versions deleted'),
-  RENAMED: m('Renamed', { context: 'file-event' }),
-  MOVED: m('Moved', { context: 'file-event' }),
-  DESCRIPTION_CHANGED: m('Description changed'),
-  METADATA: m('Details changed'),
-  LINKED: m('Linked', { context: 'file-event' }),
-  UNLINKED: m('Unlinked', { context: 'file-event' }),
-  TRASHED: m('Moved to the trash'),
-  RESTORED: m('Restored', { context: 'file-event' }),
-  PURGED: m('Deleted permanently'),
-  COPIED_IN: m('Copied in'),
-  VIEWED: m('Viewed', { context: 'file-event' }),
-  DOWNLOADED: m('Downloaded', { context: 'file-event' }),
-  READ_BY_AGENT: m('Read by the assistant'),
-};
+export { FILE_EVENT_LABELS } from './fileEventLabels.ts';
 
 /** The activity card's tabs: the file's changes and who opened it. */
 const ACTIVITY_TAB_OPTIONS = [
@@ -95,21 +70,6 @@ const ACTIVITY_TAB_OPTIONS = [
   { value: 'accesses' as const, label: m('Accesses', { context: 'file-history-tab' }), context: 'file-history-tab' },
 ];
 
-/** The audiences of an access, as the drawer names them. */
-const ACCESS_AUDIENCE_LABELS: Readonly<Record<string, string>> = {
-  INTERNAL: m('Staff', { context: 'file-access-audience' }),
-  SHARED: m('Partner', { context: 'file-access-audience' }),
-};
-
-/** What an access opened. */
-const ACCESS_VARIANT_LABELS: Readonly<Record<string, string>> = {
-  INLINE: m('Preview', { context: 'file-access-variant' }),
-  PREVIEW: m('Preview', { context: 'file-access-variant' }),
-  DOWNLOAD: m('Original', { context: 'file-access-variant' }),
-  ORIGINAL: m('Original', { context: 'file-access-variant' }),
-};
-
-const defaultEventLabel = (type: string, t: TranslateFn): string => (FILE_EVENT_LABELS[type] ? t(FILE_EVENT_LABELS[type]) : type);
 
 interface DetailsValues {
   stem: string;
@@ -440,8 +400,8 @@ const EventList = ({
     <ol className="space-y-3">
       {events.slice(0, limit).map(event => {
         const facts = [
-          event.audience ? (ACCESS_AUDIENCE_LABELS[event.audience] ? t(ACCESS_AUDIENCE_LABELS[event.audience]) : event.audience) : null,
-          event.variant ? (ACCESS_VARIANT_LABELS[event.variant] ? t(ACCESS_VARIANT_LABELS[event.variant]) : event.variant) : null,
+          event.audience ? translateFileAccessAudience(event.audience, t) : null,
+          event.variant ? translateFileAccessVariant(event.variant, t) : null,
           event.clientIp ? t('from %address%', { replacements: { address: event.clientIp } }) : null,
         ].filter((fact): fact is string => fact !== null);
         return (
@@ -449,7 +409,7 @@ const EventList = ({
             <span aria-hidden className="mt-1.5 size-2 shrink-0 rounded-full bg-brand" />
             <div className="min-w-0">
               <p>
-                <span className="font-semibold">{formatEventType?.(event.type) ?? defaultEventLabel(event.type, t)}</span>
+                <span className="font-semibold">{formatEventType?.(event.type) ?? translateFileEventType(event.type, t)}</span>
                 {event.detail && <span className="text-muted-foreground"> · {event.detail}</span>}
               </p>
               <p className="text-xs text-muted-foreground">
