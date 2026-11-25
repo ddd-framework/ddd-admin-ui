@@ -179,6 +179,11 @@ export interface FileView {
   hasWorkingCopyChanges?: boolean;
   /** Short-lived thumbnail URL of a released image (or a page rendition); absent otherwise. */
   thumbnailUrl?: string | null;
+  /**
+   * The server shows this file as a PDF it renders itself (a Word, Excel or PowerPoint document): the preview asks
+   * `getDownload` with `variant: 'PDF_RENDITION'` and draws the answer like a PDF. Absent / `false`: no rendition.
+   */
+  hasPdfRendition?: boolean;
   /** Links under the reader's rights (capability `links`). */
   links?: readonly FileLinkView[];
   /** Display name of the uploader. */
@@ -373,9 +378,16 @@ export const isFileBeingChecked = (file: Pick<FileView, 'scanStatus' | 'hasPendi
 
 /** A download (or preview) link of the release gate. */
 export interface FileDownloadView {
+  /** The link; `''` while `state` is not `ready`. */
   url: string;
   fileName: string;
   expiresAt?: string | null;
+  /**
+   * Only for a rendition the server makes on demand (`variant: 'PDF_RENDITION'`): `pending` = it is being made (ask
+   * again shortly), `failed` = none could be made (`message` says why, when the server said it). Absent = `ready`.
+   */
+  state?: 'ready' | 'pending' | 'failed';
+  message?: string | null;
 }
 
 /** A link a move to another area removes (its target is not part of the target area). */
@@ -417,7 +429,7 @@ export const isFileReleased = (status: FileScanStatus): boolean => status === 'C
 /** Raster types a browser may show inline (served with their own type, never sniffed). */
 const INLINE_IMAGE_EXTENSIONS: ReadonlySet<string> = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp']);
 
-export type FilePreviewKind = 'image' | 'pdf' | 'markdown' | 'code' | 'text' | 'csv' | 'video' | 'audio' | 'none';
+export type FilePreviewKind = 'image' | 'pdf' | 'pdf-rendition' | 'markdown' | 'code' | 'text' | 'csv' | 'video' | 'audio' | 'none';
 
 const OFFICE_PAGE_FAMILIES: ReadonlySet<FileFamily> = new Set(['DOCUMENT', 'SPREADSHEET', 'PRESENTATION']);
 const TEXT_EXTENSIONS: ReadonlySet<string> = new Set(['txt', 'log']);
@@ -450,14 +462,17 @@ export const isPageThumbnail = (file: Pick<FileView, 'family' | 'extension'>): b
 
 /**
  * What the preview shows. Only JPEG / PNG / GIF / WebP (or a rendition the server made: a thumbnail URL says it
- * exists) as `<img>`, PDF on canvases, Markdown as sanitised markup or as its source, source files, TXT and CSV as text
+ * exists) as `<img>`, PDF (or the PDF the server renders of an Office document) on canvases, Markdown as sanitised
+ * markup or as its source, source files, TXT and CSV as text
  * nodes, MP4 / WebM / MP3 … in the browser's own player. SVG, HTML and everything else never render in the browser:
  * icon, facts and Download only.
  */
-export const filePreviewKind = (file: Pick<FileView, 'family' | 'extension' | 'thumbnailUrl'>): FilePreviewKind => {
+export const filePreviewKind = (file: Pick<FileView, 'family' | 'extension' | 'thumbnailUrl' | 'hasPdfRendition'>): FilePreviewKind => {
   const extension = file.extension.toLowerCase();
   const hasRendition = Boolean(file.thumbnailUrl);
   if (file.family === 'IMAGE') return INLINE_IMAGE_EXTENSIONS.has(extension) || hasRendition ? 'image' : 'none';
+  // every page as a PDF beats the first page as a picture
+  if (file.family !== 'PDF' && file.hasPdfRendition === true) return 'pdf-rendition';
   if (file.family !== 'PDF' && isPageThumbnail(file) && hasRendition) return 'image';
   if (file.family === 'PDF') return 'pdf';
   if (extension === 'csv') return 'csv';

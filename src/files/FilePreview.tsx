@@ -66,41 +66,63 @@ const Panel = ({ children, className }: { children: ReactNode; className?: strin
   <div className={cn('flex flex-col items-center gap-3 rounded-xl bg-tint px-6 py-8 text-center', className)}>{children}</div>
 );
 
+/** A rendition the server is still making is asked for again after this pause, at most this often. */
+const RENDITION_POLL_MS = 3000;
+const RENDITION_POLL_ATTEMPTS = 60;
+
+type PreviewUrlState = { key: string; url: string | null; error: string | null; pending: boolean; failed: boolean };
+
 const usePreviewUrl = (
   file: FileView,
   enabled: boolean,
   disposition: FileDownloadOptions['disposition'],
   getDownload: FilePreviewProps['getDownload'],
-  versionId: FileItemId | undefined
+  versionId: FileItemId | undefined,
+  variant: NonNullable<FileDownloadOptions['variant']> = 'PREVIEW'
 ) => {
   const getDownloadRef = useRef(getDownload);
   getDownloadRef.current = getDownload;
-  const [state, setState] = useState<{ key: string; url: string | null; error: string | null }>({ key: '', url: null, error: null });
+  const [state, setState] = useState<PreviewUrlState>({ key: '', url: null, error: null, pending: false, failed: false });
   // another current version (upload, restore) is another content: fetch the preview again
-  const key = `${String(file.id)}:${String(versionId ?? '')}:${String(file.contentVersion ?? '')}:${file.updatedAt ?? ''}:${file.sizeBytes}:${file.scanStatus}:${disposition}`;
+  const key = `${String(file.id)}:${String(versionId ?? '')}:${String(file.contentVersion ?? '')}:${file.updatedAt ?? ''}:${file.sizeBytes}:${file.scanStatus}:${disposition}:${variant}`;
 
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
-    getDownloadRef
-      .current(file.id, { disposition, variant: 'PREVIEW', ...(versionId === undefined ? {} : { versionId }) })
-      .then(download => {
-        if (!cancelled) setState({ key, url: download.url, error: null });
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) setState({ key, url: null, error: normalizeDddError(error).message });
-      });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const ask = (attempt: number) => {
+      getDownloadRef
+        .current(file.id, { disposition, variant, ...(versionId === undefined ? {} : { versionId }) })
+        .then(download => {
+          if (cancelled) return;
+          if (download.state === 'failed') {
+            setState({ key, url: null, error: download.message ?? null, pending: false, failed: true });
+          } else if (download.state === 'pending') {
+            // the server makes the rendition: ask again until it is there (or it takes too long to wait for)
+            const waits = attempt < RENDITION_POLL_ATTEMPTS;
+            setState({ key, url: null, error: null, pending: waits, failed: !waits });
+            if (waits) timer = setTimeout(() => ask(attempt + 1), RENDITION_POLL_MS);
+          } else {
+            setState({ key, url: download.url, error: null, pending: false, failed: false });
+          }
+        })
+        .catch((error: unknown) => {
+          if (!cancelled) setState({ key, url: null, error: normalizeDddError(error).message, pending: false, failed: false });
+        });
+    };
+    ask(1);
     return () => {
       cancelled = true;
+      if (timer !== undefined) clearTimeout(timer);
     };
-  }, [enabled, file.id, disposition, key, versionId]);
+  }, [enabled, file.id, disposition, key, versionId, variant]);
 
-  return state.key === key ? state : { key, url: null, error: null };
+  return state.key === key ? state : { key, url: null, error: null, pending: false, failed: false };
 };
 
 /**
- * The preview of a file: JPEG / PNG / GIF / WebP (or the server's rendition) as `<img>` with zoom, PDF on canvases
- * through the host's pdf.js, Markdown as markup or source, source files with the host's highlighter, TXT / CSV as
+ * The preview of a file: JPEG / PNG / GIF / WebP (or the server's rendition) as `<img>` with zoom, PDF — and the PDF
+ * the server renders of a Word, Excel or PowerPoint document — on canvases through the host's pdf.js, Markdown as markup or source, source files with the host's highlighter, TXT / CSV as
  * text, MP4 / WebM / MP3 … in the browser's player, everything else icon + "download to open". Nothing is fetched
  * before the file is released; an unreleased file shows its scan state and what it means instead. File content is
  * never inserted as HTML. `layout="canvas"` fills the column it is put in (a canvas, a wide pane) instead of drawing
@@ -112,8 +134,8 @@ export const FilePreview = ({ file, getDownload, loadPdfJs, loadCodeHighlighter,
   // a file in the trash is not previewed (the server releases its content as a download only)
   const trashed = file.deletedAt !== null && file.deletedAt !== undefined;
   const kind = filePreviewKind(file);
-  const disposition: FileDownloadOptions['disposition'] = kind === 'image' || kind === 'pdf' ? 'inline' : 'attachment';
-  const preview = usePreviewUrl(file, released && !trashed && kind !== 'none', disposition, getDownload, versionId);
+  const disposition: FileDownloadOptions['disposition'] = kind === 'image' || kind === 'pdf' || kind === 'pdf-rendition' ? 'inline' : 'attachment';
+  const preview = usePreviewUrl(file, released && !trashed && kind !== 'none', disposition, getDownload, versionId, kind === 'pdf-rendition' ? 'PDF_RENDITION' : 'PREVIEW');
   const fills = layout === 'canvas';
   const maxBytes = fills ? TEXT_VIEWER_BYTES : TEXT_PREVIEW_BYTES;
 
@@ -143,6 +165,25 @@ export const FilePreview = ({ file, getDownload, loadPdfJs, loadCodeHighlighter,
       </Panel>
     );
   }
+  if (preview.failed) {
+    return (
+      <Panel className={className}>
+        <FileFamilyIcon family={file.family} size="lg" />
+        <p className="max-w-sm text-[13px] text-muted-foreground">{t('No preview could be made of this file. Download it to open it.')}</p>
+        {preview.error && <p className="max-w-sm text-xs text-muted-foreground">{preview.error}</p>}
+      </Panel>
+    );
+  }
+  if (preview.pending) {
+    return (
+      <Panel className={cn(fills && 'min-h-56 flex-1 justify-center', className)}>
+        <FileFamilyIcon family={file.family} size="lg" />
+        <p className="max-w-sm text-[13px] text-muted-foreground" role="status">
+          {t('The preview is being prepared. This can take a moment for a large document.')}
+        </p>
+      </Panel>
+    );
+  }
   if (preview.error) {
     return (
       <Panel className={className}>
@@ -154,9 +195,13 @@ export const FilePreview = ({ file, getDownload, loadPdfJs, loadCodeHighlighter,
   if (!preview.url) return <Skeleton className={cn('w-full rounded-xl', fills ? 'min-h-56 flex-1' : 'h-56', className)} />;
 
   return (
-    <div data-slot="file-preview" data-preview-kind={kind} className={cn(fills && 'flex min-h-0 flex-1 flex-col', fills && kind === 'pdf' && 'overflow-auto', className)}>
+    <div
+      data-slot="file-preview"
+      data-preview-kind={kind}
+      className={cn(fills && 'flex min-h-0 flex-1 flex-col', fills && (kind === 'pdf' || kind === 'pdf-rendition') && 'overflow-auto', className)}
+    >
       {kind === 'image' && <ImagePreview url={preview.url} alt={t('Preview of %name%', { replacements: { name: file.name } })} layout={layout} />}
-      {kind === 'pdf' &&
+      {(kind === 'pdf' || kind === 'pdf-rendition') &&
         (loadPdfJs ? (
           <PdfPreview url={preview.url} fileName={file.name} loadPdfJs={loadPdfJs} maxWidth={fills ? PDF_PREVIEW_CANVAS_MAX_WIDTH : undefined} />
         ) : (

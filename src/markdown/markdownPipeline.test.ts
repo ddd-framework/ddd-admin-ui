@@ -115,9 +115,12 @@ describe('markdown of unknown origin', () => {
       children: [
         { type: 'element', tagName: 'a', properties: { href: 'https://example.org' }, children: [] },
         { type: 'element', tagName: 'p', properties: {}, children: [{ type: 'element', tagName: 'a', properties: { href: '#top' }, children: [] }] },
+        { type: 'element', tagName: 'a', properties: {}, children: [] },
       ],
     };
     rehypeOutsideLinks()(tree);
+    // a link whose target was refused leads nowhere and opens nothing
+    assert.deepEqual(tree.children[2].properties, {});
     assert.deepEqual(tree.children[0].properties, { href: 'https://example.org', target: '_blank', rel: ['noopener', 'noreferrer', 'nofollow'] });
     assert.deepEqual(tree.children[1].children?.[0]?.properties, { href: '#top' });
   });

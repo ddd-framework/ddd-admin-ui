@@ -128,6 +128,7 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
       FilePathBar: DRAWN_BY('FileManager (a click on the last breadcrumb or Ctrl/Cmd+L)'),
       FileLinkChips: DRAWN_BY('FileManager with the links capability'),
       FilePreview: DRAWN_BY('FileDrawer and FileViewer'),
+      FileTextEditor: DRAWN_BY('FileViewer while a text file is edited'),
       CodePreview: DRAWN_BY('FilePreview (source files)'),
       CodeText: DRAWN_BY('CodePreview and MarkdownFilePreview (source)'),
       ImagePreview: DRAWN_BY('FilePreview (pictures)'),

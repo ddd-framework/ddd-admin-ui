@@ -58,6 +58,11 @@ describe('file view helpers', () => {
     assert.equal(filePreviewKind({ family: 'IMAGE', extension: 'heic' }), 'none');
     assert.equal(filePreviewKind({ family: 'IMAGE', extension: 'heic', thumbnailUrl: 'https://cdn/x.webp' }), 'image');
     assert.equal(filePreviewKind({ family: 'VECTOR', extension: 'svg' }), 'none', 'SVG never renders in the browser');
+    // an Office document the server renders as a PDF: every page, not the first page's picture
+    assert.equal(filePreviewKind({ family: 'DOCUMENT', extension: 'docx', hasPdfRendition: true }), 'pdf-rendition');
+    assert.equal(filePreviewKind({ family: 'DOCUMENT', extension: 'docx', hasPdfRendition: true, thumbnailUrl: 'https://cdn/x.webp' }), 'pdf-rendition');
+    assert.equal(filePreviewKind({ family: 'DOCUMENT', extension: 'docx' }), 'none');
+    assert.equal(filePreviewKind({ family: 'PDF', extension: 'pdf', hasPdfRendition: true }), 'pdf', 'a PDF is its own preview');
     assert.equal(filePreviewKind({ family: 'PDF', extension: 'pdf' }), 'pdf');
     assert.equal(filePreviewKind({ family: 'SPREADSHEET', extension: 'csv' }), 'csv');
     assert.equal(filePreviewKind({ family: 'TEXT', extension: 'html' }), 'none', 'HTML is never shown as text or markup');

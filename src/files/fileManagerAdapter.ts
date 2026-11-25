@@ -49,7 +49,10 @@ export interface FileManagerAdapter {
 export interface FileManagerCapabilities {
   /** Trashed files: a Trash node, restore (`restoreFiles`), final delete (`purgeFiles`), empty (`emptyTrash`). */
   trash?: FileTrashCapability;
-  /** The drawer lists the versions; Replace (`uploadVersion`), Restore (`restoreVersion`), Delete older (`deleteOlderVersions`). */
+  /**
+   * The drawer lists the versions; Replace (`uploadVersion`), Restore (`restoreVersion`), Delete older
+   * (`deleteOlderVersions`), editing a text file in place (`saveText` + `saveTextAsCopy`).
+   */
   versions?: FileVersionsCapability;
   /** The drawer lists the file's events (`FileDetailView.events`). */
   activity?: FileActivityCapability;
@@ -301,9 +304,30 @@ export interface FileDownloadOptions {
   disposition: 'inline' | 'attachment';
   /**
    * `PREVIEW` = what the drawer shows (an access the server may record as "viewed"); `THUMBNAIL` = a small picture in
-   * a list (never recorded); default `ORIGINAL` = a download (recorded as "downloaded").
+   * a list (never recorded); `PDF_RENDITION` = the PDF the server renders of a document (`FileView.hasPdfRendition`;
+   * the answer may be `pending` or `failed`); default `ORIGINAL` = a download (recorded as "downloaded").
    */
-  variant?: 'ORIGINAL' | 'PREVIEW' | 'THUMBNAIL';
+  variant?: 'ORIGINAL' | 'PREVIEW' | 'THUMBNAIL' | 'PDF_RENDITION';
+}
+
+/** The text of a file, saved as a new version on top of the version it was read from. */
+export interface FileTextSaveInput {
+  text: string;
+  /** The version the text was read from: the save is refused (`conflict`) when the file has a newer one. `null` = unknown. */
+  baseVersionId: FileItemId | null;
+}
+
+/**
+ * What a text save did: `saved` = a new version exists (`file` shows it, possibly still being checked); `conflict` =
+ * the file has a newer version than `baseVersionId`, nothing was written.
+ */
+export type FileTextSaveResult = { status: 'saved'; file: FileView } | { status: 'conflict'; message?: string | null };
+
+/** A text saved as a new file beside the one it came from (the way out of a conflict). */
+export interface FileTextCopyInput {
+  text: string;
+  /** The copy's name as the manager proposes it (`Notes (copy).md`); the adapter picks a free one when it is taken. */
+  name: string;
 }
 
 /** The writes of the manager; the optional ones belong to a capability. */
@@ -328,6 +352,11 @@ export interface FileManagerActions {
   uploadVersion?: (fileId: FileItemId, file: File, callbacks: UploadProgressCallbacks) => Promise<FileView>;
   restoreVersion?: (fileId: FileItemId, versionId: FileItemId) => Promise<unknown>;
   deleteOlderVersions?: (fileId: FileItemId) => Promise<unknown>;
+  // editing in place (text files): both must be there for "Edit"
+  /** A new version with this text on top of `baseVersionId`; never on top of a newer one. */
+  saveText?: (fileId: FileItemId, input: FileTextSaveInput) => Promise<FileTextSaveResult>;
+  /** The text as a new file in the folder of `fileId`; resolves with it. */
+  saveTextAsCopy?: (fileId: FileItemId, input: FileTextCopyInput) => Promise<FileView>;
   // links
   setLinks?: (fileId: FileItemId, links: FileLinkSet) => Promise<unknown>;
   bulkLinks?: (input: FileBulkLinksInput) => Promise<unknown>;

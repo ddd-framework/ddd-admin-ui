@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useTranslate } from '../i18n/useTranslate.ts';
 import { cn } from '../primitives/cn.ts';
@@ -80,6 +80,13 @@ export interface CodeTextProps {
   className?: string;
 }
 
+/** A cheap fingerprint of a text (djb2, 32 bit) for a render key; no security property. */
+const textFingerprint = (text: string): number => {
+  let hash = 5381;
+  for (let index = 0; index < text.length; index += 1) hash = ((hash << 5) + hash + text.charCodeAt(index)) | 0;
+  return hash;
+};
+
 /**
  * Source code as text nodes: plain at once, coloured as soon as the host's highlighter answered. The tokens are data
  * (text and class names); nothing of the file or of the highlighter's output is inserted as HTML.
@@ -87,7 +94,8 @@ export interface CodeTextProps {
 export const CodeText = ({ code, language, loadCodeHighlighter, layout = 'drawer', className }: CodeTextProps) => {
   const highlighter = useCodeHighlighter(language === null ? undefined : loadCodeHighlighter);
   const [tokens, setTokens] = useState<{ key: string; tokens: readonly CodeToken[] | null }>({ key: '', tokens: null });
-  const key = `${language ?? ''}:${code.length}:${code.slice(0, 64)}`;
+  // the whole text decides: an edit that keeps the length and the first line must not show the tokens of the text before
+  const key = useMemo(() => `${language ?? ''}:${code.length}:${textFingerprint(code)}`, [language, code]);
 
   useEffect(() => {
     if (highlighter === null || language === null) return;

@@ -10,6 +10,8 @@ export interface FileManagerFeatures {
   replaceVersion: boolean;
   restoreVersion: boolean;
   deleteOlderVersions: boolean;
+  /** Text files are edited in place (`saveText` and `saveTextAsCopy`). */
+  editText: boolean;
   activity: boolean;
   links: boolean;
   editLinks: boolean;
@@ -51,6 +53,7 @@ export const resolveFileManagerFeatures = (
     replaceVersion: versions && actions.uploadVersion !== undefined,
     restoreVersion: versions && actions.restoreVersion !== undefined,
     deleteOlderVersions: versions && actions.deleteOlderVersions !== undefined,
+    editText: versions && actions.saveText !== undefined && actions.saveTextAsCopy !== undefined,
     activity: capabilities?.activity !== undefined,
     links,
     editLinks: links && actions.setLinks !== undefined,

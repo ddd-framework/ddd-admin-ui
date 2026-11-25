@@ -61,4 +61,12 @@ describe('file manager capabilities', () => {
   it('needs at least one link kind for links', () => {
     assert.equal(resolveFileManagerFeatures({ links: { kinds: [], useLinkTargets: () => queryState } }, { setLinks: noop }).links, false);
   });
+
+  it('edits text files only with versions and both save actions', () => {
+    const saveText = async () => ({ status: 'conflict' }) as const;
+    const saveTextAsCopy = async () => ({}) as never;
+    assert.equal(resolveFileManagerFeatures({ versions: {} }, { saveText, saveTextAsCopy }).editText, true);
+    assert.equal(resolveFileManagerFeatures({ versions: {} }, { saveText }).editText, false, 'no way out of a conflict without the copy');
+    assert.equal(resolveFileManagerFeatures({}, { saveText, saveTextAsCopy }).editText, false);
+  });
 });

@@ -3,6 +3,7 @@
 import { normalizeDddError } from '@mgamadeus/ddd-web/contract';
 import {
   ArchiveRestore,
+  ArrowLeft,
   CloudUpload,
   Download,
   FilePen,
@@ -57,6 +58,7 @@ import {
 } from './fileDragAndDrop.tsx';
 import { startFileDownload } from './fileDownload.ts';
 import { FileDrawer } from './FileDrawer.tsx';
+import { FileViewer } from './FileViewer.tsx';
 import { FileFamilyIcon } from './FileFamilyIcon.tsx';
 import { FileItemActions, type FileItemHandlers } from './FileItemActions.tsx';
 import { FilePathBar } from './FilePathBar.tsx';
@@ -235,8 +237,18 @@ export interface FileManagerProps {
   /** The open area, controlled (a host picker); without it the area lives in the URL state (`area`). */
   areaKey?: FileAreaKey;
   onAreaKeyChange?: (areaKey: FileAreaKey) => void;
-  /** `page`: a full-height page with its header; `embedded`: inside a detail tab (header-less). */
-  variant?: 'page' | 'embedded';
+  /**
+   * `page`: a full-height page with its header; `embedded`: inside a detail tab (header-less); `compact`: a narrow
+   * surface that gives the height (a canvas beside a chat, a pane) — no folder tree and no quota, folders are walked
+   * through the list and the breadcrumbs, and a file opens in place (`FileViewer`, with a way back) instead of in the
+   * drawer. Every control still appears by the reader's rights.
+   */
+  variant?: 'page' | 'embedded' | 'compact';
+  /**
+   * Where the manager starts when the host passes no URL adapters: the state by URL key (`{ folder: '12' }`, `{ file:
+   * '7' }`; with `urlKeys` the host's names). Read once.
+   */
+  initialState?: Readonly<Record<string, string>>;
   title?: ReactNode;
   description?: ReactNode;
   /** Extra page actions left of "Upload files". */
@@ -310,6 +322,7 @@ export const FileManager = ({
   areaKey: controlledAreaKey,
   onAreaKeyChange,
   variant = 'page',
+  initialState,
   title,
   description,
   headerActions,
@@ -333,7 +346,8 @@ export const FileManager = ({
   buildLink,
 }: FileManagerProps) => {
   const { t } = useTranslate();
-  const memory = useMemoryUrlState();
+  const memory = useMemoryUrlState(initialState);
+  const compact = variant === 'compact';
   const urlKeysText = JSON.stringify(urlKeys ?? {});
   const renamedKeys = useMemo<Record<string, string>>(() => JSON.parse(urlKeysText) as Record<string, string>, [urlKeysText]);
   const baseUrlAdapter = urlStateAdapter ?? memory.urlStateAdapter;
@@ -1226,7 +1240,7 @@ export const FileManager = ({
     </EntityListBulkBar>
   ) : undefined;
 
-  const showTree = !context;
+  const showTree = !context && !compact;
   const anyFilter = features.familyFilter || features.links || features.uploadedByMeFilter || features.createdFilter || orderOptions.length > 1;
   const toolbar = (
     <EntityListToolbar
@@ -1362,14 +1376,14 @@ export const FileManager = ({
   );
 
   const body = (
-    <div className={cn('flex flex-col gap-4 md:flex-row', variant === 'page' && 'md:min-h-0 md:flex-1')}>
+    <div className={cn('flex flex-col gap-4 md:flex-row', variant === 'page' && 'md:min-h-0 md:flex-1', compact && 'min-h-0 flex-1')}>
       {tree && <aside className="surface hidden w-64 shrink-0 overflow-hidden rounded-2xl md:flex md:flex-col">{tree}</aside>}
-      <div className={cn('relative flex min-w-0 flex-1 flex-col', variant === 'page' && 'md:min-h-0')} {...uploadDropHandlers}>
+      <div className={cn('relative flex min-w-0 flex-1 flex-col', variant === 'page' && 'md:min-h-0', compact && 'min-h-0')} {...uploadDropHandlers}>
         <EntityListCard
           label={inTrash ? t('Trash', { context: 'files-label' }) : t('Files', { context: 'files-label' })}
           toolbar={toolbar}
           isRefetching={list.isRefetching}
-          fill={variant === 'page'}
+          fill={variant === 'page' || compact}
         >
           <EntityListBody
             displayMode={displayMode}
@@ -1438,7 +1452,14 @@ export const FileManager = ({
   // The folder bar sits in the SAME wrapper as the list: a sticky element sticks only while its parent scrolls past,
   // so a parent as tall as the bar itself (the header block) never lets it stick.
   const folderBar = (
-    <div data-file-folder-bar="" className="sticky top-[var(--nav-h)] z-(--layer-sticky) -mx-1 flex shrink-0 flex-wrap items-center justify-between gap-3 bg-background/95 px-1 py-1 backdrop-blur-sm">
+    <div
+      data-file-folder-bar=""
+      className={cn(
+        'flex shrink-0 flex-wrap items-center justify-between gap-3',
+        // a compact manager scrolls inside its list, so nothing has to stick
+        !compact && 'sticky top-[var(--nav-h)] z-(--layer-sticky) -mx-1 bg-background/95 px-1 py-1 backdrop-blur-sm'
+      )}
+    >
       {editingPath && !context && !inTrash ? (
         <FilePathBar
           initialPath={folderPathText(folders, currentFolderId)}
@@ -1461,7 +1482,9 @@ export const FileManager = ({
           onEditPath={context || inTrash ? undefined : () => setEditingPath(true)}
         />
       )}
-      <QuotaPill usedBytes={areaData?.usedBytes} quotaBytes={areaData?.quotaBytes} isLoading={areaQuery.isLoading} note={areaData?.quotaNote} parts={areaData?.usageParts} />
+      {!compact && (
+        <QuotaPill usedBytes={areaData?.usedBytes} quotaBytes={areaData?.quotaBytes} isLoading={areaQuery.isLoading} note={areaData?.quotaNote} parts={areaData?.usageParts} />
+      )}
     </div>
   );
 
@@ -1542,6 +1565,7 @@ export const FileManager = ({
 
   const overlays = (
     <>
+      {!compact && (
       <FileDrawer
         drawer={drawer}
         adapter={adapter}
@@ -1565,6 +1589,7 @@ export const FileManager = ({
         onActivityTabChange={setDrawerTab}
         onFileCheckFinished={() => list.refetch?.()}
       />
+      )}
       <MoveDialog
         open={moveRequest !== null}
         onOpenChange={open => !open && setMoveRequest(null)}
@@ -1707,6 +1732,44 @@ export const FileManager = ({
       {renderAreaSettings && !features.partner && area && renderAreaSettings({ open: settingsOpen, onClose: () => setSettingsOpen(false), areaKey, area: areaData })}
     </>
   );
+
+  if (compact) {
+    const openFileId = drawer.editId ?? null;
+    return (
+      <FileDndProvider enabled={dragEnabled} canDrop={canDrop} onDrop={onDrop}>
+        <div data-slot="file-manager" data-variant="compact" className="flex min-h-0 flex-1 flex-col gap-3">
+          {openFileId !== null ? (
+            <FileViewer
+              adapter={adapter}
+              fileId={openFileId}
+              leading={
+                <Button type="button" variant="ghost" size="icon-sm" aria-label={t('Back to the folder')} title={t('Back to the folder')} onClick={() => drawer.close()}>
+                  <ArrowLeft />
+                </Button>
+              }
+              canWrite={canWriteHere && !inTrash}
+              writesAllowed={writesAllowed}
+              onTextSaved={() => list.refetch?.()}
+              onTextCopySaved={() => list.refetch?.()}
+              loadPdfJs={loadPdfJs}
+              loadCodeHighlighter={loadCodeHighlighter}
+              renderMarkdown={renderMarkdown}
+            />
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                {folderBar}
+                {pageActions}
+              </div>
+              {belowHeader}
+              {body}
+            </>
+          )}
+          {overlays}
+        </div>
+      </FileDndProvider>
+    );
+  }
 
   if (variant === 'embedded') {
     return (

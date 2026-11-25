@@ -23,7 +23,23 @@ is in 0.x.
   pictures are not loaded (`[image: …]`), no element that loads a resource survives the sanitiser, links keep
   `http(s):` / `mailto:` and open in a new tab without opener and referrer. Pure parts: `remarkUntrustedContent`,
   `restrictMarkdownSanitizeSchema`, `rehypeOutsideLinks`, `untrustedMarkdownUrl`; `MarkdownLibrary.untrusted`.
-- 15 new UI texts, 1 reworded ("This media format has no player here. …").
+- `./files`: a text file is edited in place. `FileViewer canWrite` offers "Edit" for Markdown, TXT, CSV and source
+  files up to 1 MB when the adapter has the new actions `saveText` and `saveTextAsCopy` (with capability `versions`;
+  `features.editText`): a plain text field (`FileTextEditor`), Save writes a new version on top of the version the
+  edit started from (`FileTextSaveInput.baseVersionId`). The adapter answers `conflict` when the file has a newer
+  version; then nothing is overwritten — the reader keeps editing, loads the newer version or saves the draft as a
+  copy beside the file. Pure rules `fileTextEditRefusalOf`, `fileTextDraftSourceOf`, `fileTextForSaving`,
+  `copyFileNameOf`; `FileViewer` gains `leading`, `canWrite`, `writesAllowed`, `onTextSaved`, `onTextCopySaved` and
+  shows the state of a newer version that waits for its check.
+- `./files`: `FileManager variant="compact"` for a narrow surface that gives the height (a canvas beside a chat): no
+  folder tree and no quota, a file opens in place in `FileViewer` with a way back, every action by the same rights as
+  on the page; `initialState` says where a manager without URL adapters starts.
+- `./files`: the preview draws a PDF the server renders of a document (`FileView.hasPdfRendition`, kind
+  `pdf-rendition`, `getDownload` variant `PDF_RENDITION`); `FileDownloadView.state` (`pending` → asked again every
+  3 s, `failed` → "No preview could be made …") and `message`.
+- Fixed: `CodeText` kept the colours of the text before when a new text had the same length and the same first 64
+  characters (now the whole text decides).
+- 40 new UI texts, 1 reworded ("This media format has no player here. …").
 
 ## 0.7.2
 

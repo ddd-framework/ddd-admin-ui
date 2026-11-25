@@ -34,6 +34,9 @@ export type {
   FilePatch,
   FileQueryOptions,
   FileQueryState,
+  FileTextCopyInput,
+  FileTextSaveInput,
+  FileTextSaveResult,
   FileTrashCapability,
   FileTrashQuery,
   FileUploadInput,
@@ -78,6 +81,10 @@ export { FilePreview } from './FilePreview.tsx';
 export type { FilePreviewLoaders, FilePreviewProps } from './FilePreview.tsx';
 export { FileViewer, viewableFileVersions } from './FileViewer.tsx';
 export type { FileViewerProps } from './FileViewer.tsx';
+export { FileTextEditor } from './FileTextEditor.tsx';
+export type { FileTextEditorProps } from './FileTextEditor.tsx';
+export { copyFileNameOf, FILE_TEXT_EDIT_MAX_BYTES, fileTextDraftSourceOf, fileTextEditRefusalOf, fileTextForSaving } from './fileTextEditing.ts';
+export type { FileTextDraftSource, FileTextEditRefusal } from './fileTextEditing.ts';
 export { startFileDownload } from './fileDownload.ts';
 export { PDF_PREVIEW_CANVAS_MAX_WIDTH, PdfPreview } from './PdfPreview.tsx';
 export type { PdfDocumentLike, PdfJsLike, PdfJsLoader, PdfPageLike, PdfPreviewProps } from './PdfPreview.tsx';

@@ -1,6 +1,6 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.7.2",
+  "version": "0.8.0",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
     {
@@ -263,6 +263,22 @@
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %name% is a file or folder name."
     },
     {
+      "key": "%name% could not be opened for editing",
+      "text": "%name% could not be opened for editing",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer: error message when the content of a text file could not be loaded into the editor. %name% is the file name."
+    },
+    {
+      "key": "%name% could not be saved",
+      "text": "%name% could not be saved",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer: error message when saving the edited text of a file failed. %name% is the file name."
+    },
+    {
       "key": "%name% is active",
       "text": "%name% is active",
       "files": [
@@ -301,6 +317,22 @@
         "files/FileManager.tsx"
       ],
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %name% is a file or folder name."
+    },
+    {
+      "key": "%name% was changed while you were editing. Your changes are not saved yet, and nothing was overwritten.",
+      "text": "%name% was changed while you were editing. Your changes are not saved yet, and nothing was overwritten.",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer, dialog shown when saving an edited text file fails because someone else saved a newer version meanwhile. %name% is the file name. Reassures that nothing is lost and nothing was overwritten."
+    },
+    {
+      "key": "%name% was saved as a new version",
+      "text": "%name% was saved as a new version",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer: success message after the edited text of a file was saved as a new version. %name% is the file name."
     },
     {
       "key": "%name%: %message%",
@@ -1399,6 +1431,22 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): label: average time a job waited in the queue over the last %minutes% minutes."
     },
     {
+      "key": "Back to the file",
+      "text": "Back to the file",
+      "files": [
+        "files/FileTextEditor.tsx"
+      ],
+      "hint": "File viewer: button under a note that a file cannot be edited here; it leaves the editor and shows the file's preview again."
+    },
+    {
+      "key": "Back to the folder",
+      "text": "Back to the folder",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "Compact file manager (for example beside a chat): button that closes the opened file and shows the folder's list again."
+    },
+    {
       "key": "Back to workers",
       "text": "Back to workers",
       "files": [
@@ -1479,6 +1527,7 @@
       "text": "Cancel",
       "files": [
         "files/FilePathBar.tsx",
+        "files/FileTextEditor.tsx",
         "files/FolderNameDialog.tsx",
         "files/LinkTargetsDialog.tsx",
         "files/MoveAcrossAreasDialog.tsx",
@@ -1937,6 +1986,14 @@
         "workers/overview.tsx"
       ],
       "hint": "Workers admin screen (monitoring of the background workers that process queued jobs, grouped by transport = queue): description of the loops section."
+    },
+    {
+      "key": "Content of %name%",
+      "text": "Content of %name%",
+      "files": [
+        "files/FileTextEditor.tsx"
+      ],
+      "hint": "File viewer: accessible label of the text field that holds a file's content while it is edited. %name% is the file name."
     },
     {
       "key": "Context of %label%",
@@ -2762,6 +2819,14 @@
       "hint": "Schema diff admin screen (database changes between the code's entities and the live database): title of the notice on a large table whose change would copy the whole table."
     },
     {
+      "key": "Discard changes",
+      "text": "Discard changes",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer: confirm button of the question whether unsaved changes of an edited text file should be thrown away."
+    },
+    {
       "key": "Discard changes?",
       "text": "Discard changes?",
       "files": [
@@ -2769,6 +2834,14 @@
         "logic/react/useUnsavedChangesGuard.ts"
       ],
       "hint": "Title of the confirmation dialog shown when the user closes a form drawer that has unsaved edits. Phrased as a question."
+    },
+    {
+      "key": "Discard your changes?",
+      "text": "Discard your changes?",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer: title of the question shown when the user leaves the editor of a text file with unsaved changes."
     },
     {
       "key": "Discard__unsaved-changes-confirm",
@@ -3043,9 +3116,27 @@
       "context": "action",
       "files": [
         "crons/parts.tsx",
+        "files/FileViewer.tsx",
         "page/EditableCard.tsx"
       ],
       "hint": "Default accessible name and tooltip of the small pencil icon button in the top-right corner of a settings card; clicking it opens the edit form for that card. Imperative verb."
+    },
+    {
+      "key": "Edit__markdown-view",
+      "text": "Edit",
+      "context": "markdown-view",
+      "files": [
+        "files/FileTextEditor.tsx"
+      ],
+      "hint": "File viewer while a Markdown file is edited: the option that shows the text field (the other option, Preview, shows the formatted draft)."
+    },
+    {
+      "key": "Editing %name%",
+      "text": "Editing %name%",
+      "files": [
+        "files/FileTextEditor.tsx"
+      ],
+      "hint": "File viewer: accessible name of the editor area of a text file. %name% is the file name."
     },
     {
       "key": "Editing: %language%",
@@ -4500,6 +4591,7 @@
       "key": "Keep editing",
       "text": "Keep editing",
       "files": [
+        "files/FileViewer.tsx",
         "logic/pure/confirm.ts",
         "logic/react/useUnsavedChangesGuard.ts"
       ],
@@ -4877,6 +4969,14 @@
         "files/PdfPreview.tsx"
       ],
       "hint": "File manager, PDF preview (pages drawn as images)."
+    },
+    {
+      "key": "Load the newer version",
+      "text": "Load the newer version",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer, dialog after a save conflict: button that throws the user's own changes away and shows the newer version someone else saved."
     },
     {
       "key": "Loading",
@@ -6163,6 +6263,14 @@
       "hint": "Issues admin screen (errors grouped by root cause): empty list of the Open tab."
     },
     {
+      "key": "No preview could be made of this file. Download it to open it.",
+      "text": "No preview could be made of this file. Download it to open it.",
+      "files": [
+        "files/FilePreview.tsx"
+      ],
+      "hint": "File preview of an Office document (Word, Excel, PowerPoint) when the server could not turn it into a PDF preview. The file itself can still be downloaded."
+    },
+    {
       "key": "No process matches this filter.",
       "text": "No process matches this filter.",
       "files": [
@@ -6995,6 +7103,7 @@
       "text": "Preview",
       "context": "markdown-view",
       "files": [
+        "files/FileTextEditor.tsx",
         "files/MarkdownFilePreview.tsx"
       ],
       "hint": "File preview of a Markdown file: the option that shows the formatted text (the other option shows the source)."
@@ -7865,6 +7974,7 @@
       "text": "Save",
       "files": [
         "files/FileDrawer.tsx",
+        "files/FileTextEditor.tsx",
         "files/FolderNameDialog.tsx"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
@@ -7877,6 +7987,14 @@
         "translations/TranslationControls.tsx"
       ],
       "hint": "Button in the AI translation panel of an admin form while the form has unsaved changes: it saves the form first, then starts the translation of the stored texts. Imperative."
+    },
+    {
+      "key": "Save as a copy",
+      "text": "Save as a copy",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer, dialog after a save conflict: button that saves the user's edited text as a new file next to the original, so nothing is overwritten."
     },
     {
       "key": "Save changes",
@@ -7893,6 +8011,14 @@
         "files/LinkTargetsDialog.tsx"
       ],
       "hint": "File manager, dialog to edit the links of files (checkbox list of link targets of the application)."
+    },
+    {
+      "key": "Save your changes as a copy beside the file, or load the newer version and discard yours.",
+      "text": "Save your changes as a copy beside the file, or load the newer version and discard yours.",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer, dialog after a save conflict: second sentence that explains the two ways out (buttons \"Save as a copy\" and \"Load the newer version\")."
     },
     {
       "key": "Save__action",
@@ -7913,11 +8039,21 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): toast after saving a job."
     },
     {
+      "key": "Saved. The new version is shown as soon as it has been checked.",
+      "text": "Saved. The new version is shown as soon as it has been checked.",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer: success message after saving an edited text file when the new version still waits for its malware check; until then the previous version stays visible."
+    },
+    {
       "key": "Saving…",
       "text": "Saving…",
       "files": [
         "crons/CronFormDrawer.tsx",
         "files/FileDrawer.tsx",
+        "files/FileTextEditor.tsx",
+        "files/FileViewer.tsx",
         "files/FolderNameDialog.tsx",
         "files/LinkTargetsDialog.tsx",
         "translations/AppTranslationKeyDrawer.tsx"
@@ -9009,6 +9145,14 @@
       "hint": "File manager (the admin's file area): details drawer and preview: explanation for a file refused by the area's file type rules."
     },
     {
+      "key": "The copy could not be saved",
+      "text": "The copy could not be saved",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer: error message when saving the edited text as a copy beside the original file failed."
+    },
+    {
       "key": "The current version is %number%.",
       "text": "The current version is %number%.",
       "files": [
@@ -9456,6 +9600,14 @@
         "issues/IssueGroupDrawer.tsx"
       ],
       "hint": "Issues admin screen, details drawer of one error group: title of the warning shown instead of the newest events (the reason follows)."
+    },
+    {
+      "key": "The preview is being prepared. This can take a moment for a large document.",
+      "text": "The preview is being prepared. This can take a moment for a large document.",
+      "files": [
+        "files/FilePreview.tsx"
+      ],
+      "hint": "File preview of an Office document (Word, Excel, PowerPoint) while the server turns it into a PDF for the preview. Shown instead of the preview until it is ready."
     },
     {
       "key": "The process list has no running process yet.",
@@ -10031,6 +10183,14 @@
       "hint": "File preview of a video or a sound: the browser's player failed (unsupported codec, broken file)."
     },
     {
+      "key": "This file could not be read. Try again, or download it.",
+      "text": "This file could not be read. Try again, or download it.",
+      "files": [
+        "files/FileTextEditor.tsx"
+      ],
+      "hint": "File viewer: note shown instead of the editor when the content of the text file could not be loaded."
+    },
+    {
       "key": "This file could not be shown. Download it to open it.",
       "text": "This file could not be shown. Download it to open it.",
       "files": [
@@ -10041,6 +10201,14 @@
       "hint": "File manager, text / CSV preview."
     },
     {
+      "key": "This file has a newer version",
+      "text": "This file has a newer version",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer: title of the dialog shown when an edited text file cannot be saved because someone else saved a newer version meanwhile."
+    },
+    {
       "key": "This file is being checked for malware. It can be previewed and downloaded once the check is done.",
       "text": "This file is being checked for malware. It can be previewed and downloaded once the check is done.",
       "files": [
@@ -10049,12 +10217,28 @@
       "hint": "File manager, malware check status of a file (badge and its tooltip)."
     },
     {
+      "key": "This file is not UTF-8 text, so it is not edited here. Download it, edit it and upload it as a new version.",
+      "text": "This file is not UTF-8 text, so it is not edited here. Download it, edit it and upload it as a new version.",
+      "files": [
+        "files/FileTextEditor.tsx"
+      ],
+      "hint": "File viewer: note shown instead of the editor for a text file in another character encoding than UTF-8; editing it in the browser would damage it."
+    },
+    {
       "key": "This file is not available. It was removed, or you may not open it.",
       "text": "This file is not available. It was removed, or you may not open it.",
       "files": [
         "files/FileViewer.tsx"
       ],
       "hint": "File viewer (one file opened on a wide surface, e.g. beside a chat): the file no longer exists or the reader has no right to it."
+    },
+    {
+      "key": "This file is too large to edit here. Download it, edit it and upload it as a new version.",
+      "text": "This file is too large to edit here. Download it, edit it and upload it as a new version.",
+      "files": [
+        "files/FileTextEditor.tsx"
+      ],
+      "hint": "File viewer: note shown instead of the editor for a text file larger than what the browser editor loads (1 MB)."
     },
     {
       "key": "This file was not found or is no longer available.",
@@ -10708,6 +10892,7 @@
       "text": "Unsaved changes",
       "files": [
         "files/FileManager.tsx",
+        "files/FileTextEditor.tsx",
         "form/FormActions.tsx"
       ],
       "hint": "Status text next to the Save and Cancel buttons of an edit form, shown while the user has changed fields that are not saved yet."
@@ -10983,6 +11168,7 @@
       "key": "View of the Markdown file",
       "text": "View of the Markdown file",
       "files": [
+        "files/FileTextEditor.tsx",
         "files/MarkdownFilePreview.tsx"
       ],
       "hint": "File preview of a Markdown file: accessible name of the switch between the formatted text and the source."
@@ -11332,6 +11518,22 @@
       "hint": "Body text of the discard confirmation dialog, warning that closing the form drawer throws away the user's unsaved edits."
     },
     {
+      "key": "Your changes to %name% are not saved.",
+      "text": "Your changes to %name% are not saved.",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer: text of the question shown when the user leaves the editor with unsaved changes. %name% is the file name."
+    },
+    {
+      "key": "Your changes were saved as %name%",
+      "text": "Your changes were saved as %name%",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer: success message after the edited text was saved as a copy beside the original file. %name% is the copy's file name."
+    },
+    {
       "key": "Your session has ended. Log in again to upload.",
       "text": "Your session has ended. Log in again to upload.",
       "files": [
@@ -11485,6 +11687,15 @@
         "translations/AppTranslationsScreen.tsx"
       ],
       "hint": "App translations admin screen (the UI texts of the apps, stored in the database): badge on a key that needs singular and plural translations."
+    },
+    {
+      "key": "copy__file-name",
+      "text": "copy",
+      "context": "file-name",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "A single lower-case word put in brackets into the name of a file copy, e.g. \"Notes (copy).md\". Keep it short and lower case."
     },
     {
       "key": "current__move-target-folder",

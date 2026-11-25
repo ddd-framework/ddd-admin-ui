@@ -35,7 +35,11 @@ export const MarkdownPreview = ({ source, colorMode = 'auto', untrusted = false,
       data-slot="markdown-preview"
       data-color-mode={resolvedColorMode}
       aria-busy={state.status === 'loading' || undefined}
-      className={cn('min-w-0 break-words', className)}
+      // a host's CSS reset takes the list markers away (Tailwind's preflight): lists get them back, task lists stay bare
+      className={cn(
+        'min-w-0 break-words [&_ol]:list-decimal [&_ul]:list-disc [&_ul.contains-task-list]:list-none',
+        className
+      )}
     >
       {state.status === 'loading' && <Skeleton className="h-4 w-2/3" />}
       {state.status === 'failed' && <p className="whitespace-pre-wrap">{source}</p>}

@@ -1019,7 +1019,27 @@ export const FilesPage = ({ areas }) => (
 - **`FileViewer`** shows one file on a wide surface (a canvas beside a chat, a pane): name and facts, the preview
   filling the height (`FilePreview layout="canvas"`: no box of a fixed height, PDF pages up to 1100 px wide, texts up
   to 1 MB), the choice of a stored version and Download. It reads through the same adapter (`useFile`,
-  `useActions().getDownload`) and changes nothing; the parent is a flex column that gives the height.
+  `useActions().getDownload`); the parent is a flex column that gives the height. `leading` takes a control before the
+  name (a way back), `actions` controls after Download.
+- **Editing a text file in place** (`FileViewer canWrite`, capability `versions` with the actions `saveText` and
+  `saveTextAsCopy`; `features.editText`): Markdown, TXT, CSV and source files up to 1 MB get "Edit" — a plain text
+  field (`FileTextEditor`, no editor library; a Markdown draft can be looked at as markup). Save calls
+  `saveText(fileId, { text, baseVersionId })` with the version the edit started from; the adapter answers
+  `{ status: 'saved', file }` or `{ status: 'conflict' }` and **must never write on top of a newer version**. On a
+  conflict nothing is overwritten: the reader keeps editing, loads the newer version, or saves the draft beside the
+  file (`saveTextAsCopy(fileId, { text, name })`, the adapter picks a free name when the proposed one is taken). A file
+  that is no UTF-8 text, is longer than 1 MB, shows an older version or has a newer version waiting for its check is
+  not offered for editing (`fileTextEditRefusalOf`); Windows line ends are written back as they were. `onTextSaved`
+  and `onTextCopySaved` tell the host (e.g. to note the change in a conversation).
+- **A PDF the server renders** (`FileView.hasPdfRendition`, e.g. a Word, Excel or PowerPoint document): the preview
+  asks `getDownload(fileId, { variant: 'PDF_RENDITION', disposition: 'inline' })` and draws the answer with
+  `PdfPreview`. The answer may carry `state: 'pending'` (the preview says so and asks again every 3 s, for at most
+  3 minutes) or `state: 'failed'` ("No preview could be made …", with `message` when the server gave one).
+- **`FileManager variant="compact"`** is the manager on a narrow surface that gives the height (a canvas beside a
+  chat): no folder tree and no quota, folders are walked through the list and the breadcrumbs, a file opens in place
+  in `FileViewer` with a way back instead of in the drawer; upload, new folder, rename, move and trash appear by the
+  same rights as on the page (`canWrite`, `writesAllowed`, the adapter's capabilities). Without URL adapters the
+  manager keeps its state itself; `initialState` says where it starts (`{ folder: '12' }`).
 - **Uploads:** `uploadWithProgress(transport, request, callbacks)` sends one multipart request with progress, renews a
   session once after a 401 and refuses while writes are off; an adapter that uploads straight to a store implements
   `upload` itself. The tray runs three at a time and checks type, size and quota before (`precheckUpload`).

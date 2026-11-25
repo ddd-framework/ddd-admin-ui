@@ -121,7 +121,7 @@ interface HastNode {
 const openLinksOutside = (node: HastNode): void => {
   if (node.type === 'element' && node.tagName === 'a') {
     const href = typeof node.properties?.href === 'string' ? node.properties.href : '';
-    if (!href.startsWith('#')) node.properties = { ...node.properties, target: '_blank', rel: ['noopener', 'noreferrer', 'nofollow'] };
+    if (href !== '' && !href.startsWith('#')) node.properties = { ...node.properties, target: '_blank', rel: ['noopener', 'noreferrer', 'nofollow'] };
   }
   node.children?.forEach(openLinksOutside);
 };

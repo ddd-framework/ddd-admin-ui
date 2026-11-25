@@ -207,7 +207,11 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
   scope or `useMemo`). A control appears only when its capability and the actions it needs are both there
   (`resolveFileManagerFeatures`). Previews never render SVG or HTML; a PDF needs `loadPdfJs`, coloured source files `loadCodeHighlighter`, the
   "Preview" of a Markdown file `renderMarkdown` (`<MarkdownPreview untrusted />` of `./markdown`). `FileViewer` shows one
-  file on a wide surface (`FilePreview layout="canvas"`, version choice, download).
+  file on a wide surface (`FilePreview layout="canvas"`, version choice, download) and, with `canWrite` and the actions
+  `saveText` + `saveTextAsCopy`, edits a text file in place (a save never lands on top of a newer version: the adapter
+  answers `conflict`, the reader loads the newer version or saves a copy). `FileView.hasPdfRendition` previews a PDF
+  the server renders (`getDownload` variant `PDF_RENDITION`, answer `pending` / `failed` / ready). `FileManager
+  variant="compact"` is the manager for a canvas or pane: no tree, a file opens in place, actions by rights.
 - **Server vs client.** Hooks and context live in files with `'use client'`; pure helpers (`m`, `formatDateTime`,
   `defineStatusMap`, schemas, conditions) may be called in server code and `metadata`.
 
