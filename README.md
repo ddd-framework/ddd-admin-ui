@@ -1008,7 +1008,8 @@ export const FilesPage = ({ areas }) => (
   (click or the buttons zoom in steps), PDF on canvases through the host's pdf.js (`loadPdfJs`; without it "Open PDF"
   in a new tab), Markdown as markup or as its source, source files (JSON, YAML, TypeScript, PHP, …:
   `codeLanguageOfExtension`), TXT and CSV as text nodes (first 100 KB), MP4 / WebM / MOV and MP3 / WAV / OGG … in the
-  browser's own player. SVG, HTML and every other type are never rendered: icon, facts, download. Nothing is fetched
+  browser's own player. An SVG is a picture only from the copy the server sanitised (below), in an `<img>`; its
+  uploaded bytes, HTML and every other type are never rendered: icon, facts, download. Nothing is fetched
   before the file is released (`CLEAN` / `SKIPPED`), and nothing of a file is ever inserted as HTML.
 - **Loaders of the host** (`FilePreviewLoaders`, props of `FileManager`, `FileDrawer`, `FilePreview`, `FileViewer`; each
   optional): `loadPdfJs`; `loadCodeHighlighter` — colours source files, e.g.
@@ -1035,6 +1036,15 @@ export const FilesPage = ({ areas }) => (
   asks `getDownload(fileId, { variant: 'PDF_RENDITION', disposition: 'inline' })` and draws the answer with
   `PdfPreview`. The answer may carry `state: 'pending'` (the preview says so and asks again every 3 s, for at most
   3 minutes) or `state: 'failed'` ("No preview could be made …", with `message` when the server gave one).
+- **An SVG as a picture** (`FileView.hasSanitizedImage`): the preview asks
+  `getDownload(fileId, { variant: 'SANITIZED_IMAGE', disposition: 'inline' })` and draws the answer in an `<img>` with
+  the picture zoom (kind `sanitized-image`; fitted, a vector picture fills its box, and its zoom steps count from
+  that fitted size) — never as markup, never in an
+  `<object>` or a frame, so nothing in it runs and nothing it names is loaded. **The adapter's duty:** the URL it
+  answers serves a copy the server sanitised (no script, no handler, no reference to another resource) with a picture
+  type, and never the uploaded bytes; when it cannot say so (no copy, an attachment answer) it answers
+  `state: 'failed'`, and the file shows "… files have no preview here" with Download, as without the fact. A vector
+  file is asked for with that variant only: no thumbnail and no other fact makes its bytes a preview.
 - **`FileManager variant="compact"`** is the manager on a narrow surface that gives the height (a canvas beside a
   chat): no folder tree and no quota, folders are walked through the list and the breadcrumbs, a file opens in place
   in `FileViewer` with a way back instead of in the drawer; upload, new folder, rename, move and trash appear by the

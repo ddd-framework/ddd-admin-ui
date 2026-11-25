@@ -98,7 +98,7 @@ export { CODE_HIGHLIGHT_MAX_CHARACTERS, codeHighlighterFromHighlightJs, codeToke
 export type { CodeHighlighterLike, CodeHighlighterLoader, CodeToken, HighlightJsLike } from './codeHighlighting.ts';
 export { MarkdownFilePreview } from './MarkdownFilePreview.tsx';
 export type { MarkdownFilePreviewProps, MarkdownFileRenderer, MarkdownFileView } from './MarkdownFilePreview.tsx';
-export { IMAGE_ZOOM_STEPS, ImagePreview, nextImageZoom } from './ImagePreview.tsx';
+export { fittedImageScaleOf, IMAGE_ZOOM_STEPS, imageBaseSizeOf, ImagePreview, imageZoomBaseOf, nextImageZoom, VECTOR_IMAGE_CLICK_ZOOM } from './ImagePreview.tsx';
 export type { ImagePreviewProps } from './ImagePreview.tsx';
 export { MediaPreview } from './MediaPreview.tsx';
 export type { MediaPreviewProps } from './MediaPreview.tsx';
@@ -115,7 +115,9 @@ export {
   fileFamilyOfContentType,
   fileFamilyOfExtension,
   fileNameStem,
+  filePreviewDispositionOf,
   filePreviewKind,
+  filePreviewVariantOf,
   folderDepth,
   folderPath,
   folderSubtreeHeight,

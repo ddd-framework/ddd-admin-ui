@@ -7,7 +7,9 @@ import {
   fileFamilyOfContentType,
   fileNameStem,
   codeLanguageOfExtension,
+  filePreviewDispositionOf,
   filePreviewKind,
+  filePreviewVariantOf,
   isTextPreviewKind,
   folderDepth,
   folderPath,
@@ -53,11 +55,42 @@ describe('file view helpers', () => {
     assert.equal(folderSubtreeHeight(folders, 1), 3);
   });
 
+  it('shows a vector file only as the picture the server sanitised', () => {
+    assert.equal(filePreviewKind({ family: 'VECTOR', extension: 'svg', hasSanitizedImage: true }), 'sanitized-image');
+    assert.equal(filePreviewKind({ family: 'VECTOR', extension: 'SVG', hasSanitizedImage: true }), 'sanitized-image');
+    assert.equal(filePreviewKind({ family: 'VECTOR', extension: 'svg', hasSanitizedImage: false }), 'none');
+    assert.equal(filePreviewKind({ family: 'VECTOR', extension: 'svg' }), 'none', 'old servers and files without a copy: no preview');
+    // neither a thumbnail nor a PDF rendition makes the uploaded bytes of a vector file a preview
+    assert.equal(filePreviewKind({ family: 'VECTOR', extension: 'svg', thumbnailUrl: 'https://cdn/x.svg' }), 'none');
+    assert.equal(filePreviewKind({ family: 'VECTOR', extension: 'svg', hasPdfRendition: true }), 'none');
+    assert.equal(filePreviewKind({ family: 'VECTOR', extension: 'svg', thumbnailUrl: 'https://cdn/x.svg', hasSanitizedImage: true }), 'sanitized-image');
+    // the fact belongs to vector files: it turns no other file into a picture
+    assert.equal(filePreviewKind({ family: 'TEXT', extension: 'html', hasSanitizedImage: true }), 'none');
+    assert.equal(filePreviewKind({ family: 'OTHER', extension: 'svgz', hasSanitizedImage: true }), 'none');
+    assert.equal(filePreviewKind({ family: 'IMAGE', extension: 'png', hasSanitizedImage: true }), 'image');
+    assert.equal(isTextPreviewKind('sanitized-image'), false, 'never read as text, so never edited in place');
+  });
+
+  it('asks the release gate for the sanitised picture and for nothing else of a vector file', () => {
+    assert.equal(filePreviewVariantOf('sanitized-image'), 'SANITIZED_IMAGE');
+    assert.equal(filePreviewDispositionOf('sanitized-image'), 'inline');
+    assert.equal(filePreviewVariantOf('pdf-rendition'), 'PDF_RENDITION');
+    for (const kind of ['image', 'pdf', 'markdown', 'code', 'text', 'csv', 'video', 'audio'] as const) {
+      assert.equal(filePreviewVariantOf(kind), 'PREVIEW', kind);
+    }
+    assert.equal(filePreviewDispositionOf('image'), 'inline');
+    assert.equal(filePreviewDispositionOf('pdf'), 'inline');
+    assert.equal(filePreviewDispositionOf('pdf-rendition'), 'inline');
+    for (const kind of ['markdown', 'code', 'text', 'csv', 'video', 'audio', 'none'] as const) {
+      assert.equal(filePreviewDispositionOf(kind), 'attachment', kind);
+    }
+  });
+
   it('previews only safe types', () => {
     assert.equal(filePreviewKind({ family: 'IMAGE', extension: 'png' }), 'image');
     assert.equal(filePreviewKind({ family: 'IMAGE', extension: 'heic' }), 'none');
     assert.equal(filePreviewKind({ family: 'IMAGE', extension: 'heic', thumbnailUrl: 'https://cdn/x.webp' }), 'image');
-    assert.equal(filePreviewKind({ family: 'VECTOR', extension: 'svg' }), 'none', 'SVG never renders in the browser');
+    assert.equal(filePreviewKind({ family: 'VECTOR', extension: 'svg' }), 'none', 'an SVG the server sanitised no copy of never renders in the browser');
     // an Office document the server renders as a PDF: every page, not the first page's picture
     assert.equal(filePreviewKind({ family: 'DOCUMENT', extension: 'docx', hasPdfRendition: true }), 'pdf-rendition');
     assert.equal(filePreviewKind({ family: 'DOCUMENT', extension: 'docx', hasPdfRendition: true, thumbnailUrl: 'https://cdn/x.webp' }), 'pdf-rendition');

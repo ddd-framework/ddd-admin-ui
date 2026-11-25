@@ -8,6 +8,7 @@
 
 import { formatUiNumber } from '../i18n/format.ts';
 import { m, type TranslateFn } from '../i18n/store.ts';
+import type { FileDownloadOptions } from './fileManagerAdapter.ts';
 
 /** An id of a file, folder, version or link target. */
 export type FileItemId = string | number;
@@ -184,6 +185,13 @@ export interface FileView {
    * `getDownload` with `variant: 'PDF_RENDITION'` and draws the answer like a PDF. Absent / `false`: no rendition.
    */
   hasPdfRendition?: boolean;
+  /**
+   * The server shows this vector file (an SVG) as a picture from a copy it sanitised itself — no script, no handler,
+   * no reference to another resource — served as `image/svg+xml`: the preview asks `getDownload` with
+   * `variant: 'SANITIZED_IMAGE'` and draws the answer in an `<img>`, never the uploaded bytes. Absent / `false`: the
+   * file has no preview.
+   */
+  hasSanitizedImage?: boolean;
   /** Links under the reader's rights (capability `links`). */
   links?: readonly FileLinkView[];
   /** Display name of the uploader. */
@@ -383,8 +391,9 @@ export interface FileDownloadView {
   fileName: string;
   expiresAt?: string | null;
   /**
-   * Only for a rendition the server makes on demand (`variant: 'PDF_RENDITION'`): `pending` = it is being made (ask
-   * again shortly), `failed` = none could be made (`message` says why, when the server said it). Absent = `ready`.
+   * Only for what the server derives from the file (`variant: 'PDF_RENDITION'`, `'SANITIZED_IMAGE'`): `pending` = it
+   * is being made (ask again shortly), `failed` = none could be made (`message` says why, when the server said it).
+   * Absent = `ready`.
    */
   state?: 'ready' | 'pending' | 'failed';
   message?: string | null;
@@ -429,7 +438,7 @@ export const isFileReleased = (status: FileScanStatus): boolean => status === 'C
 /** Raster types a browser may show inline (served with their own type, never sniffed). */
 const INLINE_IMAGE_EXTENSIONS: ReadonlySet<string> = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp']);
 
-export type FilePreviewKind = 'image' | 'pdf' | 'pdf-rendition' | 'markdown' | 'code' | 'text' | 'csv' | 'video' | 'audio' | 'none';
+export type FilePreviewKind = 'image' | 'sanitized-image' | 'pdf' | 'pdf-rendition' | 'markdown' | 'code' | 'text' | 'csv' | 'video' | 'audio' | 'none';
 
 const OFFICE_PAGE_FAMILIES: ReadonlySet<FileFamily> = new Set(['DOCUMENT', 'SPREADSHEET', 'PRESENTATION']);
 const TEXT_EXTENSIONS: ReadonlySet<string> = new Set(['txt', 'log']);
@@ -464,13 +473,18 @@ export const isPageThumbnail = (file: Pick<FileView, 'family' | 'extension'>): b
  * What the preview shows. Only JPEG / PNG / GIF / WebP (or a rendition the server made: a thumbnail URL says it
  * exists) as `<img>`, PDF (or the PDF the server renders of an Office document) on canvases, Markdown as sanitised
  * markup or as its source, source files, TXT and CSV as text
- * nodes, MP4 / WebM / MP3 … in the browser's own player. SVG, HTML and everything else never render in the browser:
- * icon, facts and Download only.
+ * nodes, MP4 / WebM / MP3 … in the browser's own player. An SVG is a picture only from the copy the server sanitised
+ * (`hasSanitizedImage`), in an `<img>`: the uploaded bytes of an SVG, HTML and everything else never render in the
+ * browser — icon, facts and Download only.
  */
-export const filePreviewKind = (file: Pick<FileView, 'family' | 'extension' | 'thumbnailUrl' | 'hasPdfRendition'>): FilePreviewKind => {
+export const filePreviewKind = (
+  file: Pick<FileView, 'family' | 'extension' | 'thumbnailUrl' | 'hasPdfRendition' | 'hasSanitizedImage'>
+): FilePreviewKind => {
   const extension = file.extension.toLowerCase();
   const hasRendition = Boolean(file.thumbnailUrl);
   if (file.family === 'IMAGE') return INLINE_IMAGE_EXTENSIONS.has(extension) || hasRendition ? 'image' : 'none';
+  // a vector file is never its own preview and no thumbnail stands in for it: only the server's sanitised copy
+  if (file.family === 'VECTOR') return file.hasSanitizedImage === true ? 'sanitized-image' : 'none';
   // every page as a PDF beats the first page as a picture
   if (file.family !== 'PDF' && file.hasPdfRendition === true) return 'pdf-rendition';
   if (file.family !== 'PDF' && isPageThumbnail(file) && hasRendition) return 'image';
@@ -482,6 +496,20 @@ export const filePreviewKind = (file: Pick<FileView, 'family' | 'extension' | 't
   if (VIDEO_EXTENSIONS.has(extension)) return 'video';
   if (AUDIO_EXTENSIONS.has(extension)) return 'audio';
   return 'none';
+};
+
+/** What the preview of a kind asks the release gate for: only pictures and PDFs are handed to the browser inline. */
+export const filePreviewDispositionOf = (kind: FilePreviewKind): FileDownloadOptions['disposition'] =>
+  kind === 'image' || kind === 'sanitized-image' || kind === 'pdf' || kind === 'pdf-rendition' ? 'inline' : 'attachment';
+
+/**
+ * The variant the preview of a kind asks for. A vector file is asked for as `SANITIZED_IMAGE` and as nothing else:
+ * no path of the preview reaches its uploaded bytes.
+ */
+export const filePreviewVariantOf = (kind: FilePreviewKind): NonNullable<FileDownloadOptions['variant']> => {
+  if (kind === 'pdf-rendition') return 'PDF_RENDITION';
+  if (kind === 'sanitized-image') return 'SANITIZED_IMAGE';
+  return 'PREVIEW';
 };
 
 /** The kinds whose content is read as text (`fetch`), never handed to the browser as a document. */

@@ -3,6 +3,15 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.8.1
+
+- `./files`: an SVG is shown as a picture when the server sanitised a copy of it (`FileView.hasSanitizedImage`, kind
+  `sanitized-image`, `getDownload` variant `SANITIZED_IMAGE`): an `<img>` with the picture zoom in the drawer and the
+  viewer, never the uploaded bytes, never markup, an `<object>` or a frame. An adapter answers `state: 'failed'` when
+  it has no sanitised copy to serve; the file then has no preview, as before. `ImagePreview scalable` (a vector
+  picture fills its box while fitted, and its zoom counts from that fitted size: 100 % = fitted, a click = 200 %);
+  `filePreviewVariantOf`, `filePreviewDispositionOf`, `imageBaseSizeOf`, `fittedImageScaleOf`, `imageZoomBaseOf`. **`FilePreviewKind` gains `sanitized-image`** (a host that switches over the kinds adds it).
+
 ## 0.8.0
 
 - `./files`: the preview shows more. Markdown has "Preview" and "Source" (`MarkdownFilePreview`; the markup comes from

@@ -20,7 +20,9 @@ import {
   type FileDownloadView,
   type FileItemId,
   type FileView,
+  filePreviewDispositionOf,
   filePreviewKind,
+  filePreviewVariantOf,
   isFileReleased,
 } from './fileView.ts';
 import { ImagePreview } from './ImagePreview.tsx';
@@ -123,7 +125,8 @@ const usePreviewUrl = (
 };
 
 /**
- * The preview of a file: JPEG / PNG / GIF / WebP (or the server's rendition) as `<img>` with zoom, PDF — and the PDF
+ * The preview of a file: JPEG / PNG / GIF / WebP (or the server's rendition) as `<img>` with zoom, an SVG as `<img>`
+ * of the copy the server sanitised (`hasSanitizedImage`; never the uploaded bytes, never as markup), PDF — and the PDF
  * the server renders of a Word, Excel or PowerPoint document — on canvases through the host's pdf.js, Markdown as markup or source, source files with the host's highlighter, TXT / CSV as
  * text, MP4 / WebM / MP3 … in the browser's player, everything else icon + "download to open". Nothing is fetched
  * before the file is released; an unreleased file shows its scan state and what it means instead. File content is
@@ -136,8 +139,8 @@ export const FilePreview = ({ file, getDownload, loadPdfJs, loadCodeHighlighter,
   // a file in the trash is not previewed (the server releases its content as a download only)
   const trashed = file.deletedAt !== null && file.deletedAt !== undefined;
   const kind = filePreviewKind(file);
-  const disposition: FileDownloadOptions['disposition'] = kind === 'image' || kind === 'pdf' || kind === 'pdf-rendition' ? 'inline' : 'attachment';
-  const preview = usePreviewUrl(file, released && !trashed && kind !== 'none', disposition, getDownload, versionId, kind === 'pdf-rendition' ? 'PDF_RENDITION' : 'PREVIEW');
+  const disposition: FileDownloadOptions['disposition'] = filePreviewDispositionOf(kind);
+  const preview = usePreviewUrl(file, released && !trashed && kind !== 'none', disposition, getDownload, versionId, filePreviewVariantOf(kind));
   const fills = layout === 'canvas';
   const maxBytes = fills ? TEXT_VIEWER_BYTES : TEXT_PREVIEW_BYTES;
 
@@ -159,7 +162,8 @@ export const FilePreview = ({ file, getDownload, loadPdfJs, loadCodeHighlighter,
       </Panel>
     );
   }
-  if (kind === 'none') {
+  // a vector file the server could make no sanitised picture of has no preview at all (never its uploaded bytes)
+  if (kind === 'none' || (kind === 'sanitized-image' && preview.failed)) {
     return (
       <Panel className={className}>
         <FileFamilyIcon family={file.family} size="lg" />
@@ -202,7 +206,9 @@ export const FilePreview = ({ file, getDownload, loadPdfJs, loadCodeHighlighter,
       data-preview-kind={kind}
       className={cn(fills && 'flex min-h-0 flex-1 flex-col', fills && (kind === 'pdf' || kind === 'pdf-rendition') && 'overflow-auto', className)}
     >
-      {kind === 'image' && <ImagePreview url={preview.url} alt={t('Preview of %name%', { replacements: { name: file.name } })} layout={layout} />}
+      {(kind === 'image' || kind === 'sanitized-image') && (
+        <ImagePreview url={preview.url} alt={t('Preview of %name%', { replacements: { name: file.name } })} layout={layout} scalable={kind === 'sanitized-image'} />
+      )}
       {(kind === 'pdf' || kind === 'pdf-rendition') &&
         (loadPdfJs ? (
           <PdfPreview url={preview.url} fileName={file.name} loadPdfJs={loadPdfJs} maxWidth={fills ? PDF_PREVIEW_CANVAS_MAX_WIDTH : undefined} />

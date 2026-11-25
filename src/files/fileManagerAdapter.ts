@@ -300,14 +300,17 @@ export interface FolderDeleteResult {
 export interface FileDownloadOptions {
   /** A specific version; default the current one. */
   versionId?: FileItemId;
-  /** `inline` only for JPEG / PNG / GIF / WebP and PDF (the server refuses it otherwise). */
+  /** `inline` only for JPEG / PNG / GIF / WebP, PDF and the server's sanitised picture (the server refuses it otherwise). */
   disposition: 'inline' | 'attachment';
   /**
    * `PREVIEW` = what the drawer shows (an access the server may record as "viewed"); `THUMBNAIL` = a small picture in
    * a list (never recorded); `PDF_RENDITION` = the PDF the server renders of a document (`FileView.hasPdfRendition`;
-   * the answer may be `pending` or `failed`); default `ORIGINAL` = a download (recorded as "downloaded").
+   * the answer may be `pending` or `failed`); `SANITIZED_IMAGE` = the picture the server sanitised of a vector file
+   * (`FileView.hasSanitizedImage`): the answer's URL must serve that copy as a picture type and never the uploaded
+   * bytes — an adapter that cannot say so answers `failed` (the file then has no preview); default `ORIGINAL` = a
+   * download (recorded as "downloaded").
    */
-  variant?: 'ORIGINAL' | 'PREVIEW' | 'THUMBNAIL' | 'PDF_RENDITION';
+  variant?: 'ORIGINAL' | 'PREVIEW' | 'THUMBNAIL' | 'PDF_RENDITION' | 'SANITIZED_IMAGE';
 }
 
 /** The text of a file, saved as a new version on top of the version it was read from. */
