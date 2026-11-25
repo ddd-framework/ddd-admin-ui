@@ -1304,7 +1304,8 @@
       "key": "At most %max% characters",
       "text": "At most %max% characters",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/FileDrawer.tsx",
+        "files/FileNameDialog.tsx"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %max% is a number."
     },
@@ -1312,7 +1313,8 @@
       "key": "At most %max% characters including .%extension%",
       "text": "At most %max% characters including .%extension%",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/FileDrawer.tsx",
+        "files/FileNameDialog.tsx"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %extension% is a file extension like \"pdf\"; %max% is a number."
     },
@@ -1526,6 +1528,7 @@
       "key": "Cancel",
       "text": "Cancel",
       "files": [
+        "files/FileNameDialog.tsx",
         "files/FilePathBar.tsx",
         "files/FileTextEditor.tsx",
         "files/FolderNameDialog.tsx",
@@ -3651,6 +3654,14 @@
       "hint": "Workers admin, page of one transport (one queue of background jobs): column header: failed jobs of a job class."
     },
     {
+      "key": "File renamed",
+      "text": "File renamed",
+      "files": [
+        "files/FileManager.tsx"
+      ],
+      "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Message after a file got another name."
+    },
+    {
       "key": "File updated",
       "text": "File updated",
       "files": [
@@ -5683,7 +5694,8 @@
       "context": "file-name",
       "files": [
         "files/FileDrawer.tsx",
-        "files/FileManager.tsx"
+        "files/FileManager.tsx",
+        "files/FileNameDialog.tsx"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: file name."
     },
@@ -7406,12 +7418,37 @@
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
     },
     {
+      "key": "Rename %name%",
+      "text": "Rename %name%",
+      "files": [
+        "files/FileItemActions.tsx"
+      ],
+      "hint": "File manager, the icon buttons of one file (download, rename, move, links, delete; restore in the trash). %name% is a file or folder name."
+    },
+    {
+      "key": "Rename file",
+      "text": "Rename file",
+      "files": [
+        "files/FileNameDialog.tsx"
+      ],
+      "hint": "File manager, dialog to rename a file (title)."
+    },
+    {
       "key": "Rename folder",
       "text": "Rename folder",
       "files": [
         "files/FolderNameDialog.tsx"
       ],
       "hint": "File manager, dialog to create or rename a folder."
+    },
+    {
+      "key": "Rename__action",
+      "text": "Rename",
+      "context": "action",
+      "files": [
+        "files/FileItemActions.tsx"
+      ],
+      "hint": "File manager, the icon buttons of one file (download, rename, move, links, delete; restore in the trash). Context: action (tooltip of the rename button)."
     },
     {
       "key": "Rename__folder-action",
@@ -7974,6 +8011,7 @@
       "text": "Save",
       "files": [
         "files/FileDrawer.tsx",
+        "files/FileNameDialog.tsx",
         "files/FileTextEditor.tsx",
         "files/FolderNameDialog.tsx"
       ],
@@ -8052,6 +8090,7 @@
       "files": [
         "crons/CronFormDrawer.tsx",
         "files/FileDrawer.tsx",
+        "files/FileNameDialog.tsx",
         "files/FileTextEditor.tsx",
         "files/FileViewer.tsx",
         "files/FolderNameDialog.tsx",
@@ -9236,7 +9275,8 @@
       "key": "The extension cannot be changed. Upload the file again to change its type.",
       "text": "The extension cannot be changed. Upload the file again to change its type.",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/FileDrawer.tsx",
+        "files/FileNameDialog.tsx"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity)."
     },

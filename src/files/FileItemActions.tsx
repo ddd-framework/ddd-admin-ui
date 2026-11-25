@@ -1,6 +1,6 @@
 'use client';
 
-import { ArchiveRestore, Copy, Download, FolderInput, Link, Link2, Trash2 } from 'lucide-react';
+import { ArchiveRestore, Copy, Download, FolderInput, Link, Link2, TextCursorInput, Trash2 } from 'lucide-react';
 
 import { useTranslate } from '../i18n/useTranslate.ts';
 import { Button } from '../primitives/button.tsx';
@@ -13,6 +13,8 @@ export interface FileItemHandlers {
   onDownload: (file: FileView) => void;
   onMove: (file: FileView) => void;
   onTrash: (file: FileView) => void;
+  /** Renames the file (a manager without the details drawer offers it on the row). */
+  onRename?: (file: FileView) => void;
   onLink?: (file: FileView) => void;
   onRestore?: (file: FileView) => void;
   onPurge?: (file: FileView) => void;
@@ -67,6 +69,11 @@ export interface FileItemActionsProps {
   writesAllowed: boolean;
   /** Without a trash Delete removes the file (the tooltip says so). */
   hasTrash?: boolean;
+  /**
+   * Leaves the actions out that the viewer has no right for (`canWrite` false) instead of drawing them switched off;
+   * a write guard (`writesAllowed` false) still only switches them off. Default false.
+   */
+  hidesUnavailable?: boolean;
   className?: string;
 }
 
@@ -74,10 +81,12 @@ export interface FileItemActionsProps {
  * The per-file actions (ghost icon buttons, each with a label, Delete last): Download, Move, Link (capability `links`),
  * Delete; in the trash Restore and Delete permanently. Download is off until the file is released.
  */
-export const FileItemActions = ({ file, handlers, inTrash, canWrite, writesAllowed, hasTrash = true, className }: FileItemActionsProps) => {
+export const FileItemActions = ({ file, handlers, inTrash, canWrite, writesAllowed, hasTrash = true, hidesUnavailable = false, className }: FileItemActionsProps) => {
   const { t } = useTranslate();
   const writeDisabled = !canWrite || !writesAllowed;
+  const showsWrites = canWrite || !hidesUnavailable;
   if (inTrash) {
+    if (!showsWrites) return null;
     return (
       <div className={cn('flex items-center justify-end gap-1', className)} data-row-action-ignore>
         {handlers.onRestore && (
@@ -129,18 +138,33 @@ export const FileItemActions = ({ file, handlers, inTrash, canWrite, writesAllow
         onCopyPath={handlers.onCopyPath ? () => handlers.onCopyPath?.(file) : undefined}
         onCopyLink={handlers.onCopyLink ? () => handlers.onCopyLink?.(file) : undefined}
       />
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        aria-label={t('Move %name%', { replacements: { name: file.name } })}
-        title={t('Move', { context: 'action' })}
-        disabled={writeDisabled}
-        onClick={() => handlers.onMove(file)}
-      >
-        <FolderInput />
-      </Button>
-      {handlers.onLink && (
+      {handlers.onRename && showsWrites && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t('Rename %name%', { replacements: { name: file.name } })}
+          title={t('Rename', { context: 'action' })}
+          disabled={writeDisabled}
+          onClick={() => handlers.onRename?.(file)}
+        >
+          <TextCursorInput />
+        </Button>
+      )}
+      {showsWrites && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t('Move %name%', { replacements: { name: file.name } })}
+          title={t('Move', { context: 'action' })}
+          disabled={writeDisabled}
+          onClick={() => handlers.onMove(file)}
+        >
+          <FolderInput />
+        </Button>
+      )}
+      {handlers.onLink && showsWrites && (
         <Button
           type="button"
           variant="ghost"
@@ -153,18 +177,20 @@ export const FileItemActions = ({ file, handlers, inTrash, canWrite, writesAllow
           <Link2 />
         </Button>
       )}
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        aria-label={t('Delete %name%', { replacements: { name: file.name } })}
-        title={hasTrash ? t('Move to the trash') : t('Delete', { context: 'action' })}
-        className="text-destructive hover:text-destructive"
-        disabled={writeDisabled}
-        onClick={() => handlers.onTrash(file)}
-      >
-        <Trash2 />
-      </Button>
+      {showsWrites && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t('Delete %name%', { replacements: { name: file.name } })}
+          title={hasTrash ? t('Move to the trash') : t('Delete', { context: 'action' })}
+          className="text-destructive hover:text-destructive"
+          disabled={writeDisabled}
+          onClick={() => handlers.onTrash(file)}
+        >
+          <Trash2 />
+        </Button>
+      )}
     </div>
   );
 };

@@ -42,6 +42,8 @@ export interface FileCardProps {
   linkKinds?: readonly FileLinkKind[];
   /** Without a trash Delete removes the file. */
   hasTrash?: boolean;
+  /** Leaves the actions out that the viewer has no right for instead of drawing them switched off (`FileItemActions`). */
+  hidesUnavailable?: boolean;
   /** The badge of uncommitted working-copy changes (capability `workingCopy`); absent = no badge. */
   workingCopyLabel?: string;
   /** The grid's row key (set by `EntityListGrid`): lands on the card's root, so tests and agents find the card. */
@@ -83,6 +85,7 @@ export const FileCard = ({
   dragItem,
   linkKinds,
   hasTrash = true,
+  hidesUnavailable = false,
   workingCopyLabel,
   'data-row-key': rowKey,
 }: FileCardProps) => {
@@ -150,7 +153,15 @@ export const FileCard = ({
         {linkKinds && <FileLinkChips links={file.links} kinds={linkKinds} showEmpty={false} />}
       </CardContent>
       <CardFooter className="justify-end gap-2 border-t px-4 pt-3 pb-4">
-        <FileItemActions file={file} handlers={handlers} inTrash={inTrash} canWrite={canWrite} writesAllowed={writesAllowed} hasTrash={hasTrash} />
+        <FileItemActions
+          file={file}
+          handlers={handlers}
+          inTrash={inTrash}
+          canWrite={canWrite}
+          writesAllowed={writesAllowed}
+          hasTrash={hasTrash}
+          hidesUnavailable={hidesUnavailable}
+        />
       </CardFooter>
     </Card>
   );

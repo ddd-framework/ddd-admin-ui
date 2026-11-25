@@ -61,6 +61,7 @@ import { FileDrawer } from './FileDrawer.tsx';
 import { FileViewer } from './FileViewer.tsx';
 import { FileFamilyIcon } from './FileFamilyIcon.tsx';
 import { FileItemActions, type FileItemHandlers } from './FileItemActions.tsx';
+import { FileNameDialog } from './FileNameDialog.tsx';
 import { FilePathBar } from './FilePathBar.tsx';
 import { filePathText, findFolderByPath, folderIdOfParam, folderParamOf, folderPathText, parseLocationInput, pathSegments, siblingFolders } from './filePaths.ts';
 import { FileLinkChips } from './FileLinkChips.tsx';
@@ -231,9 +232,9 @@ export interface FileAreaPickerSlotProps {
 
 /**
  * The table columns a compact manager leaves out (a canvas, a narrow pane): what the icon, the file's own view or the
- * full screen says anyway, so name, status, size, date and the row's actions fit without scrolling sideways.
+ * full screen says anyway, so name, status, size and the row's actions fit without scrolling sideways.
  */
-const COMPACT_HIDDEN_COLUMN_IDS: ReadonlySet<string> = new Set(['type', 'links', 'uploadedBy', 'created']);
+const COMPACT_HIDDEN_COLUMN_IDS: ReadonlySet<string> = new Set(['type', 'links', 'uploadedBy', 'created', 'updated', 'deleted']);
 
 export interface FileManagerProps {
   /** The API binding; keep its identity (and its capabilities') stable. */
@@ -622,6 +623,8 @@ export const FileManager = ({
   const [crossAreaMove, setCrossAreaMove] = useState<MoveAcrossAreasRequest | null>(null);
   const [linkRequest, setLinkRequest] = useState<readonly FileView[] | null>(null);
   const [folderDialog, setFolderDialog] = useState<{ mode: 'create'; parentId: FileItemId | null } | { mode: 'rename'; folder: FolderView } | null>(null);
+  // the compact manager has no details drawer: a file is renamed from its row
+  const [fileToRename, setFileToRename] = useState<FileView | null>(null);
 
   const run = useCallback(async (work: () => Promise<unknown>, success: string, failure: string): Promise<boolean> => {
     setBusy(true);
@@ -767,13 +770,14 @@ export const FileManager = ({
       onDownload: file => void download([file]),
       onMove: file => setMoveRequest({ files: [file] }),
       onTrash: file => void trashFiles([file]),
+      onRename: compact ? file => setFileToRename(file) : undefined,
       onLink: features.editLinks ? file => setLinkRequest([file]) : undefined,
       onRestore: features.restore ? file => void restoreFiles([file]) : undefined,
       onPurge: features.purge ? file => void purgeFiles([file]) : undefined,
       onCopyPath: file => void copyText(filePathText(folders, file), t('Path copied')),
       onCopyLink: file => void copyText(linkTo(folderPathText(folders, file.folderId), file.id), t('Link copied')),
     }),
-    [download, trashFiles, restoreFiles, purgeFiles, features, copyText, linkTo, folders, t]
+    [download, trashFiles, restoreFiles, purgeFiles, features, copyText, linkTo, folders, t, compact]
   );
 
   // ─── Folders ───────────────────────────────────────────────────────────────────────────────────────────────────
@@ -1136,6 +1140,7 @@ export const FileManager = ({
             canWrite={canWriteHere}
             writesAllowed={writesAllowed}
             hasTrash={features.trash}
+            hidesUnavailable={compact}
           />
         ),
     },
@@ -1175,6 +1180,7 @@ export const FileManager = ({
         dragItem={dragEnabled ? dragItemFor(item.file) : null}
         linkKinds={features.links ? linkKinds : undefined}
         hasTrash={features.trash}
+        hidesUnavailable={compact}
         workingCopyLabel={workingCopyLabel}
         selection={
           canWriteHere
@@ -1700,6 +1706,16 @@ export const FileManager = ({
           }}
         />
       )}
+      <FileNameDialog
+        file={fileToRename}
+        onOpenChange={open => !open && setFileToRename(null)}
+        writesAllowed={writesAllowed}
+        onSubmit={async name => {
+          if (fileToRename === null) return;
+          await actions.patchFile(fileToRename.id, { name });
+          notify.success(t('File renamed'));
+        }}
+      />
       <FolderNameDialog
         open={folderDialog !== null}
         onOpenChange={open => !open && setFolderDialog(null)}

@@ -34,7 +34,10 @@ is in 0.x.
 - `./files`: `FileManager variant="compact"` for a narrow surface that gives the height (a canvas beside a chat): no
   folder tree and no quota, a file opens in place in `FileViewer` with a way back, every action by the same rights as
   on the page; `initialState` says where a manager without URL adapters starts. Its table leaves out the columns
-  Type, Links, Uploaded by and Created, so the name, the status, the size, the date and the row's actions fit.
+  Type, Links, Uploaded by and the dates, so the name, the status, the size and the row's actions fit.
+  A file is renamed from its row (`FileNameDialog`, `FileItemHandlers.onRename`), since there is no details drawer;
+  the write actions of a row are left out, not drawn switched off, for a viewer without the write right
+  (`FileItemActions hidesUnavailable`, also on `FileCard`; the page and embedded variants keep their look).
 - `./files`: the preview draws a PDF the server renders of a document (`FileView.hasPdfRendition`, kind
   `pdf-rendition`, `getDownload` variant `PDF_RENDITION`); `FileDownloadView.state` (`pending` → asked again every
   3 s, `failed` → "No preview could be made …") and `message`.
@@ -42,7 +45,7 @@ is in 0.x.
   became current while the file was open (an upload, an edit); it now fetches again at that moment.
 - Fixed: `CodeText` kept the colours of the text before when a new text had the same length and the same first 64
   characters (now the whole text decides).
-- 40 new UI texts, 1 reworded ("This media format has no player here. …").
+- 44 new UI texts, 1 reworded ("This media format has no player here. …").
 
 ## 0.7.2
 

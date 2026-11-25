@@ -1039,7 +1039,9 @@ export const FilesPage = ({ areas }) => (
   chat): no folder tree and no quota, folders are walked through the list and the breadcrumbs, a file opens in place
   in `FileViewer` with a way back instead of in the drawer; upload, new folder, rename, move and trash appear by the
   same rights as on the page (`canWrite`, `writesAllowed`, the adapter's capabilities). Without URL adapters the
-  manager keeps its state itself; `initialState` says where it starts (`{ folder: '12' }`).
+  manager keeps its state itself; `initialState` says where it starts (`{ folder: '12' }`). Its table shows the
+  name, the status, the size and the row's actions only; a file is renamed from its row (`FileNameDialog`), and a
+  viewer without the write right does not see the write actions at all.
 - **Uploads:** `uploadWithProgress(transport, request, callbacks)` sends one multipart request with progress, renews a
   session once after a 401 and refuses while writes are off; an adapter that uploads straight to a store implements
   `upload` itself. The tray runs three at a time and checks type, size and quota before (`precheckUpload`).

@@ -136,6 +136,7 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
       MediaPreview: DRAWN_BY('FilePreview (video and sound)'),
       FolderActionsMenu: DRAWN_BY('FolderTree, FolderCard and the folder rows'),
       FolderCard: DRAWN_BY('FileManager (grid)'),
+      FileNameDialog: DRAWN_BY('FileManager variant="compact" (rename a file from its row)'),
       FolderNameDialog: DRAWN_BY('FileManager (new folder, rename)'),
       FolderTree: DRAWN_BY('FileManager'),
       LinkTargetsDialog: DRAWN_BY('FileManager (edit links)'),

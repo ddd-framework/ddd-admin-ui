@@ -158,6 +158,8 @@ export { FolderCard, fileCountLabel, folderContentLabel } from './FolderCard.tsx
 export type { FolderCardProps } from './FolderCard.tsx';
 export { FolderNameDialog, MAX_FOLDER_NAME_LENGTH } from './FolderNameDialog.tsx';
 export type { FolderNameDialogProps } from './FolderNameDialog.tsx';
+export { FileNameDialog, MAX_FILE_NAME_LENGTH } from './FileNameDialog.tsx';
+export type { FileNameDialogProps } from './FileNameDialog.tsx';
 export { FolderActionsMenu, FolderTree } from './FolderTree.tsx';
 export type { FileLocation, FolderActionsMenuProps, FolderTreeActions, FolderTreeProps } from './FolderTree.tsx';
 export { LinkTargetsDialog } from './LinkTargetsDialog.tsx';

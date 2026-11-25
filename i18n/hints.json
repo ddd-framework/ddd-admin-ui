@@ -1575,5 +1575,9 @@
   "This file is too large to edit here. Download it, edit it and upload it as a new version.": "File viewer: note shown instead of the editor for a text file larger than what the browser editor loads (1 MB).",
   "Your changes to %name% are not saved.": "File viewer: text of the question shown when the user leaves the editor with unsaved changes. %name% is the file name.",
   "Your changes were saved as %name%": "File viewer: success message after the edited text was saved as a copy beside the original file. %name% is the copy's file name.",
-  "copy__file-name": "A single lower-case word put in brackets into the name of a file copy, e.g. \"Notes (copy).md\". Keep it short and lower case."
+  "copy__file-name": "A single lower-case word put in brackets into the name of a file copy, e.g. \"Notes (copy).md\". Keep it short and lower case.",
+  "File renamed": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Message after a file got another name.",
+  "Rename %name%": "File manager, the icon buttons of one file (download, rename, move, links, delete; restore in the trash). %name% is a file or folder name.",
+  "Rename file": "File manager, dialog to rename a file (title).",
+  "Rename__action": "File manager, the icon buttons of one file (download, rename, move, links, delete; restore in the trash). Context: action (tooltip of the rename button)."
 }
