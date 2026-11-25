@@ -37,7 +37,9 @@ import { FileLinkChips } from './FileLinkChips.tsx';
 import type { FileLinkKind, FileManagerActions, FileManagerAdapter, FileQueryState } from './fileManagerAdapter.ts';
 import type { FileManagerFeatures } from './fileManagerFeatures.ts';
 import type { PdfJsLoader } from './PdfPreview.tsx';
+import type { CodeHighlighterLoader } from './codeHighlighting.ts';
 import { FilePreview } from './FilePreview.tsx';
+import type { MarkdownFileRenderer } from './MarkdownFilePreview.tsx';
 import { FILE_NEWEST_VERSION_STATE, FILE_SCAN_STATUS } from './fileStatus.ts';
 import {
   extensionOf,
@@ -499,6 +501,10 @@ export interface FileDrawerProps {
   linkKinds?: readonly FileLinkKind[];
   formatEventType?: (type: string) => string | null | undefined;
   loadPdfJs?: PdfJsLoader;
+  /** A highlighter of the host for source files (`FilePreview`). */
+  loadCodeHighlighter?: CodeHighlighterLoader;
+  /** Draws a Markdown file as markup (`FilePreview`); without it Markdown shows its source. */
+  renderMarkdown?: MarkdownFileRenderer;
   workingCopyLabel?: string;
   workingCopyDescription?: string;
   /** The activity card's tab (`fileTab` in the URL); default `changes`. */
@@ -555,6 +561,8 @@ export const FileDrawer = ({
   linkKinds,
   formatEventType,
   loadPdfJs,
+  loadCodeHighlighter,
+  renderMarkdown,
   workingCopyLabel,
   workingCopyDescription,
   activityTab = 'changes',
@@ -718,7 +726,13 @@ export const FileDrawer = ({
               </AlertDescription>
             </Alert>
           )}
-          <FilePreview file={file} getDownload={actions.getDownload} loadPdfJs={loadPdfJs} />
+          <FilePreview
+            file={file}
+            getDownload={actions.getDownload}
+            loadPdfJs={loadPdfJs}
+            loadCodeHighlighter={loadCodeHighlighter}
+            renderMarkdown={renderMarkdown}
+          />
           <FileDetailsForm key={String(file.id)} file={file} actions={actions} editable={editable} onClose={drawer.close} />
           <Card className="gap-4">
             <CardHeader className="flex flex-row items-center gap-3">

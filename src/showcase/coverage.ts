@@ -117,7 +117,7 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
     notShown: {},
   },
   files: {
-    shown: ['FileFamilyIcon', 'FileManager', 'QuotaPill'],
+    shown: ['FileFamilyIcon', 'FileManager', 'FileViewer', 'QuotaPill'],
     notShown: {
       FileBreadcrumbs: DRAWN_BY('FileManager'),
       FileCard: DRAWN_BY('FileManager (grid)'),
@@ -127,7 +127,12 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
       FileCopyMenu: DRAWN_BY('FileItemActions and the details drawer of FileManager'),
       FilePathBar: DRAWN_BY('FileManager (a click on the last breadcrumb or Ctrl/Cmd+L)'),
       FileLinkChips: DRAWN_BY('FileManager with the links capability'),
-      FilePreview: DRAWN_BY('FileDrawer'),
+      FilePreview: DRAWN_BY('FileDrawer and FileViewer'),
+      CodePreview: DRAWN_BY('FilePreview (source files)'),
+      CodeText: DRAWN_BY('CodePreview and MarkdownFilePreview (source)'),
+      ImagePreview: DRAWN_BY('FilePreview (pictures)'),
+      MarkdownFilePreview: DRAWN_BY('FilePreview (Markdown)'),
+      MediaPreview: DRAWN_BY('FilePreview (video and sound)'),
       FolderActionsMenu: DRAWN_BY('FolderTree, FolderCard and the folder rows'),
       FolderCard: DRAWN_BY('FileManager (grid)'),
       FolderNameDialog: DRAWN_BY('FileManager (new folder, rename)'),

@@ -2,6 +2,7 @@
 
 import { FileFamilyIcon } from '../../files/FileFamilyIcon.tsx';
 import { FileManager } from '../../files/FileManager.tsx';
+import { FileViewer } from '../../files/FileViewer.tsx';
 import { FILE_FAMILIES } from '../../files/fileView.ts';
 import { QuotaPill } from '../../files/QuotaPill.tsx';
 import { createStaticFileManagerAdapter } from '../../files/staticFileManagerAdapter.ts';
@@ -14,12 +15,17 @@ const adapter = createStaticFileManagerAdapter({
 });
 const areas = [{ key: 'marketing', name: 'Marketing' }];
 
-/** The `./files` section: the file manager on sample payloads (writes are refused), the icons and the quota pill. */
+/** The `./files` section: the file manager and the file viewer on sample payloads (writes are refused), the icons and the quota pill. */
 export const FilesShowcase = () => (
   <div className="space-y-10">
     <Sample title="FileManager (createStaticFileManagerAdapter, variant embedded)">
       <div className="w-full">
         <FileManager adapter={adapter} areas={areas} variant="embedded" defaultView="table" />
+      </div>
+    </Sample>
+    <Sample title="FileViewer (one file on a wide surface: preview, version choice, download)">
+      <div className="flex h-80 w-full flex-col">
+        <FileViewer adapter={adapter} fileId={11} />
       </div>
     </Sample>
     <Sample title="FileFamilyIcon">

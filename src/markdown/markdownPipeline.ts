@@ -61,3 +61,72 @@ const breakLines = (node: MdastNode): void => {
 export const remarkLineBreaks = () => (tree: unknown) => {
   breakLines(tree as MdastNode);
 };
+
+/** Elements a markdown of unknown origin never keeps: they fetch from a foreign host as soon as they are drawn. */
+export const UNTRUSTED_MARKDOWN_REMOVED_TAGS = ['img', 'picture', 'source', 'video', 'audio', 'iframe'] as const;
+
+/**
+ * The sanitise schema for markdown of unknown origin (a file somebody uploaded): the given base (rehype-sanitize's
+ * `defaultSchema`) without every element that loads a resource. Returns a new schema; the base is kept.
+ */
+export const restrictMarkdownSanitizeSchema = <TSchema extends MarkdownSanitizeSchema>(base: TSchema): TSchema => {
+  const removed: readonly string[] = UNTRUSTED_MARKDOWN_REMOVED_TAGS;
+  const attributes = Object.fromEntries(Object.entries(base.attributes ?? {}).filter(([tagName]) => !removed.includes(tagName)));
+  return { ...base, tagNames: (base.tagNames ?? []).filter(tagName => !removed.includes(tagName)), attributes };
+};
+
+const untrustText = (node: MdastNode): MdastNode => {
+  if (node.type === 'html') return { type: 'text', value: node.value ?? '' };
+  if (node.type === 'image' || node.type === 'imageReference') {
+    const alt = typeof node.alt === 'string' ? node.alt.trim() : '';
+    return { type: 'text', value: alt === '' ? '[image]' : `[image: ${alt}]` };
+  }
+  return node;
+};
+
+const untrustChildren = (node: MdastNode): void => {
+  if (!node.children) return;
+  node.children = node.children.map(child => {
+    const replaced = untrustText(child);
+    if (replaced === child) untrustChildren(child);
+    return replaced;
+  });
+};
+
+/**
+ * A remark plugin for markdown of unknown origin: raw HTML stays text (it is shown as typed, never parsed as markup)
+ * and a picture becomes its description (`[image: …]`), so drawing the markdown never contacts another host.
+ */
+export const remarkUntrustedContent = () => (tree: unknown) => {
+  untrustChildren(tree as MdastNode);
+};
+
+/**
+ * The link targets markdown of unknown origin keeps: `http(s):`, `mailto:` and anchors inside the text (`#…`); every
+ * other URL (`javascript:`, `data:`, a relative path, a protocol-relative one) becomes empty.
+ */
+export const untrustedMarkdownUrl = (url: string): string => {
+  const trimmed = url.trim();
+  if (trimmed.startsWith('#')) return trimmed;
+  return /^(https?:\/\/|mailto:)/i.test(trimmed) ? trimmed : '';
+};
+
+interface HastNode {
+  type: string;
+  tagName?: string;
+  properties?: Record<string, unknown>;
+  children?: HastNode[];
+}
+
+const openLinksOutside = (node: HastNode): void => {
+  if (node.type === 'element' && node.tagName === 'a') {
+    const href = typeof node.properties?.href === 'string' ? node.properties.href : '';
+    if (!href.startsWith('#')) node.properties = { ...node.properties, target: '_blank', rel: ['noopener', 'noreferrer', 'nofollow'] };
+  }
+  node.children?.forEach(openLinksOutside);
+};
+
+/** A rehype plugin: every link that leaves the text opens in a new tab without an opener and without a referrer. */
+export const rehypeOutsideLinks = () => (tree: unknown) => {
+  openLinksOutside(tree as HastNode);
+};

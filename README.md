@@ -32,7 +32,7 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./workers` | the screens of the worker monitoring on the host's api (`createWorkersApi`): `WorkersOverviewScreen`, `WorkerTransportScreen` and their parts (tiles, live panel, throughput and transport tables, history charts as SVG, message runs, processes, restart request), the status maps, the payload types | logic, i18n, primitives, list, page |
 | `./issues` | the screen of the issues registry on the host's api (`createIssuesApi`): `IssuesScreen` and its parts (the trend as SVG bars, the window switch, the group drawer with occurrences, frames, causes, job and client blocks, the status actions), `ISSUE_GROUP_STATUS`, the payload types | logic, i18n, primitives, list, page; from form only `FormDrawer` |
 | `./database` | the schema diff screen on the host's api (`createDatabaseApi`): `SchemaDiffScreen`, `SchemaDiffCard`, the generated-code previews (`GeneratedCodePanel`, `CodeBlock`), the status maps `DB_TABLE_CHANGE_TYPE` / `DB_DIFF_SEVERITY`, the diff helpers, the payload types | logic, i18n, primitives, list, page |
-| `./files` | the generic file manager on the host's adapter (`FileManagerAdapter` with optional capabilities): `FileManager` (folder tree, grid / table, search and filters, upload tray with progress, drag and drop moves, details drawer with preview, versions and activity, trash, links, moves into other areas), its parts (`FolderTree`, `FileCard`, `FileDrawer`, `FilePreview`, `MoveDialog`, `LinkTargetsDialog`, `UploadTray`, `QuotaPill`, …), `useFileUploadQueue`, `uploadWithProgress`, `createStaticFileManagerAdapter`, the view models | logic, i18n, primitives, list, page, form |
+| `./files` | the generic file manager on the host's adapter (`FileManagerAdapter` with optional capabilities): `FileManager` (folder tree, grid / table, search and filters, upload tray with progress, drag and drop moves, details drawer with preview, versions and activity, trash, links, moves into other areas), its parts (`FolderTree`, `FileCard`, `FileDrawer`, `FilePreview`, `FileViewer`, `MoveDialog`, `LinkTargetsDialog`, `UploadTray`, `QuotaPill`, …), `useFileUploadQueue`, `uploadWithProgress`, `createStaticFileManagerAdapter`, the view models | logic, i18n, primitives, list, page, form |
 | `./crons` | the Crons screen on the host's api (`createCronsApi`): `CronsScreen` and its parts (summary tiles, runner banner, Crons table with countdown and run strip, row actions, details drawer with the duration chart, runs with their output, timeline, create / edit form with the schedule preview), `useCronActions`, the status maps `CRON_STATUS`, `CRON_EXECUTION_RESULT`, the payload types | logic, i18n, primitives, list, page, form, data |
 | `./agent-ui` | the adapters of `Agent.UI` (`@mgamadeus/ddd-agents/ui` 0.3.x) for screens built from the package: `useAdminUiAgentScreen` (screen targets from the shell's navigation tree, the navigator with the navigation guard, the DOM reader's and highlighter's options, the UI state source), the pure `buildScreenTargets`, `matchScreenTarget`, `buildScreenTargetHref`, `buildAgentUIState`, `describeNavigationBlocker`; the contract types (structural copy) | logic, i18n, primitives; never imports the agents package |
 | `./media` | `MediaItemField`, `FormMediaItemField`, `MediaItemPickerDialog`, `MediaPreview`, `ImageCropDialog` (crop surface: file and aspect options in; cropped blob, skip or cancel out) | logic, i18n, primitives, list, form |
@@ -44,7 +44,7 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./notify-sonner` | `sonnerNotifications` (the notification adapter on `sonner`) and its `Toaster` | logic; the only entry importing `sonner` |
 | `./showcase` | `Showcase`: a development page drawing every block in the host theme, light and dark, one section per entry, the host's sections appended; `SHOWCASE_COVERAGE`; the sample payloads of the screens (`showcaseWorkersData`, `showcaseTranslationsData`, `showcaseIssuesData`, `showcaseDatabaseData`, `showcaseFilesData`, `showcaseCronsData`) | logic, i18n, primitives, list, page, form, translations, media, glass, data, workers, issues, database, files, crons, shell, shell-background; never `./next`, `./notify-sonner` or `./markdown` (its section loads through `loadMarkdown`) |
 | `./data` | key figures: `MetricTile` (label, value, delta, hint, sparkline slot, skeleton), `MetricTileSkeleton`, `MetricGrid`, `DeltaText`, `NoteList`, the delta helpers `resolveDelta`, `relativeChange`, `deltaDirectionOf`, `deltaToneOf` | logic, i18n, primitives |
-| `./markdown` | `MarkdownEditor`, `MarkdownPreview` (sanitised), `renderMarkdownEditor` (the `renderEditor` slot of `./translations` and `AdminUiProvider.renderMarkdownEditor`); loads `@uiw/react-md-editor` and `rehype-sanitize` after hydration | logic, i18n, primitives; translations type-only; the only entry reaching its optional peers |
+| `./markdown` | `MarkdownEditor`, `MarkdownPreview` (sanitised; `untrusted` for a text of unknown origin: no raw HTML, no pictures, web and mail links only), `renderMarkdownEditor` (the `renderEditor` slot of `./translations` and `AdminUiProvider.renderMarkdownEditor`); loads `@uiw/react-md-editor` and `rehype-sanitize` after hydration | logic, i18n, primitives; translations type-only; the only entry reaching its optional peers |
 | `./design-studio` | `designStudioComponents`: the `components` of `@mgamadeus/ddd-design-studio`'s provider, every slot mapped to the block of the same name; the slot types (`DesignStudioComponentsContract`, structural copy) | primitives, list, page, glass; never imports the studio |
 | `./theme.css`, `./components.css` | the Tailwind theme binding and the structural CSS of the blocks | — |
 | `./tokens.json`, `./i18n-keys.json` | the host contract (colour roles, properties, layers, data attributes) and the text manifest | — |
@@ -1004,10 +1004,22 @@ export const FilesPage = ({ areas }) => (
 - **Recorded accesses:** downloads ask `getDownload` with `variant: 'ORIGINAL'`, the drawer's preview with `PREVIEW`
   and list pictures come from `thumbnailUrl` (or `THUMBNAIL`), so a server that records views and downloads never
   records a scrolled list.
-- **Untrusted content:** previews draw only JPEG, PNG, GIF and WebP (or a rendition the server made) as `<img>`, PDF on
-  canvases through the host's pdf.js (`loadPdfJs`; without it "Open PDF" in a new tab), TXT / CSV / Markdown / JSON as
-  text nodes (first 100 KB). SVG, HTML and every other type are never rendered: icon, facts, download. Nothing is fetched
-  before the file is released (`CLEAN` / `SKIPPED`).
+- **Untrusted content:** previews draw only JPEG, PNG, GIF and WebP (or a rendition the server made) as `<img>`
+  (click or the buttons zoom in steps), PDF on canvases through the host's pdf.js (`loadPdfJs`; without it "Open PDF"
+  in a new tab), Markdown as markup or as its source, source files (JSON, YAML, TypeScript, PHP, …:
+  `codeLanguageOfExtension`), TXT and CSV as text nodes (first 100 KB), MP4 / WebM / MOV and MP3 / WAV / OGG … in the
+  browser's own player. SVG, HTML and every other type are never rendered: icon, facts, download. Nothing is fetched
+  before the file is released (`CLEAN` / `SKIPPED`), and nothing of a file is ever inserted as HTML.
+- **Loaders of the host** (`FilePreviewLoaders`, props of `FileManager`, `FileDrawer`, `FilePreview`, `FileViewer`; each
+  optional): `loadPdfJs`; `loadCodeHighlighter` — colours source files, e.g.
+  `() => import('highlight.js/lib/common').then(module => codeHighlighterFromHighlightJs(module.default))` (the
+  highlighter's output is read as tokens and drawn as text nodes; without it the code is plain); `renderMarkdown` — the
+  "Preview" of a Markdown file, e.g. `source => <MarkdownPreview source={source} untrusted />` from `./markdown`
+  (without it the file shows its source only). `./files` itself imports neither library.
+- **`FileViewer`** shows one file on a wide surface (a canvas beside a chat, a pane): name and facts, the preview
+  filling the height (`FilePreview layout="canvas"`: no box of a fixed height, PDF pages up to 1100 px wide, texts up
+  to 1 MB), the choice of a stored version and Download. It reads through the same adapter (`useFile`,
+  `useActions().getDownload`) and changes nothing; the parent is a flex column that gives the height.
 - **Uploads:** `uploadWithProgress(transport, request, callbacks)` sends one multipart request with progress, renews a
   session once after a 401 and refuses while writes are off; an adapter that uploads straight to a store implements
   `upload` itself. The tray runs three at a time and checks type, size and quota before (`precheckUpload`).

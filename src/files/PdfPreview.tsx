@@ -35,16 +35,20 @@ export type PdfJsLoader = () => Promise<PdfJsLike>;
 
 /** Pages rendered per step ("Load more"). */
 const PAGE_STEP = 3;
-/** Rendering width cap (CSS px). */
+/** Rendering width cap of the drawer (CSS px). */
 const MAX_WIDTH = 440;
+/** Rendering width cap of a canvas (CSS px): a page never renders wider, whatever the pane's width. */
+export const PDF_PREVIEW_CANVAS_MAX_WIDTH = 1100;
 
 export interface PdfPreviewProps {
   url: string;
   fileName: string;
   loadPdfJs: PdfJsLoader;
+  /** The widest a page renders (CSS px); default 440 (the drawer). A canvas passes `PDF_PREVIEW_CANVAS_MAX_WIDTH`. */
+  maxWidth?: number;
 }
 
-const PdfPage = ({ pdf, pageNumber, width }: { pdf: PdfDocumentLike; pageNumber: number; width: number }) => {
+const PdfPage = ({ pdf, pageNumber, width, maxWidth }: { pdf: PdfDocumentLike; pageNumber: number; width: number; maxWidth: number }) => {
   const { t } = useTranslate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [failed, setFailed] = useState(false);
@@ -59,7 +63,7 @@ const PdfPage = ({ pdf, pageNumber, width }: { pdf: PdfDocumentLike; pageNumber:
         const context = canvas?.getContext('2d');
         if (cancelled || !canvas || !context) return;
         const base = page.getViewport({ scale: 1 });
-        const scale = Math.min(width, MAX_WIDTH) / base.width;
+        const scale = Math.min(width, maxWidth) / base.width;
         const ratio = window.devicePixelRatio || 1;
         const viewport = page.getViewport({ scale: scale * ratio });
         canvas.width = Math.floor(viewport.width);
@@ -76,7 +80,7 @@ const PdfPage = ({ pdf, pageNumber, width }: { pdf: PdfDocumentLike; pageNumber:
       cancelled = true;
       renderTask?.cancel();
     };
-  }, [pdf, pageNumber, width]);
+  }, [pdf, pageNumber, width, maxWidth]);
 
   if (failed) return <p className="py-6 text-center text-xs text-muted-foreground">{t('Page %number% could not be shown.', { replacements: { number: pageNumber } })}</p>;
   return <canvas ref={canvasRef} aria-label={t('Page %number%', { replacements: { number: pageNumber } })} className="mx-auto block rounded-md bg-white shadow-sm" />;
@@ -86,7 +90,7 @@ const PdfPage = ({ pdf, pageNumber, width }: { pdf: PdfDocumentLike; pageNumber:
  * The PDF preview of the drawer: pdf.js (loaded by the host) renders the first pages onto canvases — no PDF viewer, no
  * scripts (`isEvalSupported: false`), no XFA — three at a time with "Load more".
  */
-export const PdfPreview = ({ url, fileName, loadPdfJs }: PdfPreviewProps) => {
+export const PdfPreview = ({ url, fileName, loadPdfJs, maxWidth = MAX_WIDTH }: PdfPreviewProps) => {
   const { t } = useTranslate();
   const containerRef = useRef<HTMLDivElement>(null);
   const loaderRef = useRef(loadPdfJs);
@@ -145,7 +149,7 @@ export const PdfPreview = ({ url, fileName, loadPdfJs }: PdfPreviewProps) => {
       ) : (
         <>
           {pages.map(pageNumber => (
-            <PdfPage key={pageNumber} pdf={pdf} pageNumber={pageNumber} width={width} />
+            <PdfPage key={pageNumber} pdf={pdf} pageNumber={pageNumber} width={width} maxWidth={maxWidth} />
           ))}
           <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
             <span>{t('%shown% of {count, plural, one {# page} other {# pages}}', { count: pageCount, replacements: { shown: pages.length } })}</span>

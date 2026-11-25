@@ -6,7 +6,9 @@ import {
   extensionOf,
   fileFamilyOfContentType,
   fileNameStem,
+  codeLanguageOfExtension,
   filePreviewKind,
+  isTextPreviewKind,
   folderDepth,
   folderPath,
   folderSubtreeHeight,
@@ -59,7 +61,18 @@ describe('file view helpers', () => {
     assert.equal(filePreviewKind({ family: 'PDF', extension: 'pdf' }), 'pdf');
     assert.equal(filePreviewKind({ family: 'SPREADSHEET', extension: 'csv' }), 'csv');
     assert.equal(filePreviewKind({ family: 'TEXT', extension: 'html' }), 'none', 'HTML is never shown as text or markup');
-    assert.equal(filePreviewKind({ family: 'TEXT', extension: 'md' }), 'text');
+    assert.equal(filePreviewKind({ family: 'VECTOR', extension: 'svg', thumbnailUrl: 'https://cdn/x.png' }), 'none', 'a vector file has no inline picture');
+    assert.equal(filePreviewKind({ family: 'TEXT', extension: 'md' }), 'markdown');
+    assert.equal(filePreviewKind({ family: 'TEXT', extension: 'txt' }), 'text');
+    assert.equal(filePreviewKind({ family: 'TEXT', extension: 'JSON' }), 'code');
+    assert.equal(filePreviewKind({ family: 'OTHER', extension: 'ts' }), 'code');
+    assert.equal(filePreviewKind({ family: 'VIDEO', extension: 'mp4' }), 'video');
+    assert.equal(filePreviewKind({ family: 'VIDEO', extension: 'avi' }), 'none', 'a container no browser plays');
+    assert.equal(filePreviewKind({ family: 'AUDIO', extension: 'mp3' }), 'audio');
+    assert.equal(codeLanguageOfExtension('TSX'), 'typescript');
+    assert.equal(codeLanguageOfExtension('html'), null);
+    assert.equal(isTextPreviewKind('markdown'), true);
+    assert.equal(isTextPreviewKind('pdf'), false);
   });
 
   it('splits names and formats sizes', () => {

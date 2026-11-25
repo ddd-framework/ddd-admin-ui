@@ -75,14 +75,30 @@ export type { FileItemActionsProps, FileItemHandlers } from './FileItemActions.t
 export { FileLinkChips } from './FileLinkChips.tsx';
 export type { FileLinkChipsProps } from './FileLinkChips.tsx';
 export { FilePreview } from './FilePreview.tsx';
-export type { FilePreviewProps } from './FilePreview.tsx';
-export { PdfPreview } from './PdfPreview.tsx';
+export type { FilePreviewLoaders, FilePreviewProps } from './FilePreview.tsx';
+export { FileViewer, viewableFileVersions } from './FileViewer.tsx';
+export type { FileViewerProps } from './FileViewer.tsx';
+export { startFileDownload } from './fileDownload.ts';
+export { PDF_PREVIEW_CANVAS_MAX_WIDTH, PdfPreview } from './PdfPreview.tsx';
 export type { PdfDocumentLike, PdfJsLike, PdfJsLoader, PdfPageLike, PdfPreviewProps } from './PdfPreview.tsx';
 export { TextPreview, TEXT_PREVIEW_BYTES } from './TextPreview.tsx';
 export type { TextPreviewProps } from './TextPreview.tsx';
+export { readTextHead, TEXT_VIEWER_BYTES, useTextHead } from './useTextHead.ts';
+export type { TextHead, TextHeadState } from './useTextHead.ts';
+export { CodePreview, CodeText } from './CodePreview.tsx';
+export type { CodePreviewProps, CodeTextProps } from './CodePreview.tsx';
+export { CODE_HIGHLIGHT_MAX_CHARACTERS, codeHighlighterFromHighlightJs, codeTokensFromHighlightJsHtml } from './codeHighlighting.ts';
+export type { CodeHighlighterLike, CodeHighlighterLoader, CodeToken, HighlightJsLike } from './codeHighlighting.ts';
+export { MarkdownFilePreview } from './MarkdownFilePreview.tsx';
+export type { MarkdownFilePreviewProps, MarkdownFileRenderer, MarkdownFileView } from './MarkdownFilePreview.tsx';
+export { IMAGE_ZOOM_STEPS, ImagePreview, nextImageZoom } from './ImagePreview.tsx';
+export type { ImagePreviewProps } from './ImagePreview.tsx';
+export { MediaPreview } from './MediaPreview.tsx';
+export type { MediaPreviewProps } from './MediaPreview.tsx';
 export { detectCsvDelimiter, parseCsv } from './csvPreview.ts';
 export { FILE_NEWEST_VERSION_STATE, FILE_SCAN_STATUS, SCAN_STATUS_EXPLANATION } from './fileStatus.ts';
 export {
+  codeLanguageOfExtension,
   extensionOf,
   FILE_CHECK_POLL_INTERVAL_MS,
   FILE_FAMILIES,
@@ -101,6 +117,7 @@ export {
   isFileBeingChecked,
   isFileReleased,
   isPageThumbnail,
+  isTextPreviewKind,
   MAX_FOLDER_DEPTH,
   newestVersionStateOf,
   sameFileId,

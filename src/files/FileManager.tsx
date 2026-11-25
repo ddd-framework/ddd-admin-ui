@@ -55,6 +55,7 @@ import {
   useFileDraggable,
   useFileDropTarget,
 } from './fileDragAndDrop.tsx';
+import { startFileDownload } from './fileDownload.ts';
 import { FileDrawer } from './FileDrawer.tsx';
 import { FileFamilyIcon } from './FileFamilyIcon.tsx';
 import { FileItemActions, type FileItemHandlers } from './FileItemActions.tsx';
@@ -103,7 +104,9 @@ import { type FileLocation, FolderActionsMenu, FolderTree, type FolderTreeAction
 import { LinkTargetsDialog } from './LinkTargetsDialog.tsx';
 import { type MoveAcrossAreasRequest, MoveAcrossAreasDialog } from './MoveAcrossAreasDialog.tsx';
 import { type MoveDialogAreaPicker, MoveDialog } from './MoveDialog.tsx';
+import type { MarkdownFileRenderer } from './MarkdownFilePreview.tsx';
 import type { PdfJsLoader } from './PdfPreview.tsx';
+import type { CodeHighlighterLoader } from './codeHighlighting.ts';
 import { QuotaPill } from './QuotaPill.tsx';
 import { UploadTray } from './UploadTray.tsx';
 import { useFileUploadQueue } from './useFileUploadQueue.ts';
@@ -139,17 +142,6 @@ const isOrder = (value: string): value is FileListOrder => value === 'name' || v
 
 /** `1 file`, `3 files`. */
 const filesLabel = (count: number, t: TranslateFn) => t('{count, plural, one {# file} other {# files}}', { count });
-
-/** Opens a download URL (the server answers with `Content-Disposition: attachment`). */
-const startDownload = (url: string, fileName: string) => {
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = fileName;
-  anchor.rel = 'noopener';
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-};
 
 const NO_LIST: FileListState = {
   items: [],
@@ -264,6 +256,10 @@ export interface FileManagerProps {
   maxFolderDepth?: number;
   /** pdf.js from the host for the PDF preview. */
   loadPdfJs?: PdfJsLoader;
+  /** A highlighter of the host for the preview of source files (loaded on the first one shown). */
+  loadCodeHighlighter?: CodeHighlighterLoader;
+  /** Draws a Markdown file as markup in the preview (`MarkdownPreview untrusted` of ./markdown); without it its source. */
+  renderMarkdown?: MarkdownFileRenderer;
   /** The area's settings (a drawer of the host): the manager adds an "Area settings" button that opens it. */
   renderAreaSettings?: (props: FileAreaSettingsSlotProps) => ReactNode;
   /** Host controls next to the page actions (a purge, a usage link). */
@@ -326,6 +322,8 @@ export const FileManager = ({
   defaultView = 'grid',
   maxFolderDepth = MAX_FOLDER_DEPTH,
   loadPdfJs,
+  loadCodeHighlighter,
+  renderMarkdown,
   renderAreaSettings,
   renderAreaMaintenance,
   renderAreaPicker,
@@ -632,7 +630,7 @@ export const FileManager = ({
       for (const file of targets.filter(candidate => isFileReleased(candidate.scanStatus))) {
         try {
           const result = await actions.getDownload(file.id, { disposition: 'attachment' });
-          startDownload(result.url, result.fileName || file.name);
+          startFileDownload(result.url, result.fileName || file.name);
         } catch (error) {
           notify.error(normalizeDddError(error, t('%name% could not be downloaded', { replacements: { name: file.name } })).message);
         }
@@ -1559,6 +1557,8 @@ export const FileManager = ({
         linkKinds={linkKinds}
         formatEventType={formatEventType}
         loadPdfJs={loadPdfJs}
+        loadCodeHighlighter={loadCodeHighlighter}
+        renderMarkdown={renderMarkdown}
         workingCopyLabel={workingCopyLabel}
         workingCopyDescription={capabilities?.workingCopy?.description}
         activityTab={drawerTab}

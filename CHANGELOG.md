@@ -3,6 +3,28 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.8.0
+
+- `./files`: the preview shows more. Markdown has "Preview" and "Source" (`MarkdownFilePreview`; the markup comes from
+  the host's `renderMarkdown`, without it the source alone), source files (JSON, YAML, TypeScript, PHP, SQL, …) are
+  coloured by a highlighter the host loads on the first one (`loadCodeHighlighter`, `codeHighlighterFromHighlightJs`;
+  the highlighter's output is read as tokens and drawn as text nodes), pictures zoom in steps (`ImagePreview`), MP4 /
+  WebM / MOV and MP3 / WAV / OGG … play in the browser's own player (`MediaPreview`). `FilePreviewKind` gains
+  `markdown`, `code`, `video`, `audio` (**a `.md` file was `text`, `.json` / `.xml` / `.yaml` were `text`**: now
+  `markdown` and `code`); `codeLanguageOfExtension`, `isTextPreviewKind`. `FileManager`, `FileDrawer` and
+  `FilePreview` take the loaders `loadCodeHighlighter` and `renderMarkdown` beside `loadPdfJs` (`FilePreviewLoaders`);
+  all optional, so a host that passes none keeps text previews.
+- `./files`: `FilePreview layout="canvas"` fills the flex column it is put in instead of drawing boxes of a fixed height
+  (PDF pages up to `PDF_PREVIEW_CANVAS_MAX_WIDTH`, texts up to `TEXT_VIEWER_BYTES` = 1 MB); `versionId` previews a
+  stored version. New block `FileViewer`: one file on a wide surface (name, facts, preview, version choice, download)
+  through the file manager's adapter. `PdfPreview` takes `maxWidth`, `TextPreview` `layout` and `maxBytes`;
+  `useTextHead` / `readTextHead`, `startFileDownload`.
+- `./markdown`: `MarkdownPreview untrusted` for a text of unknown origin (an uploaded file): raw HTML stays text,
+  pictures are not loaded (`[image: …]`), no element that loads a resource survives the sanitiser, links keep
+  `http(s):` / `mailto:` and open in a new tab without opener and referrer. Pure parts: `remarkUntrustedContent`,
+  `restrictMarkdownSanitizeSchema`, `rehypeOutsideLinks`, `untrustedMarkdownUrl`; `MarkdownLibrary.untrusted`.
+- 15 new UI texts, 1 reworded ("This media format has no player here. …").
+
 ## 0.7.2
 
 - `./files`: the file activity translates the audience of an access ("· Staff", "· Partner"), what it opened

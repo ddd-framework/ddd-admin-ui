@@ -257,7 +257,8 @@
       "key": "%name% could not be downloaded",
       "text": "%name% could not be downloaded",
       "files": [
-        "files/FileManager.tsx"
+        "files/FileManager.tsx",
+        "files/FileViewer.tsx"
       ],
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). %name% is a file or folder name."
     },
@@ -2870,7 +2871,8 @@
       "context": "action",
       "files": [
         "files/FileDrawer.tsx",
-        "files/FileItemActions.tsx"
+        "files/FileItemActions.tsx",
+        "files/FileViewer.tsx"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). Context: action."
     },
@@ -3695,6 +3697,23 @@
         "issues/IssueGroupDrawer.tsx"
       ],
       "hint": "Issues admin screen (errors grouped by root cause): tooltip of the 'New' flag of a group."
+    },
+    {
+      "key": "Fit to the view",
+      "text": "Fit to the view",
+      "files": [
+        "files/ImagePreview.tsx"
+      ],
+      "hint": "File preview of a picture: button that ends the zoom and fits the picture into the preview again (tooltip and accessible name)."
+    },
+    {
+      "key": "Fit__image-zoom",
+      "text": "Fit",
+      "context": "image-zoom",
+      "files": [
+        "files/ImagePreview.tsx"
+      ],
+      "hint": "File preview of a picture: shown between the zoom buttons instead of a percentage while the picture is fitted into the preview. One short word."
     },
     {
       "key": "Five fields: minute, hour, day of month, month, day of week (server time).",
@@ -5145,14 +5164,6 @@
         "files/FileManager.tsx"
       ],
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: file uploader filter."
-    },
-    {
-      "key": "Media files have no player here. Download the file to play it.",
-      "text": "Media files have no player here. Download the file to play it.",
-      "files": [
-        "files/FilePreview.tsx"
-      ],
-      "hint": "File manager, file preview in the details drawer."
     },
     {
       "key": "Memory peak",
@@ -6961,7 +6972,10 @@
       "key": "Preview of %name%",
       "text": "Preview of %name%",
       "files": [
+        "files/CodePreview.tsx",
         "files/FilePreview.tsx",
+        "files/MarkdownFilePreview.tsx",
+        "files/MediaPreview.tsx",
         "files/PdfPreview.tsx",
         "files/TextPreview.tsx"
       ],
@@ -6975,6 +6989,15 @@
         "files/fileEventLabels.ts"
       ],
       "hint": "In a file's access history: the person viewed a preview of the file (in the details panel), not the download."
+    },
+    {
+      "key": "Preview__markdown-view",
+      "text": "Preview",
+      "context": "markdown-view",
+      "files": [
+        "files/MarkdownFilePreview.tsx"
+      ],
+      "hint": "File preview of a Markdown file: the option that shows the formatted text (the other option shows the source)."
     },
     {
       "key": "Previous__page",
@@ -8312,6 +8335,14 @@
       "hint": "Small floating pill button at the bottom edge of an expanded group panel; clicking it shows only the first few rows again."
     },
     {
+      "key": "Show the current version",
+      "text": "Show the current version",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer: link in the notice while an older version is shown; it switches back to the current version."
+    },
+    {
       "key": "Show uploads",
       "text": "Show uploads",
       "files": [
@@ -8343,6 +8374,14 @@
         "files/TextPreview.tsx"
       ],
       "hint": "File manager, text / CSV preview. %count% is a number."
+    },
+    {
+      "key": "Showing the first %size%. Download the file to see all of it.",
+      "text": "Showing the first %size%. Download the file to see all of it.",
+      "files": [
+        "files/TextPreview.tsx"
+      ],
+      "hint": "File preview of a text, a source file or a table: the file is longer than what the preview reads. %size% is the amount read, e.g. \"1 MB\"."
     },
     {
       "key": "Showing the first 100 KB. Download the file to see all of it.",
@@ -8479,6 +8518,15 @@
         "translations/TranslationControls.tsx"
       ],
       "hint": "Screen-reader text of a small marker on a language chip in the AI translation panel: texts of this language were translated before their source text was last changed."
+    },
+    {
+      "key": "Source__markdown-view",
+      "text": "Source",
+      "context": "markdown-view",
+      "files": [
+        "files/MarkdownFilePreview.tsx"
+      ],
+      "hint": "File preview of a Markdown file: the option that shows the Markdown source text as typed (the other option shows the formatted text)."
     },
     {
       "key": "Spreadsheet",
@@ -8959,6 +9007,14 @@
         "files/fileStatus.ts"
       ],
       "hint": "File manager (the admin's file area): details drawer and preview: explanation for a file refused by the area's file type rules."
+    },
+    {
+      "key": "The current version is %number%.",
+      "text": "The current version is %number%.",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer: sentence of the notice while an older version is shown. %number% is the current version's number; a link \"Show the current version\" follows."
     },
     {
       "key": "The current version stays available until the new one has passed the malware check.",
@@ -9967,9 +10023,19 @@
       "hint": "Schema diff admin screen (database changes between the code's entities and the live database): notice when a table's change was applied meanwhile."
     },
     {
+      "key": "This file could not be played here. Download it to play it.",
+      "text": "This file could not be played here. Download it to play it.",
+      "files": [
+        "files/MediaPreview.tsx"
+      ],
+      "hint": "File preview of a video or a sound: the browser's player failed (unsupported codec, broken file)."
+    },
+    {
       "key": "This file could not be shown. Download it to open it.",
       "text": "This file could not be shown. Download it to open it.",
       "files": [
+        "files/CodePreview.tsx",
+        "files/MarkdownFilePreview.tsx",
         "files/TextPreview.tsx"
       ],
       "hint": "File manager, text / CSV preview."
@@ -9981,6 +10047,14 @@
         "files/fileStatus.ts"
       ],
       "hint": "File manager, malware check status of a file (badge and its tooltip)."
+    },
+    {
+      "key": "This file is not available. It was removed, or you may not open it.",
+      "text": "This file is not available. It was removed, or you may not open it.",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer (one file opened on a wide surface, e.g. beside a chat): the file no longer exists or the reader has no right to it."
     },
     {
       "key": "This file was not found or is no longer available.",
@@ -10010,7 +10084,7 @@
       "key": "This image could not be shown.",
       "text": "This image could not be shown.",
       "files": [
-        "files/FilePreview.tsx"
+        "files/ImagePreview.tsx"
       ],
       "hint": "File manager, file preview in the details drawer."
     },
@@ -10045,6 +10119,14 @@
         "files/FileManager.tsx"
       ],
       "hint": "Title of the alert shown when a link or the URL pointed to a folder or file that does not exist (anymore)."
+    },
+    {
+      "key": "This media format has no player here. Download the file to play it.",
+      "text": "This media format has no player here. Download the file to play it.",
+      "files": [
+        "files/FilePreview.tsx"
+      ],
+      "hint": "File manager, file preview. The file is a video or a sound in a format the browser cannot play (AVI, WMA …)."
     },
     {
       "key": "This move is not possible",
@@ -10844,9 +10926,18 @@
       "key": "Version %number%",
       "text": "Version %number%",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/FileDrawer.tsx",
+        "files/FileViewer.tsx"
       ],
       "hint": "File manager (the admin's file area): details drawer: the number of the newest version under its state; %number% is the version number."
+    },
+    {
+      "key": "Version %number% (current)",
+      "text": "Version %number% (current)",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer: an entry of the version choice, the version every reader gets by default. %number% is the version's number."
     },
     {
       "key": "Version %number% restored",
@@ -10855,6 +10946,14 @@
         "files/FileDrawer.tsx"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %number% is a version or page number."
+    },
+    {
+      "key": "Version shown",
+      "text": "Version shown",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer: accessible name of the choice of the stored version that is shown."
     },
     {
       "key": "Versions",
@@ -10879,6 +10978,14 @@
         "list/EntityListViewToggle.tsx"
       ],
       "hint": "Label and accessible name of the toggle on the Home screen that switches between the Timeline and Kanban views."
+    },
+    {
+      "key": "View of the Markdown file",
+      "text": "View of the Markdown file",
+      "files": [
+        "files/MarkdownFilePreview.tsx"
+      ],
+      "hint": "File preview of a Markdown file: accessible name of the switch between the formatted text and the source."
     },
     {
       "key": "Viewed__file-event",
@@ -11208,6 +11315,14 @@
       "hint": "Default label of a yes/no flag cell in a list table, shown with a green check when the flag is on, e.g. Active column."
     },
     {
+      "key": "You are looking at version %number%",
+      "text": "You are looking at version %number%",
+      "files": [
+        "files/FileViewer.tsx"
+      ],
+      "hint": "File viewer: title of the notice while an older stored version is shown instead of the current one. %number% is its number."
+    },
+    {
       "key": "You have unsaved changes. Closing now will lose them.",
       "text": "You have unsaved changes. Closing now will lose them.",
       "files": [
@@ -11223,6 +11338,22 @@
         "files/uploadWithProgress.ts"
       ],
       "hint": "File manager, upload error message."
+    },
+    {
+      "key": "Zoom in",
+      "text": "Zoom in",
+      "files": [
+        "files/ImagePreview.tsx"
+      ],
+      "hint": "File preview of a picture: button that enlarges the picture by one step (tooltip and accessible name)."
+    },
+    {
+      "key": "Zoom out",
+      "text": "Zoom out",
+      "files": [
+        "files/ImagePreview.tsx"
+      ],
+      "hint": "File preview of a picture: button that shrinks the picture by one step (tooltip and accessible name)."
     },
     {
       "key": "a lower bound",
@@ -11302,7 +11433,8 @@
       "key": "by %user%",
       "text": "by %user%",
       "files": [
-        "files/FileDrawer.tsx"
+        "files/FileDrawer.tsx",
+        "files/FileViewer.tsx"
       ],
       "hint": "File manager, file details drawer (preview, name and description, facts, links, versions, activity). %user% is a person's name."
     },

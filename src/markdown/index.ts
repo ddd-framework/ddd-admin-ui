@@ -8,6 +8,11 @@ export {
   extendMarkdownSanitizeSchema,
   MARKDOWN_IMAGE_ATTRIBUTES,
   type MarkdownSanitizeSchema,
+  rehypeOutsideLinks,
   remarkLineBreaks,
+  remarkUntrustedContent,
+  restrictMarkdownSanitizeSchema,
+  UNTRUSTED_MARKDOWN_REMOVED_TAGS,
+  untrustedMarkdownUrl,
 } from './markdownPipeline.ts';
 export { type MarkdownColorMode, type MarkdownLibraryState, useMarkdownLibrary } from './useMarkdownLibrary.ts';

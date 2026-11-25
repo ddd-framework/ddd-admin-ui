@@ -417,10 +417,30 @@ export const isFileReleased = (status: FileScanStatus): boolean => status === 'C
 /** Raster types a browser may show inline (served with their own type, never sniffed). */
 const INLINE_IMAGE_EXTENSIONS: ReadonlySet<string> = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp']);
 
-export type FilePreviewKind = 'image' | 'pdf' | 'text' | 'csv' | 'none';
+export type FilePreviewKind = 'image' | 'pdf' | 'markdown' | 'code' | 'text' | 'csv' | 'video' | 'audio' | 'none';
 
 const OFFICE_PAGE_FAMILIES: ReadonlySet<FileFamily> = new Set(['DOCUMENT', 'SPREADSHEET', 'PRESENTATION']);
-const TEXT_EXTENSIONS: ReadonlySet<string> = new Set(['txt', 'md', 'log', 'json', 'xml', 'yaml', 'yml']);
+const TEXT_EXTENSIONS: ReadonlySet<string> = new Set(['txt', 'log']);
+const MARKDOWN_EXTENSIONS: ReadonlySet<string> = new Set(['md', 'markdown']);
+
+/**
+ * Source files shown as text with their language (the name a highlighter knows). HTML and SVG are not in the list: they
+ * are never shown, neither as markup nor as text.
+ */
+const CODE_LANGUAGE_BY_EXTENSION: Readonly<Record<string, string>> = {
+  json: 'json', xml: 'xml', yaml: 'yaml', yml: 'yaml', toml: 'ini', ini: 'ini', js: 'javascript', mjs: 'javascript',
+  cjs: 'javascript', jsx: 'javascript', ts: 'typescript', tsx: 'typescript', php: 'php', py: 'python', rb: 'ruby', go: 'go',
+  rs: 'rust', java: 'java', kt: 'kotlin', swift: 'swift', c: 'c', h: 'c', cpp: 'cpp', cs: 'csharp', css: 'css', scss: 'scss',
+  less: 'less', sql: 'sql', sh: 'bash', bash: 'bash', zsh: 'bash', diff: 'diff', patch: 'diff', graphql: 'graphql',
+  lua: 'lua', pl: 'perl', r: 'r',
+};
+
+/** Containers a browser plays in its own player; the server must serve them inline with their own type. */
+const VIDEO_EXTENSIONS: ReadonlySet<string> = new Set(['mp4', 'm4v', 'webm', 'mov']);
+const AUDIO_EXTENSIONS: ReadonlySet<string> = new Set(['mp3', 'm4a', 'wav', 'ogg', 'oga', 'opus', 'flac', 'aac']);
+
+/** The highlighter language of a source file by its extension (`ts` → `typescript`), or `null` for another file. */
+export const codeLanguageOfExtension = (extension: string): string | null => CODE_LANGUAGE_BY_EXTENSION[extension.toLowerCase()] ?? null;
 
 /** Whose thumbnail is a document's first page: grid and table crop it from the top. */
 export const isPageThumbnail = (file: Pick<FileView, 'family' | 'extension'>): boolean => {
@@ -429,9 +449,10 @@ export const isPageThumbnail = (file: Pick<FileView, 'family' | 'extension'>): b
 };
 
 /**
- * What the drawer previews. Only JPEG / PNG / GIF / WebP (or a rendition the server made: a thumbnail URL says it
- * exists) as `<img>`, PDF on canvases, TXT / CSV and a few plain text types as text nodes. SVG, HTML and everything
- * else never render in the browser: icon, facts and Download only.
+ * What the preview shows. Only JPEG / PNG / GIF / WebP (or a rendition the server made: a thumbnail URL says it
+ * exists) as `<img>`, PDF on canvases, Markdown as sanitised markup or as its source, source files, TXT and CSV as text
+ * nodes, MP4 / WebM / MP3 … in the browser's own player. SVG, HTML and everything else never render in the browser:
+ * icon, facts and Download only.
  */
 export const filePreviewKind = (file: Pick<FileView, 'family' | 'extension' | 'thumbnailUrl'>): FilePreviewKind => {
   const extension = file.extension.toLowerCase();
@@ -440,9 +461,16 @@ export const filePreviewKind = (file: Pick<FileView, 'family' | 'extension' | 't
   if (file.family !== 'PDF' && isPageThumbnail(file) && hasRendition) return 'image';
   if (file.family === 'PDF') return 'pdf';
   if (extension === 'csv') return 'csv';
+  if (MARKDOWN_EXTENSIONS.has(extension)) return 'markdown';
   if (TEXT_EXTENSIONS.has(extension)) return 'text';
+  if (codeLanguageOfExtension(extension) !== null) return 'code';
+  if (VIDEO_EXTENSIONS.has(extension)) return 'video';
+  if (AUDIO_EXTENSIONS.has(extension)) return 'audio';
   return 'none';
 };
+
+/** The kinds whose content is read as text (`fetch`), never handed to the browser as a document. */
+export const isTextPreviewKind = (kind: FilePreviewKind): boolean => kind === 'markdown' || kind === 'code' || kind === 'text' || kind === 'csv';
 
 /** `Budget 2026.xlsx` → `Budget 2026` (the editable part; the extension stays read-only). */
 export const fileNameStem = (name: string, extension: string): string => {

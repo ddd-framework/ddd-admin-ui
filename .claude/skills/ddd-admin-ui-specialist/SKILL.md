@@ -205,7 +205,9 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 - **File manager adapter identity.** `FileManager` calls the adapter's read hooks (and the capabilities' `useTrash`,
   `useLinkTargets`, `useMoveTargetAreas`) once per render: the adapter and its `capabilities` keep their identity (module
   scope or `useMemo`). A control appears only when its capability and the actions it needs are both there
-  (`resolveFileManagerFeatures`). Previews never render SVG or HTML; a PDF needs `loadPdfJs`.
+  (`resolveFileManagerFeatures`). Previews never render SVG or HTML; a PDF needs `loadPdfJs`, coloured source files `loadCodeHighlighter`, the
+  "Preview" of a Markdown file `renderMarkdown` (`<MarkdownPreview untrusted />` of `./markdown`). `FileViewer` shows one
+  file on a wide surface (`FilePreview layout="canvas"`, version choice, download).
 - **Server vs client.** Hooks and context live in files with `'use client'`; pure helpers (`m`, `formatDateTime`,
   `defineStatusMap`, schemas, conditions) may be called in server code and `metadata`.
 

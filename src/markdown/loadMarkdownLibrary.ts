@@ -4,7 +4,15 @@
 // its module (the library imports it).
 import type { ComponentType } from 'react';
 
-import { extendMarkdownSanitizeSchema, type MarkdownSanitizeSchema, remarkLineBreaks } from './markdownPipeline.ts';
+import {
+  extendMarkdownSanitizeSchema,
+  type MarkdownSanitizeSchema,
+  rehypeOutsideLinks,
+  remarkLineBreaks,
+  remarkUntrustedContent,
+  restrictMarkdownSanitizeSchema,
+  untrustedMarkdownUrl,
+} from './markdownPipeline.ts';
 
 /** A command of the editor's toolbar (opaque: passed back to the editor as is). */
 export type MarkdownToolbarCommand = { readonly name?: string; readonly [key: string]: unknown };
@@ -25,6 +33,16 @@ export interface MarkdownLibrary {
   rehypePlugins: readonly unknown[];
   remarkPlugins: readonly unknown[];
   sanitizeSchema: MarkdownSanitizeSchema;
+  /**
+   * The pipeline for markdown of unknown origin (`MarkdownPreview untrusted`): raw HTML stays text, pictures become
+   * their description, no element that loads a resource survives, links keep `http(s):` / `mailto:` only and open
+   * outside.
+   */
+  untrusted: {
+    rehypePlugins: readonly unknown[];
+    remarkPlugins: readonly unknown[];
+    urlTransform: (url: string) => string;
+  };
 }
 
 let pending: Promise<MarkdownLibrary> | null = null;
@@ -59,6 +77,14 @@ export const loadMarkdownLibrary = (): Promise<MarkdownLibrary> => {
           rehypePlugins: [[sanitizeModule.default, sanitizeSchema]],
           remarkPlugins: [remarkLineBreaks],
           sanitizeSchema,
+          untrusted: {
+            rehypePlugins: [
+              [sanitizeModule.default, restrictMarkdownSanitizeSchema(sanitizeModule.defaultSchema as MarkdownSanitizeSchema)],
+              rehypeOutsideLinks,
+            ],
+            remarkPlugins: [remarkUntrustedContent],
+            urlTransform: untrustedMarkdownUrl,
+          },
         } as unknown as MarkdownLibrary;
       },
       (error: unknown) => {
