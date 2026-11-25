@@ -83,8 +83,10 @@ const usePreviewUrl = (
   const getDownloadRef = useRef(getDownload);
   getDownloadRef.current = getDownload;
   const [state, setState] = useState<PreviewUrlState>({ key: '', url: null, error: null, pending: false, failed: false });
-  // another current version (upload, restore) is another content: fetch the preview again
-  const key = `${String(file.id)}:${String(versionId ?? '')}:${String(file.contentVersion ?? '')}:${file.updatedAt ?? ''}:${file.sizeBytes}:${file.scanStatus}:${disposition}:${variant}`;
+  // another current version (upload, restore, an edit) is another content: fetch the preview again. A new version
+  // becomes current only when its check passed, and until then the file's own facts may already be the new ones: the
+  // state of the newest version is part of the key, so the preview follows at the moment the version is released.
+  const key = `${String(file.id)}:${String(versionId ?? '')}:${String(file.contentVersion ?? '')}:${file.updatedAt ?? ''}:${file.sizeBytes}:${file.scanStatus}:${String(file.hasPendingVersion ?? false)}:${file.newestVersionStatus ?? ''}:${String(file.newestVersionNumber ?? '')}:${disposition}:${variant}`;
 
   useEffect(() => {
     if (!enabled) return;

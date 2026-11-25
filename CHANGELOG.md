@@ -33,10 +33,13 @@ is in 0.x.
   shows the state of a newer version that waits for its check.
 - `./files`: `FileManager variant="compact"` for a narrow surface that gives the height (a canvas beside a chat): no
   folder tree and no quota, a file opens in place in `FileViewer` with a way back, every action by the same rights as
-  on the page; `initialState` says where a manager without URL adapters starts.
+  on the page; `initialState` says where a manager without URL adapters starts. Its table leaves out the columns
+  Type, Links, Uploaded by and Created, so the name, the status, the size, the date and the row's actions fit.
 - `./files`: the preview draws a PDF the server renders of a document (`FileView.hasPdfRendition`, kind
   `pdf-rendition`, `getDownload` variant `PDF_RENDITION`); `FileDownloadView.state` (`pending` → asked again every
   3 s, `failed` → "No preview could be made …") and `message`.
+- Fixed: the preview (drawer and viewer) kept showing the content before when a new version passed its check and
+  became current while the file was open (an upload, an edit); it now fetches again at that moment.
 - Fixed: `CodeText` kept the colours of the text before when a new text had the same length and the same first 64
   characters (now the whole text decides).
 - 40 new UI texts, 1 reworded ("This media format has no player here. …").

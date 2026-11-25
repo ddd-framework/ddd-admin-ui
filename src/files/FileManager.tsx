@@ -229,6 +229,12 @@ export interface FileAreaPickerSlotProps {
   onSelectArea: (areaKey: FileAreaKey) => void;
 }
 
+/**
+ * The table columns a compact manager leaves out (a canvas, a narrow pane): what the icon, the file's own view or the
+ * full screen says anyway, so name, status, size, date and the row's actions fit without scrolling sideways.
+ */
+const COMPACT_HIDDEN_COLUMN_IDS: ReadonlySet<string> = new Set(['type', 'links', 'uploadedBy', 'created']);
+
 export interface FileManagerProps {
   /** The API binding; keep its identity (and its capabilities') stable. */
   adapter: FileManagerAdapter;
@@ -1387,7 +1393,7 @@ export const FileManager = ({
         >
           <EntityListBody
             displayMode={displayMode}
-            columns={columns}
+            columns={compact ? columns.filter(column => !COMPACT_HIDDEN_COLUMN_IDS.has(column.id)) : columns}
             renderCard={renderCard}
             items={entries}
             getRowKey={entry => (entry.kind === 'folder' ? `folder-${String(entry.folder.id)}` : `file-${String(entry.file.id)}`)}
