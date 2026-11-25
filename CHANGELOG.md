@@ -3,6 +3,14 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.8.2
+
+- Lists in grid view no longer make the page scroll sideways in a window narrower than `lg` (1024 px). The grid pulled
+  itself 2rem out of its list card on both sides at every width, while the page inset (`PAGE_INSET_CLASS`) is 1rem
+  below `sm` and 1.5rem below `lg`: the grid reached 16 px (8 px from `sm`) past the window's edge. The pull is now the
+  page inset of each breakpoint (1rem, 1.5rem from `sm`, 2rem from `lg`); from `lg` nothing changes. A unit test holds
+  the stylesheet and `PAGE_INSET_CLASS` together.
+
 ## 0.8.1
 
 - `./files`: an SVG is shown as a picture when the server sanitised a copy of it (`FileView.hasSanitizedImage`, kind

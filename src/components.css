@@ -300,13 +300,27 @@
 
 /* Grid view: the cards line up flush with the toolbar bar above. The scroll container clips overflow, so it keeps
    room for the card shadow and pulls itself out by the same amount (negative margin) — flush edges, uncut shadows.
-   Unlayered so it beats the grid's `p-4`. Room for the full `--surface-shadow` (offset 8 px + blur 24 px) on the sides
-   and below. */
+   Unlayered so it beats the grid's `p-4`. Room for the full `--surface-shadow` (offset 8 px + blur 24 px) below. On the
+   sides the pull is the page inset and never wider (`PAGE_INSET_CLASS` in page/PageHeader.tsx: 1rem, 1.5rem from `sm`,
+   2rem from `lg`; test/unit/grid-pull-follows-page-inset.test.ts holds the two together): a grid that reaches past the
+   inset makes the page scroll sideways. */
 .surface:has([data-entity-grid]) [data-entity-grid] {
-  padding-inline: 2rem;
-  margin-inline: -2rem;
+  padding-inline: 1rem;
+  margin-inline: -1rem;
   padding-bottom: 2.5rem;
   margin-bottom: -2.5rem;
+}
+@media (width >= 40rem) {
+  .surface:has([data-entity-grid]) [data-entity-grid] {
+    padding-inline: 1.5rem;
+    margin-inline: -1.5rem;
+  }
+}
+@media (width >= 64rem) {
+  .surface:has([data-entity-grid]) [data-entity-grid] {
+    padding-inline: 2rem;
+    margin-inline: -2rem;
+  }
 }
 
 /* AppShell: from `lg` the content frame reserves the sidebar's width (the icon rail's while `data-shell-collapsed`),
