@@ -3,6 +3,34 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.9.0
+
+- **A screen filter names the values it takes** (`./agent-ui`, `@mgamadeus/ddd-agents` with filter values).
+  `filtersByTargetKey` takes, beside a key, `{ key, values, multiple, hint, tabs }` (`ScreenFilterDeclaration`,
+  `ScreenFiltersByTargetKey`; `ScreenTargetFilter` of the contract copy gains the four fields): the stored values of an
+  enumeration or a sort, a comma list of them, what a free value is, and the tabs of a record screen whose list the
+  filter belongs to. `describeScreenFilters` (the read's `Filters` line) names them:
+  `status=OPEN (one of OPEN|SOLVED) · from (date YYYY-MM-DD) · sort (one of id|created, each with :asc or :desc)`.
+  The navigator's `currentTarget()` returns the open screen with the filters of its open tab only
+  (`matchOpenScreenTarget`, `screenTargetFiltersOfTab`), and `buildScreenTargetHref` sets a filter of a tab with that
+  tab only. A filter declared by its key alone behaves as before.
+
+- **Declared actions for an agent that acts on the screen** (`actOnScreen` of `Agent.UI`, `@mgamadeus/ddd-agents` with
+  the screen actions). The package's blocks declare what an agent's client may act on, by attribute, never by
+  selector: the sort button of every column with a `sortKey` (`data-agent-action="sort"`,
+  `data-agent-action-key="<sortKey>"`), table rows and grid cards with a `rowAction` (`data-agent-action="open"`), every
+  tab of `EntityTabs` (`data-agent-action="tab"`, key = the tab id), `FilterToggleButton` and `ClearFiltersButton`
+  (`press`, effect `view`). A host declares its own buttons with `agentPressProps(key, effect)` (`./agent-ui`,
+  `./logic/pure`); the effect defaults to `write`, which the agent's client refuses. **Rows and cards with a
+  `rowAction`, sort buttons, `EntityTabs` tabs and the two filter buttons carry new `data-*` attributes** (a host
+  snapshot of their markup changes; nothing else does).
+- `./agent-ui`: `useAdminUiAgentScreen` returns `actorOptions` (for the agents package's `DomScreenActor`), its
+  navigator answers `currentTarget()` and `applyFilters(target, filters)` (changes only the named filter keys of the
+  current URL), and `readerOptions.describeFilters` names the open screen's filters and
+  their URL values. Pure: `buildScreenFiltersHref`, `describeScreenFilters`. The contract copy gains the two optional
+  navigator methods; hosts on an agents package without screen actions are unaffected (the reader ignores the unknown
+  option, nobody calls the methods).
+
 ## 0.8.2
 
 - Lists in grid view no longer make the page scroll sideways in a window narrower than `lg` (1024 px). The grid pulled

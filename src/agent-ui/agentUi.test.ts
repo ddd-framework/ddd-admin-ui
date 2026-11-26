@@ -10,7 +10,15 @@ import {
   describeUnsavedChanges,
   fieldReferenceOf,
 } from './agentUIState.ts';
-import { buildScreenTargetHref, buildScreenTargets, matchScreenTarget } from './screenTargets.ts';
+import { agentActionProps, agentPressProps } from '../logic/pure/agentActions.ts';
+import {
+  buildScreenFiltersHref,
+  buildScreenTargetHref,
+  buildScreenTargets,
+  describeScreenFilters,
+  matchOpenScreenTarget,
+  matchScreenTarget,
+} from './screenTargets.ts';
 
 const NAVIGATION: NavigationItem<string>[] = [
   { key: 'home', label: 'Home', href: '/' },
@@ -206,5 +214,88 @@ describe('findOccludingRectOfAgentPanel', () => {
 
   it('names the attribute the default lookup reads', () => {
     assert.equal(AGENT_PANEL_ATTRIBUTE, 'data-agent-panel');
+  });
+});
+
+describe('the filters of the open screen (actOnScreen setFilters)', () => {
+  const targets = buildScreenTargets(NAVIGATION, { translate, filtersByTargetKey: { orders: ['status', 'customerId'] } });
+  const orders = targets.find(target => target.key === 'orders');
+  const order = targets.find(target => target.key === 'order');
+
+  it('sets and removes only declared filters and keeps the rest of the URL', () => {
+    assert.ok(orders);
+    assert.equal(
+      buildScreenFiltersHref(orders, '/orders', '?view=grid&status=OPEN&customerId=3', { status: 'DONE', customerId: '', secret: 'x' }),
+      '/orders?view=grid&status=DONE'
+    );
+    assert.equal(buildScreenFiltersHref(orders, '/orders', '?status=OPEN', { status: '' }), '/orders');
+    assert.equal(buildScreenFiltersHref(orders, '/orders', '', { status: 'x'.repeat(300) }).length, '/orders?status='.length + 100);
+  });
+
+  it('describes the declared filters with the values that are set', () => {
+    assert.ok(orders && order);
+    assert.equal(describeScreenFilters(orders, '?status=OPEN&view=grid'), 'status=OPEN · customerId');
+    assert.equal(describeScreenFilters(order, '?status=OPEN'), null);
+    assert.equal(describeScreenFilters(null, ''), null);
+  });
+
+  it('keeps a filter of a tab to that tab: in the href, and in the open screen the agent acts on', () => {
+    const targets = buildScreenTargets(NAVIGATION, {
+      translate: label => label,
+      filtersByTargetKey: { order: [{ key: 'status', values: ['OPEN'], tabs: ['items'] }, { key: 'sort', tabs: ['items'] }, { key: 'sort', tabs: ['details'] }] },
+    });
+    const record = targets.find(target => target.key === 'order');
+    assert.ok(record);
+    assert.equal(buildScreenTargetHref(record, { recordIds: [7], tab: 'items', filters: { status: 'OPEN', sort: 'id:desc' } }), '/orders/7/items?status=OPEN&sort=id%3Adesc');
+    assert.equal(buildScreenTargetHref(record, { recordIds: [7], tab: 'details', filters: { status: 'OPEN', sort: 'id:desc' } }), '/orders/7/details?sort=id%3Adesc');
+    assert.equal(buildScreenTargetHref(record, { recordIds: [7], tab: null, filters: { status: 'OPEN' } }), '/orders/7');
+    assert.deepEqual(matchOpenScreenTarget(targets, '/orders/7/items')?.filters.map(filter => filter.key), ['status', 'sort']);
+    assert.deepEqual(matchOpenScreenTarget(targets, '/orders/7/details')?.filters.map(filter => filter.key), ['sort']);
+    assert.deepEqual(matchOpenScreenTarget(targets, '/orders/7')?.filters, []);
+    assert.equal(describeScreenFilters(matchOpenScreenTarget(targets, '/orders/7/items'), '?status=OPEN'), 'status=OPEN (one of OPEN) · sort');
+  });
+
+  it('takes a filter with its values and names them in the catalogue entry and the screen read', () => {
+    const valued = buildScreenTargets(NAVIGATION, {
+      translate: label => label,
+      filtersByTargetKey: {
+        orders: [
+          'customerId',
+          { key: 'status', values: ['OPEN', 'SOLVED'], multiple: true },
+          { key: 'from', hint: 'date YYYY-MM-DD' },
+          { key: 'sort', values: ['id:asc', 'id:desc'] },
+        ],
+      },
+    }).find(target => target.key === 'orders');
+    assert.ok(valued);
+    assert.deepEqual(valued.filters, [
+      { key: 'customerId' },
+      { key: 'status', values: ['OPEN', 'SOLVED'], multiple: true },
+      { key: 'from', hint: 'date YYYY-MM-DD' },
+      { key: 'sort', values: ['id:asc', 'id:desc'] },
+    ]);
+    assert.equal(
+      describeScreenFilters(valued, '?status=OPEN'),
+      'customerId · status=OPEN (one or more of OPEN|SOLVED, comma-separated) · from (date YYYY-MM-DD) · sort (one of id, each with :asc or :desc)'
+    );
+  });
+});
+
+describe('what an element declares for the agent', () => {
+  it('declares sort controls and tabs with their key, a row that opens without one', () => {
+    assert.deepEqual(agentActionProps('sort', 'createdTime'), { 'data-agent-action': 'sort', 'data-agent-action-key': 'createdTime' });
+    assert.deepEqual(agentActionProps('tab', 'items'), { 'data-agent-action': 'tab', 'data-agent-action-key': 'items' });
+    assert.deepEqual(agentActionProps('open'), { 'data-agent-action': 'open' });
+    assert.deepEqual(agentActionProps('sort', 'created time'), { 'data-agent-action': 'sort' });
+  });
+
+  it('declares a button as a write unless the host says it only changes the view', () => {
+    assert.deepEqual(agentPressProps('archive'), {
+      'data-agent-action': 'press',
+      'data-agent-action-key': 'archive',
+      'data-agent-action-effect': 'write',
+    });
+    assert.equal(agentPressProps('load-more', 'view')['data-agent-action-effect'], 'view');
+    assert.deepEqual(agentPressProps('not a key'), {});
   });
 });

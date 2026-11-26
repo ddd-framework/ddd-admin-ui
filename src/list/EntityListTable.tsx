@@ -20,6 +20,7 @@ import { cn } from '../primitives/cn.ts';
 import { EntityListLoadMore } from './EntityListLoadMore.tsx';
 import { EntityListStatus } from './EntityListStatus.tsx';
 import type { EntityListDataProps, RowActionResolver } from './types.ts';
+import { agentActionProps } from '../logic/pure/agentActions.ts';
 import { type EntityListSort, type ListSortDirection, nextListSort } from '../logic/pure/listSort.ts';
 import { buildEntityListState } from '../logic/pure/listState.ts';
 import { useListStateReport } from '../logic/react/useListStateReport.ts';
@@ -284,16 +285,21 @@ const SelectAllHeader = <TItem,>({ selection, disabled, label }: { selection: En
   );
 };
 
-/** A sortable column's header content: one button that moves the sort on; the cell carries `aria-sort`. */
+/**
+ * A sortable column's header content: one button that moves the sort on; the cell carries `aria-sort`. The button
+ * declares itself to an agent (`data-agent-action="sort"` with the column's `sortKey`).
+ */
 const SortHeaderButton = ({
   label,
   direction,
+  sortKey,
   onClick,
   iconFirst,
   className,
 }: {
   label: ReactNode;
   direction: 'asc' | 'desc' | undefined;
+  sortKey: string;
   onClick: () => void;
   /** An end-aligned column: the arrow before the label, so the label shares the right edge with the numbers. */
   iconFirst: boolean;
@@ -305,6 +311,7 @@ const SortHeaderButton = ({
     <button
       type="button"
       onClick={onClick}
+      {...agentActionProps('sort', sortKey)}
       className={cn(
         '-mx-1 inline-flex cursor-pointer items-center gap-1.5 rounded-sm px-1 text-left font-bold tracking-[inherit] uppercase outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring',
         direction && 'text-foreground',
@@ -448,6 +455,7 @@ const EntityListTableRowView = <TItem,>({
         className
       )}
       data-row-key={rowKey}
+      {...(action ? agentActionProps('open') : undefined)}
       data-state={selected ? 'selected' : undefined}
       data-list-row-hover={hoverOnlyWithAction && !action ? 'none' : undefined}
       role={roleIn(layout, 'row')}
@@ -906,6 +914,7 @@ export const EntityListTable = <TItem,>({
                     <SortHeaderButton
                       label={label}
                       direction={direction}
+                      sortKey={column.sortKey as string}
                       onClick={() =>
                         onSortChange(nextListSort(sort, column.sortKey as string, { start: column.sortStart, required: sortRequired }))
                       }

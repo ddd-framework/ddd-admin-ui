@@ -1,13 +1,22 @@
 /**
- * A structural copy of the client contracts of `@mgamadeus/ddd-agents/ui` 0.3.x (`client-tools`, `agent-ui-state`):
+ * A structural copy of the client contracts of `@mgamadeus/ddd-agents/ui` (`client-tools`, `agent-ui-state`; the
+ * optional navigator methods of `actOnScreen` since the agents release that brings it):
  * the parts the adapters of this entry fill. Copied, not imported, so this package neither depends on the agents
  * package nor loads it; TypeScript matches structurally, so the adapters are assignable to the agents package's own
  * types. Keep it in step with the version named in the README.
  */
 
-/** A URL filter of a list screen: the query parameter, e.g. `customerId`. */
+/** A URL filter of a list screen: the query parameter, e.g. `customerId`, and what its value is. */
 export interface ScreenTargetFilter {
   key: string;
+  /** The stored values the filter takes (an enumeration, a sort); without them any value is passed on */
+  values?: readonly string[];
+  /** Whether the filter takes several of its values as a comma list */
+  multiple?: boolean;
+  /** What a free value is, e.g. `date YYYY-MM-DD`, `id` */
+  hint?: string;
+  /** The tabs of the target the filter belongs to (a record screen with a list per tab); without them every page of the target */
+  tabs?: readonly string[];
 }
 
 /** A screen the user can open: a navigation entry, a record screen or a page below one. */
@@ -61,6 +70,10 @@ export interface ScreenNavigator {
   describeBlockers(): ScreenNavigationBlocker | null;
   open(target: ScreenTarget, request: ScreenOpenRequest): Promise<ScreenLocation>;
   currentLocation(): ScreenLocation;
+  /** The target the open screen shows; its declared filters are what the action `setFilters` may set (agents package with `actOnScreen`) */
+  currentTarget?(): ScreenTarget | null;
+  /** Sets the given URL filters of the open screen (an empty value removes one) and keeps the rest of its URL */
+  applyFilters?(target: ScreenTarget, filters: Record<string, string>): Promise<ScreenLocation>;
 }
 
 /** One route parameter of the UI state. */

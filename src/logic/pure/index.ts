@@ -6,6 +6,19 @@
 // store, so it passes `t` where a helper takes one.
 
 export {
+  AGENT_ACTION_ATTRIBUTE,
+  AGENT_ACTION_EFFECT_ATTRIBUTE,
+  AGENT_ACTION_KEY_ATTRIBUTE,
+  AGENT_ACTION_KEY_PATTERN,
+  agentActionProps,
+  agentPressProps,
+} from './agentActions.ts';
+export type {
+  AgentActionEffect,
+  AgentActionKind,
+  AgentActionProps,
+} from './agentActions.ts';
+export {
   formatHexColor,
   normalizeColorValue,
   parseHexColor,

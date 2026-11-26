@@ -3,6 +3,7 @@
 import { type ReactNode, useState } from 'react';
 
 import { useTranslate } from '../i18n/index.ts';
+import { agentActionProps } from '../logic/pure/agentActions.ts';
 import { cn } from '../primitives/cn.ts';
 import { type PageLinkComponent, useLinkComponent } from '../primitives/link.tsx';
 
@@ -59,7 +60,8 @@ const TAB_IDLE = 'text-muted-foreground hover:bg-tint hover:text-foreground';
 
 /**
  * The tab bar of an entity (route tabs under the detail header) or of a section (sub-tabs). One look for every
- * detail screen (replaces the copied tab shells). Active: route match via `currentPath`, or `activeId`.
+ * detail screen (replaces the copied tab shells). Active: route match via `currentPath`, or `activeId`. Every tab
+ * declares itself to an agent (`data-agent-action="tab"` with its id).
  */
 export const EntityTabs = ({
   tabs,
@@ -118,6 +120,7 @@ export const EntityTabs = ({
               key={tab.id}
               href={tab.href}
               aria-current={isActive ? 'page' : undefined}
+              {...agentActionProps('tab', tab.id)}
               className={className}
               onClick={() => setPendingHref(tab.href ?? null)}
             >
@@ -130,6 +133,7 @@ export const EntityTabs = ({
             key={tab.id}
             type="button"
             aria-pressed={isActive}
+            {...agentActionProps('tab', tab.id)}
             disabled={tab.disabled}
             onClick={() => onSelect?.(tab.id)}
             className={className}

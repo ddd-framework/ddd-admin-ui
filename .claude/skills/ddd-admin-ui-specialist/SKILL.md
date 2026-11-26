@@ -98,6 +98,7 @@ installed package (`node_modules/@mgamadeus/ddd-admin-ui/`). This skill reaches 
 | the drive of mgamadeus/ddd-clouddrive (spaces by group, versions, history, trash, malware status) | the npm package `@mgamadeus/ddd-clouddrive`: `createCloudDriveApi` (`.`) + `CloudDriveScreen` (`./screen`) on `./files`; the entry `./clouddrive` is gone since 0.6.0 | — |
 | an agent or test reading the screen: row keys, list state, unsaved forms, may it navigate | `data-row-key` on rows and cards, `onListStateChange` + `activeFilters`; `useUnsavedChangesGuard(…, { form, label })` + `getDirtyForms()`; `useNavigationGuard().canNavigate()` | list, logic |
 | mark regions for an agent: anchor, secret value, chrome | `data-agent-anchor` (host), `data-agent-secret` (`Input type="password"` sets it), `data-agent-skip` (package chrome sets it) | README › Screen state for agents |
+| let an agent act on the screen (`actOnScreen`): sort, open a row, switch a tab, set URL filters, press a declared button | the blocks declare themselves (`data-agent-action` on sort buttons, rows / cards with a `rowAction`, `EntityTabs`, filter toggle, clear filters); host buttons `agentPressProps(key, 'view' \| 'write')` (write is refused); `useAdminUiAgentScreen().actorOptions` → `DomScreenActor`, navigator `applyFilters` | agent-ui, logic/pure; README › Declared actions |
 
 ## Rules that fail silently
 

@@ -2,6 +2,7 @@
 
 import { cloneElement, Fragment, isValidElement, type ReactElement, type ReactNode, useEffect, useRef } from 'react';
 
+import { agentActionProps } from '../logic/pure/agentActions.ts';
 import { buildEntityListState } from '../logic/pure/listState.ts';
 import { useListStateReport } from '../logic/react/useListStateReport.ts';
 
@@ -38,13 +39,16 @@ export interface EntityListGridProps<TItem> extends EntityListDataProps<TItem> {
 
 /**
  * The card with `data-row-key`: set on the element the renderer returns (a DOM element, or a component that passes
- * `data-*` props to its root) unless it sets its own; a fragment or text stays as it is.
+ * `data-*` props to its root) unless it sets its own; a fragment or text stays as it is. A card with an action also
+ * declares it to an agent (`data-agent-action="open"`).
  */
-const withRowKey = (card: ReactNode, rowKey: string): ReactNode => {
+const withRowKey = (card: ReactNode, rowKey: string, hasAction: boolean): ReactNode => {
   if (!isValidElement(card) || card.type === Fragment) return card;
   const props = card.props as Record<string, unknown>;
-  if (props['data-row-key'] !== undefined) return card;
-  return cloneElement(card as ReactElement<Record<string, unknown>>, { 'data-row-key': rowKey });
+  const added: Record<string, unknown> = {};
+  if (props['data-row-key'] === undefined) added['data-row-key'] = rowKey;
+  if (hasAction && props['data-agent-action'] === undefined) Object.assign(added, agentActionProps('open'));
+  return Object.keys(added).length === 0 ? card : cloneElement(card as ReactElement<Record<string, unknown>>, added);
 };
 
 let warnedCardsWithoutRowKey = false;
@@ -138,9 +142,10 @@ export const EntityListGrid = <TItem,>({
         <div ref={cardGrid} className={GRID_CLASS}>
           {items.map(item => {
             const rowKey = getRowKey(item);
+            const onActivate = rowAction ? rowAction(item) : undefined;
             return (
               <Fragment key={rowKey}>
-                {withRowKey(renderCard({ item, onActivate: rowAction ? rowAction(item) : undefined, rowKey }), rowKey)}
+                {withRowKey(renderCard({ item, onActivate, rowKey }), rowKey, Boolean(onActivate))}
               </Fragment>
             );
           })}

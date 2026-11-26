@@ -12,12 +12,21 @@ import type {
   AgentUIStateSource,
   ScreenHighlightEvent,
   ScreenLocation,
+  ScreenNavigationBlocker,
   ScreenOccludingRect,
   ScreenNavigator,
   ScreenTarget,
   ScreenTargetSource,
 } from './contract.ts';
-import { buildScreenTargetHref, buildScreenTargets } from './screenTargets.ts';
+import {
+  buildScreenFiltersHref,
+  buildScreenTargetHref,
+  buildScreenTargets,
+  describeScreenFilters,
+  matchOpenScreenTarget,
+  matchScreenTarget,
+  type ScreenFiltersByTargetKey,
+} from './screenTargets.ts';
 
 /** The longest wait for an opened screen to settle. */
 export const AGENT_SCREEN_SETTLE_MAX_MS = 6000;
@@ -38,8 +47,11 @@ export interface AdminUiAgentScreenOptions {
   canAccess?: NavigationAccess;
   /** Opens an href with the host's router (`router.push`) */
   navigate: (href: string) => void;
-  /** The URL filters per target key (a list screen's `useUrlListState` keys, imported from the screen's own constant) */
-  filtersByTargetKey?: Readonly<Record<string, readonly string[]>>;
+  /**
+   * The URL filters per target key (a list screen's `useUrlListState` keys, imported from the screen's own constant);
+   * a filter with fixed values declares them (`{ key, values, multiple, hint }`)
+   */
+  filtersByTargetKey?: ScreenFiltersByTargetKey;
   /** The views per target key (`?view=`) */
   viewsByTargetKey?: Readonly<Record<string, readonly string[]>>;
   /** Overlay kinds that neither block a navigation nor count as an open dialog (the agent window, when it is a sheet) */
@@ -71,6 +83,17 @@ export interface AdminUiScreenReaderOptions {
   findRoot: () => Element | null;
   currentLocation: () => ScreenLocation;
   describeUnsavedChanges: () => string;
+  /** The declared URL filters of the open screen with their values (`status=OPEN · priority`), or null */
+  describeFilters: () => string | null;
+}
+
+/** The options `DomScreenActor` of `@mgamadeus/ddd-agents/ui` takes besides registry, highlighter and its note. */
+export interface AdminUiScreenActorOptions {
+  currentLocation: () => ScreenLocation;
+  /** Unsaved changes in a form, an open dialog, drawer or sheet (the navigation guard) */
+  describeBlockers: () => ScreenNavigationBlocker | null;
+  /** Resolves once the screen shows no loading state for a moment (a list reloaded, a page opened) */
+  settle: () => Promise<void>;
 }
 
 /** The parts of the agent's screen adapters for screens built from this package's blocks. */
@@ -85,6 +108,8 @@ export interface AdminUiAgentScreen {
   uiStateSource: AgentUIStateSource;
   /** Pass to `new DomScreenHighlighter({ ...highlighterOptions, registry, announce })` */
   highlighterOptions: AdminUiScreenHighlighterOptions;
+  /** Pass to `new DomScreenActor({ ...actorOptions, registry, highlighter })` (the typed actions of `actOnScreen`) */
+  actorOptions: AdminUiScreenActorOptions;
 }
 
 const wait = (milliseconds: number) => new Promise(resolve => setTimeout(resolve, milliseconds));
@@ -134,30 +159,49 @@ export const useAdminUiAgentScreen = (options: AdminUiAgentScreenOptions): Admin
       };
     };
     const navigationDecision = () => canNavigate({ ignoreOverlayKinds: latest.current.options.ignoreOverlayKinds ?? [] });
+    const describeBlockers = (): ScreenNavigationBlocker | null => describeNavigationBlocker(navigationDecision());
+    // the open screen with the filters of its open tab: what `setFilters` may set and the screen read names
+    const currentTarget = (): ScreenTarget | null => matchOpenScreenTarget(listTargets(), currentPathname());
+
+    /** Waits until the screen arrived (when a path is expected) and shows no loading state for a moment. */
+    const settle = async (hasArrived: () => boolean = () => true): Promise<void> => {
+      const startedAt = Date.now();
+      let quietSince: number | null = null;
+      while (Date.now() - startedAt < AGENT_SCREEN_SETTLE_MAX_MS) {
+        await wait(100);
+        const busy = findRoot()?.querySelector(BUSY_SELECTOR) != null;
+        if (!hasArrived() || busy) {
+          quietSince = null;
+          continue;
+        }
+        quietSince ??= Date.now();
+        if (Date.now() - quietSince >= AGENT_SCREEN_SETTLE_QUIET_MS) break;
+      }
+    };
 
     const navigator: ScreenNavigator = {
-      describeBlockers: () => describeNavigationBlocker(navigationDecision()),
+      describeBlockers,
       currentLocation,
+      currentTarget,
       open: async (target, request) => {
         const href = buildScreenTargetHref(target, request) ?? target.routePattern;
         const path = href.split('?')[0] ?? href;
         latest.current.options.navigate(href);
-        const startedAt = Date.now();
-        let quietSince: number | null = null;
-        while (Date.now() - startedAt < AGENT_SCREEN_SETTLE_MAX_MS) {
-          await wait(100);
-          const arrived = latest.current.pathname === path || window.location.pathname.endsWith(path);
-          const busy = findRoot()?.querySelector(BUSY_SELECTOR) != null;
-          if (!arrived || busy) {
-            quietSince = null;
-            continue;
-          }
-          quietSince ??= Date.now();
-          if (Date.now() - quietSince >= AGENT_SCREEN_SETTLE_QUIET_MS) break;
-        }
+        await settle(() => latest.current.pathname === path || window.location.pathname.endsWith(path));
         const location = currentLocation();
         latest.current.options.onOpened?.(target, location);
         return location;
+      },
+      // the screen's own list state follows the URL (`useUrlListState` re-syncs on an outside change)
+      applyFilters: async (target, filters) => {
+        const searchBefore = window.location.search;
+        const href = buildScreenFiltersHref(target, currentPathname(), searchBefore, filters);
+        const expectedSearch = href.includes('?') ? href.slice(href.indexOf('?')) : '';
+        if (expectedSearch === searchBefore) return currentLocation();
+        latest.current.options.navigate(href);
+        // the list may write its own form of the value: any change of the query counts as arrived
+        await settle(() => window.location.search !== searchBefore);
+        return currentLocation();
       },
     };
 
@@ -179,7 +223,9 @@ export const useAdminUiAgentScreen = (options: AdminUiAgentScreenOptions): Admin
         findRoot,
         currentLocation,
         describeUnsavedChanges: () => describeUnsavedChanges(getDirtyForms()),
+        describeFilters: () => describeScreenFilters(currentTarget(), typeof window === 'undefined' ? '' : window.location.search),
       },
+      actorOptions: { currentLocation, describeBlockers, settle: () => settle() },
       uiStateSource: {
         readUIState: () => {
           const ignoredKinds = latest.current.options.ignoreOverlayKinds ?? [];

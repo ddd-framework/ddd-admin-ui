@@ -11,15 +11,24 @@ import {
   type NavigationAccess,
   type NavigationItem,
 } from '../logic/pure/navigation.ts';
-import type { ScreenTarget } from './contract.ts';
+import type { ScreenTarget, ScreenTargetFilter } from './contract.ts';
+
+/** A filter of a list screen as a host declares it: its key alone, or the key with its values and hint. */
+export type ScreenFilterDeclaration = string | ScreenTargetFilter;
+
+/** The filters per target key, as a host declares them. */
+export type ScreenFiltersByTargetKey = Readonly<Record<string, readonly ScreenFilterDeclaration[]>>;
 
 export interface ScreenTargetsOptions {
   /** Translates a label of the tree (the shell translates the same labels with `t(label)`) */
   translate: (label: string) => string;
   /** The rights predicate of the shell: an entry it hides is no target */
   canAccess?: NavigationAccess;
-  /** The URL filters per target key (a list screen's `useUrlListState` keys) */
-  filtersByTargetKey?: Readonly<Record<string, readonly string[]>>;
+  /**
+   * The URL filters per target key (a list screen's `useUrlListState` keys); a filter with fixed values (an
+   * enumeration, the sort) names them, so the agent learns them from the screen catalogue and the screen read
+   */
+  filtersByTargetKey?: ScreenFiltersByTargetKey;
   /** The views per target key (`?view=`) */
   viewsByTargetKey?: Readonly<Record<string, readonly string[]>>;
 }
@@ -51,7 +60,7 @@ const addTarget = (
   const target: ScreenTarget = {
     ...draft,
     tabs: [],
-    filters: (options.filtersByTargetKey?.[draft.key] ?? []).map(key => ({ key })),
+    filters: (options.filtersByTargetKey?.[draft.key] ?? []).map(filter => (typeof filter === 'string' ? { key: filter } : { ...filter })),
     views: [...(options.viewsByTargetKey?.[draft.key] ?? [])],
   };
   targets.push(target);
@@ -187,8 +196,93 @@ export const matchScreenTarget = (targets: readonly ScreenTarget[], pathname: st
   return best;
 };
 
+/**
+ * The filters of a target on one of its tabs (`null`: its own page): those of every page and those of that tab; a
+ * filter declared for the tab replaces the one of every page with the same key.
+ */
+export const screenTargetFiltersOfTab = (target: ScreenTarget, tab: string | null): ScreenTargetFilter[] => {
+  const ofTab = tab === null ? [] : target.filters.filter(filter => filter.tabs?.includes(tab));
+  const keysOfTab = new Set(ofTab.map(filter => filter.key));
+  return [...target.filters.filter(filter => filter.tabs === undefined && !keysOfTab.has(filter.key)), ...ofTab];
+};
+
+/**
+ * The open screen as a target with the filters of its open tab only: what the agent may set there, and what the
+ * screen read names (a record screen declares the filters of each tab's list with `tabs`).
+ */
+export const matchOpenScreenTarget = (targets: readonly ScreenTarget[], pathname: string): ScreenTarget | null => {
+  const match = matchScreenTarget(targets, pathname);
+  return match ? { ...match.target, filters: screenTargetFiltersOfTab(match.target, match.tab) } : null;
+};
+
 /** The most characters of one filter value an opened screen gets. */
 export const MAX_SCREEN_FILTER_VALUE_CHARS = 100;
+
+/**
+ * The href of the open screen with the given filters set (a non-empty value) or removed (an empty value): only the
+ * target's declared filters change, the path and every other parameter of the URL stay (the action `setFilters` of
+ * `actOnScreen`).
+ */
+export const buildScreenFiltersHref = (
+  target: ScreenTarget,
+  pathname: string,
+  search: string,
+  filters: Readonly<Record<string, string>>
+): string => {
+  const declaredFilterKeys = new Set(target.filters.map(filter => filter.key));
+  const query = new URLSearchParams(search);
+  for (const [key, value] of Object.entries(filters)) {
+    if (!declaredFilterKeys.has(key)) continue;
+    if (value === '') query.delete(key);
+    else query.set(key, value.slice(0, MAX_SCREEN_FILTER_VALUE_CHARS));
+  }
+  const queryText = query.toString();
+  return queryText ? `${pathname}?${queryText}` : pathname;
+};
+
+/** The most values of one filter the screen read names. */
+const MAX_DESCRIBED_FILTER_VALUES = 24;
+
+/**
+ * The values of a filter as one phrase. A sort (every value `<key>:asc` or `<key>:desc`, both of each key) names its
+ * keys once: `one of id|created, each with :asc or :desc`.
+ */
+const describeValueList = (values: readonly string[], multiple: boolean): string => {
+  const sortKeys = [...new Set(values.map(value => value.replace(/:(asc|desc)$/, '')))];
+  const isSort = values.length === sortKeys.length * 2 && sortKeys.every(key => values.includes(`${key}:asc`) && values.includes(`${key}:desc`));
+  const named = isSort ? sortKeys : values;
+  const list = `${named.slice(0, MAX_DESCRIBED_FILTER_VALUES).join('|')}${named.length > MAX_DESCRIBED_FILTER_VALUES ? '|…' : ''}`;
+  if (isSort) return `one of ${list}, each with :asc or :desc`;
+  return multiple ? `one or more of ${list}, comma-separated` : `one of ${list}`;
+};
+
+/** What the value of a filter is: `one of A|B`, `one or more of A|B, comma-separated`, its hint; `` for a plain key. */
+const describeFilterValues = (filter: ScreenTargetFilter): string => {
+  const parts: string[] = [];
+  if (filter.values !== undefined && filter.values.length > 0) {
+    parts.push(describeValueList(filter.values, filter.multiple === true));
+  }
+  if (filter.hint !== undefined && filter.hint !== '') parts.push(filter.hint);
+  return parts.join('; ');
+};
+
+/**
+ * The declared filters of the open screen for the screen reader, the set ones with their value, each with what its
+ * value is where the host named it: `status=OPEN (one of OPEN|SOLVED) · priority · from (date YYYY-MM-DD)`; `null`
+ * for a screen without filters.
+ */
+export const describeScreenFilters = (target: ScreenTarget | null, search: string): string | null => {
+  if (!target || target.filters.length === 0) return null;
+  const query = new URLSearchParams(search);
+  return target.filters
+    .map(filter => {
+      const value = query.get(filter.key);
+      const state = value === null || value === '' ? filter.key : `${filter.key}=${value.slice(0, MAX_SCREEN_FILTER_VALUE_CHARS)}`;
+      const values = describeFilterValues(filter);
+      return values === '' ? state : `${state} (${values})`;
+    })
+    .join(' · ');
+};
 
 /**
  * The href of a target for the given record ids, tab and filters; `null` when a record id is missing. Only the
@@ -211,7 +305,8 @@ export const buildScreenTargetHref = (
     segments.push(String(recordId));
   }
   if (request.tab && target.tabs.includes(request.tab)) segments.push(request.tab);
-  const declaredFilterKeys = new Set(target.filters.map(filter => filter.key));
+  // a filter of a tab is set with that tab only
+  const declaredFilterKeys = new Set(screenTargetFiltersOfTab(target, request.tab).map(filter => filter.key));
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(request.filters)) {
     if (declaredFilterKeys.has(key)) query.set(key, value.slice(0, MAX_SCREEN_FILTER_VALUE_CHARS));

@@ -24,12 +24,24 @@ export type {
   ScreenTargetSource,
 } from './contract.ts';
 export {
+  buildScreenFiltersHref,
   buildScreenTargetHref,
   buildScreenTargets,
+  describeScreenFilters,
+  matchOpenScreenTarget,
   matchScreenTarget,
   MAX_SCREEN_FILTER_VALUE_CHARS,
+  screenTargetFiltersOfTab,
 } from './screenTargets.ts';
-export type { ScreenTargetMatch, ScreenTargetsOptions } from './screenTargets.ts';
+export {
+  AGENT_ACTION_ATTRIBUTE,
+  AGENT_ACTION_EFFECT_ATTRIBUTE,
+  AGENT_ACTION_KEY_ATTRIBUTE,
+  agentActionProps,
+  agentPressProps,
+} from '../logic/pure/agentActions.ts';
+export type { AgentActionEffect, AgentActionKind, AgentActionProps } from '../logic/pure/agentActions.ts';
+export type { ScreenFilterDeclaration, ScreenFiltersByTargetKey, ScreenTargetMatch, ScreenTargetsOptions } from './screenTargets.ts';
 export {
   buildAgentUIState,
   describeDirtyForms,
@@ -48,6 +60,7 @@ export {
 export type {
   AdminUiAgentScreen,
   AdminUiAgentScreenOptions,
+  AdminUiScreenActorOptions,
   AdminUiScreenHighlighterOptions,
   AdminUiScreenReaderOptions,
 } from './useAdminUiAgentScreen.ts';

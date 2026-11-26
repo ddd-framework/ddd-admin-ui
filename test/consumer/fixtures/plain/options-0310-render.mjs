@@ -9,7 +9,18 @@
 import { createElement as h } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { setTranslations } from '@mgamadeus/ddd-admin-ui/i18n';
-import { EntityListBody, EntityListBulkBar, EntityListGrid, EntityListTable, EntityListViewToggle, SearchField } from '@mgamadeus/ddd-admin-ui/list';
+import {
+  ClearFiltersButton,
+  EntityListBody,
+  EntityListBulkBar,
+  EntityListGrid,
+  EntityListTable,
+  EntityListViewToggle,
+  FilterToggleButton,
+  SearchField,
+} from '@mgamadeus/ddd-admin-ui/list';
+import { agentPressProps } from '@mgamadeus/ddd-admin-ui/agent-ui';
+import { EntityTabs } from '@mgamadeus/ddd-admin-ui/page';
 import {
   buildEntityListState,
   canNavigate,
@@ -61,6 +72,45 @@ checks.push([
   JSON.stringify(buildEntityListState({ view: 'table', ...base, columnIds: ['name'], activeFilters: { q: 'x', s: '' } })) ===
     JSON.stringify({ view: 'table', rowKeys: ['a-1', 'b-2'], selectedRowKeys: [], columnIds: ['name'], filters: { q: 'x' }, sort: null, isLoading: false, hasError: false }),
 ]);
+
+// ── declared actions (an agent's `actOnScreen`) ────────────────────────────────────────────────────────────────────
+const noop = () => {};
+const sortColumns = [
+  { id: 'name', header: 'Name', cell: item => item.name, sortKey: 'name' },
+  { id: 'plain', header: 'Plain', cell: item => item.name },
+];
+const sortable = render(h(EntityListTable, { ...base, columns: sortColumns, sort: { key: 'name', direction: 'asc' }, onSortChange: noop, rowAction: () => noop }));
+checks.push(
+  ['table: a sortable header declares the sort with its key, a plain header nothing', count(sortable, /<button[^>]*data-agent-action="sort"[^>]*data-agent-action-key="name"/g) === 1 && count(sortable, /data-agent-action="sort"/g) === 1],
+  ['table: rows with a row action declare open', count(sortable, /<tr[^>]*data-row-key="[^"]*"[^>]*data-agent-action="open"/g) === 2],
+  ['table: rows without a row action declare nothing', !table.includes('data-agent-action')],
+);
+const openGrid = render(h(EntityListGrid, { ...base, renderCard, rowAction: () => noop }));
+checks.push(['grid: cards with a row action declare open, cards without none', count(openGrid, /data-agent-action="open"/g) === 2 && !render(h(EntityListGrid, { ...base, renderCard })).includes('data-agent-action')]);
+const tabs = render(
+  h(EntityTabs, {
+    'aria-label': 'Sections',
+    activeId: 'general',
+    onSelect: noop,
+    tabs: [
+      { id: 'general', label: 'General' },
+      { id: 'teams', label: 'Teams', href: '/worlds/1/teams' },
+    ],
+  }),
+);
+checks.push(['tabs: every tab declares itself with its id (button and link)', /data-agent-action="tab"[^>]*data-agent-action-key="general"/.test(tabs) && /<a[^>]*data-agent-action="tab"[^>]*data-agent-action-key="teams"/.test(tabs)]);
+const filterToggle = render(h(FilterToggleButton, { open: false, onOpenChange: noop }));
+const clearFilters = render(h(ClearFiltersButton, { onClear: noop }));
+checks.push(
+  ['filter toggle: a declared press with the effect view', /data-agent-action="press"[^>]*data-agent-action-key="filter-toggle"[^>]*data-agent-action-effect="view"/.test(filterToggle)],
+  ['clear filters: a declared press with the effect view', /data-agent-action="press"[^>]*data-agent-action-key="clear-filters"[^>]*data-agent-action-effect="view"/.test(clearFilters)],
+  [
+    'agentPressProps: write unless the host says view; a key that is no token declares nothing',
+    agentPressProps('save')['data-agent-action-effect'] === 'write' &&
+      agentPressProps('load-more', 'view')['data-agent-action-effect'] === 'view' &&
+      Object.keys(agentPressProps('not a key')).length === 0,
+  ],
+);
 
 // ── secret ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 const password = render(h(Input, { type: 'password', 'aria-label': 'Password' }));

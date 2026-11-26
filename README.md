@@ -34,7 +34,7 @@ pnpm add @mgamadeus/ddd-web radix-ui react react-dom lucide-react react-hook-for
 | `./database` | the schema diff screen on the host's api (`createDatabaseApi`): `SchemaDiffScreen`, `SchemaDiffCard`, the generated-code previews (`GeneratedCodePanel`, `CodeBlock`), the status maps `DB_TABLE_CHANGE_TYPE` / `DB_DIFF_SEVERITY`, the diff helpers, the payload types | logic, i18n, primitives, list, page |
 | `./files` | the generic file manager on the host's adapter (`FileManagerAdapter` with optional capabilities): `FileManager` (folder tree, grid / table, search and filters, upload tray with progress, drag and drop moves, details drawer with preview, versions and activity, trash, links, moves into other areas), its parts (`FolderTree`, `FileCard`, `FileDrawer`, `FilePreview`, `FileViewer`, `MoveDialog`, `LinkTargetsDialog`, `UploadTray`, `QuotaPill`, …), `useFileUploadQueue`, `uploadWithProgress`, `createStaticFileManagerAdapter`, the view models | logic, i18n, primitives, list, page, form |
 | `./crons` | the Crons screen on the host's api (`createCronsApi`): `CronsScreen` and its parts (summary tiles, runner banner, Crons table with countdown and run strip, row actions, details drawer with the duration chart, runs with their output, timeline, create / edit form with the schedule preview), `useCronActions`, the status maps `CRON_STATUS`, `CRON_EXECUTION_RESULT`, the payload types | logic, i18n, primitives, list, page, form, data |
-| `./agent-ui` | the adapters of `Agent.UI` (`@mgamadeus/ddd-agents/ui` 0.3.x) for screens built from the package: `useAdminUiAgentScreen` (screen targets from the shell's navigation tree, the navigator with the navigation guard, the DOM reader's and highlighter's options, the UI state source), the pure `buildScreenTargets`, `matchScreenTarget`, `buildScreenTargetHref`, `buildAgentUIState`, `describeNavigationBlocker`; the contract types (structural copy) | logic, i18n, primitives; never imports the agents package |
+| `./agent-ui` | the adapters of `Agent.UI` (`@mgamadeus/ddd-agents/ui` 0.3.x) for screens built from the package: `useAdminUiAgentScreen` (screen targets from the shell's navigation tree, the navigator with the navigation guard, the DOM reader's and highlighter's options, the UI state source, the options of the screen actor for `actOnScreen`), the pure `buildScreenTargets`, `matchScreenTarget`, `buildScreenTargetHref`, `buildScreenFiltersHref`, `describeScreenFilters`, `buildAgentUIState`, `describeNavigationBlocker`, the declaration helpers `agentPressProps` / `agentActionProps`; the contract types (structural copy) | logic, i18n, primitives; never imports the agents package |
 | `./media` | `MediaItemField`, `FormMediaItemField`, `MediaItemPickerDialog`, `MediaPreview`, `ImageCropDialog` (crop surface: file and aspect options in; cropped blob, skip or cancel out) | logic, i18n, primitives, list, form |
 | `./glass` | `GlassPill`, `QuickFilterPills`, `CollapsibleCard`, `GlassGroup`, `ActionRow` | logic, i18n, primitives |
 | `./shell` | the application frame `AppShell` (top bar with slots, sidebar with groups, badges and locks, the icon rail and its `[` shortcut, the mobile menu, the content frame), `ShellBreadcrumbs`, `ShellDocumentTitle`, `AccountMenu`, `LanguageMenu`, their parts and hooks (`useSidebarCollapsed`, `useShellShortcut`) | logic, i18n, primitives |
@@ -338,7 +338,7 @@ on `DialogContent` / `SheetContent` sets the kind or `null` (not counted); a `fo
 `canNavigate({ ignoreOverlayKinds: ['drawer'] })` lets a master-detail drawer through. The store lives on
 `globalThis`, so two copies of the package on one page share it.
 
-**Attribute convention.** Three attributes for agent tools, read by the host, never styled:
+**Attribute convention.** Attributes for agent tools, read by the host, never styled:
 
 | Attribute | Meaning | Set by |
 |---|---|---|
@@ -348,6 +348,28 @@ on `DialogContent` / `SheetContent` sets the kind or `null` (not counted); a `fo
 
 The package has no password, key or token field component of its own; a host field for such a value sets
 `data-agent-secret` itself (`<Input data-agent-secret="" … />` on a field that is not `type="password"`).
+
+**Declared actions.** An agent that acts on the screen (`actOnScreen` of `Agent.UI`, `@mgamadeus/ddd-agents` with the
+screen actions) acts only on an element that declares the action; it never takes a selector, never types and never
+presses a button without a declaration:
+
+| Attribute | Meaning | Set by |
+|---|---|---|
+| `data-agent-action="sort"` + `data-agent-action-key="<sortKey>"` | a column's sort control (reference `col.<sortKey>`; the state is the header cell's `aria-sort`) | the package: the sort button of every `EntityListColumn` with a `sortKey` |
+| `data-agent-action="open"` | a row or card that opens its record on activation (reference `row.<data-row-key>`) | the package: table rows and grid cards with a `rowAction` (a card that sets its own `data-agent-action` keeps it) |
+| `data-agent-action="tab"` + `data-agent-action-key="<tab id>"` | a tab (reference `t.<tab id>`) | the package: every tab of `EntityTabs` (links and buttons); a `role="tab"` of a tab list counts without the attribute |
+| `data-agent-action="press"` + `data-agent-action-key="<key>"` + `data-agent-action-effect="view\|write"` | a button the agent may be asked to press (reference `act.<key>`). `view`: changes what the screen shows and nothing stored. `write`: saves, deletes, sends or starts something; the agent's client refuses it and says so | the package: `FilterToggleButton` (`filter-toggle`, view), `ClearFiltersButton` (`clear-filters`, view); the host with `agentPressProps(key, effect)` |
+
+```tsx
+import { agentPressProps } from '@mgamadeus/ddd-admin-ui/agent-ui';   // also in ./logic/pure
+
+<Button {...agentPressProps('app-preview', 'view')} onClick={openPreview}>App preview</Button>
+<Button {...agentPressProps('send-reply')} onClick={send}>Send</Button>   // effect 'write': never pressed, refused with a reason
+```
+
+The effect defaults to `write`. Declare `view` only for a button that changes nothing stored and starts nothing (open a
+panel or a dialog, load more rows, switch a view). A button that saves, deletes or sends stays `write` or undeclared:
+the agent does such work through its own tools, or marks the button and the user presses it.
 
 ### `./agent-ui`: the agent's view of the admin
 
@@ -359,7 +381,7 @@ rest from the package's own model, so a host writes only its router call and its
 ```tsx
 'use client';
 import { useAdminUiAgentScreen } from '@mgamadeus/ddd-admin-ui/agent-ui';
-import { DomScreenHighlighter, DomScreenReader, ScreenReferenceRegistry, useAgentUIClient } from '@mgamadeus/ddd-agents/ui';
+import { DomScreenActor, DomScreenHighlighter, DomScreenReader, ScreenReferenceRegistry, useAgentUIClient } from '@mgamadeus/ddd-agents/ui';
 
 const screen = useAdminUiAgentScreen({
   navigation: ADMIN_NAVIGATION,                       // the tree of AppShell
@@ -369,16 +391,19 @@ const screen = useAdminUiAgentScreen({
 });
 const adapters = useMemo(() => {
   const registry = new ScreenReferenceRegistry();
+  const highlighter = new DomScreenHighlighter({
+    ...screen.highlighterOptions,                     // agents ≥ 0.3.2: marks scroll beside the agent window
+    registry,
+    announce: labels => t('Marked: %labels%', { replacements: { labels: labels.join(', ') } }),
+  });
   return {
     targets: screen.targets,
     navigator: screen.navigator,
     isVisible: screen.isVisible,
     reader: new DomScreenReader({ ...screen.readerOptions, registry }),
-    highlighter: new DomScreenHighlighter({
-      ...screen.highlighterOptions,                   // agents ≥ 0.3.2: marks scroll beside the agent window
-      registry,
-      announce: labels => t('Marked: %labels%', { replacements: { labels: labels.join(', ') } }),
-    }),
+    highlighter,
+    // agents with the screen actions: the typed actions of actOnScreen on declared elements
+    actions: new DomScreenActor({ ...screen.actorOptions, registry, highlighter, describeAction }),
   };
 }, [screen]);
 const uiClient = useAgentUIClient(adapters, screen.uiStateSource);   // → createAgentsHttpConversationClient({ uiClient })
@@ -397,7 +422,22 @@ const uiClient = useAgentUIClient(adapters, screen.uiStateSource);   // → crea
   reader's references (`f.<field name>`), the kind of the open overlay, visibility. Only tokens the server keeps; no
   field value or label.
 - **Reader options**: the content root is the shell's `<main>` (`findRoot` to change), the location is the pathname
-  plus query and the page's `h1`, unsaved changes come from the guard.
+  plus query and the page's `h1`, unsaved changes come from the guard. `describeFilters` names the filters of the open
+  screen and their values in the URL (`describeScreenFilters`), so the read says which filters the agent can set.
+- **Filter values**: an entry of `filtersByTargetKey` is a key, or `{ key, values, multiple, hint, tabs }` for a filter
+  whose value is one of a fixed set (pass the option constant the list's own filter control renders), a sort
+  (`values`: `<key>:asc` and `<key>:desc` of each sortable column), a free value worth a hint (`date YYYY-MM-DD`, `id`),
+  or the filter of one tab's list of a record screen (`tabs`). The catalogue and the read then name what each filter
+  takes, the agent's client refuses any other value, and a tab's filter is set with that tab only. Declare the values
+  from the list's own constants, never as texts of the host's agent skill.
+- **Screen actions** (`@mgamadeus/ddd-agents/ui` with `actOnScreen`): the navigator also answers `currentTarget()` (the
+  target of the route, its filters as declared in `filtersByTargetKey`) and `applyFilters(target, filters)`: it changes
+  only the named filter keys of the current URL (an empty value removes one; every other parameter stays, a page
+  parameter of the list is the host's to reset) and waits until the list reloaded; the runner refuses it like a
+  navigation while a form has unsaved changes or a dialog is open. `actorOptions` (`currentLocation`, `describeBlockers`, `settle`) go to the agents
+  package's `DomScreenActor` together with the shared registry and the highlighter; it acts on the declared elements
+  only (see "Declared actions" above). `describeAction(action, label)` is the host's translated note beside the mark
+  ("The assistant opens this row").
 - **Highlighter options** (`@mgamadeus/ddd-agents/ui` ≥ 0.3.2): put `data-agent-panel` on the agent window (or
   pass `findAgentPanel`). A mark is then scrolled into the band the window leaves free; a window docked beside the
   page changes nothing. `onHighlight({ references, elements, occludingRect, coveredAfterScroll })` runs after every

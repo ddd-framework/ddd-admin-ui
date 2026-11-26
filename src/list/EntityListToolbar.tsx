@@ -5,6 +5,7 @@ import { type KeyboardEvent, type ReactNode, useState } from 'react';
 
 import { Button } from '../primitives/index.ts';
 import { useTranslate } from '../i18n/index.ts';
+import { agentPressProps } from '../logic/pure/agentActions.ts';
 import { cn } from '../primitives/cn.ts';
 import { SearchField } from './SearchField.tsx';
 
@@ -103,6 +104,7 @@ export const FilterToggleButton = ({
   const { t } = useTranslate();
   return (
     <Button
+      {...agentPressProps('filter-toggle', 'view')}
       {...dataAttributesOf(rest)}
       size="sm"
       variant={open ? 'default' : 'outline'}
@@ -140,7 +142,15 @@ export const ClearFiltersButton = ({ onClear, activeFilterCount, className, ...r
   const { t } = useTranslate();
   if (activeFilterCount !== undefined && activeFilterCount <= 0) return null;
   return (
-    <Button {...dataAttributesOf(rest)} size="sm" variant="outline" rounded="full" onClick={onClear} className={cn(CONTROL_TEXT, className)}>
+    <Button
+      {...agentPressProps('clear-filters', 'view')}
+      {...dataAttributesOf(rest)}
+      size="sm"
+      variant="outline"
+      rounded="full"
+      onClick={onClear}
+      className={cn(CONTROL_TEXT, className)}
+    >
       <X />
       {t('Clear filters')}
     </Button>
