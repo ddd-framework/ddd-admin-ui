@@ -6,6 +6,8 @@ import { useTranslate } from '../i18n/useTranslate.ts';
 import { Button } from '../primitives/button.tsx';
 import { cn } from '../primitives/cn.ts';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../primitives/dropdown-menu.tsx';
+import type { FileExportTarget } from './fileManagerAdapter.ts';
+import { FileExportMenu } from './FileTransferActions.tsx';
 import { type FileView, isFileReleased } from './fileView.ts';
 
 /** What a file row / card can trigger; the manager binds them to its dialogs and the adapter. Absent = not offered. */
@@ -22,6 +24,10 @@ export interface FileItemHandlers {
   onCopyPath?: (file: FileView) => void;
   /** Copies a link that opens the file's details. */
   onCopyLink?: (file: FileView) => void;
+  /** The stores a file can be copied out into (capability `exports`); offered with `onExport`. */
+  exportTargets?: readonly FileExportTarget[];
+  /** Opens the export dialog of a target for the file. */
+  onExport?: (file: FileView, targetKey: string) => void;
 }
 
 /** "Copy path" / "Copy link" of one item as a small menu (nothing when neither handler is there). */
@@ -138,6 +144,9 @@ export const FileItemActions = ({ file, handlers, inTrash, canWrite, writesAllow
         onCopyPath={handlers.onCopyPath ? () => handlers.onCopyPath?.(file) : undefined}
         onCopyLink={handlers.onCopyLink ? () => handlers.onCopyLink?.(file) : undefined}
       />
+      {handlers.onExport && handlers.exportTargets && (
+        <FileExportMenu file={file} targets={handlers.exportTargets} disabled={!writesAllowed} onExport={handlers.onExport} />
+      )}
       {handlers.onRename && showsWrites && (
         <Button
           type="button"

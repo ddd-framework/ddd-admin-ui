@@ -28,6 +28,12 @@ export type {
   FileManagerActions,
   FileManagerAdapter,
   FileManagerCapabilities,
+  FileImportsCapability,
+  FileImportSource,
+  FileImportDialogProps,
+  FileExportsCapability,
+  FileExportTarget,
+  FileExportDialogProps,
   FileMoveAcrossAreasCapability,
   FileMoveInput,
   FileMoveResult,
@@ -185,3 +191,15 @@ export { isUploadAborted, UploadError, uploadErrorMessage, uploadWithProgress } 
 export type { UploadFailure, UploadProgressCallbacks, UploadRequest, UploadTransport } from './uploadWithProgress.ts';
 export { createStaticFileManagerAdapter } from './staticFileManagerAdapter.ts';
 export type { StaticFileManagerData } from './staticFileManagerAdapter.ts';
+// Copies between the file manager and other stores (0.10.0): picker, imports, exports.
+export { FilePicker } from './FilePicker.tsx';
+export type { FilePickerProps } from './FilePicker.tsx';
+export { FilePickerDialog } from './FilePickerDialog.tsx';
+export type { FilePickerDialogProps } from './FilePickerDialog.tsx';
+export { acceptsImageFiles, isFilePickable } from './filePicking.ts';
+export { exportTargetsFor, filesForExportTarget, withFileTransfers } from './fileTransfers.ts';
+export type { FileTransfers } from './fileTransfers.ts';
+export { FileTransfersProvider, useFileTransfers } from './FileTransfersProvider.tsx';
+export type { FileTransfersProviderProps } from './FileTransfersProvider.tsx';
+export { FileExportMenu, FileImportActions } from './FileTransferActions.tsx';
+export type { FileExportMenuProps, FileImportActionsProps } from './FileTransferActions.tsx';

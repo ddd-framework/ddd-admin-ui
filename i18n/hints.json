@@ -1579,5 +1579,22 @@
   "File renamed": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Message after a file got another name.",
   "Rename %name%": "File manager, the icon buttons of one file (download, rename, move, links, delete; restore in the trash). %name% is a file or folder name.",
   "Rename file": "File manager, dialog to rename a file (title).",
-  "Rename__action": "File manager, the icon buttons of one file (download, rename, move, links, delete; restore in the trash). Context: action (tooltip of the rename button)."
+  "Rename__action": "File manager, the icon buttons of one file (download, rename, move, links, delete; restore in the trash). Context: action (tooltip of the rename button).",
+  "%action%: %name%__file-export": "File manager row action that copies a file into another store (e.g. the media library). Screen-reader label: %action% is the action's name (\"Copy to the media library\"), %name% the file name.",
+  "Area__file-picker": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Accessible name of the dropdown that chooses the file area (a drive, the library, a World's files).",
+  "Cancel__file-picker": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Button that closes the picker without picking.",
+  "Choose an area__file-picker": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Placeholder of the area dropdown and the empty state before an area is chosen.",
+  "Copy %name% to …": "File manager row action menu that copies a file into another store (e.g. the media library). Screen-reader label; %name% is the file name.",
+  "Copy to …": "File manager row action menu (tooltip) that copies a file into another store, e.g. the media library.",
+  "Insert__file-import": "File manager page button (a menu) that copies files from another store (e.g. the media library) into the open folder.",
+  "Media library__media-picker": "Media picker dialog: tab that shows the pictures of the media library (beside other sources such as the drive).",
+  "No files match the search.": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Empty state when the search finds no file in the area.",
+  "Open folder %name%": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Screen-reader label of a folder tile; %name% is the folder name.",
+  "Pick %name%": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Screen-reader label of a file tile in single-pick mode; %name% is the file name.",
+  "Pick from__media-picker": "Media picker dialog: accessible name of the tab switch between the media library and other sources (the drive).",
+  "Search files__file-picker": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Accessible name of the search field.",
+  "Search results": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Last breadcrumb while a search spans the whole area.",
+  "Search this area…__file-picker": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Placeholder of the search field.",
+  "Working…__file-picker": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Confirm button while the host works on the picked files (imports them).",
+  "{count, plural, one {# file picked} other {# files picked}}": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). How many files are picked in multi-pick mode."
 }

@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   CloudUpload,
   Download,
+  FileOutput,
   FilePen,
   FolderInput,
   FolderPlus,
@@ -61,7 +62,10 @@ import { FileDrawer } from './FileDrawer.tsx';
 import { FileViewer } from './FileViewer.tsx';
 import { FileFamilyIcon } from './FileFamilyIcon.tsx';
 import { FileItemActions, type FileItemHandlers } from './FileItemActions.tsx';
+import { FileImportActions } from './FileTransferActions.tsx';
 import { FileNameDialog } from './FileNameDialog.tsx';
+import { exportTargetsFor, filesForExportTarget, withFileTransfers } from './fileTransfers.ts';
+import { useFileTransfers } from './FileTransfersProvider.tsx';
 import { FilePathBar } from './FilePathBar.tsx';
 import { filePathText, findFolderByPath, folderIdOfParam, folderParamOf, folderPathText, parseLocationInput, pathSegments, siblingFolders } from './filePaths.ts';
 import { FileLinkChips } from './FileLinkChips.tsx';
@@ -371,7 +375,10 @@ export const FileManager = ({
   const [editingPath, setEditingPath] = useState(false);
   const [locationMiss, setLocationMiss] = useState<string | null>(null);
   const actions = adapter.useActions();
-  const capabilities = adapter.capabilities;
+  const fileTransfers = useFileTransfers();
+  const capabilities = useMemo(() => withFileTransfers(adapter.capabilities, fileTransfers), [adapter.capabilities, fileTransfers]);
+  const [openImportSourceKey, setOpenImportSourceKey] = useState<string | null>(null);
+  const [exportRequest, setExportRequest] = useState<{ targetKey: string; files: readonly FileView[] } | null>(null);
   const features = useMemo(() => resolveFileManagerFeatures(capabilities, actions), [capabilities, actions]);
   const useTrash = capabilities?.trash?.useTrash ?? useNoTrash;
   const linksCapability = capabilities?.links;
@@ -776,8 +783,10 @@ export const FileManager = ({
       onPurge: features.purge ? file => void purgeFiles([file]) : undefined,
       onCopyPath: file => void copyText(filePathText(folders, file), t('Path copied')),
       onCopyLink: file => void copyText(linkTo(folderPathText(folders, file.folderId), file.id), t('Link copied')),
+      exportTargets: features.exports ? capabilities?.exports?.targets : undefined,
+      onExport: features.exports ? (file, targetKey) => setExportRequest({ targetKey, files: [file] }) : undefined,
     }),
-    [download, trashFiles, restoreFiles, purgeFiles, features, copyText, linkTo, folders, t, compact]
+    [download, trashFiles, restoreFiles, purgeFiles, features, copyText, linkTo, folders, t, compact, capabilities?.exports?.targets]
   );
 
   // ─── Folders ───────────────────────────────────────────────────────────────────────────────────────────────────
@@ -1237,6 +1246,14 @@ export const FileManager = ({
           onClick: () => void download(selectedFiles),
           disabled: !selectedFiles.some(file => isFileReleased(file.scanStatus)),
         },
+        ...(features.exports
+          ? exportTargetsFor(capabilities?.exports, selectedFiles).map<EntityListBulkAction>(target => ({
+              id: `export-${target.key}`,
+              label: target.label,
+              icon: target.icon ?? <FileOutput aria-hidden />,
+              onClick: () => setExportRequest({ targetKey: target.key, files: filesForExportTarget(target, selectedFiles) }),
+            }))
+          : []),
       ];
   const canDeleteSelection = inTrash ? features.purge : true;
   const bulkBar = canWriteHere ? (
@@ -1537,6 +1554,13 @@ export const FileManager = ({
                 {t('New folder')}
               </Button>
             )}
+            {features.imports && !context && (
+              <FileImportActions
+                sources={capabilities?.imports?.sources ?? []}
+                disabled={!canUploadHere}
+                onOpen={setOpenImportSourceKey}
+              />
+            )}
             <Button type="button" onClick={() => uploadInputRef.current?.click()} disabled={!canUploadHere}>
               <Upload />
               {t('Upload files')}
@@ -1575,8 +1599,34 @@ export const FileManager = ({
   );
   const depthReason = t('Folders nest at most %max% levels deep.', { replacements: { max: maxFolderDepth } });
 
+  const openImportSource = openImportSourceKey !== null ? capabilities?.imports?.sources.find(source => source.key === openImportSourceKey) : undefined;
+  const openExportTarget = exportRequest !== null ? capabilities?.exports?.targets.find(target => target.key === exportRequest.targetKey) : undefined;
   const overlays = (
     <>
+      {openImportSource &&
+        area !== undefined &&
+        openImportSource.renderDialog({
+          open: true,
+          onOpenChange: open => {
+            if (!open) setOpenImportSourceKey(null);
+          },
+          areaKey,
+          folderId: currentFolderId,
+          folderPath: folderPathText(folders, currentFolderId),
+          onImported: () => list.refetch?.(),
+        })}
+      {openExportTarget &&
+        exportRequest &&
+        exportRequest.files.length > 0 &&
+        openExportTarget.renderDialog({
+          open: true,
+          onOpenChange: open => {
+            if (!open) setExportRequest(null);
+          },
+          areaKey,
+          files: exportRequest.files,
+          onExported: () => selection.clear(),
+        })}
       {!compact && (
       <FileDrawer
         drawer={drawer}

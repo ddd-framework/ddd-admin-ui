@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import type {
   FileAreaKey,
   FileAreaRefView,
@@ -76,6 +78,72 @@ export interface FileManagerCapabilities {
    * settings and maintenance, the client address of an access).
    */
   audience?: 'staff' | 'partner';
+  /**
+   * Files of other stores copied into the open folder ("Insert from the media library"): a page action (a menu for
+   * several sources) that opens the host's dialog. Only with write access, never in the trash or a link tab.
+   */
+  imports?: FileImportsCapability;
+  /**
+   * Files copied out into other stores ("Copy to the media library"): a file action and a bulk action for released
+   * files a target accepts; the host's dialog does the rest (a slot, a refusal per file).
+   */
+  exports?: FileExportsCapability;
+}
+
+/** What the host's import dialog gets: where the copies go and how to report them. */
+export interface FileImportDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  areaKey: FileAreaKey;
+  /** The open folder (`null` = the area's root). */
+  folderId: FileItemId | null;
+  /** The open folder as a path inside its area (`/a/b`; `/` = the root). */
+  folderPath: string;
+  /** The host copied files: the manager loads the list again (the host's adapter may also invalidate its cache). */
+  onImported: () => void;
+}
+
+/** One store files can be copied in from. */
+export interface FileImportSource {
+  key: string;
+  /** The action's label (`From the media library`), already translated or a text the host's store translates. */
+  label: string;
+  /** An icon for the action (default a download-into-folder icon). */
+  icon?: ReactNode;
+  /** The host's picker; it copies the picked files and calls `onImported`. Rendered only while open. */
+  renderDialog: (props: FileImportDialogProps) => ReactNode;
+}
+
+export interface FileImportsCapability {
+  sources: readonly FileImportSource[];
+}
+
+/** What the host's export dialog gets: the files to copy out. */
+export interface FileExportDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  areaKey: FileAreaKey;
+  /** Released files the target accepts (at least one). */
+  files: readonly FileView[];
+  /** The host copied files (the manager clears the selection; the files' history shows the copy). */
+  onExported: () => void;
+}
+
+/** One store files can be copied out into. */
+export interface FileExportTarget {
+  key: string;
+  /** The action's label (`Copy to the media library`). */
+  label: string;
+  /** An icon for the action (default an export icon). */
+  icon?: ReactNode;
+  /** Whether a file can go there (a picture); absent = every file. Files not released are never offered. */
+  accepts?: (file: FileView) => boolean;
+  /** The host's dialog; it copies the files and calls `onExported`. Rendered only while open. */
+  renderDialog: (props: FileExportDialogProps) => ReactNode;
+}
+
+export interface FileExportsCapability {
+  targets: readonly FileExportTarget[];
 }
 
 /** Where a location leads (`FileLocationCapability.resolveLocation`). */

@@ -6,8 +6,8 @@ export { FormMediaItemField } from './FormMediaItemField.tsx';
 export type { FormMediaItemFieldProps, MediaItemFieldPickerArgs } from './FormMediaItemField.tsx';
 export { MediaItemField } from './MediaItemField.tsx';
 export type { MediaItemFieldProps } from './MediaItemField.tsx';
-export { MediaItemPickerDialog } from './MediaItemPickerDialog.tsx';
-export type { MediaItemPickerDialogProps, MediaPickerSearch, MediaPickerUpload } from './MediaItemPickerDialog.tsx';
+export { MEDIA_LIBRARY_SOURCE_KEY, MediaItemPickerDialog } from './MediaItemPickerDialog.tsx';
+export type { MediaItemPickerDialogProps, MediaPickerSearch, MediaPickerSource, MediaPickerUpload } from './MediaItemPickerDialog.tsx';
 export { MediaPreview } from './MediaPreview.tsx';
 export type { MediaPreviewProps } from './MediaPreview.tsx';
 /** @deprecated moved to logic/browser/prepareImageFile — the re-export is removed in a later minor */

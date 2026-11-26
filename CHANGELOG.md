@@ -3,6 +3,30 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.9.2
+
+- **A file picker on any file area** (`./files`). `FilePicker` is the browse part of a file manager in a panel: area
+  switch (grouped like the manager's), breadcrumbs, search, folders and files as tiles with thumbnails, load more;
+  `selection` `single` / `multiple`, `accept(file)` and `acceptHint`, the host's `confirmLabel`, `onConfirm(files,
+  areaKey)`, `isConfirming`, `error`. Only released files are pickable (`isFilePickable`); `acceptsImageFiles` takes the
+  raster image family (no SVG). `FilePickerDialog` is the same in a dialog (`open`, `onOpenChange`, `title`,
+  `description`).
+- **Sources of other stores in the media picker** (`./media`). `MediaItemPickerDialog` takes `sources`
+  (`MediaPickerSource[]`: `{ key, label, content }`), `activeSource` and `onActiveSourceChange`: a segmented control
+  above the library (`MEDIA_LIBRARY_SOURCE_KEY = 'library'`); a source's content replaces search, grid and footer.
+  `./media` still imports nothing of `./files`: the host renders a `FilePicker` as the content.
+- **Imports into and exports out of a file area** (`./files`). Two capabilities of `FileManagerAdapter`:
+  `imports.sources[]` (`FileImportSource`: `key`, `label`, `icon`, `renderDialog(FileImportDialogProps)`) put an
+  "Insert" button (a menu for several sources) before "Upload files" where the open folder takes uploads;
+  `exports.targets[]` (`FileExportTarget`: `key`, `label`, `icon`, `accepts(file)`, `renderDialog(FileExportDialogProps)`)
+  put a row / card action (`FileExportMenu`) and a bulk action per target for released files the target accepts. The
+  dialogs are the host's; `onImported` reloads the list, `onExported` clears the selection. Features `imports` and
+  `exports`.
+- **`FileTransfersProvider`**: the same two capabilities from a React context, merged into the adapter's
+  (`withFileTransfers`; the adapter's own win, the capabilities keep their identity when nothing is added). For a
+  screen that builds its adapter inside a package (`CloudDriveScreen` of `@mgamadeus/ddd-clouddrive`), so that package
+  needs no prop for it. `useFileTransfers`, `filesForExportTarget`, `exportTargetsFor`.
+
 ## 0.9.1
 
 - **Fix: an agent's screen read after a filter change shows the filtered list, not the rows before it.** After

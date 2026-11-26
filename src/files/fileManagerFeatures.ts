@@ -29,6 +29,10 @@ export interface FileManagerFeatures {
   resolveLocation: boolean;
   /** The reader is a partner: no staff-only control. */
   partner: boolean;
+  /** Copies from other stores into the open folder (capability `imports` with at least one source). */
+  imports: boolean;
+  /** Copies of files into other stores (capability `exports` with at least one target). */
+  exports: boolean;
 }
 
 /**
@@ -68,5 +72,7 @@ export const resolveFileManagerFeatures = (
     accesses: capabilities?.activity?.useAccessEvents !== undefined,
     resolveLocation: capabilities?.location !== undefined,
     partner,
+    imports: (capabilities?.imports?.sources.length ?? 0) > 0,
+    exports: (capabilities?.exports?.targets.length ?? 0) > 0,
   };
 };

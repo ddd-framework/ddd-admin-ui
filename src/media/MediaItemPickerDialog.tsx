@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowDownUp, Check, ExternalLink, ImageOff, Sparkles, Upload } from 'lucide-react';
-import { type ChangeEvent, type ReactNode, useRef } from 'react';
+import { type ChangeEvent, type ReactNode, useRef, useState } from 'react';
 
 import {
   Button,
@@ -16,6 +16,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
   Label,
+  SegmentedControl,
 } from '../primitives/index.ts';
 import { isInlineDescription } from '../primitives/descriptionContent.ts';
 import { useTranslate } from '../i18n/index.ts';
@@ -42,6 +43,21 @@ export interface MediaPickerUpload {
   disabled?: boolean;
 }
 
+/**
+ * Another place to pick a picture from, beside the library (a drive): a tab whose body the host renders (a file
+ * picker that imports the picked file and selects the media item it answers).
+ */
+export interface MediaPickerSource {
+  key: string;
+  /** The tab's label (`Drive`), already translated or a text the host's store translates. */
+  label: string;
+  /** The tab's body, under the title; it brings its own footer. Rendered only while its tab is open. */
+  content: ReactNode;
+}
+
+/** The key of the library's own tab in `activeSource`. */
+export const MEDIA_LIBRARY_SOURCE_KEY = 'library';
+
 export interface MediaItemPickerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -66,6 +82,11 @@ export interface MediaItemPickerDialogProps {
   onSortChange?: (value: string) => void;
   /** Optional upload button (off when absent). */
   upload?: MediaPickerUpload;
+  /** More places to pick from (tabs beside the library); absent = the library only, no tabs. */
+  sources?: readonly MediaPickerSource[];
+  /** The open tab, controlled (`MEDIA_LIBRARY_SOURCE_KEY` or a source's key); without it the dialog keeps it. */
+  activeSource?: string;
+  onActiveSourceChange?: (sourceKey: string) => void;
 }
 
 interface PickerSearchProps {
@@ -113,8 +134,18 @@ export const MediaItemPickerDialog = ({
   sort,
   onSortChange,
   upload,
+  sources,
+  activeSource,
+  onActiveSourceChange,
 }: MediaItemPickerDialogProps) => {
   const { t } = useTranslate();
+  const [ownActiveSource, setOwnActiveSource] = useState(MEDIA_LIBRARY_SOURCE_KEY);
+  const openSourceKey = activeSource ?? ownActiveSource;
+  const openSource = sources?.find(source => source.key === openSourceKey);
+  const changeSource = (sourceKey: string) => {
+    setOwnActiveSource(sourceKey);
+    onActiveSourceChange?.(sourceKey);
+  };
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isSimilarityActive = !!similaritySearch?.value.trim();
   const sortLabel = sortOptions?.find(option => option.value === sort)?.label ?? t('Sort', { context: 'media-picker' });
@@ -140,6 +171,25 @@ export const MediaItemPickerDialog = ({
             ))}
         </DialogHeader>
 
+        {sources && sources.length > 0 && (
+          <div className="shrink-0 border-b px-6 py-3">
+            <SegmentedControl
+              aria-label={t('Pick from', { context: 'media-picker' })}
+              value={openSource ? openSource.key : MEDIA_LIBRARY_SOURCE_KEY}
+              onValueChange={changeSource}
+              translate={false}
+              options={[
+                { value: MEDIA_LIBRARY_SOURCE_KEY, label: t('Media library', { context: 'media-picker' }) },
+                ...sources.map(source => ({ value: source.key, label: t(source.label) })),
+              ]}
+            />
+          </div>
+        )}
+
+        {openSource ? (
+          openSource.content
+        ) : (
+        <>
         <div className="flex shrink-0 flex-col gap-3 border-b px-6 py-3 md:flex-row md:items-start">
           {search && <PickerSearch search={search} />}
           {similaritySearch && (
@@ -271,6 +321,8 @@ export const MediaItemPickerDialog = ({
             {t('Cancel', { context: 'media-picker' })}
           </Button>
         </DialogFooter>
+        </>
+        )}
       </DialogContent>
     </Dialog>
   );

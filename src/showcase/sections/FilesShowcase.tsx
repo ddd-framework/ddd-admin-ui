@@ -2,6 +2,8 @@
 
 import { FileFamilyIcon } from '../../files/FileFamilyIcon.tsx';
 import { FileManager } from '../../files/FileManager.tsx';
+import { FilePicker } from '../../files/FilePicker.tsx';
+import { acceptsImageFiles } from '../../files/filePicking.ts';
 import { FileViewer } from '../../files/FileViewer.tsx';
 import { FILE_FAMILIES } from '../../files/fileView.ts';
 import { QuotaPill } from '../../files/QuotaPill.tsx';
@@ -21,6 +23,20 @@ export const FilesShowcase = () => (
     <Sample title="FileManager (createStaticFileManagerAdapter, variant embedded)">
       <div className="w-full">
         <FileManager adapter={adapter} areas={areas} variant="embedded" defaultView="table" />
+      </div>
+    </Sample>
+    <Sample title="FilePicker (one picture, the panel of FilePickerDialog and of a media picker tab)">
+      <div className="flex h-96 w-full flex-col rounded-lg border">
+        <FilePicker
+          adapter={adapter}
+          areas={areas}
+          areaKey="marketing"
+          onAreaKeyChange={() => undefined}
+          accept={acceptsImageFiles}
+          acceptHint="Only pictures can be picked."
+          confirmLabel="Use this picture"
+          onConfirm={() => undefined}
+        />
       </div>
     </Sample>
     <Sample title="FileViewer (one file on a wide surface: preview, version choice, download)">

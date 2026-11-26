@@ -117,8 +117,12 @@ export const SHOWCASE_COVERAGE: Readonly<Record<string, ShowcaseEntryCoverage>> 
     notShown: {},
   },
   files: {
-    shown: ['FileFamilyIcon', 'FileManager', 'FileViewer', 'QuotaPill'],
+    shown: ['FileFamilyIcon', 'FileManager', 'FilePicker', 'FileViewer', 'QuotaPill'],
     notShown: {
+      FilePickerDialog: DRAWN_BY('FilePicker in a dialog'),
+      FileImportActions: DRAWN_BY('FileManager with the imports capability'),
+      FileExportMenu: DRAWN_BY('FileItemActions with the exports capability'),
+      FileTransfersProvider: 'a context provider (adds imports and exports to the file managers below it)',
       FileBreadcrumbs: DRAWN_BY('FileManager'),
       FileCard: DRAWN_BY('FileManager (grid)'),
       FileDndProvider: 'a context provider (mounted by FileManager)',

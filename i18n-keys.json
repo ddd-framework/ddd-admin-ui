@@ -1,8 +1,17 @@
 {
   "package": "@mgamadeus/ddd-admin-ui",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "generatedBy": "scripts/build-i18n-manifest.mjs",
   "keys": [
+    {
+      "key": "%action%: %name%__file-export",
+      "text": "%action%: %name%",
+      "context": "file-export",
+      "files": [
+        "files/FileTransferActions.tsx"
+      ],
+      "hint": "File manager row action that copies a file into another store (e.g. the media library). Screen-reader label: %action% is the action's name (\"Copy to the media library\"), %name% the file name."
+    },
     {
       "key": "%add% to add · %remove% to remove on all %count% files",
       "text": "%add% to add · %remove% to remove on all %count% files",
@@ -1260,6 +1269,15 @@
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
     },
     {
+      "key": "Area__file-picker",
+      "text": "Area",
+      "context": "file-picker",
+      "files": [
+        "files/FilePicker.tsx"
+      ],
+      "hint": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Accessible name of the dropdown that chooses the file area (a drive, the library, a World's files)."
+    },
+    {
       "key": "Area__move-dialog-field",
       "text": "Area",
       "context": "move-dialog-field",
@@ -1577,6 +1595,15 @@
       "hint": "Button that closes a dialog or drawer without doing anything (workers restart dialog, translation key drawer)."
     },
     {
+      "key": "Cancel__file-picker",
+      "text": "Cancel",
+      "context": "file-picker",
+      "files": [
+        "files/FilePicker.tsx"
+      ],
+      "hint": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Button that closes the picker without picking."
+    },
+    {
       "key": "Cancel__form-dialog",
       "text": "Cancel",
       "context": "form-dialog",
@@ -1697,6 +1724,15 @@
         "crons/CronFormDrawer.tsx"
       ],
       "hint": "In the admin screen of the scheduled jobs (Crons): shown under the schedule field while the server checks the expression."
+    },
+    {
+      "key": "Choose an area__file-picker",
+      "text": "Choose an area",
+      "context": "file-picker",
+      "files": [
+        "files/FilePicker.tsx"
+      ],
+      "hint": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Placeholder of the area dropdown and the empty state before an area is chosen."
     },
     {
       "key": "Clear",
@@ -2076,6 +2112,14 @@
       "hint": "Accessible name of a copy button next to generated code; %label% names the code (e.g. 'SQL of Orders')."
     },
     {
+      "key": "Copy %name% to …",
+      "text": "Copy %name% to …",
+      "files": [
+        "files/FileTransferActions.tsx"
+      ],
+      "hint": "File manager row action menu that copies a file into another store (e.g. the media library). Screen-reader label; %name% is the file name."
+    },
+    {
       "key": "Copy ID",
       "text": "Copy ID",
       "files": [
@@ -2173,6 +2217,14 @@
         "files/FileItemActions.tsx"
       ],
       "hint": "Screen reader label of the copy button on a file row; %name% is the file name."
+    },
+    {
+      "key": "Copy to …",
+      "text": "Copy to …",
+      "files": [
+        "files/FileTransferActions.tsx"
+      ],
+      "hint": "File manager row action menu (tooltip) that copies a file into another store, e.g. the media library."
     },
     {
       "key": "Could not copy",
@@ -3707,7 +3759,8 @@
       "text": "Files",
       "context": "files-label",
       "files": [
-        "files/FileManager.tsx"
+        "files/FileManager.tsx",
+        "files/FilePicker.tsx"
       ],
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: files label."
     },
@@ -4517,6 +4570,15 @@
       "hint": "Writing style option: texts address the user informally (German 'du', French 'tu'). Shown in the language menu and account forms. One word, an adjective."
     },
     {
+      "key": "Insert__file-import",
+      "text": "Insert",
+      "context": "file-import",
+      "files": [
+        "files/FileTransferActions.tsx"
+      ],
+      "hint": "File manager page button (a menu) that copies files from another store (e.g. the media library) into the open folder."
+    },
+    {
       "key": "Issue group",
       "text": "Issue group",
       "files": [
@@ -5275,6 +5337,15 @@
         "files/FileManager.tsx"
       ],
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Context: file uploader filter."
+    },
+    {
+      "key": "Media library__media-picker",
+      "text": "Media library",
+      "context": "media-picker",
+      "files": [
+        "media/MediaItemPickerDialog.tsx"
+      ],
+      "hint": "Media picker dialog: tab that shows the pictures of the media library (beside other sources such as the drive)."
     },
     {
       "key": "Memory peak",
@@ -6048,6 +6119,14 @@
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
     },
     {
+      "key": "No files match the search.",
+      "text": "No files match the search.",
+      "files": [
+        "files/FilePicker.tsx"
+      ],
+      "hint": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Empty state when the search finds no file in the area."
+    },
+    {
       "key": "No files yet.",
       "text": "No files yet.",
       "files": [
@@ -6784,6 +6863,14 @@
       "hint": "File manager, file preview in the details drawer."
     },
     {
+      "key": "Open folder %name%",
+      "text": "Open folder %name%",
+      "files": [
+        "files/FilePicker.tsx"
+      ],
+      "hint": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Screen-reader label of a folder tile; %name% is the folder name."
+    },
+    {
       "key": "Open in log backend",
       "text": "Open in log backend",
       "files": [
@@ -7025,6 +7112,14 @@
       "hint": "Accessible name of a colour swatch button; %label% is the field name, %value% the colour code."
     },
     {
+      "key": "Pick %name%",
+      "text": "Pick %name%",
+      "files": [
+        "files/FilePicker.tsx"
+      ],
+      "hint": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Screen-reader label of a file tile in single-pick mode; %name% is the file name."
+    },
+    {
       "key": "Pick a command",
       "text": "Pick a command",
       "files": [
@@ -7047,6 +7142,15 @@
         "crons/CronFormDrawer.tsx"
       ],
       "hint": "Button in the scheduled task form, next to a stored console command that cannot be chosen from the list: unlocks the field to choose another command."
+    },
+    {
+      "key": "Pick from__media-picker",
+      "text": "Pick from",
+      "context": "media-picker",
+      "files": [
+        "media/MediaItemPickerDialog.tsx"
+      ],
+      "hint": "Media picker dialog: accessible name of the tab switch between the media library and other sources (the drive)."
     },
     {
       "key": "Pick the area and the folder to move to. A move into another area is confirmed separately.",
@@ -8215,6 +8319,15 @@
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). Placeholder of a search field."
     },
     {
+      "key": "Search files__file-picker",
+      "text": "Search files",
+      "context": "file-picker",
+      "files": [
+        "files/FilePicker.tsx"
+      ],
+      "hint": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Accessible name of the search field."
+    },
+    {
       "key": "Search for a command to run…",
       "text": "Search for a command to run…",
       "files": [
@@ -8287,6 +8400,14 @@
       "hint": "In the admin screen of the scheduled jobs (Crons): placeholder of the search field."
     },
     {
+      "key": "Search results",
+      "text": "Search results",
+      "files": [
+        "files/FilePicker.tsx"
+      ],
+      "hint": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Last breadcrumb while a search spans the whole area."
+    },
+    {
       "key": "Search results in all folders",
       "text": "Search results in all folders",
       "files": [
@@ -8301,6 +8422,15 @@
         "translations/AppTranslationKeyDrawer.tsx"
       ],
       "hint": "App translations admin, drawer of one translation key: accessible name of the search field over the values."
+    },
+    {
+      "key": "Search this area…__file-picker",
+      "text": "Search this area…",
+      "context": "file-picker",
+      "files": [
+        "files/FilePicker.tsx"
+      ],
+      "hint": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Placeholder of the search field."
     },
     {
       "key": "Search translations…",
@@ -8375,7 +8505,8 @@
       "text": "Select %name%",
       "files": [
         "files/FileCard.tsx",
-        "files/FileManager.tsx"
+        "files/FileManager.tsx",
+        "files/FilePicker.tsx"
       ],
       "hint": "File manager, file card in the grid. %name% is a file or folder name."
     },
@@ -9318,7 +9449,8 @@
       "key": "The files could not be loaded.",
       "text": "The files could not be loaded.",
       "files": [
-        "files/FileManager.tsx"
+        "files/FileManager.tsx",
+        "files/FilePicker.tsx"
       ],
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash)."
     },
@@ -10292,7 +10424,8 @@
       "key": "This folder is empty.",
       "text": "This folder is empty.",
       "files": [
-        "files/FileManager.tsx"
+        "files/FileManager.tsx",
+        "files/FilePicker.tsx"
       ],
       "hint": "Drive screen (cloud drive of the admin): empty state of a folder without files."
     },
@@ -11456,6 +11589,15 @@
       "hint": "Status badge of a worker transport (queue): jobs are being handled."
     },
     {
+      "key": "Working…__file-picker",
+      "text": "Working…",
+      "context": "file-picker",
+      "files": [
+        "files/FilePicker.tsx"
+      ],
+      "hint": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). Confirm button while the host works on the picked files (imports them)."
+    },
+    {
       "key": "Workspace",
       "text": "Workspace",
       "files": [
@@ -12534,6 +12676,14 @@
         "files/FileManager.tsx"
       ],
       "hint": "File manager (the admin's file area: folder tree, file list as grid or table, uploads, trash). ICU plural; # is the number."
+    },
+    {
+      "key": "{count, plural, one {# file picked} other {# files picked}}",
+      "text": "{count, plural, one {# file picked} other {# files picked}}",
+      "files": [
+        "files/FilePicker.tsx"
+      ],
+      "hint": "File picker (a dialog or a tab of the media picker to pick files of the drive or another file area: area switch, folders, picture tiles, search). How many files are picked in multi-pick mode."
     },
     {
       "key": "{count, plural, one {# file restored} other {# files restored}}",
