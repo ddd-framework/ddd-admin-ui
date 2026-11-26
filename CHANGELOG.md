@@ -3,6 +3,21 @@
 All notable changes to `@mgamadeus/ddd-admin-ui`. 0.x: each minor may break; pin the exact version while the package
 is in 0.x.
 
+## 0.9.1
+
+- **Fix: an agent's screen read after a filter change shows the filtered list, not the rows before it.** After
+  `setFilters` or an `openScreen` of the open list with other filters, the read could still hold the old rows under
+  the new `Filters` line (seen in a host: `status=OPEN` set, the answer named other statuses). Three causes, all
+  between the URL change and the list's request:
+  - `useUrlListState` passed values the URL brought from outside (Back / Forward, a link, the agent's navigator)
+    through the typing debounce: for 350 ms the list showed the old rows without a loading state. Such values now
+    reach `debounced` in the same render pass (`isListValuesFromUrl`; `useDebouncedValue` takes `isImmediate`). Typed
+    values debounce as before. Back and Forward reload the list at once too.
+  - The navigator's `open` took the open screen with another query as arrived at once, because its path was there
+    before the navigation started. It now waits for the query to change (`hasOpenedScreenArrived`).
+  - `AGENT_SCREEN_SETTLE_QUIET_MS` was 300, shorter than the lists' debounce: a change the screen makes itself (a
+    pressed "Clear filters") could settle before its request started. It is `LIST_STATE_DEBOUNCE_MS + 150` (500) now.
+
 ## 0.9.0
 
 - **A screen filter names the values it takes** (`./agent-ui`, `@mgamadeus/ddd-agents` with filter values).

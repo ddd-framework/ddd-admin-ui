@@ -5,6 +5,7 @@ import { useMemo, useRef } from 'react';
 import { useTranslate } from '../i18n/useTranslate.ts';
 import type { NavigationAccess, NavigationItem } from '../logic/pure/navigation.ts';
 import { canNavigate, getDirtyForms, getOpenOverlays, type OverlayKind } from '../logic/pure/navigationGuard.ts';
+import { LIST_STATE_DEBOUNCE_MS } from '../logic/pure/urlListState.ts';
 import { useCurrentPathname } from '../primitives/pathname.tsx';
 import { findAgentPanelByAttribute, findOccludingRectOfAgentPanel } from './agentPanel.ts';
 import { buildAgentUIState, describeNavigationBlocker, describeUnsavedChanges } from './agentUIState.ts';
@@ -23,6 +24,7 @@ import {
   buildScreenTargetHref,
   buildScreenTargets,
   describeScreenFilters,
+  hasOpenedScreenArrived,
   matchOpenScreenTarget,
   matchScreenTarget,
   type ScreenFiltersByTargetKey,
@@ -31,8 +33,12 @@ import {
 /** The longest wait for an opened screen to settle. */
 export const AGENT_SCREEN_SETTLE_MAX_MS = 6000;
 
-/** How long an opened screen must stay without a loading state. */
-export const AGENT_SCREEN_SETTLE_QUIET_MS = 300;
+/**
+ * How long an opened screen must stay without a loading state. Longer than the lists' debounce: a change the screen
+ * makes itself (a pressed "Clear filters", a typed search) reaches its request only then, and until then the old rows
+ * stand there without a loading state.
+ */
+export const AGENT_SCREEN_SETTLE_QUIET_MS = LIST_STATE_DEBOUNCE_MS + 150;
 
 /** What marks a loading screen: the package's skeletons and busy regions. */
 const BUSY_SELECTOR = '[aria-busy="true"], [data-slot="skeleton"]';
@@ -186,8 +192,15 @@ export const useAdminUiAgentScreen = (options: AdminUiAgentScreenOptions): Admin
       open: async (target, request) => {
         const href = buildScreenTargetHref(target, request) ?? target.routePattern;
         const path = href.split('?')[0] ?? href;
+        const isPathOpen = () => latest.current.pathname === path || window.location.pathname.endsWith(path);
+        const wasPathOpen = isPathOpen();
+        const searchBefore = window.location.search;
+        const openedSearch = href.includes('?') ? href.slice(href.indexOf('?')) : '';
         latest.current.options.navigate(href);
-        await settle(() => latest.current.pathname === path || window.location.pathname.endsWith(path));
+        // the open screen with another query (its list with other filters) has arrived only with the new query
+        await settle(() =>
+          hasOpenedScreenArrived({ wasPathOpen, isPathOpen: isPathOpen(), openedSearch, searchBefore, searchNow: window.location.search })
+        );
         const location = currentLocation();
         latest.current.options.onOpened?.(target, location);
         return location;

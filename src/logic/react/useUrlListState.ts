@@ -98,10 +98,22 @@ export const externalListChange = <K extends string>(
 };
 
 /**
+ * Whether the list's values pass to its request without the debounce: they are the ones the URL brought from outside
+ * (Back / Forward, a link, an agent that sets a filter). Nobody is typing then. Debounced, the list would show the old
+ * rows under the new URL for that time without a loading state, and whoever reads the screen then (an agent's screen
+ * read waits for the loading state to end) takes them for the filtered list.
+ */
+export const isListValuesFromUrl = <K extends string>(
+  values: Readonly<Record<K, string>>,
+  valuesFromUrl: Readonly<Record<K, string>> | null
+): boolean => values === valuesFromUrl;
+
+/**
  * A list's search and filters, kept in the URL: a reload, Back and a shared link keep them; when the URL has none of
  * the keys, the adapter's `restore` (last saved state of this list) is used, so a return to the list keeps its filters. One hook for every list (replaces the
  * per-module URL hooks and `useState` filters). Keys are the URL parameter names; values are strings (`''` = unset);
- * multi-value keys use `getList` / `setList`. The URL is written with the debounced values only.
+ * multi-value keys use `getList` / `setList`. The URL is written with the debounced values only. Values the URL brings
+ * from outside reach `debounced` in the same render pass (no debounce).
  *
  * Pass the keys as a module constant (`as const`), not an inline array.
  */
@@ -113,7 +125,9 @@ export const useUrlListState = <K extends string>(
   // touch storage, and the saved state is applied right after hydration instead.
   const hydrated = useHydrated();
   const [values, setValuesState] = useState<Record<K, string>>(() => initialListValues(keys, adapter, hydrated));
-  const debounced = useDebouncedValue(values, debounceMs);
+  // The values the last URL change from outside brought: they skip the debounce (`isListValuesFromUrl`).
+  const [valuesFromUrl, setValuesFromUrl] = useState<Record<K, string> | null>(null);
+  const debounced = useDebouncedValue(values, debounceMs, isListValuesFromUrl(values, valuesFromUrl));
 
   const adapterRef = useRef(adapter);
   adapterRef.current = adapter;
@@ -130,6 +144,7 @@ export const useUrlListState = <K extends string>(
     const external = externalListChange(keys, urlNow, lastSeen, lastWrittenRef.current);
     if (!external) return;
     lastWrittenRef.current = null;
+    setValuesFromUrl(external);
     setValuesState(previous => (keys.some(key => previous[key].trim() !== external[key]) ? external : previous));
   }, [adapter, keys]);
 

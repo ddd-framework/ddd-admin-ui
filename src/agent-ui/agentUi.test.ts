@@ -16,6 +16,7 @@ import {
   buildScreenTargetHref,
   buildScreenTargets,
   describeScreenFilters,
+  hasOpenedScreenArrived,
   matchOpenScreenTarget,
   matchScreenTarget,
 } from './screenTargets.ts';
@@ -230,6 +231,21 @@ describe('the filters of the open screen (actOnScreen setFilters)', () => {
     );
     assert.equal(buildScreenFiltersHref(orders, '/orders', '?status=OPEN', { status: '' }), '/orders');
     assert.equal(buildScreenFiltersHref(orders, '/orders', '', { status: 'x'.repeat(300) }).length, '/orders?status='.length + 100);
+  });
+
+  it('takes the open screen with another query as arrived only once the query changed', () => {
+    const sameList = { wasPathOpen: true, openedSearch: '?status=OPEN', searchBefore: '?status=SOLVED' };
+    // the path was there before the navigation started: the old query is the old list
+    assert.equal(hasOpenedScreenArrived({ ...sameList, isPathOpen: true, searchNow: '?status=SOLVED' }), false);
+    assert.equal(hasOpenedScreenArrived({ ...sameList, isPathOpen: true, searchNow: '?status=OPEN' }), true);
+    // the list wrote its own form of the value
+    assert.equal(hasOpenedScreenArrived({ ...sameList, isPathOpen: true, searchNow: '?status=OPEN&view=table' }), true);
+    // the filters removed
+    assert.equal(hasOpenedScreenArrived({ wasPathOpen: true, isPathOpen: true, openedSearch: '', searchBefore: '?status=OPEN', searchNow: '' }), true);
+    // the same URL again, and another screen: the path decides
+    assert.equal(hasOpenedScreenArrived({ wasPathOpen: true, isPathOpen: true, openedSearch: '?status=OPEN', searchBefore: '?status=OPEN', searchNow: '?status=OPEN' }), true);
+    assert.equal(hasOpenedScreenArrived({ wasPathOpen: false, isPathOpen: false, openedSearch: '?status=OPEN', searchBefore: '', searchNow: '' }), false);
+    assert.equal(hasOpenedScreenArrived({ wasPathOpen: false, isPathOpen: true, openedSearch: '', searchBefore: '?page=2', searchNow: '?page=2' }), true);
   });
 
   it('describes the declared filters with the values that are set', () => {

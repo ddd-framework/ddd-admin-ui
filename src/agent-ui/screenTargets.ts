@@ -215,6 +215,30 @@ export const matchOpenScreenTarget = (targets: readonly ScreenTarget[], pathname
   return match ? { ...match.target, filters: screenTargetFiltersOfTab(match.target, match.tab) } : null;
 };
 
+/** Where an opened screen stands: its path and query before the navigation and now. */
+export interface OpenedScreenArrival {
+  /** Whether the opened path was the open one before the navigation */
+  wasPathOpen: boolean;
+  /** Whether the opened path is the open one now */
+  isPathOpen: boolean;
+  /** The query the navigation asked for (`?status=OPEN`, `''` for none) */
+  openedSearch: string;
+  searchBefore: string;
+  searchNow: string;
+}
+
+/**
+ * Whether an opened screen is there. Its path is the open one; and when that path was open already with another query
+ * (the same list with other filters), the query has changed too: the path alone was there before the navigation
+ * started, and a router changes the URL only after it loaded the route. The screen may write its own form of a value,
+ * so any change of the query counts.
+ */
+export const hasOpenedScreenArrived = (arrival: OpenedScreenArrival): boolean => {
+  if (!arrival.isPathOpen) return false;
+  const opensOtherQueryOfOpenScreen = arrival.wasPathOpen && arrival.openedSearch !== arrival.searchBefore;
+  return !opensOtherQueryOfOpenScreen || arrival.searchNow !== arrival.searchBefore;
+};
+
 /** The most characters of one filter value an opened screen gets. */
 export const MAX_SCREEN_FILTER_VALUE_CHARS = 100;
 
